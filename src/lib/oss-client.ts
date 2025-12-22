@@ -1,18 +1,21 @@
 const OSS = require('ali-oss');
 
-export const ossClient = new OSS({
-  // 从环境变量中获取访问凭证
-  accessKeyId: process.env.MY_OSS_ACCESS_KEY_ID,
-  accessKeySecret: process.env.MY_OSS_ACCESS_KEY_SECRET,
-  // 填写Bucket所在地域
-  region: 'oss-cn-beijing',
-  // 使用V4签名算法
-  authorizationV4: true,
-  // 填写Bucket名称
-  bucket: 'outfittest',
-  // 填写Bucket所在地域对应的公网Endpoint
-  endpoint: 'https://oss-cn-beijing.aliyuncs.com',
-});
+// 只在有配置时才初始化 OSS 客户端
+export const ossClient = process.env.MY_OSS_ACCESS_KEY_ID && process.env.MY_OSS_ACCESS_KEY_SECRET
+  ? new OSS({
+      // 从环境变量中获取访问凭证
+      accessKeyId: process.env.MY_OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.MY_OSS_ACCESS_KEY_SECRET,
+      // 填写Bucket所在地域
+      region: 'oss-cn-beijing',
+      // 使用V4签名算法
+      authorizationV4: true,
+      // 填写Bucket名称
+      bucket: 'outfittest',
+      // 填写Bucket所在地域对应的公网Endpoint
+      endpoint: 'https://oss-cn-beijing.aliyuncs.com',
+    })
+  : null;
 
 /**
  * 生成唯一的文件名
@@ -34,4 +37,4 @@ export function generateUniqueFileName(originalName: string, prefix: string = ''
  */
 export function getOssUrl(ossKey: string): string {
   return `https://outfittest.oss-cn-beijing.aliyuncs.com/${ossKey}`;
-} 
+}
