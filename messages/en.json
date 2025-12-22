@@ -1,0 +1,1028 @@
+{
+  "Metadata": {
+    "name": "Independent Worker",
+    "title": "Independent Worker - A Person Who Loves Life",
+    "description": "Love life"
+  },
+  "Common": {
+    "login": "Log in",
+    "logout": "Log out",
+    "signUp": "Sign up",
+    "language": "Switch language",
+    "mode": {
+      "label": "Toggle mode",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "theme": {
+      "label": "Toggle theme",
+      "default": "Default",
+      "blue": "Blue",
+      "green": "Green",
+      "amber": "Amber",
+      "neutral": "Neutral"
+    },
+    "copy": "Copy",
+    "saving": "Saving...",
+    "save": "Save",
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "logoutFailed": "Failed to log out"
+  },
+  "PricingPage": {
+    "title": "Pricing",
+    "description": "Choose the perfect plan for your virtual try-on needs",
+    "subtitle": "Choose the perfect plan for your virtual try-on needs",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "PricingCard": {
+      "freePrice": "$0",
+      "perMonth": "/month",
+      "perYear": "/year",
+      "popular": "Popular",
+      "currentPlan": "Current Plan",
+      "yourCurrentPlan": "Your Current Plan",
+      "getStartedForFree": "Start Free Trial",
+      "getLifetimeAccess": "Get Lifetime Access",
+      "getStarted": "Get Started",
+      "notAvailable": "Not Available",
+      "daysTrial": "{days}-day free trial"
+    },
+    "CheckoutButton": {
+      "loading": "Loading...",
+      "checkoutFailed": "Failed to open checkout page"
+    }
+  },
+  "PricePlans": {
+    "free": {
+      "name": "Free Trial",
+      "description": "Perfect for trying out AI virtual try-on",
+      "features": {
+        "feature-1": "Up to 10 virtual try-ons per month",
+        "feature-2": "Basic AI fitting technology",
+        "feature-3": "Standard resolution images",
+        "feature-4": "Community support"
+      },
+      "limits": {
+        "limit-1": "Advanced AI features",
+        "limit-2": "High-resolution outputs",
+        "limit-3": "Priority support"
+      }
+    },
+    "pro": {
+      "name": "Pro",
+      "description": "Advanced AI features for fashion enthusiasts",
+      "features": {
+        "feature-1": "Unlimited virtual try-ons",
+        "feature-2": "Advanced AI fitting with body analysis",
+        "feature-3": "High-resolution 4K outputs",
+        "feature-4": "Style recommendations",
+        "feature-5": "Multiple outfit combinations"
+      },
+      "limits": {
+        "limit-1": "API access",
+        "limit-2": "White-label solutions"
+      }
+    },
+    "lifetime": {
+      "name": "Lifetime",
+      "description": "One-time payment for unlimited AI try-ons",
+      "features": {
+        "feature-1": "All Pro features",
+        "feature-2": "Unlimited AI processing",
+        "feature-3": "Priority customer support",
+        "feature-4": "Early access to new features",
+        "feature-5": "API access for developers",
+        "feature-6": "White-label solutions",
+        "feature-7": "Lifetime updates"
+      }
+    }
+  },
+  "NotFoundPage": {
+    "title": "404",
+    "message": "Sorry, the page you are looking for does not exist.",
+    "backToHome": "Back to home"
+  },
+  "ErrorPage": {
+    "title": "Oops! Something went wrong!",
+    "tryAgain": "Try again",
+    "backToHome": "Back to home"
+  },
+  "AboutPage": {
+    "title": "About",
+    "description": "OutfitAI is revolutionizing the fashion industry with cutting-edge AI technology that allows you to virtually try on clothes before purchasing.",
+    "authorName": "OutfitAI",
+    "authorBio": "AI Virtual Try-On Platform",
+    "introduction": "👋 Welcome to OutfitAI! We're revolutionizing online shopping with AI-powered virtual try-on technology. See how any outfit looks on you before you buy. Have questions? We'd love to help!",
+    "talkWithMe": "Contact Us",
+    "followMe": "Follow us on X"
+  },
+  "OutfitPage": {
+    "title": "AI Virtual Try-On",
+    "description": "Discover your perfect style with AI-powered virtual try-on technology",
+    "comingSoon": "Experience the future of fashion with our AI virtual try-on platform",
+    "filters": {
+      "all": "All",
+      "male": "Men",
+      "female": "Women"
+    },
+    "buttons": {
+      "buyNow": "Buy Now",
+      "tryOn": "Try On",
+      "viewOutfit": "View Outfit"
+    },
+    "loading": "Loading outfits...",
+    "noResults": "No outfits found",
+    "modal": {
+      "close": "Close",
+      "outfitDetails": "Outfit Details"
+    }
+  },
+  "ChangelogPage": {
+    "title": "Changelog",
+    "description": "Stay up to date with the latest OutfitAI features and improvements",
+    "subtitle": "Stay up to date with the latest OutfitAI features and improvements"
+  },
+  "ContactPage": {
+    "title": "Contact",
+    "description": "Get in touch with our AI fashion experts",
+    "subtitle": "Get in touch with our AI fashion experts",
+    "form": {
+      "title": "Contact OutfitAI",
+      "description": "Have questions about our AI virtual try-on technology? Our team is here to help",
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
+      "submit": "Submit",
+      "submitting": "Submitting...",
+      "success": "Message sent successfully",
+      "fail": "Failed to send message",
+      "nameMinLength": "Name must be at least 3 characters",
+      "nameMaxLength": "Name must not exceed 30 characters",
+      "emailValidation": "Please enter a valid email address",
+      "messageMinLength": "Message must be at least 10 characters",
+      "messageMaxLength": "Message must not exceed 500 characters"
+    }
+  },
+  "WaitlistPage": {
+    "title": "Waitlist",
+    "description": "Join our waitlist for early access to OutfitAI",
+    "subtitle": "Join our waitlist for early access to OutfitAI",
+    "form": {
+      "title": "Join OutfitAI Waitlist",
+      "description": "Be the first to experience our revolutionary AI virtual try-on technology",
+      "email": "Email",
+      "subscribe": "Join Waitlist",
+      "subscribing": "Joining...",
+      "success": "Successfully joined waitlist",
+      "fail": "Failed to join waitlist",
+      "emailValidation": "Please enter a valid email address"
+    }
+  },
+  "Newsletter": {
+    "title": "Newsletter",
+    "subtitle": "Stay updated with OutfitAI",
+    "description": "Subscribe to get the latest updates on AI fashion technology and new features",
+    "form": {
+      "email": "Email",
+      "subscribe": "Subscribe",
+      "subscribing": "Subscribing...",
+      "success": "Subscribed successfully",
+      "fail": "Failed to subscribe",
+      "emailValidation": "Please enter a valid email address"
+    }
+  },
+  "AuthPage": {
+    "login": {
+      "title": "Login",
+      "welcomeBack": "Welcome back to OutfitAI",
+      "signUpHint": "New to OutfitAI? Sign up",
+      "signInWithGoogle": "Sign In with Google",
+      "loginWithGoogle": "Sign in with Google to start your AI fashion journey",
+      "or": "Or continue with"
+    },
+    "register": {
+      "title": "Sign Up",
+      "createAccount": "Create your OutfitAI account",
+      "signInHint": "Already have an account? Sign in",
+      "registerWithGoogle": "Create your OutfitAI account with Google to get started"
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "email": "Email",
+      "send": "Send reset link",
+      "backToLogin": "Back to login",
+      "checkEmail": "Please check your email inbox",
+      "emailRequired": "Please enter your email"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "password": "Password",
+      "reset": "Reset password",
+      "backToLogin": "Back to login",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "minLength": "Password must be at least 8 characters"
+    },
+    "error": {
+      "title": "Oops! Something went wrong!",
+      "tryAgain": "Please try again.",
+      "backToLogin": "Back to login",
+      "checkEmail": "Please check your email inbox"
+    },
+    "common": {
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy",
+      "byClickingContinue": "By clicking continue, you agree to our ",
+      "and": " and "
+    }
+  },
+  "BlogPage": {
+    "title": "Independent Worker Blog",
+    "description": "Sharing life insights, work experience and personal growth",
+    "subtitle": "Sharing life insights, work experience and personal growth",
+    "author": "Author",
+    "categories": "Categories",
+    "tableOfContents": "Table of Contents",
+    "readTime": "{minutes} min read",
+    "all": "All",
+    "noPostsFound": "No posts found",
+    "allPosts": "All Posts",
+    "morePosts": "More Posts"
+  },
+  "DocsPage": {
+    "toc": "Table of Contents",
+    "search": "Search docs",
+    "lastUpdate": "Last updated on",
+    "searchNoResult": "No results",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "chooseLanguage": "Select language",
+    "title": "OutfitAI Documentation",
+    "homepage": "Homepage",
+    "blog": "Blog"
+  },
+  "Marketing": {
+    "navbar": {
+      "home": {
+        "title": "Home"
+      },
+      "features": {
+        "title": "Features"
+      },
+      "pricing": {
+        "title": "Pricing"
+      },
+      "blog": {
+        "title": "Blog"
+      },
+      "docs": {
+        "title": "Docs"
+      },
+      "outfit": {
+        "title": "Try Now"
+      },
+      "ai": {
+        "title": "AI Features",
+        "items": {
+          "text": {
+            "title": "AI Styling",
+            "description": "Get personalized style recommendations powered by AI"
+          },
+          "image": {
+            "title": "Virtual Try-On",
+            "description": "See how clothes look on you with AI-powered virtual fitting"
+          },
+          "video": {
+            "title": "3D Modeling",
+            "description": "Experience clothes in stunning 3D with AI body modeling"
+          },
+          "audio": {
+            "title": "Voice Assistant",
+            "description": "Get style advice through our AI voice assistant"
+          }
+        }
+      },
+      "pages": {
+        "title": "Pages",
+        "items": {
+          "about": {
+            "title": "About",
+            "description": "Learn about our AI fashion technology and mission"
+          },
+          "contact": {
+            "title": "Contact",
+            "description": "Get in touch with our AI fashion experts"
+          },
+          "waitlist": {
+            "title": "Waitlist",
+            "description": "Join early access to OutfitAI's latest features"
+          },
+          "changelog": {
+            "title": "Changelog",
+            "description": "See the latest OutfitAI updates and new AI features"
+          },
+          "roadmap": {
+            "title": "Roadmap",
+            "description": "Explore our future AI fashion innovations"
+          },
+          "cookiePolicy": {
+            "title": "Cookie Policy",
+            "description": "How we use cookies to enhance your OutfitAI experience"
+          },
+          "privacyPolicy": {
+            "title": "Privacy Policy",
+            "description": "How we protect your data and AI-generated content"
+          },
+          "termsOfService": {
+            "title": "Terms of Service",
+            "description": "Legal agreement for using OutfitAI services"
+          }
+        }
+      },
+      "blocks": {
+        "title": "Components",
+        "items": {
+          "magicui": {
+            "title": "MagicUI Blocks"
+          },
+          "hero-section": {
+            "title": "Hero Blocks"
+          },
+          "logo-cloud": {
+            "title": "Logo Cloud Blocks"
+          },
+          "integrations": {
+            "title": "Integrations Blocks"
+          },
+          "features": {
+            "title": "Features Blocks"
+          },
+          "content": {
+            "title": "Content Blocks"
+          },
+          "stats": {
+            "title": "Stats Blocks"
+          },
+          "team": {
+            "title": "Team Blocks"
+          },
+          "testimonials": {
+            "title": "Testimonials Blocks"
+          },
+          "callToAction": {
+            "title": "Call to Action Blocks"
+          },
+          "footer": {
+            "title": "Footer Blocks"
+          },
+          "pricing": {
+            "title": "Pricing Blocks"
+          },
+          "comparator": {
+            "title": "Comparator Blocks"
+          },
+          "faq": {
+            "title": "FAQ Blocks"
+          },
+          "login": {
+            "title": "Login Blocks"
+          },
+          "signup": {
+            "title": "Signup Blocks"
+          },
+          "forgot-password": {
+            "title": "Forgot Password Blocks"
+          },
+          "contact": {
+            "title": "Contact Blocks"
+          }
+        }
+      }
+    },
+    "footer": {
+      "tagline": "Revolutionize your style with AI-powered virtual try-on technology",
+      "product": {
+        "title": "Product",
+        "items": {
+          "features": "AI Features",
+          "pricing": "Pricing",
+          "faq": "FAQ"
+        }
+      },
+      "resources": {
+        "title": "Resources",
+        "items": {
+          "blog": "AI Fashion Blog",
+          "docs": "API Documentation",
+          "changelog": "What's New",
+          "roadmap": "AI Roadmap"
+        }
+      },
+      "company": {
+        "title": "Company",
+        "items": {
+          "about": "About OutfitAI",
+          "contact": "Contact Us",
+          "waitlist": "Early Access"
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "items": {
+          "cookiePolicy": "Cookie Policy",
+          "privacyPolicy": "Privacy Policy",
+          "termsOfService": "Terms of Service"
+        }
+      }
+    },
+    "avatar": {
+      "dashboard": "Dashboard",
+      "billing": "Billing",
+      "settings": "Settings"
+    }
+  },
+  "Dashboard": {
+    "dashboard": {
+      "title": "Dashboard"
+    },
+    "fittingRoom": {
+      "title": "AI Fitting Room",
+      "selectModel": "Select Model",
+      "addModel": "Add Model",
+      "clothingType": "Clothing Type",
+      "topAndBottom": "Top & Bottom",
+      "onepiece": "One-piece",
+      "uploadTop": "Upload Top",
+      "uploadBottom": "Upload Bottom",
+      "uploadClothing": "Upload Clothing",
+      "startTryOn": "Start Try-On",
+      "modelSelection": "Model Selection",
+      "tryingOn": "Trying on clothes...",
+      "uploadModelImage": "Upload Model Image",
+      "modelName": "Model Name",
+      "height": "Height",
+      "weight": "Weight",
+      "bodyType": "Body Type",
+      "style": "Style",
+      "addNewModel": "Add New Model",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "uploading": "Uploading...",
+      "modelAdded": "Model added successfully",
+      "modelAddFailed": "Failed to add model",
+      "dragDropImage": "Drag and drop image here or click to browse",
+      "imageRequired": "Image is required",
+      "nameRequired": "Name is required",
+      "heightRequired": "Height is required",
+      "weightRequired": "Weight is required",
+      "bodyTypeRequired": "Body type is required",
+      "styleRequired": "Style is required",
+      "uploadSuccess": "Upload successful",
+      "uploadFailed": "Upload failed",
+      "uploadInProgress": "Uploading...",
+      "selectModelFirst": "Please select a model first",
+      "uploadClothingFirst": "Please upload the required clothing images",
+      "tryOnSuccess": "Try-on completed successfully!",
+      "fillAllFields": "Please fill in all required fields and upload model image",
+      "clickToReupload": "Click to re-upload",
+      "loadingModels": "Loading models...",
+      "customModel": "Custom",
+      "cannotDeleteDefault": "Cannot delete default model",
+      "modelDeletedSuccess": "Model deleted successfully",
+      "modelDeleteFailed": "Failed to delete model",
+      "aiTryOnResult": "AI Try-On Result",
+      "aiTryOnComplete": "✨ AI Try-On Complete",
+      "tryOnEffectGenerated": "Try-on effect generated",
+      "download": "Download",
+      "share": "Share",
+      "retryTryOn": "Retry Try-On",
+      "selectModelAndClothing": "Select model and clothing to start AI try-on",
+      "taskQueued": "Task queued...",
+      "preprocessing": "Pre-processing...",
+      "aiGenerating": "AI generating try-on...",
+      "postprocessing": "Post-processing...",
+      "tryOnCompleted": "Try-on completed",
+      "tryOnFailed": "Try-on failed",
+      "taskCanceled": "Task canceled",
+      "unknownStatus": "Unknown status",
+      "estimatedTime": "Estimated time: 30-60 seconds",
+      "queuedStatus": "Queued",
+      "processingStatus": "Processing",
+      "generatingStatus": "Generating",
+      "completedStatus": "Completed",
+      "tryOnFailedMsg": "Generation failed, please try again",
+      "retryAttempt": "Retry",
+      "subscriptionRequired": "Premium Feature",
+      "subscriptionRequiredMessage": "AI virtual try-on is available for paid users only",
+      "subscriptionRequiredDescription": "Upgrade to Pro or Lifetime to unlock unlimited AI virtual try-on features",
+      "upgradeToPro": "Upgrade Plan",
+      "freeTrial": "Free Trial",
+      "subscriptionExpired": "Subscription Expired",
+      "subscriptionExpiredMessage": "Your subscription has expired, please renew to continue using AI virtual try-on",
+      "renewSubscription": "Renew Subscription",
+      "premiumFeature": "Premium Feature",
+      "preloaded": "Preloaded",
+      "fromOutfitPreset": "From outfit preset",
+      "outfitPreloaded": "Outfit preloaded",
+      "onePiece": "One-piece",
+      "topAndBottomLoaded": "Top & bottom auto-loaded",
+      "clear": "Clear",
+      "clickToSelectModel": "Click to select AI try-on model",
+      "autoSelectedByOutfit": "Auto-selected based on outfit",
+      "paidFeature": "Paid Feature",
+      "checkingSubscription": "Checking subscription...",
+      "goBack": "Go Back",
+      "lifetimeMember": "Lifetime Member",
+      "subscriptionActive": "Subscription Active",
+      "statusActive": "Active",
+      "statusTrialing": "Trial",
+      "aiVirtualTryonPremium": "AI Virtual Try-On - Premium Feature",
+      "upgradeNow": "Upgrade Now",
+      "topAndBottomType": "Top & Bottom",
+      "onepieceType": "One-piece",
+      "loadingTryOnHistory": "Loading try-on history...",
+      "noTryOnHistory": "No try-on history",
+      "startFirstTryOn": "Start your first AI try-on experience!",
+      "startTryOn": "Start Try-On",
+      "tryOnHistory": "Try-On History",
+      "yourTryOnRecords": "Your AI try-on records",
+      "records": "records",
+      "refresh": "Refresh",
+      "aiTryOnResult": "AI Try-On Result",
+      "download": "Download"
+    },
+    "admin": {
+      "title": "Admin",
+      "users": {
+        "title": "Users",
+        "fakeData": "Note: Demo data for OutfitAI platform features",
+        "error": "Failed to get users",
+        "search": "Search users...",
+        "columns": {
+          "columns": "Columns",
+          "name": "Name",
+          "email": "Email",
+          "role": "Role",
+          "createdAt": "Created At",
+          "customerId": "Customer ID",
+          "status": "Status",
+          "banReason": "Ban Reason",
+          "banExpires": "Ban Expires"
+        },
+        "noResults": "No results",
+        "firstPage": "First Page",
+        "lastPage": "Last Page",
+        "nextPage": "Next Page",
+        "previousPage": "Previous Page",
+        "rowsPerPage": "Rows per page",
+        "page": "Page",
+        "loading": "Loading...",
+        "admin": "Admin",
+        "user": "User",
+        "email": {
+          "verified": "Email Verified",
+          "unverified": "Email Unverified"
+        },
+        "emailCopied": "Email copied to clipboard",
+        "banned": "Banned",
+        "active": "Active",
+        "joined": "Joined",
+        "updated": "Updated",
+        "ban": {
+          "reason": "Ban Reason",
+          "reasonPlaceholder": "Enter the reason for banning this user",
+          "defaultReason": "Spamming",
+          "never": "Never",
+          "expires": "Ban Expires",
+          "selectDate": "Select Date",
+          "button": "Ban User",
+          "success": "User has been banned",
+          "error": "Failed to ban user"
+        },
+        "unban": {
+          "button": "Unban User",
+          "success": "User has been unbanned",
+          "error": "Failed to unban user"
+        },
+        "close": "Close"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "profile": {
+        "title": "Profile",
+        "description": "Manage your OutfitAI account information",
+        "avatar": {
+          "title": "Avatar",
+          "description": "Upload your photo for better AI fitting accuracy",
+          "recommendation": "A clear photo helps our AI provide better recommendations",
+          "uploading": "Uploading...",
+          "uploadAvatar": "Upload Avatar",
+          "success": "Avatar updated successfully",
+          "fail": "Failed to update avatar"
+        },
+        "name": {
+          "title": "Name",
+          "description": "Please enter your display name",
+          "placeholder": "Enter your name",
+          "minLength": "Please use 3 characters at minimum",
+          "maxLength": "Please use 30 characters at maximum",
+          "hint": "Please use 3-30 characters for your name",
+          "success": "Name updated successfully",
+          "fail": "Failed to update name",
+          "saving": "Saving...",
+          "save": "Save"
+        }
+      },
+      "billing": {
+        "title": "Billing",
+        "description": "Manage your OutfitAI subscription and billing",
+        "status": {
+          "active": "Active",
+          "trial": "Trial",
+          "free": "Free",
+          "lifetime": "Lifetime"
+        },
+        "interval": {
+          "month": "month",
+          "year": "year",
+          "oneTime": "one-time"
+        },
+        "currentPlan": {
+          "title": "Current Plan",
+          "description": "Your current OutfitAI subscription details",
+          "noPlan": "You have no active plan"
+        },
+        "CustomerPortalButton": {
+          "loading": "Loading...",
+          "createCustomerPortalFailed": "Failed to open billing portal"
+        },
+        "price": "Price:",
+        "nextBillingDate": "Next billing date:",
+        "trialEnds": "Trial ends:",
+        "freePlanMessage": "You're on the free plan with limited AI try-ons",
+        "lifetimeMessage": "You have lifetime access to all OutfitAI features",
+        "manageSubscription": "Manage Subscription",
+        "manageBilling": "Manage Billing",
+        "upgradePlan": "Upgrade Plan",
+        "retry": "Retry",
+        "errorMessage": "Failed to get data"
+      },
+      "notification": {
+        "title": "Notifications",
+        "description": "Manage your OutfitAI notification preferences",
+        "newsletter": {
+          "title": "Newsletter Subscription",
+          "description": "Get updates on new AI features and fashion trends",
+          "label": "Subscribe to newsletter",
+          "hint": "You can change your subscription preferences at any time",
+          "emailRequired": "Email is required to subscribe",
+          "subscribeSuccess": "Successfully subscribed to newsletter",
+          "subscribeFail": "Failed to subscribe to newsletter",
+          "unsubscribeSuccess": "Successfully unsubscribed from newsletter",
+          "unsubscribeFail": "Failed to unsubscribe from newsletter",
+          "error": "An error occurred while updating your subscription"
+        }
+      },
+      "security": {
+        "title": "Security",
+        "description": "Manage your OutfitAI account security",
+        "updatePassword": {
+          "title": "Change Password",
+          "description": "Update your password to keep your account secure",
+          "currentPassword": "Current Password",
+          "currentRequired": "Current password is required",
+          "newPassword": "New Password",
+          "newMinLength": "Password must be at least 8 characters",
+          "hint": "Please use at least 8 characters for password",
+          "showPassword": "Show password",
+          "hidePassword": "Hide password",
+          "success": "Password updated successfully",
+          "fail": "Failed to update password",
+          "saving": "Saving...",
+          "save": "Save"
+        },
+        "resetPassword": {
+          "title": "Reset Password",
+          "description": "Reset password to enable email login",
+          "info": "Resetting your password will allow you to sign in using your email and password in addition to your social login methods",
+          "button": "Reset Password"
+        },
+        "deleteAccount": {
+          "title": "Delete Account",
+          "description": "Permanently remove your OutfitAI account and all data",
+          "warning": "This action cannot be undone and will delete all your AI-generated content",
+          "button": "Delete Account",
+          "confirmTitle": "Delete Account",
+          "confirmDescription": "Are you sure you want to delete your OutfitAI account? This action cannot be undone.",
+          "confirm": "Delete",
+          "cancel": "Cancel",
+          "deleting": "Deleting...",
+          "success": "Account deleted successfully",
+          "fail": "Failed to delete account"
+        }
+      }
+    },
+    "upgrade": {
+      "title": "Upgrade",
+      "description": "Upgrade to Pro for unlimited AI try-ons and advanced features",
+      "button": "Upgrade to Pro"
+    }
+  },
+  "Mail": {
+    "common": {
+      "team": "OutfitAI Team",
+      "copyright": "©️ {year} OutfitAI. All Rights Reserved."
+    },
+    "verifyEmail": {
+      "title": "Welcome to OutfitAI, {name}!",
+      "body": "Please click the link below to verify your email and start your AI fashion journey.",
+      "confirmEmail": "Verify Email",
+      "subject": "Verify your OutfitAI account"
+    },
+    "forgotPassword": {
+      "title": "Hi {name},",
+      "body": "Please click the link below to reset your OutfitAI password.",
+      "resetPassword": "Reset Password",
+      "subject": "Reset your OutfitAI password"
+    },
+    "subscribeNewsletter": {
+      "body": "Thank you for subscribing to OutfitAI updates! We'll keep you informed about the latest AI fashion technology and new features.",
+      "subject": "Welcome to OutfitAI Newsletter"
+    },
+    "contactMessage": {
+      "name": "Name: {name}",
+      "email": "Email: {email}",
+      "message": "Message: {message}",
+      "subject": "New Contact Message - OutfitAI"
+    }
+  },
+  "HomePage": {
+    "title": "OutfitAI",
+    "description": "Revolutionize your style with AI-powered virtual try-on technology",
+    "hero": {
+      "title": "Try On Any Outfit with AI Technology",
+      "description": "Welcome to Independent Worker's personal blog. Here I document work insights, life moments, and personal growth stories. Sharing authentic experiences and thoughts with you.",
+      "introduction": "Introducing OutfitAI Platform",
+      "primary": "Try Now",
+      "secondary": "About Me"
+    },
+    "logocloud": {
+      "title": "Trusted by leading fashion brands worldwide"
+    },
+    "integration": {
+      "title": "AI Integrations",
+      "subtitle": "Powered by advanced AI technology",
+      "description": "OutfitAI integrates with cutting-edge AI models and fashion platforms to provide the most accurate virtual try-on experience.",
+      "learnMore": "Learn More",
+      "items": {
+        "item-1": {
+          "title": "Advanced Computer Vision",
+          "description": "State-of-the-art body detection and pose estimation for accurate fitting."
+        },
+        "item-2": {
+          "title": "3D Body Modeling",
+          "description": "Create realistic 3D body models for precise garment visualization."
+        },
+        "item-3": {
+          "title": "AI Style Assistant",
+          "description": "Get personalized style recommendations based on your preferences."
+        },
+        "item-4": {
+          "title": "Real-time Processing",
+          "description": "Instant try-on results with our optimized AI inference engine."
+        },
+        "item-5": {
+          "title": "Fashion Database",
+          "description": "Access millions of clothing items with AI-powered search and matching."
+        },
+        "item-6": {
+          "title": "Trend Analysis",
+          "description": "AI-powered fashion trend analysis and personalized recommendations."
+        }
+      }
+    },
+    "integration2": {
+      "title": "Seamless AI Fashion Integration",
+      "description": "Connect with your favorite fashion retailers and get AI-powered styling recommendations across all platforms.",
+      "primaryButton": "Try Now",
+      "secondaryButton": "Watch Demo"
+    },
+    "features": {
+      "title": "AI-Powered Features",
+      "subtitle": "Revolutionary virtual try-on technology",
+      "description": "Experience the future of online shopping with our advanced AI features designed to transform how you discover and try on clothes.",
+      "items": {
+        "item-1": {
+          "title": "Virtual Try-On Technology",
+          "description": "See how any outfit looks on you with our advanced AI that creates realistic virtual fittings using just your photo, eliminating guesswork from online shopping."
+        },
+        "item-2": {
+          "title": "Smart Size Recommendations",
+          "description": "Get accurate size suggestions powered by AI analysis of your body measurements and fit preferences, reducing returns and ensuring perfect fits every time."
+        },
+        "item-3": {
+          "title": "Style Matching AI",
+          "description": "Discover clothes that match your personal style with our AI that learns your preferences and suggests outfits tailored to your taste and lifestyle."
+        },
+        "item-4": {
+          "title": "Real-time Outfit Combinations",
+          "description": "Mix and match different clothing items instantly with AI-powered outfit generation that creates stunning combinations you never thought of."
+        }
+      }
+    },
+    "features2": {
+      "title": "Advanced AI Capabilities",
+      "subtitle": "Next-generation fashion technology",
+      "description": "Discover the powerful AI features that make OutfitAI the most advanced virtual try-on platform",
+      "feature-1": "AI Body Analysis & Measurement",
+      "feature-2": "Smart Fabric Simulation",
+      "feature-3": "Personalized Style AI",
+      "feature-4": "Real-time Fashion Trends"
+    },
+    "features3": {
+      "title": "Core AI Features",
+      "subtitle": "Cutting-edge technology at your fingertips",
+      "description": "Explore the advanced AI capabilities that power OutfitAI's virtual try-on experience",
+      "items": {
+        "item-1": {
+          "title": "Lightning-Fast AI Processing",
+          "description": "Get instant try-on results with our optimized AI models that process images in real-time"
+        },
+        "item-2": {
+          "title": "Advanced Body Recognition",
+          "description": "Precise body detection and pose estimation for accurate virtual clothing placement"
+        },
+        "item-3": {
+          "title": "Smart Style Suggestions",
+          "description": "AI-powered recommendations based on your style preferences and body type"
+        },
+        "item-4": {
+          "title": "Intelligent Fit Analysis",
+          "description": "Advanced algorithms that predict how clothes will fit based on your measurements"
+        },
+        "item-5": {
+          "title": "Realistic Fabric Rendering",
+          "description": "See how different fabrics drape and move with our physics-based AI simulation"
+        },
+        "item-6": {
+          "title": "Trend Prediction AI",
+          "description": "Stay ahead of fashion trends with our AI that analyzes global fashion data"
+        }
+      }
+    },
+    "pricing": {
+      "title": "AI Try-On Pricing",
+      "subtitle": "Choose your plan",
+      "description": "Select the perfect plan for your virtual try-on needs"
+    },
+    "faqs": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you need to know about OutfitAI",
+      "items": {
+        "item-1": {
+          "question": "How accurate is the AI virtual try-on?",
+          "answer": "Our AI technology achieves 95% accuracy in virtual fitting by using advanced computer vision and 3D body modeling."
+        },
+        "item-2": {
+          "question": "What types of clothing can I try on?",
+          "answer": "You can virtually try on shirts, dresses, pants, jackets, shoes, and accessories from our partner retailers."
+        },
+        "item-3": {
+          "question": "Is my personal data secure?",
+          "answer": "Yes, we use enterprise-grade encryption and never store your photos longer than necessary for processing."
+        },
+        "item-4": {
+          "question": "Can I use OutfitAI on mobile devices?",
+          "answer": "Absolutely! OutfitAI works seamlessly on all devices including smartphones, tablets, and desktops."
+        },
+        "item-5": {
+          "question": "Need more help?",
+          "answer": "Contact our AI fashion experts at support@outfitai.com for personalized assistance."
+        }
+      }
+    },
+    "testimonials": {
+      "title": "What Users Say About OutfitAI",
+      "subtitle": "Real experiences from fashion enthusiasts",
+      "items": {
+        "item-1": {
+          "name": "Sarah Johnson",
+          "role": "Fashion Blogger",
+          "image": "https://randomuser.me/api/portraits/women/1.jpg",
+          "quote": "OutfitAI completely changed how I shop online. The AI try-on is so accurate, I haven't returned a single item!"
+        },
+        "item-2": {
+          "name": "Michael Chen",
+          "role": "Style Influencer",
+          "image": "https://randomuser.me/api/portraits/men/6.jpg",
+          "quote": "The AI recommendations are spot-on. It's like having a personal stylist that knows exactly what looks good on me."
+        },
+        "item-3": {
+          "name": "Emma Rodriguez",
+          "role": "Fashion Designer",
+          "image": "https://randomuser.me/api/portraits/women/7.jpg",
+          "quote": "As a designer, I'm amazed by the accuracy of the fabric simulation. OutfitAI is the future of fashion tech."
+        },
+        "item-4": {
+          "name": "David Kim",
+          "role": "E-commerce Manager",
+          "image": "https://randomuser.me/api/portraits/men/8.jpg",
+          "quote": "Our return rates dropped by 60% after integrating OutfitAI. Customers love seeing how clothes actually look on them."
+        },
+        "item-5": {
+          "name": "Lisa Wang",
+          "role": "Personal Shopper",
+          "image": "https://randomuser.me/api/portraits/women/4.jpg",
+          "quote": "OutfitAI helps me serve more clients by quickly showing them how different outfits will look. It's incredibly efficient."
+        },
+        "item-6": {
+          "name": "James Thompson",
+          "role": "Fashion Retailer",
+          "image": "https://randomuser.me/api/portraits/men/2.jpg",
+          "quote": "The AI technology is remarkable. Our customers are more confident in their purchases and satisfaction has increased dramatically."
+        },
+        "item-7": {
+          "name": "Sofia Martinez",
+          "role": "Style Consultant",
+          "image": "https://randomuser.me/api/portraits/women/5.jpg",
+          "quote": "The virtual try-on is so realistic, it feels like magic. OutfitAI has revolutionized how I help clients choose outfits."
+        },
+        "item-8": {
+          "name": "Alex Turner",
+          "role": "Fashion Photographer",
+          "image": "https://randomuser.me/api/portraits/men/9.jpg",
+          "quote": "The 3D rendering quality is exceptional. OutfitAI captures how fabric moves and fits better than anything I've seen."
+        },
+        "item-9": {
+          "name": "Rachel Green",
+          "role": "Boutique Owner",
+          "image": "https://randomuser.me/api/portraits/women/10.jpg",
+          "quote": "Since using OutfitAI, my online sales have tripled. Customers love being able to try before they buy."
+        },
+        "item-10": {
+          "name": "Mark Davis",
+          "role": "Tech Enthusiast",
+          "image": "https://randomuser.me/api/portraits/men/11.jpg",
+          "quote": "The AI is incredibly sophisticated. It considers body type, posture, and even fabric properties. Truly impressive technology."
+        },
+        "item-11": {
+          "name": "Anna Kowalski",
+          "role": "Fashion Student",
+          "image": "https://randomuser.me/api/portraits/women/12.jpg",
+          "quote": "OutfitAI helped me understand fit and proportion better than any textbook. It's an invaluable learning tool."
+        },
+        "item-12": {
+          "name": "Tony Stark",
+          "role": "Retail Innovation Director",
+          "image": "https://randomuser.me/api/portraits/men/13.jpg",
+          "quote": "OutfitAI is setting the standard for virtual try-on technology. The AI accuracy and speed are unmatched in the industry."
+        }
+      }
+    },
+    "stats": {
+      "title": "OutfitAI Impact",
+      "subtitle": "Revolutionizing fashion with AI",
+      "description": "See how OutfitAI is transforming the fashion industry with cutting-edge AI technology",
+      "items": {
+        "item-1": {
+          "title": "AI Try-Ons Completed"
+        },
+        "item-2": {
+          "title": "Happy Customers"
+        },
+        "item-3": {
+          "title": "Fashion Brands Integrated"
+        }
+      }
+    },
+    "calltoaction": {
+      "title": "Start Your AI Fashion Journey",
+      "description": "Join thousands of fashion-forward users who've revolutionized their shopping experience with OutfitAI's virtual try-on technology",
+      "primaryButton": "Try OutfitAI Now",
+      "secondaryButton": "Watch Demo"
+    }
+  },
+  "AITextPage": {
+    "title": "AI Style Assistant",
+    "description": "Get personalized fashion advice and styling tips powered by AI",
+    "content": "Coming soon - AI-powered style recommendations"
+  },
+  "AIImagePage": {
+    "title": "Virtual Try-On",
+    "description": "See how any outfit looks on you with our advanced AI virtual try-on technology",
+    "content": "Experience the future of online shopping"
+  },
+  "AIVideoPage": {
+    "title": "3D Fashion Modeling",
+    "description": "Watch clothes come to life with our 3D AI modeling technology",
+    "content": "Revolutionary 3D fashion visualization"
+  },
+  "AIAudioPage": {
+    "title": "Voice Style Assistant",
+    "description": "Get fashion advice through our AI-powered voice assistant",
+    "content": "Talk to your personal AI stylist"
+  }
+}
