@@ -50,7 +50,7 @@ export const websiteConfig: WebsiteConfig = {
     enableGithubLogin: false,
   },
   i18n: {
-    defaultLocale: 'en',
+    defaultLocale: 'zh',
     locales: {
       en: {
         flag: '🇺🇸',
