@@ -111,10 +111,10 @@
   },
   "AboutPage": {
     "title": "关于我",
-    "description": "OutfitAI正在用前沿的AI技术革新时尚行业，让您在购买前就能虚拟试穿任何服装。",
-    "authorName": "OutfitAI",
+    "description": "独立工作者正在用前沿的AI技术革新时尚行业，让您在购买前就能虚拟试穿任何服装。",
+    "authorName": "独立工作者",
     "authorBio": "AI虚拟试衣平台",
-    "introduction": "👋 欢迎来到OutfitAI！我们正在用AI驱动的虚拟试衣技术革新在线购物体验。看看任何服装在您身上的效果，然后再决定购买。有问题吗？我们很乐意为您提供帮助！",
+    "introduction": "👋 欢迎来到独立工作者！我们正在用AI驱动的虚拟试衣技术革新在线购物体验。看看任何服装在您身上的效果，然后再决定购买。有问题吗？我们很乐意为您提供帮助！",
     "talkWithMe": "联系我们",
     "followMe": "关注我们"
   },
@@ -141,15 +141,15 @@
   },
   "ChangelogPage": {
     "title": "更新日志",
-    "description": "了解OutfitAI的最新功能和改进",
-    "subtitle": "了解OutfitAI的最新功能和改进"
+    "description": "了解独立工作者的最新功能和改进",
+    "subtitle": "了解独立工作者的最新功能和改进"
   },
   "ContactPage": {
     "title": "联系我们",
     "description": "联系我们的AI时尚专家",
     "subtitle": "联系我们的AI时尚专家",
     "form": {
-      "title": "联系OutfitAI",
+      "title": "联系独立工作者",
       "description": "对我们的AI虚拟试衣技术有疑问？我们的团队随时为您提供帮助",
       "name": "姓名",
       "email": "邮箱",
@@ -167,10 +167,10 @@
   },
   "WaitlistPage": {
     "title": "预约体验",
-    "description": "预约抢先体验OutfitAI",
-    "subtitle": "预约抢先体验OutfitAI",
+    "description": "预约抢先体验独立工作者",
+    "subtitle": "预约抢先体验独立工作者",
     "form": {
-      "title": "加入OutfitAI预约名单",
+      "title": "加入独立工作者预约名单",
       "description": "抢先体验我们革命性的AI虚拟试衣技术",
       "email": "邮箱",
       "subscribe": "加入预约",
@@ -182,7 +182,7 @@
   },
   "Newsletter": {
     "title": "邮件订阅",
-    "subtitle": "获取OutfitAI最新资讯",
+    "subtitle": "获取独立工作者最新资讯",
     "description": "订阅邮件获取AI时尚技术和新功能的最新资讯",
     "form": {
       "email": "邮箱",
@@ -196,17 +196,17 @@
   "AuthPage": {
     "login": {
       "title": "登录",
-      "welcomeBack": "欢迎回到OutfitAI",
-      "signUpHint": "初次使用OutfitAI？注册账号",
+      "welcomeBack": "欢迎回到独立工作者",
+      "signUpHint": "初次使用独立工作者？注册账号",
       "signInWithGoogle": "使用Google登录",
       "loginWithGoogle": "使用Google登录开始您的AI时尚之旅",
       "or": "或者使用社交账号登录"
     },
     "register": {
       "title": "注册",
-      "createAccount": "创建您的OutfitAI账号",
+      "createAccount": "创建您的独立工作者账号",
       "signInHint": "已有账号？立即登录",
-      "registerWithGoogle": "使用Google创建OutfitAI账号开始使用"
+      "registerWithGoogle": "使用Google创建独立工作者账号开始使用"
     },
     "forgotPassword": {
       "title": "忘记密码",
@@ -259,7 +259,7 @@
     "previousPage": "上一页",
     "nextPage": "下一页",
     "chooseLanguage": "选择语言",
-    "title": "OutfitAI文档",
+    "title": "独立工作者文档",
     "homepage": "首页",
     "blog": "博客"
   },
@@ -317,11 +317,11 @@
           },
           "waitlist": {
             "title": "预约体验",
-            "description": "抢先体验OutfitAI的最新功能"
+            "description": "抢先体验独立工作者的最新功能"
           },
           "changelog": {
             "title": "更新日志",
-            "description": "查看OutfitAI最新更新和新AI功能"
+            "description": "查看独立工作者最新更新和新AI功能"
           },
           "roadmap": {
             "title": "发展路线",
@@ -329,7 +329,7 @@
           },
           "cookiePolicy": {
             "title": "Cookie政策",
-            "description": "我们如何使用Cookie来增强您的OutfitAI体验"
+            "description": "我们如何使用Cookie来增强您的独立工作者体验"
           },
           "privacyPolicy": {
             "title": "隐私政策",
@@ -337,7 +337,7 @@
           },
           "termsOfService": {
             "title": "服务条款",
-            "description": "使用OutfitAI服务的法律协议"
+            "description": "使用独立工作者服务的法律协议"
           }
         }
       },
@@ -423,7 +423,7 @@
       "company": {
         "title": "公司",
         "items": {
-          "about": "关于OutfitAI",
+          "about": "关于独立工作者",
           "contact": "联系我们",
           "waitlist": "抢先体验"
         }
@@ -557,7 +557,7 @@
       "title": "系统管理",
       "users": {
         "title": "用户管理",
-        "fakeData": "注：OutfitAI平台功能演示数据",
+        "fakeData": "注：独立工作者平台功能演示数据",
         "error": "获取用户失败",
         "search": "搜索用户...",
         "columns": {
@@ -613,7 +613,7 @@
       "title": "设置",
       "profile": {
         "title": "个人资料",
-        "description": "管理您的OutfitAI账户信息",
+        "description": "管理您的独立工作者账户信息",
         "avatar": {
           "title": "头像",
           "description": "上传您的照片以获得更准确的AI试衣效果",
@@ -638,7 +638,7 @@
       },
       "billing": {
         "title": "账单",
-        "description": "管理您的OutfitAI订阅和账单",
+        "description": "管理您的独立工作者订阅和账单",
         "status": {
           "active": "已激活",
           "trial": "试用中",
@@ -652,7 +652,7 @@
         },
         "currentPlan": {
           "title": "当前方案",
-          "description": "您当前的OutfitAI订阅详情",
+          "description": "您当前的独立工作者订阅详情",
           "noPlan": "您没有激活的方案"
         },
         "CustomerPortalButton": {
@@ -663,7 +663,7 @@
         "nextBillingDate": "下次账单日期：",
         "trialEnds": "试用结束日期：",
         "freePlanMessage": "您正在使用功能有限的免费版本",
-        "lifetimeMessage": "您拥有OutfitAI所有功能的终身使用权",
+        "lifetimeMessage": "您拥有独立工作者所有功能的终身使用权",
         "manageSubscription": "管理订阅",
         "manageBilling": "管理账单",
         "upgradePlan": "升级方案",
@@ -672,7 +672,7 @@
       },
       "notification": {
         "title": "通知",
-        "description": "管理您的OutfitAI通知偏好",
+        "description": "管理您的独立工作者通知偏好",
         "newsletter": {
           "title": "邮件订阅",
           "description": "获取新AI功能和时尚趋势的更新",
@@ -688,7 +688,7 @@
       },
       "security": {
         "title": "安全",
-        "description": "管理您的OutfitAI账户安全设置",
+        "description": "管理您的独立工作者账户安全设置",
         "updatePassword": {
           "title": "修改密码",
           "description": "更新密码以保护您的账户安全",
@@ -712,11 +712,11 @@
         },
         "deleteAccount": {
           "title": "删除账号",
-          "description": "永久删除您的OutfitAI账号和所有数据",
+          "description": "永久删除您的独立工作者账号和所有数据",
           "warning": "此操作无法撤销，将删除您所有的AI生成内容",
           "button": "删除账号",
           "confirmTitle": "删除账号",
-          "confirmDescription": "您确定要删除您的OutfitAI账号吗？此操作无法撤销。",
+          "confirmDescription": "您确定要删除您的独立工作者账号吗？此操作无法撤销。",
           "confirm": "删除",
           "cancel": "取消",
           "deleting": "删除中...",
@@ -733,39 +733,39 @@
   },
   "Mail": {
     "common": {
-      "team": "OutfitAI团队",
-      "copyright": "©️ {year} OutfitAI. 版权所有。"
+      "team": "独立工作者团队",
+      "copyright": "©️ {year} 独立工作者. 版权所有。"
     },
     "verifyEmail": {
-      "title": "欢迎来到OutfitAI，{name}！",
+      "title": "欢迎来到独立工作者，{name}！",
       "body": "请点击下方链接验证您的邮箱，开始您的AI时尚之旅。",
       "confirmEmail": "验证邮箱",
-      "subject": "验证您的OutfitAI账号"
+      "subject": "验证您的独立工作者账号"
     },
     "forgotPassword": {
       "title": "你好，{name}",
-      "body": "请点击下方链接重置您的OutfitAI密码。",
+      "body": "请点击下方链接重置您的独立工作者密码。",
       "resetPassword": "重置密码",
-      "subject": "重置您的OutfitAI密码"
+      "subject": "重置您的独立工作者密码"
     },
     "subscribeNewsletter": {
-      "body": "感谢您订阅OutfitAI邮件！我们将为您提供最新的AI时尚技术和新功能资讯。",
-      "subject": "欢迎订阅OutfitAI邮件"
+      "body": "感谢您订阅独立工作者邮件！我们将为您提供最新的AI时尚技术和新功能资讯。",
+      "subject": "欢迎订阅独立工作者邮件"
     },
     "contactMessage": {
       "name": "姓名：{name}",
       "email": "邮箱：{email}",
       "message": "消息：{message}",
-      "subject": "新联系消息 - OutfitAI"
+      "subject": "新联系消息 - 独立工作者"
     }
   },
   "HomePage": {
-    "title": "OutfitAI",
+    "title": "独立工作者",
     "description": "用AI驱动的虚拟试衣技术革新您的风格",
     "hero": {
       "title": "分享生活，记录成长",
       "description": "欢迎来到独立工作者的个人博客。这里记录工作感悟、生活点滴和个人成长的故事。与您分享真实的经验和思考。",
-      "introduction": "介绍OutfitAI平台",
+      "introduction": "介绍独立工作者平台",
       "primary": "阅读博客",
       "secondary": "关于我"
     },
@@ -775,7 +775,7 @@
     "integration": {
       "title": "AI集成",
       "subtitle": "由先进AI技术驱动",
-      "description": "OutfitAI与尖端AI模型和时尚平台集成，提供最准确的虚拟试衣体验。",
+      "description": "独立工作者与尖端AI模型和时尚平台集成，提供最准确的虚拟试衣体验。",
       "learnMore": "了解更多",
       "items": {
         "item-1": {
@@ -836,7 +836,7 @@
     "features2": {
       "title": "先进AI能力",
       "subtitle": "下一代时尚技术",
-      "description": "发现使OutfitAI成为最先进虚拟试衣平台的强大AI功能",
+      "description": "发现使独立工作者成为最先进虚拟试衣平台的强大AI功能",
       "feature-1": "AI身体分析与测量",
       "feature-2": "智能面料模拟",
       "feature-3": "个性化风格AI",
@@ -845,7 +845,7 @@
     "features3": {
       "title": "核心AI功能",
       "subtitle": "触手可及的尖端技术",
-      "description": "探索驱动OutfitAI虚拟试衣体验的先进AI能力",
+      "description": "探索驱动独立工作者虚拟试衣体验的先进AI能力",
       "items": {
         "item-1": {
           "title": "闪电般的AI处理",
@@ -880,7 +880,7 @@
     },
     "faqs": {
       "title": "常见问题",
-      "subtitle": "关于OutfitAI您需要了解的一切",
+      "subtitle": "关于独立工作者您需要了解的一切",
       "items": {
         "item-1": {
           "question": "AI虚拟试衣的准确度如何？",
@@ -895,8 +895,8 @@
           "answer": "是的，我们使用企业级加密，并且不会将您的照片存储超过处理所需的时间。"
         },
         "item-4": {
-          "question": "我可以在移动设备上使用OutfitAI吗？",
-          "answer": "当然可以！OutfitAI在包括智能手机、平板电脑和桌面电脑在内的所有设备上都能无缝运行。"
+          "question": "我可以在移动设备上使用独立工作者吗？",
+          "answer": "当然可以！独立工作者在包括智能手机、平板电脑和桌面电脑在内的所有设备上都能无缝运行。"
         },
         "item-5": {
           "question": "需要更多帮助？",
@@ -905,14 +905,14 @@
       }
     },
     "testimonials": {
-      "title": "用户对OutfitAI的评价",
+      "title": "用户对独立工作者的评价",
       "subtitle": "来自时尚爱好者的真实体验",
       "items": {
         "item-1": {
           "name": "莎拉·约翰逊",
           "role": "时尚博主",
           "image": "https://randomuser.me/api/portraits/women/1.jpg",
-          "quote": "OutfitAI彻底改变了我的在线购物方式。AI试衣如此准确，我没有退过一件商品！"
+          "quote": "独立工作者彻底改变了我的在线购物方式。AI试衣如此准确，我没有退过一件商品！"
         },
         "item-2": {
           "name": "迈克尔·陈",
@@ -924,19 +924,19 @@
           "name": "艾玛·罗德里格斯",
           "role": "时装设计师",
           "image": "https://randomuser.me/api/portraits/women/7.jpg",
-          "quote": "作为设计师，我对面料模拟的准确性感到惊讶。OutfitAI是时尚科技的未来。"
+          "quote": "作为设计师，我对面料模拟的准确性感到惊讶。独立工作者是时尚科技的未来。"
         },
         "item-4": {
           "name": "大卫·金",
           "role": "电商经理",
           "image": "https://randomuser.me/api/portraits/men/8.jpg",
-          "quote": "集成OutfitAI后，我们的退货率下降了60%。客户喜欢看到衣服实际在他们身上的效果。"
+          "quote": "集成独立工作者后，我们的退货率下降了60%。客户喜欢看到衣服实际在他们身上的效果。"
         },
         "item-5": {
           "name": "丽莎·王",
           "role": "私人购物顾问",
           "image": "https://randomuser.me/api/portraits/women/4.jpg",
-          "quote": "OutfitAI帮助我通过快速展示不同服装的效果为更多客户服务。非常高效。"
+          "quote": "独立工作者帮助我通过快速展示不同服装的效果为更多客户服务。非常高效。"
         },
         "item-6": {
           "name": "詹姆斯·汤普森",
@@ -948,19 +948,19 @@
           "name": "索菲亚·马丁内兹",
           "role": "风格顾问",
           "image": "https://randomuser.me/api/portraits/women/5.jpg",
-          "quote": "虚拟试衣如此逼真，感觉就像魔法。OutfitAI革新了我帮助客户选择服装的方式。"
+          "quote": "虚拟试衣如此逼真，感觉就像魔法。独立工作者革新了我帮助客户选择服装的方式。"
         },
         "item-8": {
           "name": "亚历克斯·特纳",
           "role": "时尚摄影师",
           "image": "https://randomuser.me/api/portraits/men/9.jpg",
-          "quote": "3D渲染质量非常出色。OutfitAI比我见过的任何东西都能更好地捕捉面料的运动和合身度。"
+          "quote": "3D渲染质量非常出色。独立工作者比我见过的任何东西都能更好地捕捉面料的运动和合身度。"
         },
         "item-9": {
           "name": "雷切尔·格林",
           "role": "精品店主",
           "image": "https://randomuser.me/api/portraits/women/10.jpg",
-          "quote": "自从使用OutfitAI以来，我的在线销售额增长了三倍。客户喜欢能够先试后买。"
+          "quote": "自从使用独立工作者以来，我的在线销售额增长了三倍。客户喜欢能够先试后买。"
         },
         "item-10": {
           "name": "马克·戴维斯",
@@ -972,20 +972,20 @@
           "name": "安娜·科瓦尔斯基",
           "role": "时装学生",
           "image": "https://randomuser.me/api/portraits/women/12.jpg",
-          "quote": "OutfitAI帮助我比任何教科书都更好地理解合身和比例。这是一个宝贵的学习工具。"
+          "quote": "独立工作者帮助我比任何教科书都更好地理解合身和比例。这是一个宝贵的学习工具。"
         },
         "item-12": {
           "name": "托尼·斯塔克",
           "role": "零售创新总监",
           "image": "https://randomuser.me/api/portraits/men/13.jpg",
-          "quote": "OutfitAI正在为虚拟试衣技术设定标准。AI的准确性和速度在行业中无与伦比。"
+          "quote": "独立工作者正在为虚拟试衣技术设定标准。AI的准确性和速度在行业中无与伦比。"
         }
       }
     },
     "stats": {
-      "title": "OutfitAI影响力",
+      "title": "独立工作者影响力",
       "subtitle": "用AI革新时尚",
-      "description": "看看OutfitAI如何用尖端AI技术改变时尚行业",
+      "description": "看看独立工作者如何用尖端AI技术改变时尚行业",
       "items": {
         "item-1": {
           "title": "完成的AI试衣次数"
@@ -1000,8 +1000,8 @@
     },
     "calltoaction": {
       "title": "开始您的AI时尚之旅",
-      "description": "加入数千名通过OutfitAI虚拟试衣技术革新购物体验的时尚先锋用户",
-      "primaryButton": "立即试用OutfitAI",
+      "description": "加入数千名通过独立工作者虚拟试衣技术革新购物体验的时尚先锋用户",
+      "primaryButton": "立即试用独立工作者",
       "secondaryButton": "观看演示"
     }
   },

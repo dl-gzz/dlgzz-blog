@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 /**
- * OutfitAI Features2 Section - Advanced AI Capabilities
+ * 独立工作者 Features2 Section - Advanced AI Capabilities
  */
 export default function Features2Section() {
   const t = useTranslations('HomePage.features2');
@@ -59,14 +59,14 @@ export default function Features2Section() {
               <Image
                 src="/images/marketing/ai-tech.png"
                 className="hidden rounded-[15px] dark:block"
-                alt="OutfitAI advanced features interface"
+                alt="独立工作者 advanced features interface"
                 width={1207}
                 height={929}
               />
               <Image
                 src="/images/marketing/ai-tech.png"
                 className="rounded-[15px] shadow dark:hidden"
-                alt="OutfitAI advanced features interface"
+                alt="独立工作者 advanced features interface"
                 width={1207}
                 height={929}
               />

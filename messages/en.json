@@ -111,10 +111,10 @@
   },
   "AboutPage": {
     "title": "About",
-    "description": "OutfitAI is revolutionizing the fashion industry with cutting-edge AI technology that allows you to virtually try on clothes before purchasing.",
-    "authorName": "OutfitAI",
+    "description": "Independent Worker is revolutionizing the fashion industry with cutting-edge AI technology that allows you to virtually try on clothes before purchasing.",
+    "authorName": "Independent Worker",
     "authorBio": "AI Virtual Try-On Platform",
-    "introduction": "👋 Welcome to OutfitAI! We're revolutionizing online shopping with AI-powered virtual try-on technology. See how any outfit looks on you before you buy. Have questions? We'd love to help!",
+    "introduction": "👋 Welcome to Independent Worker! We're revolutionizing online shopping with AI-powered virtual try-on technology. See how any outfit looks on you before you buy. Have questions? We'd love to help!",
     "talkWithMe": "Contact Us",
     "followMe": "Follow us on X"
   },
@@ -141,15 +141,15 @@
   },
   "ChangelogPage": {
     "title": "Changelog",
-    "description": "Stay up to date with the latest OutfitAI features and improvements",
-    "subtitle": "Stay up to date with the latest OutfitAI features and improvements"
+    "description": "Stay up to date with the latest Independent Worker features and improvements",
+    "subtitle": "Stay up to date with the latest Independent Worker features and improvements"
   },
   "ContactPage": {
     "title": "Contact",
     "description": "Get in touch with our AI fashion experts",
     "subtitle": "Get in touch with our AI fashion experts",
     "form": {
-      "title": "Contact OutfitAI",
+      "title": "Contact Independent Worker",
       "description": "Have questions about our AI virtual try-on technology? Our team is here to help",
       "name": "Name",
       "email": "Email",
@@ -167,10 +167,10 @@
   },
   "WaitlistPage": {
     "title": "Waitlist",
-    "description": "Join our waitlist for early access to OutfitAI",
-    "subtitle": "Join our waitlist for early access to OutfitAI",
+    "description": "Join our waitlist for early access to Independent Worker",
+    "subtitle": "Join our waitlist for early access to Independent Worker",
     "form": {
-      "title": "Join OutfitAI Waitlist",
+      "title": "Join Independent Worker Waitlist",
       "description": "Be the first to experience our revolutionary AI virtual try-on technology",
       "email": "Email",
       "subscribe": "Join Waitlist",
@@ -182,7 +182,7 @@
   },
   "Newsletter": {
     "title": "Newsletter",
-    "subtitle": "Stay updated with OutfitAI",
+    "subtitle": "Stay updated with Independent Worker",
     "description": "Subscribe to get the latest updates on AI fashion technology and new features",
     "form": {
       "email": "Email",
@@ -196,17 +196,17 @@
   "AuthPage": {
     "login": {
       "title": "Login",
-      "welcomeBack": "Welcome back to OutfitAI",
-      "signUpHint": "New to OutfitAI? Sign up",
+      "welcomeBack": "Welcome back to Independent Worker",
+      "signUpHint": "New to Independent Worker? Sign up",
       "signInWithGoogle": "Sign In with Google",
       "loginWithGoogle": "Sign in with Google to start your AI fashion journey",
       "or": "Or continue with"
     },
     "register": {
       "title": "Sign Up",
-      "createAccount": "Create your OutfitAI account",
+      "createAccount": "Create your Independent Worker account",
       "signInHint": "Already have an account? Sign in",
-      "registerWithGoogle": "Create your OutfitAI account with Google to get started"
+      "registerWithGoogle": "Create your Independent Worker account with Google to get started"
     },
     "forgotPassword": {
       "title": "Forgot Password",
@@ -259,7 +259,7 @@
     "previousPage": "Previous",
     "nextPage": "Next",
     "chooseLanguage": "Select language",
-    "title": "OutfitAI Documentation",
+    "title": "Independent Worker Documentation",
     "homepage": "Homepage",
     "blog": "Blog"
   },
@@ -317,11 +317,11 @@
           },
           "waitlist": {
             "title": "Waitlist",
-            "description": "Join early access to OutfitAI's latest features"
+            "description": "Join early access to Independent Worker's latest features"
           },
           "changelog": {
             "title": "Changelog",
-            "description": "See the latest OutfitAI updates and new AI features"
+            "description": "See the latest Independent Worker updates and new AI features"
           },
           "roadmap": {
             "title": "Roadmap",
@@ -329,7 +329,7 @@
           },
           "cookiePolicy": {
             "title": "Cookie Policy",
-            "description": "How we use cookies to enhance your OutfitAI experience"
+            "description": "How we use cookies to enhance your Independent Worker experience"
           },
           "privacyPolicy": {
             "title": "Privacy Policy",
@@ -337,7 +337,7 @@
           },
           "termsOfService": {
             "title": "Terms of Service",
-            "description": "Legal agreement for using OutfitAI services"
+            "description": "Legal agreement for using Independent Worker services"
           }
         }
       },
@@ -423,7 +423,7 @@
       "company": {
         "title": "Company",
         "items": {
-          "about": "About OutfitAI",
+          "about": "About Independent Worker",
           "contact": "Contact Us",
           "waitlist": "Early Access"
         }
@@ -557,7 +557,7 @@
       "title": "Admin",
       "users": {
         "title": "Users",
-        "fakeData": "Note: Demo data for OutfitAI platform features",
+        "fakeData": "Note: Demo data for Independent Worker platform features",
         "error": "Failed to get users",
         "search": "Search users...",
         "columns": {
@@ -613,7 +613,7 @@
       "title": "Settings",
       "profile": {
         "title": "Profile",
-        "description": "Manage your OutfitAI account information",
+        "description": "Manage your Independent Worker account information",
         "avatar": {
           "title": "Avatar",
           "description": "Upload your photo for better AI fitting accuracy",
@@ -638,7 +638,7 @@
       },
       "billing": {
         "title": "Billing",
-        "description": "Manage your OutfitAI subscription and billing",
+        "description": "Manage your Independent Worker subscription and billing",
         "status": {
           "active": "Active",
           "trial": "Trial",
@@ -652,7 +652,7 @@
         },
         "currentPlan": {
           "title": "Current Plan",
-          "description": "Your current OutfitAI subscription details",
+          "description": "Your current Independent Worker subscription details",
           "noPlan": "You have no active plan"
         },
         "CustomerPortalButton": {
@@ -663,7 +663,7 @@
         "nextBillingDate": "Next billing date:",
         "trialEnds": "Trial ends:",
         "freePlanMessage": "You're on the free plan with limited AI try-ons",
-        "lifetimeMessage": "You have lifetime access to all OutfitAI features",
+        "lifetimeMessage": "You have lifetime access to all Independent Worker features",
         "manageSubscription": "Manage Subscription",
         "manageBilling": "Manage Billing",
         "upgradePlan": "Upgrade Plan",
@@ -672,7 +672,7 @@
       },
       "notification": {
         "title": "Notifications",
-        "description": "Manage your OutfitAI notification preferences",
+        "description": "Manage your Independent Worker notification preferences",
         "newsletter": {
           "title": "Newsletter Subscription",
           "description": "Get updates on new AI features and fashion trends",
@@ -688,7 +688,7 @@
       },
       "security": {
         "title": "Security",
-        "description": "Manage your OutfitAI account security",
+        "description": "Manage your Independent Worker account security",
         "updatePassword": {
           "title": "Change Password",
           "description": "Update your password to keep your account secure",
@@ -712,11 +712,11 @@
         },
         "deleteAccount": {
           "title": "Delete Account",
-          "description": "Permanently remove your OutfitAI account and all data",
+          "description": "Permanently remove your Independent Worker account and all data",
           "warning": "This action cannot be undone and will delete all your AI-generated content",
           "button": "Delete Account",
           "confirmTitle": "Delete Account",
-          "confirmDescription": "Are you sure you want to delete your OutfitAI account? This action cannot be undone.",
+          "confirmDescription": "Are you sure you want to delete your Independent Worker account? This action cannot be undone.",
           "confirm": "Delete",
           "cancel": "Cancel",
           "deleting": "Deleting...",
@@ -733,39 +733,39 @@
   },
   "Mail": {
     "common": {
-      "team": "OutfitAI Team",
-      "copyright": "©️ {year} OutfitAI. All Rights Reserved."
+      "team": "Independent Worker Team",
+      "copyright": "©️ {year} Independent Worker. All Rights Reserved."
     },
     "verifyEmail": {
-      "title": "Welcome to OutfitAI, {name}!",
+      "title": "Welcome to Independent Worker, {name}!",
       "body": "Please click the link below to verify your email and start your AI fashion journey.",
       "confirmEmail": "Verify Email",
-      "subject": "Verify your OutfitAI account"
+      "subject": "Verify your Independent Worker account"
     },
     "forgotPassword": {
       "title": "Hi {name},",
-      "body": "Please click the link below to reset your OutfitAI password.",
+      "body": "Please click the link below to reset your Independent Worker password.",
       "resetPassword": "Reset Password",
-      "subject": "Reset your OutfitAI password"
+      "subject": "Reset your Independent Worker password"
     },
     "subscribeNewsletter": {
-      "body": "Thank you for subscribing to OutfitAI updates! We'll keep you informed about the latest AI fashion technology and new features.",
-      "subject": "Welcome to OutfitAI Newsletter"
+      "body": "Thank you for subscribing to Independent Worker updates! We'll keep you informed about the latest AI fashion technology and new features.",
+      "subject": "Welcome to Independent Worker Newsletter"
     },
     "contactMessage": {
       "name": "Name: {name}",
       "email": "Email: {email}",
       "message": "Message: {message}",
-      "subject": "New Contact Message - OutfitAI"
+      "subject": "New Contact Message - Independent Worker"
     }
   },
   "HomePage": {
-    "title": "OutfitAI",
+    "title": "Independent Worker",
     "description": "Revolutionize your style with AI-powered virtual try-on technology",
     "hero": {
       "title": "Try On Any Outfit with AI Technology",
       "description": "Welcome to Independent Worker's personal blog. Here I document work insights, life moments, and personal growth stories. Sharing authentic experiences and thoughts with you.",
-      "introduction": "Introducing OutfitAI Platform",
+      "introduction": "Introducing Independent Worker Platform",
       "primary": "Try Now",
       "secondary": "About Me"
     },
@@ -775,7 +775,7 @@
     "integration": {
       "title": "AI Integrations",
       "subtitle": "Powered by advanced AI technology",
-      "description": "OutfitAI integrates with cutting-edge AI models and fashion platforms to provide the most accurate virtual try-on experience.",
+      "description": "Independent Worker integrates with cutting-edge AI models and fashion platforms to provide the most accurate virtual try-on experience.",
       "learnMore": "Learn More",
       "items": {
         "item-1": {
@@ -836,7 +836,7 @@
     "features2": {
       "title": "Advanced AI Capabilities",
       "subtitle": "Next-generation fashion technology",
-      "description": "Discover the powerful AI features that make OutfitAI the most advanced virtual try-on platform",
+      "description": "Discover the powerful AI features that make Independent Worker the most advanced virtual try-on platform",
       "feature-1": "AI Body Analysis & Measurement",
       "feature-2": "Smart Fabric Simulation",
       "feature-3": "Personalized Style AI",
@@ -845,7 +845,7 @@
     "features3": {
       "title": "Core AI Features",
       "subtitle": "Cutting-edge technology at your fingertips",
-      "description": "Explore the advanced AI capabilities that power OutfitAI's virtual try-on experience",
+      "description": "Explore the advanced AI capabilities that power Independent Worker's virtual try-on experience",
       "items": {
         "item-1": {
           "title": "Lightning-Fast AI Processing",
@@ -880,7 +880,7 @@
     },
     "faqs": {
       "title": "Frequently Asked Questions",
-      "subtitle": "Everything you need to know about OutfitAI",
+      "subtitle": "Everything you need to know about Independent Worker",
       "items": {
         "item-1": {
           "question": "How accurate is the AI virtual try-on?",
@@ -895,8 +895,8 @@
           "answer": "Yes, we use enterprise-grade encryption and never store your photos longer than necessary for processing."
         },
         "item-4": {
-          "question": "Can I use OutfitAI on mobile devices?",
-          "answer": "Absolutely! OutfitAI works seamlessly on all devices including smartphones, tablets, and desktops."
+          "question": "Can I use Independent Worker on mobile devices?",
+          "answer": "Absolutely! Independent Worker works seamlessly on all devices including smartphones, tablets, and desktops."
         },
         "item-5": {
           "question": "Need more help?",
@@ -905,14 +905,14 @@
       }
     },
     "testimonials": {
-      "title": "What Users Say About OutfitAI",
+      "title": "What Users Say About Independent Worker",
       "subtitle": "Real experiences from fashion enthusiasts",
       "items": {
         "item-1": {
           "name": "Sarah Johnson",
           "role": "Fashion Blogger",
           "image": "https://randomuser.me/api/portraits/women/1.jpg",
-          "quote": "OutfitAI completely changed how I shop online. The AI try-on is so accurate, I haven't returned a single item!"
+          "quote": "Independent Worker completely changed how I shop online. The AI try-on is so accurate, I haven't returned a single item!"
         },
         "item-2": {
           "name": "Michael Chen",
@@ -924,19 +924,19 @@
           "name": "Emma Rodriguez",
           "role": "Fashion Designer",
           "image": "https://randomuser.me/api/portraits/women/7.jpg",
-          "quote": "As a designer, I'm amazed by the accuracy of the fabric simulation. OutfitAI is the future of fashion tech."
+          "quote": "As a designer, I'm amazed by the accuracy of the fabric simulation. Independent Worker is the future of fashion tech."
         },
         "item-4": {
           "name": "David Kim",
           "role": "E-commerce Manager",
           "image": "https://randomuser.me/api/portraits/men/8.jpg",
-          "quote": "Our return rates dropped by 60% after integrating OutfitAI. Customers love seeing how clothes actually look on them."
+          "quote": "Our return rates dropped by 60% after integrating Independent Worker. Customers love seeing how clothes actually look on them."
         },
         "item-5": {
           "name": "Lisa Wang",
           "role": "Personal Shopper",
           "image": "https://randomuser.me/api/portraits/women/4.jpg",
-          "quote": "OutfitAI helps me serve more clients by quickly showing them how different outfits will look. It's incredibly efficient."
+          "quote": "Independent Worker helps me serve more clients by quickly showing them how different outfits will look. It's incredibly efficient."
         },
         "item-6": {
           "name": "James Thompson",
@@ -948,19 +948,19 @@
           "name": "Sofia Martinez",
           "role": "Style Consultant",
           "image": "https://randomuser.me/api/portraits/women/5.jpg",
-          "quote": "The virtual try-on is so realistic, it feels like magic. OutfitAI has revolutionized how I help clients choose outfits."
+          "quote": "The virtual try-on is so realistic, it feels like magic. Independent Worker has revolutionized how I help clients choose outfits."
         },
         "item-8": {
           "name": "Alex Turner",
           "role": "Fashion Photographer",
           "image": "https://randomuser.me/api/portraits/men/9.jpg",
-          "quote": "The 3D rendering quality is exceptional. OutfitAI captures how fabric moves and fits better than anything I've seen."
+          "quote": "The 3D rendering quality is exceptional. Independent Worker captures how fabric moves and fits better than anything I've seen."
         },
         "item-9": {
           "name": "Rachel Green",
           "role": "Boutique Owner",
           "image": "https://randomuser.me/api/portraits/women/10.jpg",
-          "quote": "Since using OutfitAI, my online sales have tripled. Customers love being able to try before they buy."
+          "quote": "Since using Independent Worker, my online sales have tripled. Customers love being able to try before they buy."
         },
         "item-10": {
           "name": "Mark Davis",
@@ -972,20 +972,20 @@
           "name": "Anna Kowalski",
           "role": "Fashion Student",
           "image": "https://randomuser.me/api/portraits/women/12.jpg",
-          "quote": "OutfitAI helped me understand fit and proportion better than any textbook. It's an invaluable learning tool."
+          "quote": "Independent Worker helped me understand fit and proportion better than any textbook. It's an invaluable learning tool."
         },
         "item-12": {
           "name": "Tony Stark",
           "role": "Retail Innovation Director",
           "image": "https://randomuser.me/api/portraits/men/13.jpg",
-          "quote": "OutfitAI is setting the standard for virtual try-on technology. The AI accuracy and speed are unmatched in the industry."
+          "quote": "Independent Worker is setting the standard for virtual try-on technology. The AI accuracy and speed are unmatched in the industry."
         }
       }
     },
     "stats": {
-      "title": "OutfitAI Impact",
+      "title": "Independent Worker Impact",
       "subtitle": "Revolutionizing fashion with AI",
-      "description": "See how OutfitAI is transforming the fashion industry with cutting-edge AI technology",
+      "description": "See how Independent Worker is transforming the fashion industry with cutting-edge AI technology",
       "items": {
         "item-1": {
           "title": "AI Try-Ons Completed"
@@ -1000,8 +1000,8 @@
     },
     "calltoaction": {
       "title": "Start Your AI Fashion Journey",
-      "description": "Join thousands of fashion-forward users who've revolutionized their shopping experience with OutfitAI's virtual try-on technology",
-      "primaryButton": "Try OutfitAI Now",
+      "description": "Join thousands of fashion-forward users who've revolutionized their shopping experience with Independent Worker's virtual try-on technology",
+      "primaryButton": "Try Independent Worker Now",
       "secondaryButton": "Watch Demo"
     }
   },

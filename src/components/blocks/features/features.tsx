@@ -20,7 +20,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 
 /**
- * OutfitAI Features Section - AI-powered virtual try-on features
+ * 独立工作者 Features Section - AI-powered virtual try-on features
  */
 export default function FeaturesSection() {
   const t = useTranslations('HomePage.features');

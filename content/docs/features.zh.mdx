@@ -1,0 +1,83 @@
+---
+title: 功能全览
+description: 独立工作者博客的核心功能介绍
+icon: Sparkles
+---
+
+## 简介
+
+欢迎使用独立工作者博客系统。通过本手册快速掌握任务管理、笔记系统、项目追踪等核心模块，更有生活记录与进阶自动化教程助你全面提效。
+
+## 基础入门
+
+开始使用之前，请先了解这些基础内容：
+
+<Cards>
+<Card title="快速开始" href="/docs/quick-start">
+快速了解如何使用博客系统
+</Card>
+
+<Card title="写作指南" href="/docs/writing-guide">
+学习如何创作和发布文章
+</Card>
+</Cards>
+
+## 核心功能
+
+掌握博客的核心功能，快速上手使用：
+
+<Cards>
+<Card title="文章管理" href="/docs/articles">
+创建、编辑和管理您的文章
+</Card>
+
+<Card title="分类标签" href="/docs/categories">
+使用分类和标签组织内容
+</Card>
+
+<Card title="评论系统" href="/docs/comments">
+与读者互动交流
+</Card>
+
+<Card title="图片管理" href="/docs/images">
+上传和管理文章图片
+</Card>
+</Cards>
+
+## 进阶功能
+
+更多高级功能帮助您提升博客体验：
+
+<Cards>
+<Card title="SEO 优化" href="/docs/seo">
+提升搜索引擎排名
+</Card>
+
+<Card title="数据统计" href="/docs/analytics">
+查看访问数据和文章表现
+</Card>
+
+<Card title="会员系统" href="/docs/membership">
+管理付费订阅和会员权益
+</Card>
+
+<Card title="自定义主题" href="/docs/customization">
+个性化您的博客外观
+</Card>
+</Cards>
+
+## 常见问题
+
+<Accordions>
+<Accordion title="如何修改博客标题？">
+在 `messages/zh.json` 文件中修改 `Metadata.name` 字段。
+</Accordion>
+
+<Accordion title="如何添加新文章？">
+在 `content/blog/` 目录下创建新的 `.mdx` 文件，添加 frontmatter 元数据。
+</Accordion>
+
+<Accordion title="如何修改首页布局？">
+编辑 `src/app/[locale]/(marketing)/(home)/page.tsx` 文件。
+</Accordion>
+</Accordions>

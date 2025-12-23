@@ -2,7 +2,7 @@ import { PaymentTypes, PlanIntervals } from '@/payment/types';
 import type { WebsiteConfig } from '@/types';
 
 /**
- * OutfitAI website configuration
+ * 独立工作者 website configuration
  *
  * docs:
  * https://mksaas.com/docs/config/website
@@ -23,13 +23,13 @@ export const websiteConfig: WebsiteConfig = {
       logoDark: '/logo-dark.png',
     },
     social: {
-      github: 'https://github.com/OutfitAI',
-      twitter: 'https://x.com/outfitai',
-      blueSky: 'https://bsky.app/profile/outfitai.bsky.social',
-      discord: 'https://discord.gg/outfitai',
-      mastodon: 'https://mastodon.social/@outfitai',
-      linkedin: 'https://linkedin.com/company/outfitai',
-      youtube: 'https://youtube.com/@outfitai',
+      github: 'https://github.com/dl-gzz',
+      twitter: '',
+      blueSky: '',
+      discord: '',
+      mastodon: '',
+      linkedin: '',
+      youtube: '',
     },
   },
   features: {
@@ -68,8 +68,8 @@ export const websiteConfig: WebsiteConfig = {
   },
   mail: {
     provider: 'resend',
-    fromEmail: 'OutfitAI <support@outfitai.com>',
-    supportEmail: 'OutfitAI <support@outfitai.com>',
+    fromEmail: '独立工作者 <support@dlgzz.com>',
+    supportEmail: '独立工作者 <support@dlgzz.com>',
   },
   newsletter: {
     provider: 'resend',
