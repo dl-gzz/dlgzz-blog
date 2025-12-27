@@ -12,13 +12,14 @@ export async function getDb() {
   if (db) return db;
   const connectionString = process.env.DATABASE_URL!;
 
-  // Configure postgres client with better timeout and connection settings
+  // Configure postgres client - disable SSL for pgbouncer compatibility
   const client = postgres(connectionString, {
     prepare: false,
-    max: 10, // Maximum connections in pool
-    idle_timeout: 20, // Close idle connections after 20 seconds
-    connect_timeout: 10, // Connection timeout in seconds
-    max_lifetime: 60 * 30, // Maximum lifetime of a connection (30 minutes)
+    ssl: false, // Disable SSL for pgbouncer (port 6543)
+    max: 10,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    max_lifetime: 60 * 30,
   });
 
   db = drizzle(client, { schema });
