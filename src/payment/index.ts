@@ -1,5 +1,6 @@
 import { websiteConfig } from '@/config/website';
 import { StripeProvider } from './provider/stripe';
+import { XorPayProvider } from './provider/xorpay';
 import type {
   CheckoutResult,
   CreateCheckoutParams,
@@ -35,6 +36,8 @@ export const initializePaymentProvider = (): PaymentProvider => {
   if (!paymentProvider) {
     if (websiteConfig.payment.provider === 'stripe') {
       paymentProvider = new StripeProvider();
+    } else if (websiteConfig.payment.provider === 'xorpay') {
+      paymentProvider = new XorPayProvider();
     } else {
       throw new Error(
         `Unsupported payment provider: ${websiteConfig.payment.provider}`

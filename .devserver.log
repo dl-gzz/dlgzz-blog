@@ -1,0 +1,36 @@
+[MDX] updated map file in 5.936916999999994ms
+[MDX] started dev server
+   ▲ Next.js 15.2.1
+   - Local:        http://127.0.0.1:3000
+   - Network:      http://127.0.0.1:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ⚠ Invalid next.config.ts options detected: 
+ ⚠     Unrecognized key(s) in object: 'turbopack'
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ✓ Ready in 1837ms
+ ✓ Compiled /middleware in 153ms (182 modules)
+>> middleware start, pathname /
+<< middleware end, applying intlMiddleware
+(node:12265) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+>> middleware start, pathname /
+<< middleware end, applying intlMiddleware
+>> middleware start, pathname /en
+<< middleware end, applying intlMiddleware
+>> middleware start, pathname /
+<< middleware end, applying intlMiddleware
+>> middleware start, pathname /
+<< middleware end, applying intlMiddleware
+>> middleware start, pathname /
+<< middleware end, applying intlMiddleware
+ ✓ Compiled in 132ms (182 modules)
+ ✓ Compiled in 50ms (182 modules)
+   Reload env: .env.local
+ ✓ Compiled in 86ms (182 modules)
+ ✓ Compiled in 110ms (183 modules)
+ ✓ Compiled in 38ms (183 modules)
+ ✓ Compiled in 54ms (183 modules)
+ ✓ Compiled in 40ms (182 modules)
+ ✓ Compiled in 30ms (182 modules)

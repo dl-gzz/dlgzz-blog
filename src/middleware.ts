@@ -3,7 +3,6 @@ import createMiddleware from 'next-intl/middleware';
 import { type NextRequest, NextResponse } from 'next/server';
 import { LOCALES, routing } from './i18n/routing';
 import type { Session } from './lib/auth-types';
-import { getBaseUrl } from './lib/urls/urls';
 import {
   DEFAULT_LOGIN_REDIRECT,
   protectedRoutes,
@@ -28,10 +27,11 @@ export default async function middleware(req: NextRequest) {
 
   // do not use getSession() here, it will cause error related to edge runtime
   // const session = await getSession();
+  const baseURL = nextUrl.origin;
   const { data: session } = await betterFetch<Session>(
     '/api/auth/get-session',
     {
-      baseURL: getBaseUrl(),
+      baseURL,
       headers: {
         cookie: req.headers.get('cookie') || '', // Forward the cookies from the request
       },

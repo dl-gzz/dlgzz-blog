@@ -79,7 +79,7 @@ export const websiteConfig: WebsiteConfig = {
     provider: 's3',
   },
   payment: {
-    provider: 'stripe',
+    provider: 'xorpay', // Changed from 'stripe' to 'xorpay'
   },
   price: {
     plans: {
@@ -94,22 +94,35 @@ export const websiteConfig: WebsiteConfig = {
         prices: [
           {
             type: PaymentTypes.SUBSCRIPTION,
-            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY!,
-            amount: 1990,
-            currency: 'USD',
+            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'xorpay_pro_monthly',
+            amount: 180, // 180 分 = 1.80 元 (XorPay test amount)
+            currency: 'CNY',
             interval: PlanIntervals.MONTH,
           },
           {
             type: PaymentTypes.SUBSCRIPTION,
-            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY!,
-            amount: 9900,
-            currency: 'USD',
+            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'xorpay_pro_yearly',
+            amount: 180, // 180 分 = 1.80 元 (XorPay test amount)
+            currency: 'CNY',
             interval: PlanIntervals.YEAR,
           },
         ],
         isFree: false,
         isLifetime: false,
         recommended: true,
+      },
+      lifetime: {
+        id: 'lifetime',
+        prices: [
+          {
+            type: PaymentTypes.ONE_TIME,
+            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_LIFETIME || 'xorpay_lifetime',
+            amount: 180, // 180 分 = 1.80 元 (XorPay test amount)
+            currency: 'CNY',
+          },
+        ],
+        isFree: false,
+        isLifetime: true,
       },
     },
   },

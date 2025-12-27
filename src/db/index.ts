@@ -11,7 +11,16 @@ let db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (db) return db;
   const connectionString = process.env.DATABASE_URL!;
-  const client = postgres(connectionString, { prepare: false });
+
+  // Configure postgres client with better timeout and connection settings
+  const client = postgres(connectionString, {
+    prepare: false,
+    max: 10, // Maximum connections in pool
+    idle_timeout: 20, // Close idle connections after 20 seconds
+    connect_timeout: 10, // Connection timeout in seconds
+    max_lifetime: 60 * 30, // Maximum lifetime of a connection (30 minutes)
+  });
+
   db = drizzle(client, { schema });
   return db;
 }
