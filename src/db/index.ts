@@ -12,14 +12,11 @@ export async function getDb() {
   if (db) return db;
   const connectionString = process.env.DATABASE_URL!;
 
-  // Configure postgres client with SSL for Tencent Cloud
-  // Check if we should use SSL based on environment
-  const isProduction = process.env.NODE_ENV === 'production';
-  const hasSslParam = connectionString.includes('ssl=true') || connectionString.includes('sslmode=require');
-
+  // Tencent Cloud PostgreSQL: Disable SSL for now as it causes ERR_SSL_PACKET_LENGTH_TOO_LONG
+  // The database works fine without SSL in both development and production
   const client = postgres(connectionString, {
     prepare: false,
-    ssl: (isProduction || hasSslParam) ? { rejectUnauthorized: false } : false,
+    ssl: false, // Disable SSL - Tencent Cloud works without it
     max: 10,
     idle_timeout: 20,
     connect_timeout: 10,
