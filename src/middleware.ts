@@ -27,7 +27,11 @@ export default async function middleware(req: NextRequest) {
 
   // do not use getSession() here, it will cause error related to edge runtime
   // const session = await getSession();
-  const baseURL = nextUrl.origin;
+  // Use localhost for internal API calls to avoid SSL issues
+  const baseURL = process.env.NODE_ENV === 'production'
+    ? 'http://localhost:8080'  // Internal HTTP connection in production
+    : nextUrl.origin;           // Use external URL in development
+
   const { data: session } = await betterFetch<Session>(
     '/api/auth/get-session',
     {
