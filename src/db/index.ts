@@ -13,12 +13,13 @@ export async function getDb() {
   const connectionString = process.env.DATABASE_URL!;
 
   // Configure postgres client with SSL for Tencent Cloud
-  // SSL is disabled by default, enable only if needed
+  // Check if we should use SSL based on environment
+  const isProduction = process.env.NODE_ENV === 'production';
+  const hasSslParam = connectionString.includes('ssl=true') || connectionString.includes('sslmode=require');
+
   const client = postgres(connectionString, {
     prepare: false,
-    ssl: connectionString.includes('ssl=true') || connectionString.includes('sslmode=require')
-      ? { rejectUnauthorized: false } // Tencent Cloud SSL enabled
-      : false, // Disable SSL for local development
+    ssl: (isProduction || hasSslParam) ? { rejectUnauthorized: false } : false,
     max: 10,
     idle_timeout: 20,
     connect_timeout: 10,
