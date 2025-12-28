@@ -12,10 +12,10 @@ export async function getDb() {
   if (db) return db;
   const connectionString = process.env.DATABASE_URL!;
 
-  // Configure postgres client - disable SSL for pgbouncer compatibility
+  // Configure postgres client with SSL for Tencent Cloud
   const client = postgres(connectionString, {
     prepare: false,
-    ssl: false, // Disable SSL for pgbouncer (port 6543)
+    ssl: { rejectUnauthorized: false }, // Tencent Cloud SSL enabled
     max: 10,
     idle_timeout: 20,
     connect_timeout: 10,
