@@ -111,19 +111,6 @@ export const websiteConfig: WebsiteConfig = {
         isLifetime: false,
         recommended: true,
       },
-      lifetime: {
-        id: 'lifetime',
-        prices: [
-          {
-            type: PaymentTypes.ONE_TIME,
-            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_LIFETIME || 'xorpay_lifetime',
-            amount: 180, // 180 分 = 1.80 元 (XorPay test amount)
-            currency: 'CNY',
-          },
-        ],
-        isFree: false,
-        isLifetime: true,
-      },
     },
   },
 };

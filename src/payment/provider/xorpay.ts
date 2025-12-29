@@ -6,6 +6,7 @@ import {
   findPlanByPriceId,
   findPriceInPlan,
 } from '@/lib/price-plan';
+import { sendEmail } from '@/mail';
 import { sendNotification } from '@/notification/notification';
 import { desc, eq } from 'drizzle-orm';
 import {
@@ -235,6 +236,19 @@ export class XorPayProvider implements PaymentProvider {
         }];
       }
 
+      // Calculate period end based on subscription interval
+      const periodStart = new Date();
+      const periodEnd = new Date(periodStart);
+
+      // Calculate expiry date based on interval
+      if (price.interval === 'month') {
+        // Monthly subscription: +1 month
+        periodEnd.setMonth(periodEnd.getMonth() + 1);
+      } else if (price.interval === 'year') {
+        // Yearly subscription: +1 year
+        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+      }
+
       // Save payment record to database
       await db.insert(payment).values({
         id: randomUUID(),
@@ -244,8 +258,8 @@ export class XorPayProvider implements PaymentProvider {
         type: price.type,
         interval: price.interval || null,
         status: 'processing',
-        periodStart: new Date(),
-        periodEnd: null,
+        periodStart: periodStart,
+        periodEnd: periodEnd, // ⭐ 自动计算的到期时间
         cancelAtPeriodEnd: false,
         trialStart: null,
         trialEnd: null,
@@ -357,35 +371,66 @@ export class XorPayProvider implements PaymentProvider {
 
     console.log('Processing payment success:', { aoid, orderId });
 
-    // Update payment record - find by our order_id in subscriptionId
+    // Update payment record status to 'active' (all payments are subscriptions now)
     const updatedPayment = await db
       .update(payment)
       .set({
-        status: 'completed',
+        status: 'active', // ⭐ 订阅设为 active
         updatedAt: new Date(),
       })
       .where(eq(payment.subscriptionId, aoid))
       .returning();
 
-    // Send notification if payment found
+    // Send notification and confirmation email if payment found
     if (updatedPayment.length > 0) {
       const payAmount = parseFloat(event.pay_price || '0');
+      const paymentRecord = updatedPayment[0];
 
       // Get user email from payment record
       const userRecord = await db
         .select()
         .from(user)
-        .where(eq(user.id, updatedPayment[0].userId))
+        .where(eq(user.id, paymentRecord.userId))
         .limit(1);
 
       const customerEmail = userRecord.length > 0 ? userRecord[0].email : 'Unknown';
 
+      // Send notification
       await sendNotification(
         aoid,
-        updatedPayment[0].customerId,
+        paymentRecord.customerId,
         customerEmail,
         payAmount
       );
+
+      // Send payment success confirmation email
+      try {
+        // Get plan information
+        const plan = findPlanByPriceId(paymentRecord.priceId);
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        if (plan && customerEmail !== 'Unknown') {
+          await sendEmail({
+            to: customerEmail,
+            template: 'paymentSuccess',
+            context: {
+              planName: plan.name || '独立工作者会员',
+              interval: paymentRecord.interval || 'month',
+              amount: payAmount * 100, // Convert yuan to cents for email template
+              currency: 'CNY',
+              periodStart: paymentRecord.periodStart?.toISOString() || new Date().toISOString(),
+              periodEnd: paymentRecord.periodEnd?.toISOString() || new Date().toISOString(),
+              dashboardUrl: `${baseUrl}/dashboard`,
+            },
+            locale: 'zh', // Default to Chinese, could be improved by storing user locale preference
+          });
+
+          console.log(`Payment success email sent to: ${customerEmail}`);
+        }
+      } catch (emailError) {
+        console.error('Failed to send payment success email:', emailError);
+        // Don't throw - email failure shouldn't block payment processing
+      }
 
       console.log(`Payment completed successfully: ${aoid}`);
     } else {

@@ -5,7 +5,12 @@ import { eq } from 'drizzle-orm';
 
 /**
  * Check if the current user has access to premium content
- * @returns true if user is authenticated and has an active subscription
+ *
+ * 自动化检查逻辑：
+ * - 订阅类型（月付/年付）：检查 status='active' 且 periodEnd > 当前时间
+ * - 过期的订阅会自动被排除，无需手动处理
+ *
+ * @returns true if user is authenticated and has a valid non-expired subscription
  */
 export async function hasAccessToPremiumContent(): Promise<boolean> {
   try {
@@ -20,17 +25,40 @@ export async function hasAccessToPremiumContent(): Promise<boolean> {
     // Get database connection
     const db = await getDb();
 
-    // Check if user has any active/completed payments
+    // Check if user has any payments
     const userPayments = await db
       .select()
       .from(payment)
-      .where(eq(payment.userId, session.user.id))
-      .limit(1);
+      .where(eq(payment.userId, session.user.id));
 
-    // User has access if they have at least one payment record with 'active' or 'completed' status
-    const hasValidPayment = userPayments.some(
-      (p) => p.status === 'active' || p.status === 'completed'
-    );
+    if (userPayments.length === 0) {
+      return false;
+    }
+
+    const now = new Date();
+
+    // Check if user has any valid subscription
+    const hasValidPayment = userPayments.some((p) => {
+      // Only check subscriptions with 'active' status
+      if (p.type !== 'subscription' || p.status !== 'active') {
+        return false;
+      }
+
+      // Subscription must have periodEnd set
+      if (!p.periodEnd) {
+        console.warn(`Subscription payment ${p.id} has no periodEnd set`);
+        return false;
+      }
+
+      // ⭐ 核心检查：订阅是否已过期
+      const isNotExpired = p.periodEnd > now;
+
+      if (!isNotExpired) {
+        console.log(`Subscription expired for user ${session.user.id}, periodEnd: ${p.periodEnd}, now: ${now}`);
+      }
+
+      return isNotExpired; // ✅ 订阅有效且未过期
+    });
 
     return hasValidPayment;
   } catch (error) {
@@ -41,8 +69,13 @@ export async function hasAccessToPremiumContent(): Promise<boolean> {
 
 /**
  * Check if a specific user has premium access (by user ID)
+ *
+ * 自动化检查逻辑：
+ * - 订阅类型（月付/年付）：检查 status='active' 且 periodEnd > 当前时间
+ * - 过期的订阅会自动被排除，无需手动处理
+ *
  * @param userId User ID to check
- * @returns true if user has an active subscription
+ * @returns true if user has a valid non-expired subscription
  */
 export async function userHasPremiumAccess(userId: string): Promise<boolean> {
   try {
@@ -51,12 +84,35 @@ export async function userHasPremiumAccess(userId: string): Promise<boolean> {
     const userPayments = await db
       .select()
       .from(payment)
-      .where(eq(payment.userId, userId))
-      .limit(1);
+      .where(eq(payment.userId, userId));
 
-    return userPayments.some(
-      (p) => p.status === 'active' || p.status === 'completed'
-    );
+    if (userPayments.length === 0) {
+      return false;
+    }
+
+    const now = new Date();
+
+    return userPayments.some((p) => {
+      // Only check subscriptions with 'active' status
+      if (p.type !== 'subscription' || p.status !== 'active') {
+        return false;
+      }
+
+      // Subscription must have periodEnd set
+      if (!p.periodEnd) {
+        console.warn(`Subscription payment ${p.id} has no periodEnd set`);
+        return false;
+      }
+
+      // ⭐ 核心检查：订阅是否已过期
+      const isNotExpired = p.periodEnd > now;
+
+      if (!isNotExpired) {
+        console.log(`Subscription expired for user ${userId}, periodEnd: ${p.periodEnd}, now: ${now}`);
+      }
+
+      return isNotExpired; // ✅ 订阅有效且未过期
+    });
   } catch (error) {
     console.error('Error checking user premium access:', error);
     return false;
