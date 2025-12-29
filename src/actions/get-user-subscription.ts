@@ -4,7 +4,7 @@ import { getSession } from '@/lib/server';
 import { getDb } from '@/db';
 import { payment } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { getAllPricePlans } from '@/payment/price';
+import { getAllPricePlans } from '@/lib/price-plan';
 
 export interface UserSubscription {
   planName: string;
@@ -74,20 +74,22 @@ export async function getUserSubscription(): Promise<UserSubscription | null> {
       (subscription.periodEnd!.getTime() - now.getTime()) / msPerDay
     );
 
-    // Get plan details
+    // Get plan details and price info
     const plans = getAllPricePlans();
     let planName = '独立工作者会员';
+    let amount = 0;
+    let currency = 'CNY';
 
-    // Find plan name from price ID
-    for (const [, plan] of Object.entries(plans)) {
-      if (plan.prices) {
-        const priceEntry = Object.entries(plan.prices).find(
-          ([, price]) => price.id === subscription.priceId
-        );
-        if (priceEntry) {
-          planName = plan.name || planName;
-          break;
-        }
+    // Find plan name and price details from price ID
+    for (const plan of plans) {
+      const matchingPrice = plan.prices.find(
+        (price) => price.priceId === subscription.priceId
+      );
+      if (matchingPrice) {
+        planName = plan.name || planName;
+        amount = matchingPrice.amount;
+        currency = matchingPrice.currency;
+        break;
       }
     }
 
@@ -98,8 +100,8 @@ export async function getUserSubscription(): Promise<UserSubscription | null> {
       periodStart: subscription.periodStart!,
       periodEnd: subscription.periodEnd!,
       daysRemaining,
-      amount: subscription.amount || 0,
-      currency: subscription.currency || 'CNY',
+      amount,
+      currency,
       priceId: subscription.priceId || '',
     };
   } catch (error) {
