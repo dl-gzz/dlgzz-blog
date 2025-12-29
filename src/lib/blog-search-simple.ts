@@ -96,7 +96,7 @@ async function createBlogIndex() {
 }
 
 // 全局缓存
-let blogIndexCache: Awaited<ReturnType<typeof create>> | null = null;
+let blogIndexCache: any = null;
 
 async function getBlogIndex() {
   if (!blogIndexCache) {
