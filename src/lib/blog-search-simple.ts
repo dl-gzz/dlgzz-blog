@@ -1,5 +1,5 @@
 import { create, insertMultiple, search } from '@orama/orama';
-import { readdirSync, readFileSync } from 'fs';
+import { readdirSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import matter from 'gray-matter';
 
@@ -20,6 +20,13 @@ export interface BlogSearchResult {
  */
 function loadBlogPosts() {
   const blogDir = join(process.cwd(), 'content/blog');
+
+  // 检查目录是否存在
+  if (!existsSync(blogDir)) {
+    console.warn(`⚠️ Blog directory not found: ${blogDir}`);
+    return [];
+  }
+
   // 只加载中文博客，过滤掉 .en.mdx 文件
   const files = readdirSync(blogDir).filter(f =>
     f.endsWith('.mdx') && !f.endsWith('.en.mdx')
