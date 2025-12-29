@@ -96,5 +96,6 @@ export const blog = defineCollections({
     published: z.boolean().default(true),
     categories: z.array(z.string()),
     author: z.string(),
+    premium: z.boolean().default(false), // Premium/paid content flag
   }),
 });

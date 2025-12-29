@@ -260,6 +260,17 @@
     "allPosts": "全部文章",
     "morePosts": "更多文章"
   },
+  "Blog": {
+    "premium": "付费",
+    "premiumContent": "付费内容",
+    "premiumContentTitle": "解锁完整内容",
+    "premiumContentDescription": "这是一篇付费文章，成为会员即可阅读完整内容",
+    "premiumBenefit1": "无限制访问所有付费文章",
+    "premiumBenefit2": "支持独立创作者持续创作",
+    "premiumBenefit3": "获取独家深度内容",
+    "upgradeToPremium": "升级为会员",
+    "signInToRead": "登录阅读"
+  },
   "DocsPage": {
     "toc": "目录",
     "search": "搜索文档",

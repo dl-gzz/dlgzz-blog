@@ -1,11 +1,14 @@
 import AllPostsButton from '@/components/blog/all-posts-button';
 import BlogGrid from '@/components/blog/blog-grid';
+import { PremiumBadge } from '@/components/blog/premium-badge';
+import { PremiumContentGuard } from '@/components/blog/premium-content-guard';
 import { getMDXComponents } from '@/components/docs/mdx-components';
 import { NewsletterCard } from '@/components/newsletter/newsletter-card';
 import { websiteConfig } from '@/config/website';
 import { LocaleLink } from '@/i18n/navigation';
 import { formatDate } from '@/lib/formatter';
 import { constructMetadata } from '@/lib/metadata';
+import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import {
   type BlogType,
   authorSource,
@@ -83,7 +86,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
     notFound();
   }
 
-  const { date, title, description, image, author, categories } = post.data;
+  const { date, title, description, image, author, categories, premium = false } = post.data;
   const publishDate = formatDate(new Date(date));
 
   const blogAuthor = authorSource.getPage([author], locale);
@@ -95,6 +98,9 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
 
   // getTranslations may cause error DYNAMIC_SERVER_USAGE, so we set dynamic to force-static
   const t = await getTranslations('BlogPage');
+
+  // Check if user has access to premium content
+  const hasAccess = await hasAccessToPremiumContent();
 
   // get related posts
   const relatedPosts = await getRelatedPosts(post);
@@ -129,6 +135,8 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
                   {publishDate}
                 </span>
               </div>
+              {/* Premium badge */}
+              {premium && <PremiumBadge />}
             </div>
 
             {/* blog post title */}
@@ -141,9 +149,11 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
           {/* blog post content */}
           {/* in order to make the mdx.css work, we need to add the className prose to the div */}
           {/* https://github.com/tailwindlabs/tailwindcss-typography */}
-          <div className="mt-8 max-w-none prose prose-neutral dark:prose-invert prose-img:rounded-lg">
-            <MDX components={getMDXComponents()} />
-          </div>
+          <PremiumContentGuard isPremium={premium} hasAccess={hasAccess}>
+            <div className="mt-8 max-w-none prose prose-neutral dark:prose-invert prose-img:rounded-lg">
+              <MDX components={getMDXComponents()} />
+            </div>
+          </PremiumContentGuard>
 
           <div className="flex items-center justify-start my-16">
             <AllPostsButton />

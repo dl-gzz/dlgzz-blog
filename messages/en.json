@@ -260,6 +260,17 @@
     "allPosts": "All Posts",
     "morePosts": "More Posts"
   },
+  "Blog": {
+    "premium": "Premium",
+    "premiumContent": "Premium Content",
+    "premiumContentTitle": "Unlock Full Content",
+    "premiumContentDescription": "This is a premium article. Become a member to read the full content",
+    "premiumBenefit1": "Unlimited access to all premium articles",
+    "premiumBenefit2": "Support independent creators",
+    "premiumBenefit3": "Get exclusive in-depth content",
+    "upgradeToPremium": "Upgrade to Premium",
+    "signInToRead": "Sign in to Read"
+  },
   "DocsPage": {
     "toc": "Table of Contents",
     "search": "Search docs",
