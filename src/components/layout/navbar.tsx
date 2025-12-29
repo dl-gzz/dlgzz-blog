@@ -2,6 +2,7 @@
 
 import { LoginWrapper } from '@/components/auth/login-wrapper';
 import Container from '@/components/layout/container';
+import { GlobalSearchDialog } from '@/components/layout/global-search-dialog';
 import { Logo } from '@/components/layout/logo';
 import { ModeSwitcher } from '@/components/layout/mode-switcher';
 import { NavbarMobile } from '@/components/layout/navbar-mobile';
@@ -23,7 +24,7 @@ import { LocaleLink, useLocalePathname } from '@/i18n/navigation';
 import { authClient } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 import { Routes } from '@/routes';
-import { ArrowUpRightIcon } from 'lucide-react';
+import { ArrowUpRightIcon, SearchIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useEffect } from 'react';
@@ -49,12 +50,26 @@ export function Navbar({ scroll }: NavBarProps) {
   const menuLinks = getNavbarLinks();
   const localePathname = useLocalePathname();
   const [mounted, setMounted] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const currentUser = session?.user;
   // console.log(`Navbar, user:`, user);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Keyboard shortcut for search (Cmd+K or Ctrl+K)
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setSearchOpen((open) => !open);
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
   }, []);
 
   return (
@@ -219,6 +234,22 @@ export function Navbar({ scroll }: NavBarProps) {
 
           {/* navbar right show sign in or user */}
           <div className="flex items-center gap-x-4">
+            {/* Search button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="cursor-pointer gap-2"
+              onClick={() => setSearchOpen(true)}
+            >
+              <SearchIcon className="size-4" />
+              <span className="hidden sm:inline-flex">
+                {t('Search.search')}
+              </span>
+              <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </Button>
+
             {!mounted || isPending ? (
               <Skeleton className="size-8 border rounded-full" />
             ) : currentUser ? (
@@ -256,6 +287,9 @@ export function Navbar({ scroll }: NavBarProps) {
 
         {/* mobile navbar */}
         <NavbarMobile className="lg:hidden" />
+
+        {/* Global Search Dialog */}
+        <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
       </Container>
     </section>
   );

@@ -30,6 +30,15 @@
     "cancel": "Cancel",
     "logoutFailed": "Failed to log out"
   },
+  "Search": {
+    "search": "Search",
+    "title": "Global Search",
+    "description": "Search docs, blog and more",
+    "placeholder": "Type to search...",
+    "noResults": "No results found",
+    "typeToSearch": "Type to start searching",
+    "results": "{count} results found"
+  },
   "PricingPage": {
     "title": "Pricing",
     "description": "Choose the perfect plan for your virtual try-on needs",

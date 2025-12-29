@@ -1,5 +1,5 @@
 import { docsI18nConfig } from '@/lib/docs/i18n';
-import { source } from '@/lib/source';
+import { blogSource, changelogSource, source } from '@/lib/source';
 import { createTokenizer } from '@orama/tokenizers/mandarin';
 import { createI18nSearchAPI } from 'fumadocs-core/search/server';
 
@@ -18,16 +18,42 @@ const searchAPI = createI18nSearchAPI('advanced', {
   i18n: docsI18nConfig,
 
   // Get all pages from all languages and map them to search indexes
-  indexes: source.getLanguages().flatMap(({ language, pages }) =>
-    pages.map((page) => ({
-      title: page.data.title,
-      description: page.data.description,
-      structuredData: page.data.structuredData,
-      id: page.url,
-      url: page.url,
-      locale: language,
-    }))
-  ),
+  // Include docs, blog, and changelog
+  indexes: [
+    // Docs
+    ...source.getLanguages().flatMap(({ language, pages }) =>
+      pages.map((page) => ({
+        title: page.data.title,
+        description: page.data.description,
+        structuredData: page.data.structuredData,
+        id: page.url,
+        url: page.url,
+        locale: language,
+      }))
+    ),
+    // Blog posts
+    ...blogSource.getLanguages().flatMap(({ language, pages }) =>
+      pages.map((page) => ({
+        title: page.data.title,
+        description: page.data.description,
+        structuredData: page.data.structuredData,
+        id: page.url,
+        url: page.url,
+        locale: language,
+      }))
+    ),
+    // Changelog
+    ...changelogSource.getLanguages().flatMap(({ language, pages }) =>
+      pages.map((page) => ({
+        title: page.data.title,
+        description: page.data.description,
+        structuredData: page.data.structuredData,
+        id: page.url,
+        url: page.url,
+        locale: language,
+      }))
+    ),
+  ],
 
   // Configure special language tokenizers and search options
   localeMap: {

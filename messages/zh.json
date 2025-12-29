@@ -30,6 +30,15 @@
     "cancel": "取消",
     "logoutFailed": "退出失败"
   },
+  "Search": {
+    "search": "搜索",
+    "title": "全站搜索",
+    "description": "搜索文档、博客和更多内容",
+    "placeholder": "输入关键词搜索...",
+    "noResults": "未找到相关结果",
+    "typeToSearch": "输入关键词开始搜索",
+    "results": "找到 {count} 个结果"
+  },
   "PricingPage": {
     "title": "价格方案",
     "description": "选择最适合您虚拟试衣需求的方案",
