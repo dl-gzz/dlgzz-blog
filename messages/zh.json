@@ -300,6 +300,9 @@
       "docs": {
         "title": "文档"
       },
+      "aiChat": {
+        "title": "AI问答"
+      },
       "outfit": {
         "title": "立即试用"
       },
@@ -467,6 +470,24 @@
     "dashboard": {
       "title": "仪表盘"
     },
+    "subscriptionStatus": "订阅状态",
+    "subscriptionStatusDesc": "查看您当前的订阅信息",
+    "noSubscription": "暂无订阅",
+    "noSubscriptionDesc": "您目前还没有订阅任何套餐，升级以解锁付费内容",
+    "viewPricing": "查看价格方案",
+    "plan": "套餐",
+    "amount": "金额",
+    "startDate": "开始日期",
+    "expiryDate": "到期日期",
+    "monthly": "月付",
+    "yearly": "年付",
+    "active": "有效",
+    "expired": "已过期",
+    "daysRemaining": "剩余天数",
+    "daysRemainingDesc": "距离订阅到期还有",
+    "renewNow": "立即续费",
+    "viewAllPlans": "查看所有套餐",
+    "renewalReminder": "您的订阅即将到期，建议提前续费以确保不间断地访问付费内容。",
     "fittingRoom": {
       "title": "AI试衣间",
       "selectModel": "选择模特",
@@ -777,6 +798,39 @@
       "email": "邮箱：{email}",
       "message": "消息：{message}",
       "subject": "新联系消息 - 独立工作者"
+    },
+    "paymentSuccess": {
+      "subject": "🎉 订阅成功！",
+      "greeting": "您好！",
+      "thankYou": "感谢您订阅独立工作者会员！您的订阅已激活，现在可以享受所有付费内容了。",
+      "subscriptionDetails": "订阅详情",
+      "plan": "套餐",
+      "amount": "金额",
+      "startDate": "开始日期",
+      "expiryDate": "到期日期",
+      "monthly": "月付",
+      "yearly": "年付",
+      "viewDashboard": "查看我的订阅",
+      "accessInfo": "您现在可以访问所有付费文章和内容。",
+      "renewalInfo": "订阅到期后，您需要手动续费以继续访问付费内容。我们会在到期前提醒您。",
+      "supportInfo": "如有任何问题，请随时联系我们的客服团队。"
+    }
+  },
+  "AI": {
+    "Chat": {
+      "title": "AI 博客助手",
+      "subtitle": "基于博客内容",
+      "placeholder": "输入您的问题...",
+      "thinking": "正在思考...",
+      "welcome": "问我任何关于博客的问题",
+      "welcomeDesc": "我会根据博客文章的实际内容来回答您的问题",
+      "premiumRequired": "AI 问答功能仅限付费用户使用，请升级您的订阅。",
+      "sources": "参考来源：",
+      "exampleQuestions": {
+        "q1": "Next.js 最佳实践？",
+        "q2": "如何实现支付？",
+        "q3": "用户认证方案？"
+      }
     }
   },
   "HomePage": {

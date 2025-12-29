@@ -31,6 +31,11 @@ export function getNavbarLinks(): NestedMenuItem[] {
       external: false,
     },
     {
+      title: t('aiChat.title'),
+      href: Routes.AIChat,
+      external: false,
+    },
+    {
       title: t('pricing.title'),
       href: Routes.Pricing,
       external: false,

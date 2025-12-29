@@ -32,6 +32,7 @@ export enum Routes {
   // dashboard routes
   Dashboard = '/dashboard',
   FittingRoom = '/fitting-room',
+  AIChat = '/ai-chat',
   AdminUsers = '/admin/users',
   SettingsProfile = '/settings/profile',
   SettingsBilling = '/settings/billing',
@@ -76,6 +77,7 @@ export const routesNotAllowedByLoggedInUsers = [Routes.Login, Routes.Register];
 export const protectedRoutes = [
   Routes.Dashboard,
   Routes.FittingRoom,
+  // Routes.AIChat, // 🧪 测试模式：临时移除 AI Chat 页面的登录保护
   Routes.AdminUsers,
   Routes.SettingsProfile,
   Routes.SettingsBilling,

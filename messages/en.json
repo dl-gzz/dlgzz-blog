@@ -300,6 +300,9 @@
       "docs": {
         "title": "Docs"
       },
+      "aiChat": {
+        "title": "AI Chat"
+      },
       "outfit": {
         "title": "Try Now"
       },
@@ -467,6 +470,24 @@
     "dashboard": {
       "title": "Dashboard"
     },
+    "subscriptionStatus": "Subscription Status",
+    "subscriptionStatusDesc": "View your current subscription information",
+    "noSubscription": "No Active Subscription",
+    "noSubscriptionDesc": "You don't have any active subscription. Upgrade to unlock premium content",
+    "viewPricing": "View Pricing Plans",
+    "plan": "Plan",
+    "amount": "Amount",
+    "startDate": "Start Date",
+    "expiryDate": "Expiry Date",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "active": "Active",
+    "expired": "Expired",
+    "daysRemaining": "Days Remaining",
+    "daysRemainingDesc": "Until subscription expires",
+    "renewNow": "Renew Now",
+    "viewAllPlans": "View All Plans",
+    "renewalReminder": "Your subscription is expiring soon. Renew early to ensure uninterrupted access to premium content.",
     "fittingRoom": {
       "title": "AI Fitting Room",
       "selectModel": "Select Model",
@@ -777,6 +798,39 @@
       "email": "Email: {email}",
       "message": "Message: {message}",
       "subject": "New Contact Message - Independent Worker"
+    },
+    "paymentSuccess": {
+      "subject": "🎉 Subscription Successful!",
+      "greeting": "Hello!",
+      "thankYou": "Thank you for subscribing to Independent Worker! Your subscription is now active and you can enjoy all premium content.",
+      "subscriptionDetails": "Subscription Details",
+      "plan": "Plan",
+      "amount": "Amount",
+      "startDate": "Start Date",
+      "expiryDate": "Expiry Date",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "viewDashboard": "View My Subscription",
+      "accessInfo": "You can now access all premium articles and content.",
+      "renewalInfo": "After expiration, you'll need to manually renew to continue accessing premium content. We'll remind you before it expires.",
+      "supportInfo": "If you have any questions, please feel free to contact our support team."
+    }
+  },
+  "AI": {
+    "Chat": {
+      "title": "AI Blog Assistant",
+      "subtitle": "Based on blog content",
+      "placeholder": "Type your question...",
+      "thinking": "Thinking...",
+      "welcome": "Ask me anything about the blog",
+      "welcomeDesc": "I'll answer based on actual blog article content",
+      "premiumRequired": "AI Q&A is a premium feature. Please upgrade your subscription.",
+      "sources": "References:",
+      "exampleQuestions": {
+        "q1": "Next.js best practices?",
+        "q2": "How to implement payments?",
+        "q3": "User authentication solutions?"
+      }
     }
   },
   "HomePage": {
