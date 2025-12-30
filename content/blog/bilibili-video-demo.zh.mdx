@@ -1,0 +1,134 @@
+---
+title: B站视频展示测试
+description: 测试在博客中嵌入 Bilibili 视频组件
+image: /images/blog/post-5.png
+date: "2025-12-30"
+published: true
+categories: ["测试", "视频"]
+author: admin
+premium: false
+---
+
+import { HeroVideoDialog } from "@/components/blog/hero-video-dialog"
+
+# B站视频展示测试
+
+这是一篇测试文章，展示如何在博客中嵌入 Bilibili（B站）视频。
+
+## 视频演示
+
+点击下方播放按钮观看视频：
+
+<div className="my-8">
+  <HeroVideoDialog
+    animationStyle="from-center"
+    videoSrc="https://www.bilibili.com/video/BV1FV4y1573C?spm_id_from=333.788.player.player_end_recommend&vd_source=61cefbb09683bbe2535d1887f030408e&trackid=web_related_0.router-related-2206146-n6d7k.1767036015882.785"
+    thumbnailSrc="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&h=450&fit=crop"
+    thumbnailAlt="B站视频封面"
+  />
+</div>
+
+## 关于这个视频
+
+这是来自 Bilibili 的视频内容。视频嵌入使用了 B站的播放器 API。
+
+### 特性说明
+
+- ✅ 支持 B站视频嵌入
+- ✅ 自动高清画质
+- ✅ 默认关闭弹幕
+- ✅ 响应式播放器
+- ✅ 点击即可播放
+
+## 如何嵌入 B站视频
+
+### 步骤 1：获取视频 BV 号
+
+从 B站视频链接中提取 BV 号：
+```
+https://www.bilibili.com/video/BV1Tnm4B6ENj/
+                              ^^^^^^^^^^^^
+                              这就是 BV 号
+```
+
+### 步骤 2：构建嵌入链接
+
+使用 B站播放器 API：
+```
+https://player.bilibili.com/player.html?bvid=BV号&page=1
+```
+
+### 步骤 3：在 MDX 中使用
+
+```jsx
+<HeroVideoDialog
+  videoSrc="https://player.bilibili.com/player.html?bvid=BV1Tnm4B6ENj&page=1"
+  thumbnailSrc="你的封面图片链接"
+  thumbnailAlt="视频描述"
+/>
+```
+
+## 参数说明
+
+在 B站视频链接中可以添加以下参数：
+
+| 参数 | 说明 | 示例值 |
+|------|------|--------|
+| `bvid` | 视频的 BV 号（必需） | BV1Tnm4B6ENj |
+| `page` | 分P视频的页码 | 1 |
+| `high_quality` | 高清画质 | 1 |
+| `danmaku` | 是否显示弹幕 | 0（关闭）或 1（开启） |
+| `autoplay` | 自动播放 | 0（关闭）或 1（开启） |
+
+### 完整示例
+
+```
+https://player.bilibili.com/player.html?bvid=BV1Tnm4B6ENj&page=1&high_quality=1&danmaku=0&autoplay=0
+```
+
+## YouTube vs Bilibili
+
+我们的视频组件同时支持：
+
+### YouTube 格式
+```jsx
+<HeroVideoDialog
+  videoSrc="https://www.youtube.com/embed/视频ID"
+  thumbnailSrc="封面图"
+/>
+```
+
+### Bilibili 格式
+```jsx
+<HeroVideoDialog
+  videoSrc="https://player.bilibili.com/player.html?bvid=BV号&page=1"
+  thumbnailSrc="封面图"
+/>
+```
+
+## 提示
+
+💡 **封面图选择**：
+- 可以使用 B站视频的封面图
+- 也可以使用自定义图片
+- 推荐比例：16:9
+
+💡 **性能优化**：
+- 封面图建议压缩后使用
+- 建议使用 CDN 加速
+
+## 更多功能
+
+您还可以在文章中混合使用多种内容：
+
+- 📝 文字内容
+- 🎬 视频组件
+- 💻 代码块
+- 📊 图表
+- 🖼️ 图片
+
+让您的博客更加生动有趣！
+
+---
+
+**提示**：如果您需要获取 B站视频的真实封面图，可以访问视频页面，右键点击封面图选择"复制图片地址"。

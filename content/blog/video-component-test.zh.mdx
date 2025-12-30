@@ -1,0 +1,82 @@
+---
+title: MDX 视频组件测试
+description: 测试在博客文章中嵌入交互式视频组件
+image: /images/blog/post-6.png
+date: "2025-12-30"
+published: true
+categories: ["教程", "前端开发"]
+author: admin
+premium: false
+---
+
+import { HeroVideoDialog } from "@/components/blog/hero-video-dialog"
+
+# MDX 视频组件测试
+
+这是一篇测试文章，演示如何在 MDX 博客中嵌入交互式视频组件。
+
+## 视频演示
+
+点击下方缩略图播放视频：
+
+<div className="my-8">
+  <HeroVideoDialog
+    className="block dark:hidden"
+    animationStyle="from-center"
+    videoSrc="https://www.youtube.com/embed/qh3NGpYRG3I?si=4rb-zSdDkVK9qxxb"
+    thumbnailSrc="https://startup-template-sage.vercel.app/hero-light.png"
+    thumbnailAlt="产品演示视频"
+  />
+  <HeroVideoDialog
+    className="hidden dark:block"
+    animationStyle="from-center"
+    videoSrc="https://www.youtube.com/embed/qh3NGpYRG3I?si=4rb-zSdDkVK9qxxb"
+    thumbnailSrc="https://startup-template-sage.vercel.app/hero-dark.png"
+    thumbnailAlt="产品演示视频"
+  />
+</div>
+
+## 特性说明
+
+这个视频组件具有以下特性：
+
+- ✅ 响应式设计
+- ✅ 平滑的打开/关闭动画
+- ✅ 支持明暗主题切换
+- ✅ 点击背景关闭
+- ✅ YouTube 视频嵌入
+
+## 使用方法
+
+在 MDX 文件中导入组件：
+
+```jsx
+import { HeroVideoDialog } from "@/components/blog/hero-video-dialog"
+```
+
+然后在文章中使用：
+
+```jsx
+<HeroVideoDialog
+  videoSrc="你的YouTube视频链接"
+  thumbnailSrc="你的缩略图链接"
+  thumbnailAlt="视频描述"
+/>
+```
+
+## 更多内容
+
+你可以继续在组件前后写正常的 Markdown 内容。
+
+- 列表项 1
+- 列表项 2
+- 列表项 3
+
+代码块也能正常工作：
+
+```typescript
+const greeting = "Hello, World!";
+console.log(greeting);
+```
+
+**粗体文字** 和 *斜体文字* 也都能正常显示。
