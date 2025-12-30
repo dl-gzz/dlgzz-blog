@@ -87,6 +87,7 @@ export interface AnalyticsConfig {
 }
 
 export interface AuthConfig {
+  enableEmailLogin?: boolean;        // Whether to enable email/password login
   enableGoogleLogin?: boolean;       // Whether to enable google login
   enableGithubLogin?: boolean;       // Whether to enable github login
 }
@@ -111,7 +112,7 @@ export interface BlogConfig {
  * Mail configuration
  */
 export interface MailConfig {
-  provider: 'resend';                // The email provider, only resend is supported for now
+  provider: 'resend' | 'smtp';       // The email provider, supports resend and smtp
   fromEmail?: string;                // The email address to send from
   supportEmail?: string;             // The email address to send support emails to
 }

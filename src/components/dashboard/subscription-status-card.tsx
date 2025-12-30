@@ -2,13 +2,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getUserSubscription } from '@/actions/get-user-subscription';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { Routes } from '@/routes';
 
 export async function SubscriptionStatusCard() {
   const subscription = await getUserSubscription();
-  const t = useTranslations('Dashboard');
+  const t = await getTranslations('Dashboard');
 
   if (!subscription) {
     return (

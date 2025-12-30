@@ -209,13 +209,36 @@
       "signUpHint": "New to Independent Worker? Sign up",
       "signInWithGoogle": "Sign In with Google",
       "loginWithGoogle": "Sign in with Google to start your AI fashion journey",
-      "or": "Or continue with"
+      "or": "Or continue with",
+      "orContinueWith": "Or",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "signIn": "Sign In",
+      "forgotPassword": "Forgot password?",
+      "loginSuccess": "Login successful",
+      "loginError": "Login failed, please check your email and password"
     },
     "register": {
       "title": "Sign Up",
       "createAccount": "Create your Independent Worker account",
       "signInHint": "Already have an account? Sign in",
-      "registerWithGoogle": "Create your Independent Worker account with Google to get started"
+      "registerWithGoogle": "Create your Independent Worker account with Google to get started",
+      "orContinueWith": "Or",
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter your password",
+      "signUp": "Sign Up",
+      "registerSuccess": "Registration successful! Please check your email for verification.",
+      "registerError": "Registration failed, please try again later",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters"
     },
     "forgotPassword": {
       "title": "Forgot Password",

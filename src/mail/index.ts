@@ -4,6 +4,7 @@ import { routing } from '@/i18n/routing';
 import { render } from '@react-email/render';
 import type { Locale, Messages } from 'next-intl';
 import { ResendProvider } from './provider/resend';
+import { SMTPProvider } from './provider/smtp';
 import {
   type EmailTemplate,
   EmailTemplates,
@@ -37,6 +38,8 @@ export const initializeMailProvider = (): MailProvider => {
   if (!mailProvider) {
     if (websiteConfig.mail.provider === 'resend') {
       mailProvider = new ResendProvider();
+    } else if (websiteConfig.mail.provider === 'smtp') {
+      mailProvider = new SMTPProvider();
     } else {
       throw new Error(
         `Unsupported mail provider: ${websiteConfig.mail.provider}`

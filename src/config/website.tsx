@@ -46,7 +46,8 @@ export const websiteConfig: WebsiteConfig = {
     enableSpeedInsights: true,
   },
   auth: {
-    enableGoogleLogin: true,
+    enableEmailLogin: true,
+    enableGoogleLogin: false,
     enableGithubLogin: false,
   },
   i18n: {
@@ -67,13 +68,13 @@ export const websiteConfig: WebsiteConfig = {
     relatedPostsSize: 3,
   },
   mail: {
-    provider: 'resend',
-    fromEmail: '独立工作者 <support@dlgzz.com>',
-    supportEmail: '独立工作者 <support@dlgzz.com>',
+    provider: 'smtp',
+    fromEmail: '独立工作者 <395887347@qq.com>',
+    supportEmail: '独立工作者 <395887347@qq.com>',
   },
   newsletter: {
     provider: 'resend',
-    autoSubscribeAfterSignUp: true,
+    autoSubscribeAfterSignUp: false,
   },
   storage: {
     provider: 's3',
