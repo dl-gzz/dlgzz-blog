@@ -40,7 +40,7 @@ export class SMTPProvider implements MailProvider {
       );
     }
 
-    this.from = smtpFrom || websiteConfig.mail.fromEmail;
+    this.from = (smtpFrom || websiteConfig.mail.fromEmail) as string;
 
     // Create SMTP transporter
     this.transporter = nodemailer.createTransport({
