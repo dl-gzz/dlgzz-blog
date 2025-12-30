@@ -70,12 +70,17 @@ export const RegisterForm = ({
           },
           onError: (ctx) => {
             console.error('Register error:', ctx.error);
-            const errorMessage =
-              ctx.error?.message ||
-              ctx.error?.body?.message ||
-              (ctx.error?.status === 'UNPROCESSABLE_ENTITY' ? '该邮箱已被注册，请使用其他邮箱或直接登录' : null) ||
-              t('registerError') ||
-              '注册失败，请稍后重试';
+            let errorMessage = ctx.error?.message || ctx.error?.body?.message;
+
+            // Check if user already exists
+            if (!errorMessage && ctx.error?.status === 422) {
+              errorMessage = '该邮箱已被注册，请使用其他邮箱或直接登录';
+            }
+
+            if (!errorMessage) {
+              errorMessage = t('registerError') || '注册失败，请稍后重试';
+            }
+
             toast.error(errorMessage);
             setIsLoading(false);
           },
