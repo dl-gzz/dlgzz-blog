@@ -1,4 +1,5 @@
 import AllPostsButton from '@/components/blog/all-posts-button';
+import { ArticleChat } from '@/components/blog/article-chat';
 import BlogGrid from '@/components/blog/blog-grid';
 import { PremiumBadge } from '@/components/blog/premium-badge';
 import { PremiumContentGuard } from '@/components/blog/premium-content-guard';
@@ -236,6 +237,9 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
       <div className="flex items-center justify-start my-8">
         <NewsletterCard />
       </div>
+
+      {/* AI Chat Assistant */}
+      <ArticleChat slug={slug.join('/')} locale={locale} articleTitle={title} />
     </div>
   );
 }

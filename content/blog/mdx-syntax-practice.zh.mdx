@@ -1,0 +1,383 @@
+---
+title: MDX 语法练习指南
+description: 全面学习 MDX 语法，包括 Markdown 基础语法和 React 组件集成
+image: /images/blog/post-1.png
+date: "2025-12-30"
+published: true
+categories: ["教程", "MDX"]
+author: admin
+premium: false
+---
+
+import { HeroVideoDialog } from "@/components/blog/hero-video-dialog"
+
+# MDX 语法练习指南
+
+欢迎来到 MDX 语法练习！这篇文章将带你了解 MDX 的各种语法特性。
+
+## 1. 基础 Markdown 语法
+
+### 1.1 文本格式化
+
+这是**粗体文本**和*斜体文本*的示例。
+
+你也可以使用~~删除线~~来标记删除的内容。
+
+### 1.2 标题层级
+
+MDX 支持 6 级标题：
+
+# 一级标题
+## 二级标题
+### 三级标题
+#### 四级标题
+##### 五级标题
+###### 六级标题
+
+### 1.3 列表
+
+**无序列表**:
+- 第一项
+- 第二项
+  - 嵌套项 2.1
+  - 嵌套项 2.2
+- 第三项
+
+**有序列表**:
+1. 第一步
+2. 第二步
+3. 第三步
+
+**任务列表**:
+- [x] 已完成的任务
+- [ ] 未完成的任务
+- [ ] 另一个待办事项
+
+### 1.4 引用
+
+> 这是一段引用文本。
+>
+> 可以包含多行内容。
+>
+> — 作者名字
+
+### 1.5 代码
+
+**行内代码**: 使用 `const variable = "value"` 来定义变量。
+
+**代码块**:
+
+```javascript
+// JavaScript 代码示例
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet("World"));
+```
+
+```typescript
+// TypeScript 代码示例
+interface User {
+  name: string;
+  age: number;
+}
+
+const user: User = {
+  name: "张三",
+  age: 25
+};
+```
+
+```python
+# Python 代码示例
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(fibonacci(10))
+```
+
+```bash
+# Bash 命令示例
+npm install
+npm run dev
+git commit -m "feat: add new feature"
+```
+
+### 1.6 链接和图片
+
+**文本链接**: 访问 [我的网站](https://example.com) 了解更多。
+
+**参考链接**: 这是一个 [参考链接][1]。
+
+[1]: https://example.com "链接标题"
+
+**图片**:
+![示例图片](/images/blog/post-1.png)
+
+### 1.7 表格
+
+| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| 数据1 | 数据2 | 数据3 |
+| 数据4 | 数据5 | 数据6 |
+
+**对齐表格**:
+
+| 左对齐 | 居中对齐 | 右对齐 |
+|:------|:-------:|------:|
+| 左 | 中 | 右 |
+| A | B | C |
+
+### 1.8 水平分割线
+
+使用三个或更多的 `-`, `*`, 或 `_` 创建分割线：
+
+---
+
+***
+
+___
+
+## 2. MDX 特性 - React 组件集成
+
+### 2.1 导入组件
+
+在文件开头，我们已经导入了视频组件：
+
+```jsx
+import { HeroVideoDialog } from "@/components/blog/hero-video-dialog"
+```
+
+### 2.2 使用 React 组件
+
+#### 视频组件示例
+
+<div className="my-8">
+  <HeroVideoDialog
+    animationStyle="from-center"
+    videoSrc="https://www.youtube.com/embed/qh3NGpYRG3I?si=4rb-zSdDkVK9qxxb"
+    thumbnailSrc="https://startup-template-sage.vercel.app/hero-light.png"
+    thumbnailAlt="示例视频"
+  />
+</div>
+
+### 2.3 HTML 元素 + CSS 类
+
+MDX 允许你使用 HTML 元素并添加 Tailwind CSS 类：
+
+<div className="p-6 bg-blue-50 dark:bg-blue-900 rounded-lg border border-blue-200 dark:border-blue-700">
+  <h3 className="text-xl font-bold text-blue-900 dark:text-blue-100">提示框示例</h3>
+  <p className="mt-2 text-blue-700 dark:text-blue-200">
+    这是一个使用 Tailwind CSS 样式的提示框。
+  </p>
+</div>
+
+<div className="mt-4 p-6 bg-green-50 dark:bg-green-900 rounded-lg border border-green-200 dark:border-green-700">
+  <h3 className="text-xl font-bold text-green-900 dark:text-green-100">成功消息</h3>
+  <p className="mt-2 text-green-700 dark:text-green-200">
+    操作已成功完成！
+  </p>
+</div>
+
+<div className="mt-4 p-6 bg-yellow-50 dark:bg-yellow-900 rounded-lg border border-yellow-200 dark:border-yellow-700">
+  <h3 className="text-xl font-bold text-yellow-900 dark:text-yellow-100">⚠️ 警告</h3>
+  <p className="mt-2 text-yellow-700 dark:text-yellow-200">
+    请注意这个重要信息！
+  </p>
+</div>
+
+<div className="mt-4 p-6 bg-red-50 dark:bg-red-900 rounded-lg border border-red-200 dark:border-red-700">
+  <h3 className="text-xl font-bold text-red-900 dark:text-red-100">❌ 错误</h3>
+  <p className="mt-2 text-red-700 dark:text-red-200">
+    发生了一个错误，请重试。
+  </p>
+</div>
+
+## 3. 高级用法
+
+### 3.1 混合 Markdown 和 JSX
+
+你可以在 Markdown 中自由混合 JSX：
+
+这是普通的 Markdown 段落。
+
+<div className="flex gap-4">
+  <div className="flex-1 p-4 bg-purple-100 dark:bg-purple-900 rounded">
+    <strong>卡片 1</strong>
+    <p>这是第一个卡片</p>
+  </div>
+  <div className="flex-1 p-4 bg-pink-100 dark:bg-pink-900 rounded">
+    <strong>卡片 2</strong>
+    <p>这是第二个卡片</p>
+  </div>
+</div>
+
+继续普通的 Markdown 内容...
+
+### 3.2 嵌套列表和代码
+
+1. **第一个主题**
+
+   这是关于第一个主题的详细说明。
+
+   ```javascript
+   const example1 = "示例代码";
+   ```
+
+   - 子项 1.1
+   - 子项 1.2
+
+2. **第二个主题**
+
+   第二个主题的说明。
+
+   ```python
+   example2 = "Python 示例"
+   ```
+
+### 3.3 表格中的格式
+
+| 功能 | 语法 | 示例 |
+|------|------|------|
+| 粗体 | `**文本**` | **粗体** |
+| 斜体 | `*文本*` | *斜体* |
+| 代码 | `` `代码` `` | `code` |
+| 链接 | `[文本](URL)` | [链接](#) |
+
+## 4. 实用示例
+
+### 4.1 步骤指南
+
+<div className="space-y-4">
+  <div className="flex gap-4">
+    <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+      1
+    </div>
+    <div>
+      <h4 className="font-bold">第一步：准备环境</h4>
+      <p className="text-gray-600 dark:text-gray-300">安装必要的依赖和工具</p>
+    </div>
+  </div>
+
+  <div className="flex gap-4">
+    <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+      2
+    </div>
+    <div>
+      <h4 className="font-bold">第二步：创建项目</h4>
+      <p className="text-gray-600 dark:text-gray-300">使用脚手架初始化项目</p>
+    </div>
+  </div>
+
+  <div className="flex gap-4">
+    <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+      3
+    </div>
+    <div>
+      <h4 className="font-bold">第三步：开始开发</h4>
+      <p className="text-gray-600 dark:text-gray-300">运行开发服务器并开始编码</p>
+    </div>
+  </div>
+</div>
+
+### 4.2 特性列表
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+  <div className="p-6 border rounded-lg">
+    <h4 className="font-bold text-lg mb-2">✅ 简单易用</h4>
+    <p className="text-gray-600 dark:text-gray-300">
+      直观的语法，快速上手
+    </p>
+  </div>
+
+  <div className="p-6 border rounded-lg">
+    <h4 className="font-bold text-lg mb-2">⚡ 高性能</h4>
+    <p className="text-gray-600 dark:text-gray-300">
+      优化的构建和渲染性能
+    </p>
+  </div>
+
+  <div className="p-6 border rounded-lg">
+    <h4 className="font-bold text-lg mb-2">🎨 可定制</h4>
+    <p className="text-gray-600 dark:text-gray-300">
+      灵活的主题和样式系统
+    </p>
+  </div>
+
+  <div className="p-6 border rounded-lg">
+    <h4 className="font-bold text-lg mb-2">🔧 可扩展</h4>
+    <p className="text-gray-600 dark:text-gray-300">
+      丰富的插件生态系统
+    </p>
+  </div>
+</div>
+
+## 5. 语法速查表
+
+### Markdown 语法
+
+```markdown
+# 标题
+## 二级标题
+
+**粗体** *斜体* ~~删除线~~
+
+- 无序列表
+1. 有序列表
+
+[链接](URL)
+![图片](URL)
+
+> 引用
+
+`行内代码`
+
+```代码块```
+
+| 表格 | 列 |
+|------|---|
+| 行1  | 数据|
+```
+
+### MDX 扩展
+
+```jsx
+// 导入组件
+import { Component } from "@/components/Component"
+
+// 使用组件
+<Component prop="value" />
+
+// 使用 HTML + CSS
+<div className="class-name">
+  内容
+</div>
+```
+
+## 6. 练习建议
+
+1. **复制这个文件**，修改内容进行练习
+2. **尝试添加**新的组件和样式
+3. **实验不同**的 Markdown 语法组合
+4. **创建自己**的内容结构
+5. **保存经常**使用的代码片段
+
+## 总结
+
+MDX 结合了 Markdown 的简洁和 React 的强大功能，让你能够创建富交互式的文章内容。
+
+关键要点：
+- ✅ Markdown 语法保持不变
+- ✅ 可以直接使用 React 组件
+- ✅ 支持 JSX 和 HTML 元素
+- ✅ 可以添加 Tailwind CSS 类名
+- ✅ 完美支持代码高亮
+
+继续练习，你会发现 MDX 的更多可能性！
+
+---
+
+**提示**: 在浏览器中打开这篇文章，查看实际渲染效果，然后对照源代码学习语法。
