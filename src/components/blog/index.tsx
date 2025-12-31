@@ -48,6 +48,24 @@ export const ArticleChat = dynamic(
   { ssr: false }
 );
 
+/**
+ * 数学游戏组件
+ * 互动式小学数学练习游戏
+ */
+export const MathGame = dynamic(
+  () => import('./math-game').then(mod => mod.MathGame),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full max-w-2xl mx-auto my-8 p-8 border rounded-lg bg-muted/50 animate-pulse">
+        <div className="h-64 flex items-center justify-center text-muted-foreground">
+          加载中...
+        </div>
+      </div>
+    )
+  }
+);
+
 // 未来可以添加更多组件
 // export const InteractiveChart = dynamic(() => import('./interactive-chart'));
 // export const PricingCalculator = dynamic(() => import('./pricing-calculator'));
