@@ -860,14 +860,14 @@
     "title": "独立工作者",
     "description": "用AI驱动的虚拟试衣技术革新您的风格",
     "hero": {
-      "title": "分享生活，记录成长",
-      "description": "欢迎来到独立工作者的个人博客。这里记录工作感悟、生活点滴和个人成长的故事。与您分享真实的经验和思考。",
-      "introduction": "介绍独立工作者平台",
+      "title": "生活即创作，创作即分享",
+      "description": "专注于独立性工作者方面的研究与探索，愿有一天可以和更多的独立工作者们一起学习、分享和成长。",
+      "introduction": "独立工作者简介",
       "primary": "阅读博客",
       "secondary": "关于我"
     },
     "logocloud": {
-      "title": "全球领先时尚品牌的信赖之选"
+      "title": "独立生活、独立工作、独立思考"
     },
     "integration": {
       "title": "AI集成",
@@ -973,7 +973,7 @@
     "pricing": {
       "title": "AI试衣价格",
       "subtitle": "选择您的方案",
-      "description": "为您的虚拟试衣需求选择完美的方案"
+      "description": "选择一个适合自己的方案"
     },
     "faqs": {
       "title": "常见问题",

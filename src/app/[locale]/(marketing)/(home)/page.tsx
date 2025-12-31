@@ -2,6 +2,7 @@ import CallToActionSection from '@/components/blocks/calltoaction/calltoaction';
 import FaqSection from '@/components/blocks/faqs/faqs';
 import FeaturesSection from '@/components/blocks/features/features';
 import HeroSection from '@/components/blocks/hero/hero';
+import LogoCloudSection from '@/components/blocks/logo-cloud/logo-cloud';
 import PricingSection from '@/components/blocks/pricing/pricing';
 import { NewsletterCard } from '@/components/newsletter/newsletter-card';
 import { constructMetadata } from '@/lib/metadata';
@@ -41,6 +42,8 @@ export default async function HomePage(props: HomePageProps) {
     <>
       <div className="flex flex-col">
         <HeroSection />
+
+        <LogoCloudSection />
 
         <FeaturesSection />
 

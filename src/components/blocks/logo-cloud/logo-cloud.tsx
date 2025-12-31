@@ -10,60 +10,10 @@ export default function LogoCloudSection() {
 
         <div className="mx-auto mt-20 flex max-w-4xl flex-wrap items-center justify-center gap-x-12 gap-y-8 sm:gap-x-16 sm:gap-y-12">
           <img
-            className="h-8 w-fit dark:invert"
-            src="/images/marketing/lululemon-logo.png"
-            alt="Lululemon Logo"
-            height="20"
-            width="auto"
-          />
-          <img
-            className="h-8 w-fit dark:invert"
-            src="/images/marketing/lv-logo.png"
-            alt="LV Logo"
-            height="20"
-            width="auto"
-          />
-
-          <img
-            className="h-8 w-fit dark:invert"
-            src="/images/marketing/nike-logo.png"
-            alt="Nike Logo"
-            height="20"
-            width="auto"
-          />
-          <img
-            className="h-8 w-fit dark:invert"
-            src="/images/marketing/muji-logo.png"
-            alt="Muji Logo"
-            height="20"
-            width="auto"
-          />
-          <img
-            className="h-8 w-fit dark:invert"
-            src="/images/marketing/patagonia-logo.png"
-            alt="Patagonia Logo"
-            height="20"
-            width="auto"
-          />
-          <img
-            className="h-8 w-fit dark:invert"
-            src="/images/marketing/supreme-logo.png"
-            alt="Supreme Logo"
-            height="20"
-            width="auto"
-          />
-           <img
-            className="h-8 w-fit dark:invert"
-            src="/images/marketing/uniqlo-logo.png"
-            alt="Uniqlo Logo"
-            height="20"
-            width="auto"
-          />
-           <img
-            className="h-8 w-fit dark:invert"
-            src="/images/marketing/zara-logo.webp"
-            alt="Zara Logo"
-            height="20"
+            className="h-16 w-fit"
+            src="/images/marketing/独立沉思录头像.png"
+            alt="独立沉思录"
+            height="64"
             width="auto"
           />
         </div>
