@@ -1096,10 +1096,10 @@
       }
     },
     "calltoaction": {
-      "title": "开始您的AI时尚之旅",
-      "description": "加入数千名通过独立工作者虚拟试衣技术革新购物体验的时尚先锋用户",
-      "primaryButton": "立即试用独立工作者",
-      "secondaryButton": "观看演示"
+      "title": "开始您的知识探索之旅",
+      "description": "加入独立工作者社区，通过AI问答功能深度理解每篇文章，让阅读成为高效的学习体验",
+      "primaryButton": "立即开始阅读",
+      "secondaryButton": "了解更多"
     }
   },
   "AITextPage": {
