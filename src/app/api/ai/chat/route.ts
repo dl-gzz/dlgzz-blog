@@ -1,7 +1,7 @@
 import { streamText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getSession } from '@/lib/server';
-// import { hasAccessToPremiumContent } from '@/lib/premium-access'; // 🧪 测试时注释
+import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { searchBlogContent } from '@/lib/blog-search-simple';
 
 // 配置 DeepSeek API（使用 OpenAI 兼容接口）
@@ -23,29 +23,26 @@ export const maxDuration = 60; // 设置最大执行时间 60 秒
  */
 export async function POST(req: Request) {
   try {
-    // 🧪 测试模式：临时禁用权限检查
-    // TODO: 生产环境需要启用以下权限检查
-
     // 1. 验证用户登录状态
     const session = await getSession();
-    // if (!session?.user) {
-    //   return new Response('Unauthorized - Please login', { status: 401 });
-    // }
+    if (!session?.user) {
+      return new Response('Unauthorized - Please login', { status: 401 });
+    }
 
     // 2. 检查付费订阅权限
-    // const hasPremiumAccess = await hasAccessToPremiumContent();
-    // if (!hasPremiumAccess) {
-    //   return new Response(
-    //     JSON.stringify({
-    //       error: 'Premium feature',
-    //       message: 'AI 问答功能仅限付费用户使用，请升级您的订阅。',
-    //     }),
-    //     {
-    //       status: 403,
-    //       headers: { 'Content-Type': 'application/json' },
-    //     }
-    //   );
-    // }
+    const hasPremiumAccess = await hasAccessToPremiumContent();
+    if (!hasPremiumAccess) {
+      return new Response(
+        JSON.stringify({
+          error: 'Premium feature',
+          message: 'AI 问答功能仅限付费用户使用，请升级您的订阅。',
+        }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     // 3. 获取请求数据
     const { messages } = await req.json();
