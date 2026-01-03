@@ -138,20 +138,9 @@ ${relevantContext}
       },
     });
 
-    // 8. 在响应头中附加来源信息
-    const headers = new Headers();
-    headers.set('Content-Type', 'text/plain; charset=utf-8');
-    if (sources.length > 0) {
-      // 使用 Base64 编码来避免中文字符导致的响应头错误
-      const sourcesJson = JSON.stringify(sources);
-      const sourcesBase64 = Buffer.from(sourcesJson, 'utf-8').toString('base64');
-      headers.set('X-AI-Sources', sourcesBase64);
-    }
-
-    // 9. 返回流式响应
-    return result.toDataStreamResponse({
-      headers,
-    });
+    // 8. 返回流式响应
+    // 注意：不在响应头中传递来源信息,避免中文字符导致的 ByteString 错误
+    return result.toDataStreamResponse();
   } catch (error) {
     console.error('AI Chat API error:', error);
 
