@@ -448,30 +448,28 @@
       }
     },
     "footer": {
-      "tagline": "用AI驱动的虚拟试衣技术革新您的风格",
+      "tagline": "专注独立工作者的知识分享与成长平台",
       "product": {
         "title": "产品",
         "items": {
-          "features": "AI功能",
-          "pricing": "价格方案",
+          "features": "功能特性",
+          "pricing": "会员方案",
           "faq": "常见问题"
         }
       },
       "resources": {
         "title": "资源",
         "items": {
-          "blog": "AI时尚博客",
-          "docs": "API文档",
-          "changelog": "最新动态",
-          "roadmap": "AI发展路线"
+          "blog": "文章博客",
+          "docs": "使用文档",
+          "changelog": "更新日志"
         }
       },
       "company": {
-        "title": "公司",
+        "title": "关于",
         "items": {
-          "about": "关于独立工作者",
-          "contact": "联系我们",
-          "waitlist": "抢先体验"
+          "about": "关于我",
+          "contact": "联系方式"
         }
       },
       "legal": {
