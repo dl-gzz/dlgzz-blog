@@ -97,7 +97,7 @@ export function PremiumContentGuard({
                 {t('upgradeToPremium')}
               </Button>
             </LocaleLink>
-            <LocaleLink href="/login">
+            <LocaleLink href="/auth/login">
               <Button size="lg" variant="outline" className="w-full sm:w-auto">
                 {t('signInToRead')}
               </Button>
