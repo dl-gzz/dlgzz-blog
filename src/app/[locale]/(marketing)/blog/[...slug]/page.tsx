@@ -136,8 +136,8 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
                   {publishDate}
                 </span>
               </div>
-              {/* Premium badge */}
-              {premium && <PremiumBadge />}
+              {/* Premium badge - only show if user doesn't have access */}
+              {premium && !hasAccess && <PremiumBadge />}
             </div>
 
             {/* blog post title */}
