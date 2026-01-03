@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { blogSource } from '@/lib/source';
+import { getSession } from '@/lib/server';
+import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import fs from 'fs';
 import path from 'path';
 
@@ -54,6 +56,29 @@ export async function POST(req: NextRequest) {
 
     const articleTitle = post.data.title;
     const articleDescription = post.data.description;
+    const isPremium = post.data.premium || false;
+
+    // 如果是付费文章，检查用户权限
+    if (isPremium) {
+      const session = await getSession();
+
+      // 检查是否登录
+      if (!session?.user) {
+        return NextResponse.json(
+          { error: '请先登录才能使用付费文章的 AI 问答功能' },
+          { status: 401 }
+        );
+      }
+
+      // 检查是否有付费权限
+      const hasPremiumAccess = await hasAccessToPremiumContent();
+      if (!hasPremiumAccess) {
+        return NextResponse.json(
+          { error: '此文章为付费内容，请升级订阅后使用 AI 问答功能' },
+          { status: 403 }
+        );
+      }
+    }
 
     // 读取 MDX 原始文件内容
     const contentDir = path.join(process.cwd(), 'content', 'blog');
