@@ -59,7 +59,7 @@ export const checkSubscriptionStatusAction = actionClient
       if (subscriptions && subscriptions.length > 0) {
         // Find the most recent active subscription
         const activeSubscription = subscriptions.find(
-          (sub) => sub.status === 'active' || sub.status === 'trialing'
+          (sub) => sub.status === 'active' || sub.status === 'trialing' || sub.status === 'completed'
         );
 
         if (activeSubscription) {

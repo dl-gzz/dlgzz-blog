@@ -52,7 +52,7 @@ export async function getUserSubscription(): Promise<UserSubscription | null> {
       .filter((p) => {
         return (
           p.type === 'subscription' &&
-          p.status === 'active' &&
+          (p.status === 'active' || p.status === 'completed') &&
           p.periodEnd &&
           p.periodEnd > now
         );
