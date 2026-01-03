@@ -39,8 +39,8 @@ export async function hasAccessToPremiumContent(): Promise<boolean> {
 
     // Check if user has any valid subscription
     const hasValidPayment = userPayments.some((p) => {
-      // Only check subscriptions with 'active' status
-      if (p.type !== 'subscription' || p.status !== 'active') {
+      // Only check subscriptions with 'active' or 'completed' status
+      if (p.type !== 'subscription' || (p.status !== 'active' && p.status !== 'completed')) {
         return false;
       }
 
@@ -93,8 +93,8 @@ export async function userHasPremiumAccess(userId: string): Promise<boolean> {
     const now = new Date();
 
     return userPayments.some((p) => {
-      // Only check subscriptions with 'active' status
-      if (p.type !== 'subscription' || p.status !== 'active') {
+      // Only check subscriptions with 'active' or 'completed' status
+      if (p.type !== 'subscription' || (p.status !== 'active' && p.status !== 'completed')) {
         return false;
       }
 
