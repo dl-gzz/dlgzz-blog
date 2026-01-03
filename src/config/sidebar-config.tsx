@@ -11,7 +11,6 @@ import {
   Settings2Icon,
   SettingsIcon,
   UsersRoundIcon,
-  ShirtIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -36,12 +35,6 @@ export function getSidebarLinks(): NestedMenuItem[] {
       title: t('dashboard.title'),
       icon: <LayoutDashboardIcon className="size-4 shrink-0" />,
       href: Routes.Dashboard,
-      external: false,
-    },
-    {
-      title: t('fittingRoom.title'),
-      icon: <ShirtIcon className="size-4 shrink-0" />,
-      href: Routes.FittingRoom,
       external: false,
     },
     {

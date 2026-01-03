@@ -1,10 +1,9 @@
 import { useTranslations } from 'next-intl';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
-import { TryOnHistoryList } from '@/components/dashboard/try-on-history-list';
 import { SubscriptionStatusCard } from '@/components/dashboard/subscription-status-card';
 
 /**
- * Try-on History Dashboard Page
+ * Dashboard Page
  */
 export default function DashboardPage() {
   const t = useTranslations();
@@ -25,12 +24,7 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             <div className="px-4 lg:px-6">
               {/* Subscription Status Section */}
-              <div className="mb-6">
-                <SubscriptionStatusCard />
-              </div>
-
-              {/* Try-on History Section */}
-              <TryOnHistoryList />
+              <SubscriptionStatusCard />
             </div>
           </div>
         </div>
