@@ -82,7 +82,12 @@ export async function POST(req: NextRequest) {
 
     // 读取 MDX 原始文件内容
     const contentDir = path.join(process.cwd(), 'content', 'blog');
-    const filePath = path.join(contentDir, `${slug}.${locale}.mdx`);
+
+    // 尝试读取带 locale 后缀的文件，如果不存在则尝试不带后缀的文件
+    let filePath = path.join(contentDir, `${slug}.${locale}.mdx`);
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(contentDir, `${slug}.mdx`);
+    }
 
     let articleContent = '';
     try {
