@@ -1,0 +1,8 @@
+[build]
+# 增加构建超时时间
+timeout = 1800
+
+[build.env]
+# 加速npm安装
+NPM_CONFIG_REGISTRY = "https://registry.npmmirror.com"
+PNPM_STORE_DIR = "/tmp/pnpm-store"
