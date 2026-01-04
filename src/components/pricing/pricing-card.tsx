@@ -23,6 +23,7 @@ import {
 import { CheckCircleIcon, XCircleIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { LoginWrapper } from '../auth/login-wrapper';
+import { CheckoutButton } from './create-checkout-button';
 
 interface PricingCardProps {
   plan: PricePlan;
@@ -170,16 +171,24 @@ export function PricingCard({
             {t('yourCurrentPlan')}
           </Button>
         ) : isPaidPlan ? (
-          <LocaleLink
-            href={`/payment/test?planId=${encodeURIComponent(
-              plan.id
-            )}&priceId=${encodeURIComponent(price.priceId)}`}
-            className="mt-4"
-          >
-            <Button variant="default" className="w-full cursor-pointer">
+          currentUser ? (
+            <CheckoutButton
+              userId={currentUser.id}
+              planId={plan.id}
+              priceId={price.priceId}
+              variant="default"
+              size="default"
+              className="mt-4 w-full"
+            >
               {plan.isLifetime ? t('getLifetimeAccess') : t('getStarted')}
-            </Button>
-          </LocaleLink>
+            </CheckoutButton>
+          ) : (
+            <LoginWrapper mode="modal" asChild callbackUrl={currentPath}>
+              <Button variant="default" className="mt-4 w-full cursor-pointer">
+                {plan.isLifetime ? t('getLifetimeAccess') : t('getStarted')}
+              </Button>
+            </LoginWrapper>
+          )
         ) : (
           <Button disabled className="mt-4 w-full">
             {t('notAvailable')}
