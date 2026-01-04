@@ -77,7 +77,7 @@ export async function SubscriptionStatusCard() {
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">{t('plan')}</p>
             <p className="font-medium">
-              {subscription.planName} ({intervalText})
+              {subscription.planName} (<span className="text-muted-foreground">{intervalText}</span>)
             </p>
           </div>
 

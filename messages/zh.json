@@ -80,8 +80,8 @@
       }
     },
     "pro": {
-      "name": "月付会员",
-      "description": "短期需求或低门槛尝试",
+      "name": "独立工作者会员",
+      "description": "适合长期使用的个人会员",
       "features": {
         "feature-1": "全站文章无限制阅读",
         "feature-2": "每月500次AI问答配额",

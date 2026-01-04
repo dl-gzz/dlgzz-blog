@@ -165,7 +165,20 @@ export default function BillingCard() {
         <CardContent className="space-y-4 flex-1">
           {/* Plan name and status */}
           <div className="flex items-center justify-between">
-            <div className="text-3xl font-medium">{currentPlan?.name}</div>
+            <div className="text-3xl font-medium">
+              {currentPlan?.name}
+              {currentPrice && (
+                <span className="text-lg text-muted-foreground ml-2">
+                  (
+                  {currentPrice.interval === PlanIntervals.MONTH
+                    ? '月付'
+                    : currentPrice.interval === PlanIntervals.YEAR
+                      ? '年付'
+                      : ''}
+                  )
+                </span>
+              )}
+            </div>
             {subscription && (
               <Badge variant="outline">
                 {subscription?.status === 'trialing'
