@@ -56,11 +56,6 @@ export function getFooterLinks(): NestedMenuItem[] {
           href: Routes.Changelog,
           external: false,
         },
-        {
-          title: t('resources.items.roadmap'),
-          href: Routes.Roadmap,
-          external: true,
-        },
       ],
     },
     {
@@ -74,11 +69,6 @@ export function getFooterLinks(): NestedMenuItem[] {
         {
           title: t('company.items.contact'),
           href: Routes.Contact,
-          external: false,
-        },
-        {
-          title: t('company.items.waitlist'),
-          href: Routes.Waitlist,
           external: false,
         },
       ],
