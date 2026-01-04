@@ -30,8 +30,8 @@ const transitionVariants = {
 export default function HeroSection() {
   const t = useTranslations('HomePage.hero');
   const linkIntroduction = 'https://x.com/outfitai';
-  const linkPrimary = '/outfit';
-  const linkSecondary = 'https://demo.outfitai.com';
+  const linkPrimary = '/blog';
+  const linkSecondary = '/about';
 
   return (
     <>
