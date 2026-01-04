@@ -82,6 +82,7 @@ export const createCheckoutAction = actionClient
       const params: CreateCheckoutParams = {
         planId,
         priceId,
+        userId: session.user.id,  // 传递实际登录用户的ID
         customerEmail: session.user.email,
         metadata: customMetadata,
         successUrl,

@@ -113,7 +113,7 @@ export class XorPayProvider implements PaymentProvider {
    */
   async createCheckout(params: CreateCheckoutParams & { openid?: string }): Promise<CheckoutResult> {
     try {
-      const { priceId, customerEmail, successUrl, openid } = params;
+      const { priceId, userId, customerEmail, successUrl, openid } = params;
 
       // Get price information
       const plan = findPlanByPriceId(priceId);
@@ -198,42 +198,18 @@ export class XorPayProvider implements PaymentProvider {
         throw new Error(`XorPay checkout failed: ${errorInfo}`);
       }
 
-      // Get user ID from email for payment record
+      // Use the provided user ID directly (user must be logged in)
       const db = await getDb();
-      let userRecord = await db
+
+      // Verify user exists
+      const userRecord = await db
         .select()
         .from(user)
-        .where(eq(user.email, customerEmail))
+        .where(eq(user.id, userId))
         .limit(1);
 
-      // Create user if not exists (for testing purposes)
       if (userRecord.length === 0) {
-        console.log(`Creating test user for email: ${customerEmail}`);
-        const newUserId = randomUUID();
-        await db.insert(user).values({
-          id: newUserId,
-          name: 'Test User',
-          email: customerEmail,
-          emailVerified: true,
-          customerId: customerId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-
-        userRecord = [{
-          id: newUserId,
-          name: 'Test User',
-          email: customerEmail,
-          emailVerified: true,
-          customerId: customerId,
-          image: null,
-          role: null,
-          banned: null,
-          banReason: null,
-          banExpires: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }];
+        throw new Error(`User not found: ${userId}. Please ensure user is logged in.`);
       }
 
       // Calculate period end based on subscription interval

@@ -120,6 +120,7 @@ export interface Payment {
 export interface CreateCheckoutParams {
   planId: string;
   priceId: string;
+  userId: string;  // 添加用户ID，必填
   customerEmail: string;
   successUrl?: string;
   cancelUrl?: string;
