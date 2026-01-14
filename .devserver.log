@@ -1,0 +1,209 @@
+
+> mksaas-template@0.1.0 dev /Users/baiyang/Desktop/mksaas-outfit-main
+> next dev
+
+[MDX] updated map file in 6.126541999999972ms
+[MDX] started dev server
+ ⚠ Port 3000 is in use, trying 3001 instead.
+ ⚠ Port 3001 is in use, trying 3002 instead.
+ ⚠ Port 3002 is in use, trying 3003 instead.
+   ▲ Next.js 15.2.1
+   - Local:        http://localhost:3003
+   - Network:      http://192.168.61.47:3003
+   - Environments: .env.local
+
+ ✓ Starting...
+ ⚠ Invalid next.config.ts options detected: 
+ ⚠     Unrecognized key(s) in object: 'turbopack'
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ✓ Ready in 1957ms
+ ○ Compiling /api/search ...
+ ✓ Compiled /api/search in 1534ms (2061 modules)
+=== Search Index Debug ===
+Docs languages: [ { language: 'en', pageCount: 9 }, { language: 'zh', pageCount: 9 } ]
+Blog languages: [ { language: 'en', pageCount: 2 }, { language: 'zh', pageCount: 2 } ]
+Changelog languages: [ { language: 'en', pageCount: 3 }, { language: 'zh', pageCount: 3 } ]
+Blog [en]: [
+  { url: '/en/blog/comparisons', title: '对比' },
+  { url: '/en/blog/my-first-post', title: 'My First Blog Post' }
+]
+Blog [zh]: [
+  { url: '/blog/comparisons', title: '对比' },
+  { url: '/blog/my-first-post', title: '我的第一篇博客文章' }
+]
+ GET /api/search?query=blog&locale=zh 200 in 1952ms
+ GET /api/search?query=blog&locale=zh 200 in 10ms
+ GET /api/search?query=first&locale=en 200 in 13ms
+ ✓ Compiled in 27ms
+ ✓ Compiled /api/search in 381ms (1782 modules)
+=== Search Index Debug ===
+Docs languages: [ { language: 'en', pageCount: 9 }, { language: 'zh', pageCount: 9 } ]
+Blog languages: [ { language: 'en', pageCount: 2 }, { language: 'zh', pageCount: 2 } ]
+Changelog languages: [ { language: 'en', pageCount: 3 }, { language: 'zh', pageCount: 3 } ]
+Blog [en]: [
+  { url: '/en/blog/comparisons', title: '对比' },
+  { url: '/en/blog/my-first-post', title: 'My First Blog Post' }
+]
+Blog [zh]: [
+  { url: '/blog/comparisons', title: '对比' },
+  { url: '/blog/my-first-post', title: '我的第一篇博客文章' }
+]
+Search request: query="first", locale="en"
+Search results count: 4
+First result: {
+  id: '/en/blog/my-first-post',
+  type: 'page',
+  content: 'My First Blog Post',
+  url: '/en/blog/my-first-post'
+}
+ GET /api/search?query=first&locale=en 200 in 640ms
+Search request: query="博客", locale="zh"
+Search results count: 12
+First result: {
+  id: '/docs/use-cases',
+  type: 'page',
+  content: '应用案例',
+  url: '/docs/use-cases'
+}
+ GET /api/search?query=%E5%8D%9A%E5%AE%A2&locale=zh 200 in 7ms
+ ✓ Compiled in 29ms
+ ✓ Compiled /middleware in 146ms (182 modules)
+>> middleware start, pathname /
+ ○ Compiling /api/auth/[...all] ...
+ ✓ Compiled /api/auth/[...all] in 1486ms (1068 modules)
+[2m2025-12-29T03:59:50.519Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T03:59:50.519Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+[2m2025-12-29T03:59:50.975Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T03:59:50.976Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/auth/get-session 200 in 2193ms
+<< middleware end, applying intlMiddleware
+ ○ Compiling /[locale] ...
+ ✓ Compiled /[locale] in 2.8s (4362 modules)
+motion() is deprecated. Use motion.create() instead.
+ GET / 200 in 3964ms
+ ✓ Compiled /api/search in 413ms (4790 modules)
+ GET /api/search?query=%E5%8D%9A%E5%AE%A2&locale=zh 200 in 779ms
+>> middleware start, pathname /
+[2m2025-12-29T04:00:06.883Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:00:06.883Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/auth/get-session 200 in 156ms
+<< middleware end, applying intlMiddleware
+ GET / 200 in 62ms
+[2m2025-12-29T04:00:07.463Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:00:07.464Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ ○ Compiling /[locale]/[...rest] ...
+ ✓ Compiled /[locale]/[...rest] in 637ms (6022 modules)
+ GET /api/search?query=%E5%8D%9A%E5%AE%A2%E5%8D%9A%E5%AE%A2&locale=zh 200 in 844ms
+ GET /api/search?query=%E5%8D%9A%E5%AE%A2&locale=zh 200 in 4ms
+ GET /api/search?query=%E4%BD%A0%E5%A5%BD&locale=zh 200 in 5ms
+ GET /api/search?query=k&locale=zh 200 in 4ms
+ GET /api/search?query=%E5%8D%9A%E5%AE%A2&locale=zh 200 in 5ms
+ GET /api/search?query=%E5%8D%9A%E5%AE%A2&locale=zh 200 in 8ms
+>> middleware start, pathname /docs
+[2m2025-12-29T04:00:36.001Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:00:36.001Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/auth/get-session 200 in 131ms
+<< middleware end, applying intlMiddleware
+ ○ Compiling /[locale]/docs/[[...slug]] ...
+[2m2025-12-29T04:00:36.584Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:00:36.585Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ ✓ Compiled /[locale]/docs/[[...slug]] in 4.4s (7497 modules)
+>> middleware start, pathname /docs
+[2m2025-12-29T04:00:41.791Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:00:41.791Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/auth/get-session 200 in 150ms
+<< middleware end, applying intlMiddleware
+ GET /docs 200 in 5794ms
+>> middleware start, pathname /docs
+ GET /api/auth/get-session 200 in 8ms
+<< middleware end, applying intlMiddleware
+ GET /docs 200 in 52ms
+>> middleware start, pathname /docs
+ GET /api/auth/get-session 200 in 9ms
+<< middleware end, applying intlMiddleware
+ GET /docs 200 in 69ms
+ GET /docs 200 in 50ms
+[2m2025-12-29T04:00:42.307Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:00:42.308Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/search?query=ka&locale=zh 200 in 86ms
+ GET /api/search?query=kai+s&locale=zh 200 in 4ms
+ GET /api/search?query=%E5%BC%80%E5%A7%8B&locale=zh 200 in 4ms
+>> middleware start, pathname /docs
+ GET /api/auth/get-session 200 in 4ms
+<< middleware end, applying intlMiddleware
+ GET /docs 200 in 35ms
+[2m2025-12-29T04:00:51.265Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:00:51.266Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+>> middleware start, pathname /docs/pricing-guide
+ GET /api/auth/get-session 200 in 7ms
+<< middleware end, applying intlMiddleware
+ GET /docs/pricing-guide 200 in 53ms
+[2m2025-12-29T04:00:57.724Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:00:57.725Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ ✓ Compiled in 2.7s (6836 modules)
+>> middleware start, pathname /docs/pricing-guide
+ ○ Compiling /api/auth/[...all] ...
+ ✓ Compiled /api/auth/[...all] in 641ms (5420 modules)
+[2m2025-12-29T04:12:55.930Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:12:55.930Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/auth/get-session 200 in 1047ms
+<< middleware end, applying intlMiddleware
+ GET /docs/pricing-guide 200 in 405ms
+[2m2025-12-29T04:12:56.673Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:12:56.674Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ ✓ Compiled in 1340ms (7455 modules)
+>> middleware start, pathname /docs/pricing-guide
+[2m2025-12-29T04:13:35.121Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:13:35.121Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/auth/get-session 200 in 104ms
+<< middleware end, applying intlMiddleware
+ GET /docs/pricing-guide 200 in 212ms
+[2m2025-12-29T04:13:35.780Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:13:35.781Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ ✓ Compiled in 1020ms (7455 modules)
+>> middleware start, pathname /docs/pricing-guide
+[2m2025-12-29T04:13:47.822Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:13:47.822Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/auth/get-session 200 in 98ms
+<< middleware end, applying intlMiddleware
+ ⨯ Failed to generate static paths for /api/auth/[...all]:
+[Error [PageNotFoundError]: Cannot find module for page: /api/auth/[...all]/route] {
+  type: 'PageNotFoundError',
+  code: 'ENOENT'
+}
+ GET /docs/pricing-guide 200 in 224ms
+>> middleware start, pathname /docs/pricing-guide
+ ○ Compiling /[locale]/[...rest] ...
+ ✓ Compiled /[locale]/[...rest] in 604ms (5422 modules)
+[2m2025-12-29T04:14:17.654Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:14:17.654Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+[2m2025-12-29T04:14:18.148Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+[2m2025-12-29T04:14:18.149Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/auth/get-session 200 in 1172ms
+<< middleware end, applying intlMiddleware
+ GET /docs/pricing-guide 200 in 413ms
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/baiyang/Desktop/mksaas-outfit-main/.next/cache/webpack/client-development/15.pack.gz_' -> '/Users/baiyang/Desktop/mksaas-outfit-main/.next/cache/webpack/client-development/15.pack.gz'
+ ✓ Compiled in 2.2s (6836 modules)
+ ✓ Compiled in 1875ms (6836 modules)
+ ✓ Compiled in 2.4s (6836 modules)
+ ✓ Compiled in 2.4s (6836 modules)
+ ✓ Compiled in 2.2s (6836 modules)
+ ✓ Compiled in 1976ms (6836 modules)
+ ✓ Compiled in 1051ms (6836 modules)
+ ✓ Compiled in 2.2s (6836 modules)
+[MDX] updated map file in 6.732999999076128ms
+ ✓ Compiled in 4s (6836 modules)
+ ✓ Compiled in 1519ms (2035 modules)
+ ✓ Compiled in 622ms (2035 modules)
+ ✓ Compiled in 2.1s (6836 modules)
+ ✓ Compiled in 1193ms (6836 modules)
+ ✓ Compiled in 673ms (2035 modules)
+ ✓ Compiled in 896ms (2035 modules)
+ ✓ Compiled in 1000ms (2035 modules)
+ ✓ Compiled in 728ms (2035 modules)
+[MDX] updated map file in 6.560624999925494ms
+ ✓ Compiled in 2.1s (6837 modules)
+ ✓ Compiled in 614ms (2035 modules)
+ ✓ Compiled in 1874ms (2035 modules)
+[?25h
+[MDX] closing dev server

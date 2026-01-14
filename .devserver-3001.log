@@ -1,0 +1,30 @@
+[MDX] updated map file in 7.567999999999984ms
+[MDX] started dev server
+   ▲ Next.js 15.2.1
+   - Local:        http://127.0.0.1:3001
+   - Network:      http://127.0.0.1:3001
+   - Environments: .env.local
+
+ ✓ Starting...
+ ⚠ Invalid next.config.ts options detected: 
+ ⚠     Unrecognized key(s) in object: 'turbopack'
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ✓ Ready in 2.3s
+ ✓ Compiled /middleware in 156ms (182 modules)
+>> middleware start, pathname /
+<< middleware end, applying intlMiddleware
+(node:12889) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+>> middleware start, pathname /
+<< middleware end, applying intlMiddleware
+ ✓ Compiled in 58ms (182 modules)
+ ✓ Compiled in 52ms (182 modules)
+   Reload env: .env.local
+ ✓ Compiled in 66ms (182 modules)
+ ✓ Compiled in 66ms (182 modules)
+ ✓ Compiled in 81ms (183 modules)
+ ✓ Compiled in 22ms (183 modules)
+ ✓ Compiled in 46ms (183 modules)
+ ✓ Compiled in 48ms (182 modules)
+ ✓ Compiled in 19ms (182 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/baiyang/Desktop/mksaas-outfit-main/.next/cache/webpack/edge-server-development/0.pack.gz_' -> '/Users/baiyang/Desktop/mksaas-outfit-main/.next/cache/webpack/edge-server-development/0.pack.gz'
