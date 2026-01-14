@@ -1,0 +1,55 @@
+/**
+ * Connect to PostgreSQL Database (Supabase/Neon/Local PostgreSQL)
+ * https://orm.drizzle.team/docs/tutorials/drizzle-with-supabase
+ */
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from './schema';
+
+let db: ReturnType<typeof drizzle> | null = null;
+
+export async function getDb() {
+  if (db) return db;
+  const connectionString = process.env.DATABASE_URL!;
+
+  // Tencent Cloud PostgreSQL: Disable SSL for now as it causes ERR_SSL_PACKET_LENGTH_TOO_LONG
+  // The database works fine without SSL in both development and production
+  const client = postgres(connectionString, {
+    prepare: false,
+    ssl: false, // Disable SSL - Tencent Cloud works without it
+    max: 10,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    max_lifetime: 60 * 30,
+  });
+
+  db = drizzle(client, { schema });
+  return db;
+}
+
+/**
+ * Connect to Neon Database
+ * https://orm.drizzle.team/docs/tutorials/drizzle-with-neon
+ */
+// import { drizzle } from 'drizzle-orm/neon-http';
+// const db = drizzle(process.env.DATABASE_URL!);
+
+/**
+ * Database connection with Drizzle
+ * https://orm.drizzle.team/docs/connect-overview
+ *
+ * Drizzle <> PostgreSQL
+ * https://orm.drizzle.team/docs/get-started-postgresql
+ *
+ * Get Started with Drizzle and Neon
+ * https://orm.drizzle.team/docs/get-started/neon-new
+ *
+ * Drizzle with Neon Postgres
+ * https://orm.drizzle.team/docs/tutorials/drizzle-with-neon
+ *
+ * Drizzle <> Neon Postgres
+ * https://orm.drizzle.team/docs/connect-neon
+ *
+ * Drizzle with Supabase Database
+ * https://orm.drizzle.team/docs/tutorials/drizzle-with-supabase
+ */

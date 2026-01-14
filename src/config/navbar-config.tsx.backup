@@ -1,0 +1,39 @@
+'use client';
+
+import { Routes } from '@/routes';
+import type { NestedMenuItem } from '@/types';
+import { useTranslations } from 'next-intl';
+
+/**
+ * Get navbar config with translations for OutfitAI
+ *
+ * NOTICE: used in client components only
+ *
+ * @returns The navbar config with translated titles for OutfitAI navigation
+ */
+export function getNavbarLinks(): NestedMenuItem[] {
+  const t = useTranslations('Marketing.navbar');
+
+  return [
+    {
+      title: t('home.title'),
+      href: Routes.Root,
+      external: false,
+    },
+    {
+      title: t('outfit.title'),
+      href: Routes.Outfit,
+      external: false,
+    },
+    {
+      title: t('pricing.title'),
+      href: Routes.Pricing,
+      external: false,
+    },
+    {
+      title: t('blog.title'),
+      href: Routes.Blog,
+      external: false,
+    },
+  ];
+}

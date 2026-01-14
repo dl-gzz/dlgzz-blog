@@ -1,0 +1,25 @@
+{
+  "title": "独立工作者文档",
+  "description": "独立工作者完整使用指南",
+  "icon": "BookOpen",
+  "root": true,
+  "pages": [
+    "---基础入门---",
+    "index",
+    "getting-started",
+    "---快速开始---",
+    "quick-start",
+    "---核心功能---",
+    "core-features",
+    "---进阶用法---",
+    "advanced-usage",
+    "---应用案例---",
+    "use-cases",
+    "---常见问题---",
+    "faq",
+    "---更新日志---",
+    "changelog",
+    "---购买指南---",
+    "pricing-guide"
+  ]
+}
