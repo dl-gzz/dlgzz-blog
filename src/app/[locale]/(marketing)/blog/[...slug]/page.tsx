@@ -1,4 +1,5 @@
 import AllPostsButton from '@/components/blog/all-posts-button';
+import ArticleCircleToSearch from '@/components/blog/ArticleCircleToSearch';
 import { ArticleChat } from '@/components/blog/article-chat';
 import BlogGrid from '@/components/blog/blog-grid';
 import { PremiumBadge } from '@/components/blog/premium-badge';
@@ -147,12 +148,21 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
             <p className="text-lg text-muted-foreground">{description}</p>
           </div>
 
-          {/* blog post content */}
+          {/* blog post content with Circle to Search */}
           {/* in order to make the mdx.css work, we need to add the className prose to the div */}
           {/* https://github.com/tailwindlabs/tailwindcss-typography */}
           <PremiumContentGuard isPremium={premium} hasAccess={hasAccess}>
-            <div className="mt-8 max-w-none prose prose-neutral dark:prose-invert prose-img:rounded-lg">
-              <MDX components={getMDXComponents()} />
+            <div className="mt-8 relative">
+              {/* Circle to Search - sticky button that follows scroll */}
+              <div className="absolute right-0 top-0 z-10 h-full pointer-events-none">
+                <div className="sticky top-24 pointer-events-auto">
+                  <ArticleCircleToSearch />
+                </div>
+              </div>
+
+              <div className="max-w-none prose prose-neutral dark:prose-invert prose-img:rounded-lg">
+                <MDX components={getMDXComponents()} />
+              </div>
             </div>
           </PremiumContentGuard>
 
