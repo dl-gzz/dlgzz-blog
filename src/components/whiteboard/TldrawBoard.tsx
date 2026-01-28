@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Tldraw } from 'tldraw';
-import 'tldraw/tldraw.css';
 import { customShapeUtils } from './shapes/registry';
 import BoardLogic from './BoardLogic';
 import Link from 'next/link';
