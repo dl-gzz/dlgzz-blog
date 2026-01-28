@@ -326,6 +326,9 @@
       "aiChat": {
         "title": "AI问答"
       },
+      "whiteboard": {
+        "title": "白板"
+      },
       "outfit": {
         "title": "立即试用"
       },

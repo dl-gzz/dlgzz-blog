@@ -31,6 +31,7 @@ export enum Routes {
   // dashboard routes
   Dashboard = '/dashboard',
   AIChat = '/ai-chat',
+  Whiteboard = '/whiteboard',
   AdminUsers = '/admin/users',
   SettingsProfile = '/settings/profile',
   SettingsBilling = '/settings/billing',
