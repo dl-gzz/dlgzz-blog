@@ -18,6 +18,11 @@ const TldrawBoard: React.FC = () => {
             link.onload = () => {
                 console.log('✅ Tldraw CSS loaded successfully from local');
                 console.log('Checking tldraw elements:', document.querySelectorAll('[class*="tl-"]').length);
+                // 延迟检查，等待 Tldraw 完全初始化
+                setTimeout(() => {
+                    console.log('After init - tldraw elements:', document.querySelectorAll('[class*="tl-"]').length);
+                    console.log('Canvas element:', document.querySelector('.tl-canvas'));
+                }, 1000);
             };
             link.onerror = () => {
                 console.error('❌ Failed to load tldraw CSS, trying CDN fallback');
@@ -44,9 +49,8 @@ const TldrawBoard: React.FC = () => {
                 返回首页
             </Link>
 
-            <Tldraw shapeUtils={customShapeUtils}>
-                <BoardLogic />
-            </Tldraw>
+            {/* 临时移除 customShapeUtils 和 BoardLogic 进行测试 */}
+            <Tldraw />
         </div>
     );
 };
