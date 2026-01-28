@@ -49,8 +49,9 @@ const TldrawBoard: React.FC = () => {
                 返回首页
             </Link>
 
-            {/* 临时移除 customShapeUtils 和 BoardLogic 进行测试 */}
-            <Tldraw />
+            <Tldraw shapeUtils={customShapeUtils}>
+                <BoardLogic />
+            </Tldraw>
         </div>
     );
 };
