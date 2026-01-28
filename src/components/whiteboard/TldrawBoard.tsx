@@ -14,9 +14,20 @@ const TldrawBoard: React.FC = () => {
         if (!existingLink) {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = 'https://cdn.jsdelivr.net/npm/tldraw@4.2.3/tldraw.css';
+            link.href = '/css/tldraw.css';
+            link.onload = () => {
+                console.log('✅ Tldraw CSS loaded successfully from local');
+                console.log('Checking tldraw elements:', document.querySelectorAll('[class*="tl-"]').length);
+            };
+            link.onerror = () => {
+                console.error('❌ Failed to load tldraw CSS, trying CDN fallback');
+                // 如果本地加载失败，尝试 CDN
+                const cdnLink = document.createElement('link');
+                cdnLink.rel = 'stylesheet';
+                cdnLink.href = 'https://unpkg.com/tldraw@4.2.3/tldraw.css';
+                document.head.appendChild(cdnLink);
+            };
             document.head.appendChild(link);
-            console.log('Tldraw CSS loaded from CDN');
         }
     }, []);
 
