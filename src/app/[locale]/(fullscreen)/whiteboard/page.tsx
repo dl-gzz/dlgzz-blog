@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import '@/styles/globals.css';
 
 // 动态导入 Tldraw 组件（避免 SSR 问题）
 const TldrawBoard = dynamic(
