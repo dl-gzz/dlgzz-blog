@@ -42,8 +42,8 @@ export const websiteConfig: WebsiteConfig = {
     defaultLoginRedirect: '/dashboard',
   },
   analytics: {
-    enableVercelAnalytics: true,
-    enableSpeedInsights: true,
+    enableVercelAnalytics: false,
+    enableSpeedInsights: false,
   },
   auth: {
     enableEmailLogin: true,
