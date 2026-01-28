@@ -2,11 +2,14 @@
 
 import dynamic from 'next/dynamic';
 import '@/styles/globals.css';
+import { Suspense } from 'react';
 
-// 确保 tldraw 样式被正确加载到生产环境
 // 动态导入 Tldraw 组件（避免 SSR 问题）
 const TldrawBoard = dynamic(
-  () => import('@/components/whiteboard/TldrawBoard'),
+  () => import('@/components/whiteboard/TldrawBoard').catch(err => {
+    console.error('Failed to load TldrawBoard:', err);
+    return { default: () => <div>Failed to load whiteboard: {err.message}</div> };
+  }),
   {
     ssr: false,
     loading: () => (
@@ -21,5 +24,9 @@ const TldrawBoard = dynamic(
 );
 
 export default function WhiteboardPage() {
-  return <TldrawBoard />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TldrawBoard />
+    </Suspense>
+  );
 }
