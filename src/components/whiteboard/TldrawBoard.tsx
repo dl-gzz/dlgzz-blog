@@ -49,7 +49,8 @@ const TldrawBoard: React.FC = () => {
                 返回首页
             </Link>
 
-            <Tldraw shapeUtils={customShapeUtils}>
+            {/* 只测试 BoardLogic，不包含 customShapeUtils */}
+            <Tldraw>
                 <BoardLogic />
             </Tldraw>
         </div>
