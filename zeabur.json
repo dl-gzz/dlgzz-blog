@@ -1,0 +1,10 @@
+{
+  "$schema": "https://zeabur.com/schema.json",
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_AI_PROVIDER": "${NEXT_PUBLIC_AI_PROVIDER}",
+      "NEXT_PUBLIC_AI_API_KEY": "${NEXT_PUBLIC_AI_API_KEY}",
+      "NEXT_PUBLIC_CLAUDE_API_ENDPOINT": "${NEXT_PUBLIC_CLAUDE_API_ENDPOINT}"
+    }
+  }
+}
