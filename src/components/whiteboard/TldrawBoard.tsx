@@ -1,12 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tldraw } from 'tldraw';
 import { customShapeUtils } from './shapes/registry';
 import BoardLogic from './BoardLogic';
 import Link from 'next/link';
 
 const TldrawBoard: React.FC = () => {
+    // 动态加载 tldraw CSS
+    useEffect(() => {
+        // 检查是否已经加载了 tldraw CSS
+        const existingLink = document.querySelector('link[href*="tldraw"]');
+        if (!existingLink) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://cdn.jsdelivr.net/npm/tldraw@4.2.3/tldraw.css';
+            document.head.appendChild(link);
+            console.log('Tldraw CSS loaded from CDN');
+        }
+    }, []);
+
     return (
         <div style={{ position: 'fixed', inset: 0 }}>
             {/* 返回首页按钮 */}
