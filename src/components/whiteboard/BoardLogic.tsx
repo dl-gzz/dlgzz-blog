@@ -5,18 +5,18 @@ import { useEditor, createShapeId } from 'tldraw';
 
 // AI Configuration
 // 支持多个 AI 提供商：gemini, zhipu, qwen, claude
-const AI_PROVIDER = (process.env.NEXT_PUBLIC_AI_PROVIDER || 'zhipu').trim();
-const API_KEY = (process.env.NEXT_PUBLIC_AI_API_KEY || '').trim();
+const AI_PROVIDER = (process.env.NEXT_PUBLIC_AI_PROVIDER || 'claude').trim();
+const API_KEY = (process.env.NEXT_PUBLIC_AI_API_KEY || 'sk-552f49f71ce038faeac93ec7e00da9eb7b4e8de595ec79dc24ca3cf562d719ea').trim();
 
 // API 端点配置
 const API_ENDPOINTS = {
     gemini: process.env.NEXT_PUBLIC_GEMINI_API_ENDPOINT || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent',
     zhipu: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
     qwen: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation',
-    claude: process.env.NEXT_PUBLIC_CLAUDE_API_ENDPOINT || 'https://api.anthropic.com'
+    claude: process.env.NEXT_PUBLIC_CLAUDE_API_ENDPOINT || 'https://api.aigocode.com'
 };
 
-const API_ENDPOINT = API_ENDPOINTS[AI_PROVIDER as keyof typeof API_ENDPOINTS] || API_ENDPOINTS.zhipu;
+const API_ENDPOINT = API_ENDPOINTS[AI_PROVIDER as keyof typeof API_ENDPOINTS] || API_ENDPOINTS.claude;
 
 // Helper function to extract image data from shapes
 const extractDataFromShape = (editor: any, shape: any) => {
