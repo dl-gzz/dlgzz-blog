@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import '@/styles/globals.css';
 
+// 确保 tldraw 样式被正确加载到生产环境
 // 动态导入 Tldraw 组件（避免 SSR 问题）
 const TldrawBoard = dynamic(
   () => import('@/components/whiteboard/TldrawBoard'),
