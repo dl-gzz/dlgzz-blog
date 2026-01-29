@@ -1,10 +1,7 @@
 [build]
-# 增加构建超时时间
+# 增加构建超时时间到 30 分钟
 timeout = 1800
 
 [build.env]
-# 加速npm安装
-NPM_CONFIG_REGISTRY = "https://registry.npmmirror.com"
-PNPM_STORE_DIR = "/tmp/pnpm-store"
 # 增加 Node.js 内存限制
 NODE_OPTIONS = "--max-old-space-size=4096"

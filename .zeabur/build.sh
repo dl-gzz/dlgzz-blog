@@ -4,31 +4,29 @@ set -e
 echo "=== 开始构建 ==="
 echo "Node version: $(node --version)"
 echo "pnpm version: $(pnpm --version)"
-echo "Available memory: $(free -h 2>/dev/null | grep Mem || echo 'unknown')"
+echo "Current directory: $(pwd)"
+echo "Disk space: $(df -h . | tail -1)"
 
 # 使用淘宝镜像加速
-export PNPM_REGISTRY=https://registry.npmmirror.com
+echo "=== 配置 pnpm ==="
+pnpm config set registry https://registry.npmmirror.com
+pnpm config set network-timeout 300000
+echo "pnpm config:"
+pnpm config list
 
-# 先只安装生产依赖，减少内存占用
-echo "=== 安装生产依赖 ==="
-pnpm install --frozen-lockfile --ignore-scripts --prefer-offline --prod
+# 安装依赖
+echo "=== 开始安装依赖 $(date) ==="
+pnpm install --frozen-lockfile --ignore-scripts --no-optional 2>&1 | tee /tmp/pnpm-install.log
+echo "=== 依赖安装完成 $(date) ==="
 
-echo "=== 生产依赖安装完成 ==="
 echo "node_modules size: $(du -sh node_modules 2>/dev/null || echo 'unknown')"
-
-# 再安装开发依赖（构建需要）
-echo "=== 安装开发依赖 ==="
-pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
-
-echo "=== 所有依赖安装完成 ==="
-echo "node_modules size: $(du -sh node_modules 2>/dev/null || echo 'unknown')"
+echo "Disk space after install: $(df -h . | tail -1)"
 
 # 手动运行 fumadocs-mdx
-echo "=== 运行 fumadocs-mdx ==="
+echo "=== 运行 fumadocs-mdx $(date) ==="
 pnpm run content || echo "fumadocs-mdx 失败，继续构建"
 
 # 构建项目
-echo "=== 构建项目 ==="
-pnpm build
-
-echo "=== 构建完成! ==="
+echo "=== 开始构建项目 $(date) ==="
+pnpm build 2>&1 | tee /tmp/pnpm-build.log
+echo "=== 构建完成 $(date) ==="
