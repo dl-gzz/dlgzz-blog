@@ -16,9 +16,12 @@ COPY source.config.ts ./
 COPY content ./content
 
 # Install with increased timeout, skip postinstall to avoid issues
-RUN pnpm config set registry https://registry.npmmirror.com && \
+RUN echo "=== Starting pnpm install ===" && \
+    pnpm config set registry https://registry.npmmirror.com && \
     pnpm config set fetch-timeout 600000 && \
-    pnpm i --frozen-lockfile --ignore-scripts
+    echo "=== Installing dependencies ===" && \
+    pnpm i --frozen-lockfile --ignore-scripts && \
+    echo "=== Dependencies installed successfully ==="
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -35,10 +38,13 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Run fumadocs-mdx manually before build
-RUN pnpm run content || true
+RUN echo "=== Running fumadocs-mdx ===" && \
+    pnpm run content || echo "fumadocs-mdx failed, continuing anyway"
 
 # Build the application
-RUN DOCKER_BUILD=true pnpm build
+RUN echo "=== Starting Next.js build ===" && \
+    DOCKER_BUILD=true pnpm build && \
+    echo "=== Build completed successfully ==="
 
 # Production image, copy all the files and run next
 FROM base AS runner
