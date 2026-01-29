@@ -20,15 +20,22 @@ const nextConfig: NextConfig = {
 
   // Webpack configuration for Tldraw
   webpack: (config, { isServer }) => {
-    // Only apply client-side optimizations
+    // Resolve tldraw libraries to avoid duplicate imports
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@tldraw/utils': require.resolve('@tldraw/utils'),
+      '@tldraw/state': require.resolve('@tldraw/state'),
+      '@tldraw/state-react': require.resolve('@tldraw/state-react'),
+      '@tldraw/store': require.resolve('@tldraw/store'),
+      '@tldraw/validate': require.resolve('@tldraw/validate'),
+      '@tldraw/tlschema': require.resolve('@tldraw/tlschema'),
+      '@tldraw/editor': require.resolve('@tldraw/editor'),
+      'tldraw': require.resolve('tldraw'),
+    };
+
+    // Fix hotkeys-js import issue - force ESM resolution
     if (!isServer) {
-      // Ensure proper module resolution
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
+      config.resolve.alias['hotkeys-js'] = require.resolve('hotkeys-js');
     }
 
     return config;

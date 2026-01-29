@@ -2,24 +2,43 @@
 
 import React, { useEffect } from 'react';
 import { Tldraw } from 'tldraw';
+import { customShapeUtils } from './shapes/registry';
+import BoardLogic from './BoardLogic';
 import Link from 'next/link';
 
 const TldrawBoard: React.FC = () => {
     // 动态加载 tldraw CSS
     useEffect(() => {
+        // 检查是否已经加载了 tldraw CSS
         const existingLink = document.querySelector('link[href*="tldraw"]');
         if (!existingLink) {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = '/css/tldraw.css';
-            link.onload = () => console.log('✅ Tldraw CSS loaded');
-            link.onerror = () => console.error('❌ Failed to load tldraw CSS');
+            link.onload = () => {
+                console.log('✅ Tldraw CSS loaded successfully from local');
+                console.log('Checking tldraw elements:', document.querySelectorAll('[class*="tl-"]').length);
+                // 延迟检查，等待 Tldraw 完全初始化
+                setTimeout(() => {
+                    console.log('After init - tldraw elements:', document.querySelectorAll('[class*="tl-"]').length);
+                    console.log('Canvas element:', document.querySelector('.tl-canvas'));
+                }, 1000);
+            };
+            link.onerror = () => {
+                console.error('❌ Failed to load tldraw CSS, trying CDN fallback');
+                // 如果本地加载失败，尝试 CDN
+                const cdnLink = document.createElement('link');
+                cdnLink.rel = 'stylesheet';
+                cdnLink.href = 'https://unpkg.com/tldraw@4.2.3/tldraw.css';
+                document.head.appendChild(cdnLink);
+            };
             document.head.appendChild(link);
         }
     }, []);
 
     return (
         <div style={{ position: 'fixed', inset: 0 }}>
+            {/* 返回首页按钮 */}
             <Link
                 href="/"
                 className="fixed top-4 left-4 z-50 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center gap-2"
@@ -30,8 +49,9 @@ const TldrawBoard: React.FC = () => {
                 返回首页
             </Link>
 
-            {/* 完全简化版本 - 无任何自定义组件 */}
-            <Tldraw />
+            <Tldraw shapeUtils={customShapeUtils}>
+                <BoardLogic />
+            </Tldraw>
         </div>
     );
 };

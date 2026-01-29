@@ -15,13 +15,9 @@ COPY package.json pnpm-lock.yaml* ./
 COPY source.config.ts ./
 COPY content ./content
 
-# Install with increased timeout, skip postinstall to avoid issues
-RUN echo "=== Starting pnpm install ===" && \
-    pnpm config set registry https://registry.npmmirror.com && \
-    pnpm config set fetch-timeout 600000 && \
-    echo "=== Installing dependencies ===" && \
-    pnpm i --frozen-lockfile --ignore-scripts && \
-    echo "=== Dependencies installed successfully ==="
+# Use China mirror for faster installation
+RUN pnpm config set registry https://registry.npmmirror.com && \
+    pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -37,14 +33,8 @@ COPY . .
 # Uncomment the following line to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Run fumadocs-mdx manually before build
-RUN echo "=== Running fumadocs-mdx ===" && \
-    pnpm run content || echo "fumadocs-mdx failed, continuing anyway"
-
 # Build the application
-RUN echo "=== Starting Next.js build ===" && \
-    DOCKER_BUILD=true pnpm build && \
-    echo "=== Build completed successfully ==="
+RUN DOCKER_BUILD=true pnpm build
 
 # Production image, copy all the files and run next
 FROM base AS runner
