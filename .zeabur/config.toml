@@ -6,3 +6,5 @@ timeout = 1800
 # 加速npm安装
 NPM_CONFIG_REGISTRY = "https://registry.npmmirror.com"
 PNPM_STORE_DIR = "/tmp/pnpm-store"
+# 增加 Node.js 内存限制
+NODE_OPTIONS = "--max-old-space-size=4096"
