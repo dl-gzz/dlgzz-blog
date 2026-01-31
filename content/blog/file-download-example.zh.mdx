@@ -1,0 +1,103 @@
+---
+title: 文件下载功能示例
+description: 演示如何在文章中添加文件下载功能
+image: /images/blog/post-1.png
+date: "2026-01-30"
+published: true
+categories: ["教程", "功能"]
+author: admin
+premium: false
+---
+
+# 文章文件下载功能
+
+这篇文章演示了如何在博客文章中添加文件下载功能。
+
+## 基础用法
+
+### 默认样式
+
+<FileDownload
+  href="/files/example.pdf"
+  name="示例文档.pdf"
+  size="2.5 MB"
+  description="这是一个示例 PDF 文档"
+/>
+
+### 紧凑样式
+
+<FileDownload
+  href="/files/code-sample.zip"
+  name="代码示例.zip"
+  size="1.2 MB"
+  variant="compact"
+/>
+
+### 卡片样式
+
+<FileDownload
+  href="/files/tutorial.pdf"
+  name="完整教程.pdf"
+  size="5.8 MB"
+  type="PDF"
+  description="包含详细步骤和代码示例的完整教程文档"
+  variant="card"
+/>
+
+## 文件列表
+
+使用 `FileDownloads` 容器可以组织多个文件：
+
+<FileDownloads title="相关资源下载">
+  <FileDownload
+    href="/files/chapter1.pdf"
+    name="第一章：入门指南.pdf"
+    size="1.5 MB"
+  />
+  <FileDownload
+    href="/files/chapter2.pdf"
+    name="第二章：进阶技巧.pdf"
+    size="2.3 MB"
+  />
+  <FileDownload
+    href="/files/source-code.zip"
+    name="完整源代码.zip"
+    size="856 KB"
+    description="包含所有示例代码"
+  />
+</FileDownloads>
+
+## 支持的文件类型
+
+组件会自动识别文件类型并显示相应的图标：
+
+<FileDownloads>
+  <FileDownload href="/files/document.pdf" name="PDF 文档.pdf" size="1 MB" variant="compact" />
+  <FileDownload href="/files/archive.zip" name="压缩包.zip" size="2 MB" variant="compact" />
+  <FileDownload href="/files/image.png" name="图片.png" size="500 KB" variant="compact" />
+  <FileDownload href="/files/code.js" name="代码文件.js" size="10 KB" variant="compact" />
+</FileDownloads>
+
+## 在文章中的实际应用
+
+你可以在文章的任何位置添加文件下载，例如：
+
+1. **教程资源**：提供配套的代码示例、数据集等
+2. **模板文件**：分享可复用的模板
+3. **工具下载**：提供相关工具的下载链接
+4. **补充材料**：提供额外的学习资料
+
+<FileDownload
+  href="/files/template.zip"
+  name="项目模板.zip"
+  size="3.2 MB"
+  description="包含完整的项目结构和配置文件"
+  variant="card"
+/>
+
+## 注意事项
+
+- 文件应该放在 `public/files/` 目录下
+- 建议标注文件大小，方便用户判断
+- 可以添加描述说明文件内容
+- 支持自定义样式和类名

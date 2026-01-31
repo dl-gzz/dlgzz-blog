@@ -1,6 +1,7 @@
 import { ImageWrapper } from '@/components/docs/image-wrapper';
 import { Wrapper } from '@/components/docs/wrapper';
 import { YoutubeVideo } from '@/components/docs/youtube-video';
+import { FileDownload, FileDownloads } from '@/components/blog/file-download';
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Card, Cards } from 'fumadocs-ui/components/card';
@@ -37,6 +38,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     File,
     Folder,
     Files,
+    FileDownload,
+    FileDownloads,
     blockquote: Callout as unknown as FC<ComponentProps<'blockquote'>>,
     img: ImageWrapper,
   };
