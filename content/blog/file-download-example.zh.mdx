@@ -13,7 +13,43 @@ premium: false
 
 这篇文章演示了如何在博客文章中添加文件下载功能。
 
-## 基础用法
+## 权限控制
+
+### 公开文件（所有人可下载）
+
+<FileDownload
+  href="/files/example.pdf"
+  name="公开示例文档.pdf"
+  size="1.5 MB"
+  description="无需登录，任何人都可以下载"
+/>
+
+### 会员专属文件（需要登录）
+
+<FileDownload
+  href="/api/files/download?key=members/member-guide.pdf&auth=true"
+  name="会员使用指南.pdf"
+  size="2.3 MB"
+  description="需要登录后才能下载"
+/>
+
+### 付费用户专属（需要订阅）
+
+<FileDownload
+  href="/api/files/download?key=premium/advanced-tutorial.pdf&premium=true"
+  name="高级教程完整版.pdf"
+  size="8.5 MB"
+  description="仅限付费订阅用户下载"
+  variant="card"
+/>
+
+## 权限说明
+
+| 文件类型 | 访问要求 | 使用场景 |
+|---------|---------|---------|
+| 公开文件 | 无需登录 | 示例文件、免费资源 |
+| 会员文件 | 需要登录 | 注册用户福利 |
+| 付费文件 | 需要订阅 | 高价值内容、专业教程 |
 
 ### 默认样式
 

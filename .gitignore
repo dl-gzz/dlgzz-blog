@@ -58,3 +58,7 @@ next-env.d.ts
 .dev.vars
 .dev.vars*
 !.dev.vars.example
+# 受保护的文件（不提交到 Git）
+/private-files/*
+!/private-files/README.md
+!/private-files/.gitkeep
