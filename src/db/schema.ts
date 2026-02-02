@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, pgTable, text, timestamp, integer } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -100,4 +100,20 @@ export const tryOnHistory = pgTable("try_on_history", {
 	outfitId: text('outfit_id'), // 如果来自套装，记录套装ID
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// 文件下载统计表
+export const fileDownload = pgTable("file_download", {
+	id: text("id").primaryKey(),
+	fileKey: text('file_key').notNull(), // 文件标识
+	fileName: text('file_name').notNull(), // 文件名
+	fileSize: integer('file_size'), // 文件大小（字节）
+	userId: text('user_id').references(() => user.id, { onDelete: 'set null' }), // 下载用户（可为空，匿名下载）
+	userEmail: text('user_email'), // 用户邮箱（冗余字段，方便查询）
+	ipAddress: text('ip_address'), // IP 地址
+	userAgent: text('user_agent'), // 浏览器信息
+	referer: text('referer'), // 来源页面
+	requireAuth: boolean('require_auth').notNull().default(false), // 是否需要登录
+	requirePremium: boolean('require_premium').notNull().default(false), // 是否需要付费
+	downloadedAt: timestamp('downloaded_at').notNull().defaultNow(), // 下载时间
 });

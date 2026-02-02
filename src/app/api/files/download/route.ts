@@ -1,10 +1,13 @@
 /**
- * 文件下载 API - 支持权限控制
+ * 文件下载 API - 支持权限控制和下载统计
  * 支持：公开文件、需要登录、需要付费订阅
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
+import { db } from '@/db';
+import { fileDownload } from '@/db/schema';
+import { nanoid } from 'nanoid';
 import path from 'path';
 import fs from 'fs';
 
@@ -104,8 +107,38 @@ export async function GET(req: NextRequest) {
 
     const contentType = mimeTypes[ext] || 'application/octet-stream';
 
-    // 记录下载日志（可选）
-    console.log(`File downloaded: ${fileName} by user: ${(await getSession())?.user?.email || 'anonymous'}`);
+    // 获取用户信息
+    const session = await getSession();
+    const userId = session?.user?.id || null;
+    const userEmail = session?.user?.email || null;
+
+    // 获取请求信息
+    const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+    const referer = req.headers.get('referer') || null;
+
+    // 记录下载统计到数据库
+    try {
+      await db.insert(fileDownload).values({
+        id: nanoid(),
+        fileKey,
+        fileName,
+        fileSize: fileBuffer.length,
+        userId,
+        userEmail,
+        ipAddress,
+        userAgent,
+        referer,
+        requireAuth,
+        requirePremium,
+      });
+    } catch (dbError) {
+      // 统计记录失败不影响下载
+      console.error('Failed to record download stats:', dbError);
+    }
+
+    // 控制台日志
+    console.log(`File downloaded: ${fileName} by user: ${userEmail || 'anonymous'}`);
 
     // 返回文件
     return new NextResponse(fileBuffer, {
