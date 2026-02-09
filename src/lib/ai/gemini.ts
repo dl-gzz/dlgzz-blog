@@ -20,6 +20,13 @@ export class GeminiAI {
 
     const normalized = this.baseURL.replace(/\/+$/, '');
 
+    // Official Google Gemini endpoint: use native generateContent directly.
+    if (normalized.includes('generativelanguage.googleapis.com')) {
+      return [
+        `${normalized}/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`,
+      ];
+    }
+
     if (normalized.endsWith('/chat/completions')) {
       return [normalized];
     }
