@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
-import { db } from '@/db';
+import { getDb } from '@/db';
 import { fileDownload } from '@/db/schema';
 import { nanoid } from 'nanoid';
 import path from 'path';
@@ -13,6 +13,7 @@ import fs from 'fs';
 
 export async function GET(req: NextRequest) {
   try {
+    const db = await getDb();
     const searchParams = req.nextUrl.searchParams;
     const fileKey = searchParams.get('key');
     const requireAuth = searchParams.get('auth') === 'true';

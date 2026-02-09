@@ -4,12 +4,13 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/server';
-import { db } from '@/db';
+import { getDb } from '@/db';
 import { fileDownload } from '@/db/schema';
-import { desc, eq, sql, and } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 
 export async function GET(req: NextRequest) {
   try {
+    const db = await getDb();
     // 检查管理员权限
     const session = await getSession();
     if (!session?.user || session.user.role !== 'admin') {
