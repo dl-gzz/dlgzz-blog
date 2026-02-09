@@ -3,21 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useEditor, createShapeId } from 'tldraw';
 
-// AI Configuration
-// 支持多个 AI 提供商：gemini, zhipu, qwen, claude
-const AI_PROVIDER = (process.env.NEXT_PUBLIC_AI_PROVIDER || 'claude').trim();
-const API_KEY = (process.env.NEXT_PUBLIC_AI_API_KEY || 'sk-552f49f71ce038faeac93ec7e00da9eb7b4e8de595ec79dc24ca3cf562d719ea').trim();
-
-// API 端点配置
-const API_ENDPOINTS = {
-    gemini: process.env.NEXT_PUBLIC_GEMINI_API_ENDPOINT || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent',
-    zhipu: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-    qwen: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation',
-    claude: process.env.NEXT_PUBLIC_CLAUDE_API_ENDPOINT || 'https://api.aigocode.com'
-};
-
-const API_ENDPOINT = API_ENDPOINTS[AI_PROVIDER as keyof typeof API_ENDPOINTS] || API_ENDPOINTS.claude;
-
 // Helper function to extract image data from shapes
 const extractDataFromShape = (editor: any, shape: any) => {
     if (!shape) return null;
@@ -298,159 +283,20 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                 contextData += 'No shapes selected.\n';
             }
 
-            // Build request based on AI provider
-            let body: any;
-            let headers: any = { 'Content-Type': 'application/json' };
-            let fetchUrl = API_ENDPOINT;
-
             const finalPrompt = SYSTEM_PROMPT + '\n\nCURRENT CONTEXT:\n' + contextData + '\n\nUSER REQUEST: ' + userText;
+            const imageSummary = imageData.length > 0
+                ? `\n\nIMAGE_CONTEXT: ${imageData.length} image(s) selected.`
+                : '';
 
-            if (AI_PROVIDER === 'zhipu') {
-                // 智谱 GLM-4V 格式
-                headers['Authorization'] = `Bearer ${API_KEY}`;
-
-                // 构建用户消息内容
-                const userContent: any[] = [
-                    { type: 'text', text: 'CURRENT CONTEXT:\n' + contextData + '\n\nUSER REQUEST: ' + userText }
-                ];
-
-                // 添加图片（智谱格式）
-                if (imageData.length > 0) {
-                    imageData.forEach(img => {
-                        userContent.push({
-                            type: 'image_url',
-                            image_url: {
-                                url: `data:${img.mimeType};base64,${img.data}`
-                            }
-                        });
-                    });
-                }
-
-                body = {
-                    model: 'glm-4v',
+            const res = await fetch('/api/whiteboard/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     messages: [
                         { role: 'system', content: SYSTEM_PROMPT },
-                        { role: 'user', content: userContent }
+                        { role: 'user', content: `${finalPrompt}${imageSummary}` }
                     ]
-                };
-            } else if (AI_PROVIDER === 'qwen') {
-                // 通义千问格式
-                headers['Authorization'] = `Bearer ${API_KEY}`;
-                headers['X-DashScope-SSE'] = 'disable';
-
-                const content: any[] = [{ text: finalPrompt }];
-
-                if (imageData.length > 0) {
-                    imageData.forEach(img => {
-                        content.push({
-                            image: `data:${img.mimeType};base64,${img.data}`
-                        });
-                    });
-                }
-
-                body = {
-                    model: 'qwen-vl-plus',
-                    input: {
-                        messages: [
-                            { role: 'user', content }
-                        ]
-                    }
-                };
-            } else if (AI_PROVIDER === 'claude') {
-                // Claude API 格式（代理不支持 system 参数，需要将 system prompt 放入用户消息）
-                headers['x-api-key'] = API_KEY;
-                headers['anthropic-version'] = '2023-06-01';
-
-                fetchUrl = `${API_ENDPOINT}/v1/messages`;
-
-                // 构建消息内容（支持多模态）
-                // 将 SYSTEM_PROMPT 放入用户消息的开头
-                const content: any[] = [
-                    { type: 'text', text: SYSTEM_PROMPT + '\n\nCURRENT CONTEXT:\n' + contextData + '\n\nUSER REQUEST: ' + userText }
-                ];
-
-                // 添加图片（Claude 格式）
-                if (imageData.length > 0) {
-                    imageData.forEach(img => {
-                        content.push({
-                            type: 'image',
-                            source: {
-                                type: 'base64',
-                                media_type: img.mimeType,
-                                data: img.data
-                            }
-                        });
-                    });
-                }
-
-                body = {
-                    model: 'claude-sonnet-4-5-20250929',
-                    max_tokens: 4096,
-                    messages: [
-                        { role: 'user', content }
-                    ]
-                };
-            } else {
-                // Gemini 格式（默认）
-                // 如果是自定义端点，使用 Authorization header 和 OpenAI 兼容格式
-                if (process.env.NEXT_PUBLIC_GEMINI_API_ENDPOINT) {
-                    headers['Authorization'] = `Bearer ${API_KEY}`;
-
-                    // 直接使用配置的端点，不添加额外路径
-                    fetchUrl = API_ENDPOINT;
-
-                    // 构建用户消息内容（支持多模态）
-                    const userContent: any[] = [
-                        { type: 'text', text: 'CURRENT CONTEXT:\n' + contextData + '\n\nUSER REQUEST: ' + userText }
-                    ];
-
-                    // 添加图片（OpenAI 格式）
-                    if (imageData.length > 0) {
-                        imageData.forEach(img => {
-                            userContent.push({
-                                type: 'image_url',
-                                image_url: {
-                                    url: `data:${img.mimeType};base64,${img.data}`
-                                }
-                            });
-                        });
-                    }
-
-                    // 使用 OpenAI 兼容格式（适用于大多数第三方代理）
-                    body = {
-                        model: 'gemini-2.0-flash-exp',
-                        messages: [
-                            { role: 'system', content: SYSTEM_PROMPT },
-                            { role: 'user', content: userContent }
-                        ]
-                    };
-                } else {
-                    // 标准 Gemini API 格式
-                    fetchUrl = `${API_ENDPOINT}?key=${API_KEY}`;
-
-                    const parts: any[] = [{ text: finalPrompt }];
-
-                    if (imageData.length > 0) {
-                        imageData.forEach(img => {
-                            parts.push({
-                                inline_data: {
-                                    mime_type: img.mimeType,
-                                    data: img.data
-                                }
-                            });
-                        });
-                    }
-
-                    body = {
-                        contents: [{ parts }]
-                    };
-                }
-            }
-
-            const res = await fetch(fetchUrl, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(body)
+                })
             });
 
             const data = await res.json();
@@ -458,43 +304,17 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
             // 调试日志：打印完整响应
             console.log('API Response:', JSON.stringify(data, null, 2));
 
-            let responseText = '';
-
-            // 解析响应（根据不同提供商）
-            if (AI_PROVIDER === 'zhipu') {
-                responseText = data.choices?.[0]?.message?.content || '';
-            } else if (AI_PROVIDER === 'qwen') {
-                responseText = data.output?.choices?.[0]?.message?.content || '';
-            } else if (AI_PROVIDER === 'claude') {
-                // Claude API 响应格式
-                if (data.content && Array.isArray(data.content)) {
-                    for (const block of data.content) {
-                        if (block.type === 'text' && block.text) {
-                            responseText = block.text;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                // Gemini
-                responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-                if (!responseText && data.candidates?.[0]?.content?.parts) {
-                    for (const part of data.candidates[0].content.parts) {
-                        if (part.text) {
-                            responseText = part.text;
-                            break;
-                        }
-                    }
-                }
+            if (!res.ok || !data?.success) {
+                const errorMsg = data?.error || `HTTP ${res.status}`;
+                throw new Error(`AI Error: ${errorMsg}`);
             }
 
+            const responseText = typeof data.message === 'string'
+                ? data.message
+                : JSON.stringify(data.message || '');
+
             if (!responseText) {
-                let errorMsg = 'Empty Response';
-                if (data.error) {
-                    errorMsg = data.error.message || JSON.stringify(data.error);
-                }
-                throw new Error('AI Error: ' + errorMsg);
+                throw new Error('AI Error: Empty Response');
             }
 
             // Parse JSON & Execute
@@ -666,10 +486,7 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                                     borderRadius: 4,
                                     fontWeight: 500
                                 }}>
-                                    {AI_PROVIDER === 'zhipu' ? 'GLM-4V' :
-                                     AI_PROVIDER === 'qwen' ? 'Qwen-VL' :
-                                     AI_PROVIDER === 'claude' ? 'Claude Sonnet 4.5' :
-                                     'Gemini 3 Pro'}
+                                    Server AI
                                 </span>
                             </div>
                             <button
@@ -814,4 +631,3 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
 };
 
 export default BoardLogic;
-
