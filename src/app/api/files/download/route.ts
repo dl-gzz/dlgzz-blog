@@ -132,9 +132,10 @@ export async function GET(req: NextRequest) {
         requireAuth,
         requirePremium,
       });
+      console.log(`✅ Download stats recorded for: ${fileName}`);
     } catch (dbError) {
       // 统计记录失败不影响下载
-      console.error('Failed to record download stats:', dbError);
+      console.warn('⚠️ Failed to record download stats (database not configured):', dbError instanceof Error ? dbError.message : 'Unknown error');
     }
 
     // 控制台日志

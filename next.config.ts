@@ -20,17 +20,37 @@ const nextConfig: NextConfig = {
 
   // Webpack configuration for Tldraw
   webpack: (config, { isServer }) => {
+    // Resolve a package only if it exists to avoid dev server crash
+    const safeResolve = (pkg: string) => {
+      try {
+        return require.resolve(pkg);
+      } catch {
+        return undefined;
+      }
+    };
+
     // Resolve tldraw libraries to avoid duplicate imports
+    const tldrawAliases: Record<string, string> = {};
+    const candidates = [
+      '@tldraw/utils',
+      '@tldraw/state',
+      '@tldraw/state-react',
+      '@tldraw/store',
+      '@tldraw/validate',
+      '@tldraw/tlschema',
+      '@tldraw/editor',
+      'tldraw',
+    ];
+    for (const pkg of candidates) {
+      const resolved = safeResolve(pkg);
+      if (resolved) {
+        tldrawAliases[pkg] = resolved;
+      }
+    }
+
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@tldraw/utils': require.resolve('@tldraw/utils'),
-      '@tldraw/state': require.resolve('@tldraw/state'),
-      '@tldraw/state-react': require.resolve('@tldraw/state-react'),
-      '@tldraw/store': require.resolve('@tldraw/store'),
-      '@tldraw/validate': require.resolve('@tldraw/validate'),
-      '@tldraw/tlschema': require.resolve('@tldraw/tlschema'),
-      '@tldraw/editor': require.resolve('@tldraw/editor'),
-      'tldraw': require.resolve('tldraw'),
+      ...tldrawAliases,
     };
 
     // Fix hotkeys-js import issue - force ESM resolution

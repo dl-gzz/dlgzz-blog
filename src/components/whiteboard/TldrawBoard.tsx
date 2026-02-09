@@ -1,40 +1,33 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Tldraw } from 'tldraw';
 import { customShapeUtils } from './shapes/registry';
 import BoardLogic from './BoardLogic';
 import Link from 'next/link';
 
 const TldrawBoard: React.FC = () => {
-    // 动态加载 tldraw CSS
-    useEffect(() => {
-        // 检查是否已经加载了 tldraw CSS
-        const existingLink = document.querySelector('link[href*="tldraw"]');
-        if (!existingLink) {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = '/css/tldraw.css';
-            link.onload = () => {
-                console.log('✅ Tldraw CSS loaded successfully from local');
-                console.log('Checking tldraw elements:', document.querySelectorAll('[class*="tl-"]').length);
-                // 延迟检查，等待 Tldraw 完全初始化
-                setTimeout(() => {
-                    console.log('After init - tldraw elements:', document.querySelectorAll('[class*="tl-"]').length);
-                    console.log('Canvas element:', document.querySelector('.tl-canvas'));
-                }, 1000);
-            };
-            link.onerror = () => {
-                console.error('❌ Failed to load tldraw CSS, trying CDN fallback');
-                // 如果本地加载失败，尝试 CDN
-                const cdnLink = document.createElement('link');
-                cdnLink.rel = 'stylesheet';
-                cdnLink.href = 'https://unpkg.com/tldraw@4.2.3/tldraw.css';
-                document.head.appendChild(cdnLink);
-            };
-            document.head.appendChild(link);
-        }
-    }, []);
+    const licenseKey = process.env.NEXT_PUBLIC_TLDRAW_LICENSE_KEY;
+    const hasTldrawLicense = Boolean(
+        licenseKey &&
+        licenseKey.trim().length > 0
+    );
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isProduction && !hasTldrawLicense) {
+        return (
+            <div className="fixed inset-0 flex items-center justify-center bg-black text-white p-6">
+                <div className="max-w-xl text-center space-y-3">
+                    <h1 className="text-2xl font-semibold">Whiteboard is not configured</h1>
+                    <p className="text-white/80">
+                        tldraw requires a production license key. Please set
+                        <code className="mx-1">NEXT_PUBLIC_TLDRAW_LICENSE_KEY</code>
+                        in your deployment environment and redeploy.
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div style={{ position: 'fixed', inset: 0 }}>
@@ -49,7 +42,10 @@ const TldrawBoard: React.FC = () => {
                 返回首页
             </Link>
 
-            <Tldraw shapeUtils={customShapeUtils}>
+            <Tldraw
+                shapeUtils={customShapeUtils}
+                licenseKey={licenseKey}
+            >
                 <BoardLogic />
             </Tldraw>
         </div>

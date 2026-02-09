@@ -5,7 +5,10 @@ import { Suspense } from 'react';
 
 // 动态导入 Tldraw 组件（避免 SSR 问题）
 const TldrawBoard = dynamic(
-  () => import('@/components/whiteboard/TldrawBoard'),
+  () => import('@/components/whiteboard/TldrawBoard').catch(err => {
+    console.error('Failed to load TldrawBoard:', err);
+    return { default: () => <div className="p-6 text-red-500">Failed to load whiteboard: {err.message}</div> };
+  }),
   {
     ssr: false,
     loading: () => (
