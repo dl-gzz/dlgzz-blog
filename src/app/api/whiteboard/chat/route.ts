@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GeminiAI } from '@/lib/ai/gemini';
 import { ZhipuAI } from '@/lib/ai/zhipu';
 
 export const maxDuration = 60;
 
 /**
- * Whiteboard AI Chat API - 白板专用的智谱 AI 对话接口
+ * Whiteboard AI Chat API
  *
- * 与 /api/ai/chat 不同，这个接口：
- * 1. 使用智谱 AI (GLM-4) 而不是 DeepSeek
- * 2. 不需要付费订阅（可选）
- * 3. 专门用于白板的 AI Terminal 功能
+ * Provider priority:
+ * 1. WHITEBOARD_AI_PROVIDER=gemini|zhipu
+ * 2. Auto-detect by available server keys
  */
 export async function POST(request: NextRequest) {
   try {
@@ -22,12 +22,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const zhipu = new ZhipuAI();
-    const response = await zhipu.chat(messages);
+    const provider = (process.env.WHITEBOARD_AI_PROVIDER || '').trim().toLowerCase();
+    const hasGemini = Boolean(process.env.GEMINI_API_KEY);
+    const hasZhipu = Boolean(process.env.ZHIPU_API_KEY);
+
+    let response = '';
+    let usedProvider = '';
+
+    if (provider === 'gemini' || (!provider && hasGemini)) {
+      const gemini = new GeminiAI();
+      response = await gemini.chat(messages);
+      usedProvider = 'gemini';
+    } else if (provider === 'zhipu' || (!provider && hasZhipu)) {
+      const zhipu = new ZhipuAI();
+      response = await zhipu.chat(messages);
+      usedProvider = 'zhipu';
+    } else {
+      throw new Error(
+        'No whiteboard AI provider configured. Set GEMINI_API_KEY or ZHIPU_API_KEY.'
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: response
+      message: response,
+      provider: usedProvider,
     });
   } catch (error) {
     console.error('Whiteboard AI Chat Error:', error);
