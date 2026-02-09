@@ -3,12 +3,14 @@ export class GeminiAI {
   private baseURL: string;
   private model: string;
   private chatCompletionsURL: string;
+  private authMode: string;
 
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY || '';
     this.baseURL = process.env.GOOGLE_GEMINI_BASE_URL || 'https://api.aigocode.com';
     this.model = process.env.GEMINI_MODEL || 'gemini-3-pro-preview';
     this.chatCompletionsURL = process.env.GEMINI_CHAT_COMPLETIONS_URL || '';
+    this.authMode = (process.env.GEMINI_AUTH_MODE || 'auto').toLowerCase();
   }
 
   private getCandidateUrls() {
@@ -50,60 +52,83 @@ export class GeminiAI {
     const candidates = this.getCandidateUrls();
     let lastError = '';
 
+    const authHeadersForMode = (): Array<Record<string, string>> => {
+      if (this.authMode === 'bearer') {
+        return [{ Authorization: `Bearer ${this.apiKey}` }];
+      }
+      if (this.authMode === 'x-api-key') {
+        return [{ 'x-api-key': this.apiKey }];
+      }
+      if (this.authMode === 'api-key') {
+        return [{ 'api-key': this.apiKey }];
+      }
+      // auto mode: try common variants used by gateway vendors
+      return [
+        { Authorization: `Bearer ${this.apiKey}` },
+        { 'x-api-key': this.apiKey },
+        { 'api-key': this.apiKey },
+      ];
+    };
+
     for (const url of candidates) {
       const isNativeGemini = url.includes(':generateContent?key=');
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: isNativeGemini
-          ? {
-              'Content-Type': 'application/json',
-            }
-          : {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${this.apiKey}`,
-            },
-        body: JSON.stringify(
-          isNativeGemini
-            ? {
-                contents: [
-                  {
-                    parts: [
-                      {
-                        text: messages.map((m) => `${m.role}: ${m.content}`).join('\n\n'),
-                      },
-                    ],
-                  },
-                ],
-              }
-            : {
-                model: this.model,
-                messages,
-                stream: false,
-              }
-        ),
-      });
+      const headerVariants: Array<Record<string, string>> = isNativeGemini
+        ? [{}]
+        : authHeadersForMode();
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        lastError = `${url} -> ${response.status} - ${errorText}`;
-        continue;
-      }
+      for (const authHeaders of headerVariants) {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        };
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(
+            isNativeGemini
+              ? {
+                  contents: [
+                    {
+                      parts: [
+                        {
+                          text: messages.map((m) => `${m.role}: ${m.content}`).join('\n\n'),
+                        },
+                      ],
+                    },
+                  ],
+                }
+              : {
+                  model: this.model,
+                  messages,
+                  stream: false,
+                }
+          ),
+        });
 
-      const data = await response.json();
-
-      if (isNativeGemini) {
-        const nativeText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (nativeText) return nativeText;
-      } else {
-        const content = data?.choices?.[0]?.message?.content;
-        if (typeof content === 'string') return content;
-        if (Array.isArray(content)) {
-          const firstText = content.find((item: any) => item?.type === 'text' && item?.text)?.text;
-          if (firstText) return firstText;
+        if (!response.ok) {
+          const errorText = await response.text();
+          const authTag = Object.keys(authHeaders).join(',') || 'native-key-query';
+          lastError = `${url} [${authTag}] -> ${response.status} - ${errorText}`;
+          continue;
         }
-      }
 
-      lastError = `${url} -> 返回内容为空`;
+        const data = await response.json();
+
+        if (isNativeGemini) {
+          const nativeText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (nativeText) return nativeText;
+        } else {
+          const content = data?.choices?.[0]?.message?.content;
+          if (typeof content === 'string') return content;
+          if (Array.isArray(content)) {
+            const firstText = content.find((item: any) => item?.type === 'text' && item?.text)?.text;
+            if (firstText) return firstText;
+          }
+        }
+
+        const authTag = Object.keys(authHeaders).join(',') || 'native-key-query';
+        lastError = `${url} [${authTag}] -> 返回内容为空`;
+      }
     }
 
     throw new Error(`Gemini 请求失败: ${lastError || 'No available endpoint'}`);
