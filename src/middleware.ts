@@ -23,24 +23,29 @@ const intlMiddleware = createMiddleware(routing);
  */
 export default async function middleware(req: NextRequest) {
   const { nextUrl, headers } = req;
-  console.log('>> middleware start, pathname', nextUrl.pathname);
 
   // do not use getSession() here, it will cause error related to edge runtime
   // const session = await getSession();
-  // Use localhost for internal API calls to avoid SSL issues
-  const baseURL = process.env.NODE_ENV === 'production'
-    ? 'http://localhost:8080'  // Internal HTTP connection in production
-    : nextUrl.origin;           // Use external URL in development
+  // Always resolve the current request origin dynamically.
+  // Hard-coded localhost breaks on hosted platforms.
+  const forwardedProto = headers.get('x-forwarded-proto');
+  const forwardedHost = headers.get('x-forwarded-host') || headers.get('host');
+  const protocol = forwardedProto || nextUrl.protocol.replace(':', '');
+  const baseURL = forwardedHost ? `${protocol}://${forwardedHost}` : nextUrl.origin;
 
-  const { data: session } = await betterFetch<Session>(
-    '/api/auth/get-session',
-    {
+  let session: Session | null = null;
+  try {
+    const result = await betterFetch<Session>('/api/auth/get-session', {
       baseURL,
       headers: {
         cookie: req.headers.get('cookie') || '', // Forward the cookies from the request
       },
-    }
-  );
+    });
+    session = result?.data ?? null;
+  } catch {
+    // If session lookup fails in middleware, continue as guest instead of throwing.
+    session = null;
+  }
   const isLoggedIn = !!session;
   // console.log('middleware, isLoggedIn', isLoggedIn);
 
@@ -56,9 +61,6 @@ export default async function middleware(req: NextRequest) {
       new RegExp(`^${route}$`).test(pathnameWithoutLocale)
     );
     if (isNotAllowedRoute) {
-      console.log(
-        '<< middleware end, not allowed route, already logged in, redirecting to dashboard'
-      );
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
   }
@@ -75,17 +77,12 @@ export default async function middleware(req: NextRequest) {
       callbackUrl += nextUrl.search;
     }
     const encodedCallbackUrl = encodeURIComponent(callbackUrl);
-    console.log(
-      '<< middleware end, not logged in, redirecting to login, callbackUrl',
-      callbackUrl
-    );
     return NextResponse.redirect(
       new URL(`/auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
     );
   }
 
   // Apply intlMiddleware for all routes
-  console.log('<< middleware end, applying intlMiddleware');
   return intlMiddleware(req);
 }
 
