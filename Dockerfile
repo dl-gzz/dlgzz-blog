@@ -15,9 +15,11 @@ COPY package.json pnpm-lock.yaml* ./
 COPY source.config.ts ./
 COPY content ./content
 
-# Use China mirror for faster installation
-RUN pnpm config set registry https://registry.npmmirror.com && \
-    pnpm i --frozen-lockfile
+# Use China mirror first, then fallback to npmjs if mirror is unavailable
+RUN (pnpm config set registry https://registry.npmmirror.com && \
+    pnpm i --frozen-lockfile) || \
+    (pnpm config set registry https://registry.npmjs.org && \
+    pnpm i --frozen-lockfile)
 
 # Rebuild the source code only when needed
 FROM base AS builder
