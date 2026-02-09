@@ -31,10 +31,13 @@ export class GeminiAI {
       candidates.push(`${normalized}/chat/completions`);
     }
 
-    // Native Gemini endpoint fallback (works for vendors implementing Google-style path)
-    candidates.push(
-      `${normalized}/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
-    );
+    // Native Gemini endpoint fallback is opt-in because many proxy providers
+    // only support OpenAI-compatible chat/completions.
+    if (process.env.GEMINI_ENABLE_NATIVE_FALLBACK === 'true') {
+      candidates.push(
+        `${normalized}/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
+      );
+    }
 
     return candidates;
   }
