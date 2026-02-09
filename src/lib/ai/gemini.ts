@@ -23,14 +23,19 @@ export class GeminiAI {
     if (normalized.endsWith('/chat/completions')) {
       return [normalized];
     }
+    if (normalized.endsWith('/v1/messages') || normalized.endsWith('/messages')) {
+      return [normalized];
+    }
 
     const candidates: string[] = [];
 
     if (normalized.endsWith('/v1')) {
       candidates.push(`${normalized}/chat/completions`);
+      candidates.push(`${normalized}/messages`);
     } else {
       candidates.push(`${normalized}/v1/chat/completions`);
       candidates.push(`${normalized}/chat/completions`);
+      candidates.push(`${normalized}/v1/messages`);
     }
 
     // Native Gemini endpoint fallback is opt-in because many proxy providers
@@ -72,6 +77,7 @@ export class GeminiAI {
 
     for (const url of candidates) {
       const isNativeGemini = url.includes(':generateContent?key=');
+      const isNativeMessages = url.endsWith('/v1/messages') || url.endsWith('/messages');
       const headerVariants: Array<Record<string, string>> = isNativeGemini
         ? [{}]
         : authHeadersForMode();
@@ -97,6 +103,20 @@ export class GeminiAI {
                     },
                   ],
                 }
+              : isNativeMessages
+                ? {
+                    model: this.model,
+                    contents: [
+                      {
+                        role: 'user',
+                        parts: [
+                          {
+                            text: messages.map((m) => `${m.role}: ${m.content}`).join('\n\n'),
+                          },
+                        ],
+                      },
+                    ],
+                  }
               : {
                   model: this.model,
                   messages,
@@ -114,7 +134,7 @@ export class GeminiAI {
 
         const data = await response.json();
 
-        if (isNativeGemini) {
+        if (isNativeGemini || isNativeMessages) {
           const nativeText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
           if (nativeText) return nativeText;
         } else {
