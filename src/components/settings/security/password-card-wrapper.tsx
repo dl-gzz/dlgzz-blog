@@ -37,7 +37,6 @@ export function PasswordCardWrapper() {
       try {
         // Get the user's linked accounts
         const accounts = await authClient.listAccounts();
-        // console.log('accounts', accounts);
 
         // Check if the response is successful and contains accounts data
         if ('data' in accounts && Array.isArray(accounts.data)) {
@@ -48,7 +47,7 @@ export function PasswordCardWrapper() {
           setHasCredentialProvider(hasCredential);
         }
       } catch (error) {
-        console.error('Error checking credential provider:', error);
+        // Error checking credential provider
       } finally {
         setIsLoading(false);
       }

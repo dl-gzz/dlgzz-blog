@@ -41,6 +41,55 @@ const BoardLogic: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [isListening, setIsListening] = useState(false);
 
+    // Blog Picker State
+    const [isBlogPickerOpen, setIsBlogPickerOpen] = useState(false);
+    const [blogPosts, setBlogPosts] = useState<any[]>([]);
+    const [blogLoading, setBlogLoading] = useState(false);
+    const [blogSearch, setBlogSearch] = useState('');
+
+    const fetchBlogPosts = async () => {
+        if (blogPosts.length > 0) return;
+        setBlogLoading(true);
+        try {
+            const res = await fetch('/api/whiteboard/blog-posts?locale=zh');
+            const data = await res.json();
+            if (data.success) {
+                setBlogPosts(data.posts);
+            }
+        } catch (e) {
+            // Failed to fetch blog posts
+        } finally {
+            setBlogLoading(false);
+        }
+    };
+
+    const insertBlogPost = (post: any) => {
+        const center = editor.getViewportPageBounds().center;
+        editor.createShape({
+            id: createShapeId(),
+            type: 'blog_post',
+            x: center.x - 160,
+            y: center.y - 190,
+            props: {
+                title: post.title,
+                description: post.description,
+                image: post.image,
+                date: post.date,
+                categories: post.categories,
+                url: post.url,
+                w: 320,
+                h: 380,
+            },
+        });
+        setIsBlogPickerOpen(false);
+    };
+
+    const filteredBlogPosts = blogPosts.filter(
+        (post) =>
+            post.title.toLowerCase().includes(blogSearch.toLowerCase()) ||
+            post.description.toLowerCase().includes(blogSearch.toLowerCase())
+    );
+
     const startVoiceInput = () => {
         if (!('webkitSpeechRecognition' in window)) {
             return alert('您的浏览器不支持语音输入 (需 Chrome/Edge)');
@@ -452,6 +501,139 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                     pointerEvents: 'none'
                 }}
             >
+                {/* Blog Picker Panel */}
+                {isBlogPickerOpen && (
+                    <div style={{
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(12px)',
+                        borderRadius: 20,
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                        border: '1px solid rgba(255,255,255,0.5)',
+                        padding: 16,
+                        maxHeight: 500,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        pointerEvents: 'all'
+                    }}>
+                        {/* Header */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: 12,
+                            paddingBottom: 8,
+                            borderBottom: '1px solid #e5e7eb'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ fontSize: 16 }}>📝</span>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>
+                                    插入博客文章
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => setIsBlogPickerOpen(false)}
+                                style={{
+                                    padding: '4px 8px',
+                                    fontSize: 11,
+                                    border: '1px solid #e5e7eb',
+                                    background: '#fff',
+                                    borderRadius: 6,
+                                    cursor: 'pointer',
+                                    color: '#666',
+                                    fontWeight: 500,
+                                }}
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Search */}
+                        <input
+                            style={{
+                                padding: '8px 12px',
+                                borderRadius: 8,
+                                border: '1px solid #ddd',
+                                fontSize: 13,
+                                outline: 'none',
+                                marginBottom: 12,
+                            }}
+                            placeholder="搜索文章..."
+                            value={blogSearch}
+                            onChange={(e) => setBlogSearch(e.target.value)}
+                        />
+
+                        {/* Post List */}
+                        <div style={{
+                            flex: 1,
+                            overflowY: 'auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 8,
+                            minHeight: 200,
+                        }}>
+                            {blogLoading ? (
+                                <div style={{ textAlign: 'center', color: '#666', padding: 20, fontSize: 13 }}>
+                                    加载中...
+                                </div>
+                            ) : filteredBlogPosts.length === 0 ? (
+                                <div style={{ textAlign: 'center', color: '#999', padding: 20, fontSize: 13 }}>
+                                    {blogPosts.length === 0 ? '暂无文章' : '无匹配结果'}
+                                </div>
+                            ) : (
+                                filteredBlogPosts.map((post, i) => (
+                                    <div
+                                        key={i}
+                                        onClick={() => insertBlogPost(post)}
+                                        style={{
+                                            display: 'flex',
+                                            gap: 10,
+                                            padding: 10,
+                                            borderRadius: 8,
+                                            cursor: 'pointer',
+                                            border: '1px solid #e5e7eb',
+                                            transition: 'background 0.15s',
+                                        }}
+                                        onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#f9fafb'; }}
+                                        onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
+                                    >
+                                        {/* Thumbnail */}
+                                        {post.image && (
+                                            <img
+                                                src={post.image}
+                                                alt=""
+                                                style={{
+                                                    width: 60,
+                                                    height: 45,
+                                                    objectFit: 'cover',
+                                                    borderRadius: 6,
+                                                    flexShrink: 0,
+                                                }}
+                                            />
+                                        )}
+                                        {/* Info */}
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                color: '#111',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                            }}>
+                                                {post.title}
+                                            </div>
+                                            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
+                                                {new Date(post.date).toLocaleDateString('zh-CN')}
+                                                {post.categories.length > 0 && ` · ${post.categories.join(', ')}`}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Chat Bubble */}
                 {isAiOpen && (
                     <div style={{
@@ -623,6 +805,38 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                         }}
                     >
                         {isAiOpen ? '✕' : '✨'}
+                    </button>
+
+                    {/* 博客插入按钮 */}
+                    <button
+                        onClick={() => {
+                            setIsBlogPickerOpen(!isBlogPickerOpen);
+                            if (!isBlogPickerOpen) fetchBlogPosts();
+                        }}
+                        title="插入博客文章"
+                        style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 24,
+                            background: '#1e40af',
+                            color: '#fff',
+                            border: 'none',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                            fontSize: 20,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s cubic-bezier(0.25, 1, 0.5, 1)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                    >
+                        {isBlogPickerOpen ? '✕' : '📝'}
                     </button>
                 </div>
             </div>

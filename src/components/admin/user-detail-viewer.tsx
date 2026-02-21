@@ -85,7 +85,6 @@ export function UserDetailViewer({ user }: UserDetailViewerProps) {
       triggerRefresh();
     } catch (err) {
       const error = err as Error;
-      console.error('Failed to ban user:', error);
       setError(error.message || t('ban.error'));
       toast.error(error.message || t('ban.error'));
     } finally {
@@ -112,7 +111,6 @@ export function UserDetailViewer({ user }: UserDetailViewerProps) {
       triggerRefresh();
     } catch (err) {
       const error = err as Error;
-      console.error('Failed to unban user:', error);
       setError(error.message || t('unban.error'));
       toast.error(error.message || t('unban.error'));
     } finally {

@@ -64,11 +64,6 @@ export function DeleteAccountCard() {
           router.replace('/');
         },
         onError: (ctx) => {
-          console.error('delete account error:', ctx.error);
-          // { "message": "Session expired. Re-authenticate to perform this action.",
-          // "code": "SESSION_EXPIRED_REAUTHENTICATE_TO_PERFORM_THIS_ACTION",
-          // "status": 400, "statusText": "BAD_REQUEST" }
-          // set freshAge to 0 to disable session refreshness check for user deletion
           setError(`${ctx.error.status}: ${ctx.error.message}`);
           toast.error(t('fail'));
         },

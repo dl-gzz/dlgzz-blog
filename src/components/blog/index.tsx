@@ -65,7 +65,3 @@ export const MathGame = dynamic(
     )
   }
 );
-
-// 未来可以添加更多组件
-// export const InteractiveChart = dynamic(() => import('./interactive-chart'));
-// export const PricingCalculator = dynamic(() => import('./pricing-calculator'));

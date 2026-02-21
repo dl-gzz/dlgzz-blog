@@ -72,7 +72,6 @@ export function UpdateNameCard({ className }: UpdateNameCardProps) {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     // Don't update if the name hasn't changed
     if (values.name === session?.user?.name) {
-      console.log('No changes to save');
       return;
     }
 
@@ -82,24 +81,18 @@ export function UpdateNameCard({ className }: UpdateNameCardProps) {
       },
       {
         onRequest: (ctx) => {
-          // console.log('update name, request:', ctx.url);
           setIsSaving(true);
           setError('');
         },
         onResponse: (ctx) => {
-          // console.log('update name, response:', ctx.response);
           setIsSaving(false);
         },
         onSuccess: (ctx) => {
-          // update name success, user information stored in ctx.data
-          // console.log("update name, success:", ctx.data);
           toast.success(t('name.success'));
           refetch();
           form.reset();
         },
         onError: (ctx) => {
-          // update name fail, display the error message
-          console.error('update name error:', ctx.error);
           setError(`${ctx.error.status}: ${ctx.error.message}`);
           toast.error(t('name.fail'));
         },

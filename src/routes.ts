@@ -75,7 +75,7 @@ export const routesNotAllowedByLoggedInUsers = [Routes.Login, Routes.Register];
  */
 export const protectedRoutes = [
   Routes.Dashboard,
-  // Routes.AIChat, // 🧪 测试模式：临时移除 AI Chat 页面的登录保护
+  Routes.AIChat,
   Routes.AdminUsers,
   Routes.SettingsProfile,
   Routes.SettingsBilling,

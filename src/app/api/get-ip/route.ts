@@ -13,9 +13,5 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     ip: ip,
-    forwarded: forwarded,
-    realIp: realIp,
-    cfConnectingIp: cfConnectingIp,
-    allHeaders: Object.fromEntries(request.headers.entries()),
   });
 }

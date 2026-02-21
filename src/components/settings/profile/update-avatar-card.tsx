@@ -72,9 +72,7 @@ export function UpdateAvatarCard({ className }: UpdateAvatarCardProps) {
 
       // Upload the file to storage
       const result = await uploadFileFromBrowser(file, 'avatars');
-      // console.log('uploadFileFromBrowser, result', result);
       const { url } = result;
-      console.log('uploadFileFromBrowser, url', url);
 
       // Update the user's avatar using authClient
       await authClient.updateUser(
@@ -82,14 +80,9 @@ export function UpdateAvatarCard({ className }: UpdateAvatarCardProps) {
           image: url,
         },
         {
-          onRequest: () => {
-            // console.log('update avatar, request:', ctx.url);
-          },
-          onResponse: () => {
-            // console.log('update avatar, response:', ctx.response);
-          },
+          onRequest: () => {},
+          onResponse: () => {},
           onSuccess: () => {
-            // console.log('update avatar, success:', ctx.data);
             // Set the permanent avatar URL on success
             setAvatarUrl(url);
             toast.success(t('avatar.success'));
@@ -97,7 +90,6 @@ export function UpdateAvatarCard({ className }: UpdateAvatarCardProps) {
             refetch();
           },
           onError: (ctx) => {
-            console.error('update avatar error:', ctx.error);
             setError(`${ctx.error.status}: ${ctx.error.message}`);
             // Restore the previous avatar on error
             if (session?.user?.image) {
@@ -108,7 +100,6 @@ export function UpdateAvatarCard({ className }: UpdateAvatarCardProps) {
         }
       );
     } catch (error) {
-      console.error('update avatar error:', error);
       setError(error instanceof Error ? error.message : t('avatar.fail'));
       // Restore the previous avatar if there was an error
       if (session?.user?.image) {

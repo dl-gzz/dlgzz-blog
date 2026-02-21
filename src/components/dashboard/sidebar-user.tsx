@@ -80,13 +80,11 @@ export function SidebarUser({ user, className }: SidebarUserProps) {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          console.log('sign out success');
           // Reset payment state on sign out
           resetState();
           router.replace('/');
         },
         onError: (error) => {
-          console.error('sign out error:', error);
           toast.error(t('Common.logoutFailed'));
         },
       },

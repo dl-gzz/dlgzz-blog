@@ -64,7 +64,6 @@ export default function BillingCard() {
 
   // Determine if we are in a loading state
   const isPageLoading = isLoadingPayment || isLoadingSession;
-  // console.log('billing card, isLoadingPayment', isLoadingPayment, 'isLoadingSession', isLoadingSession);
 
   // Render loading skeleton
   if (isPageLoading) {
@@ -144,10 +143,6 @@ export default function BillingCard() {
       </div>
     );
   }
-
-  // console.log('billing card, currentPlan', currentPlan);
-  // console.log('billing card, subscription', subscription);
-  // console.log('billing card, currentUser', currentUser);
 
   return (
     <div className="grid md:grid-cols-2 gap-8">

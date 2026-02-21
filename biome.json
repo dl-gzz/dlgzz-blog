@@ -65,25 +65,7 @@
         "useKeyWithClickEvents": "off"
       }
     },
-    "ignore": [
-      ".next/**",
-      ".cursor/**",
-      ".vscode/**",
-      ".source/**",
-      "node_modules/**",
-      "dist/**",
-      "build/**",
-      "src/db/**",
-      "tailwind.config.ts",
-      "src/components/ui/*.tsx",
-      "src/components/magicui/*.tsx",
-      "src/components/animate-ui/*.tsx",
-      "src/components/tailark/*.tsx",
-      "src/app/[[]locale]/preview/**",
-      "src/payment/types.ts",
-      "src/types/index.d.ts",
-      "public/sw.js"
-    ]
+    "ignore": []
   },
   "javascript": {
     "formatter": {

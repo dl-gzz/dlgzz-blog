@@ -8,7 +8,6 @@ interface BlogGridProps {
 }
 
 export default function BlogGrid({ locale, posts }: BlogGridProps) {
-  // console.log('BlogGrid, posts', posts);
   return (
     <div>
       {posts?.length > 0 && (

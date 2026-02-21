@@ -47,7 +47,6 @@ export default async function middleware(req: NextRequest) {
     session = null;
   }
   const isLoggedIn = !!session;
-  // console.log('middleware, isLoggedIn', isLoggedIn);
 
   // Get the pathname of the request (e.g. /zh/dashboard to /dashboard)
   const pathnameWithoutLocale = getPathnameWithoutLocale(
@@ -68,7 +67,6 @@ export default async function middleware(req: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) =>
     new RegExp(`^${route}$`).test(pathnameWithoutLocale)
   );
-  // console.log('middleware, isProtectedRoute', isProtectedRoute);
 
   // If the route is a protected route, redirect to login if user is not logged in
   if (!isLoggedIn && isProtectedRoute) {

@@ -41,7 +41,6 @@ export function UsersPageClient() {
           setTotal(0);
         }
       } catch (error) {
-        console.error('Failed to fetch users:', error);
         toast.error(t('error'));
         setData([]);
         setTotal(0);

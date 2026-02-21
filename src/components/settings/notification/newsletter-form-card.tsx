@@ -79,7 +79,6 @@ export function NewsletterFormCard({ className }: NewsletterFormCardProps) {
             // Handle error from server action
             const errorMessage = statusResult?.data?.error;
             if (errorMessage) {
-              console.error('check subscription status error:', errorMessage);
               setError(errorMessage);
             }
             // Default to not subscribed if there's an error
@@ -87,7 +86,6 @@ export function NewsletterFormCard({ className }: NewsletterFormCardProps) {
             form.setValue('subscribed', false);
           }
         } catch (error) {
-          console.error('check subscription status error:', error);
           // Default to not subscribed if there's an error
           setIsSubscriptionChecked(false);
           form.setValue('subscribed', false);
@@ -154,7 +152,6 @@ export function NewsletterFormCard({ className }: NewsletterFormCardProps) {
         }
       }
     } catch (error) {
-      console.error('newsletter subscription error:', error);
       setError(t('newsletter.error'));
       toast.error(t('newsletter.error'));
       // Reset form to previous state on error
