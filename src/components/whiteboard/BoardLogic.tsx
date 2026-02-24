@@ -754,7 +754,7 @@ RULES for update:
                         position: 'absolute',
                         ...(panelPositions['blog']
                             ? { left: panelPositions['blog'].x, top: panelPositions['blog'].y }
-                            : { top: 60, right: 12 }),
+                            : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }),
                         width: 380,
                         pointerEvents: 'all',
                         zIndex: 502,
@@ -902,7 +902,7 @@ RULES for update:
                         position: 'absolute',
                         ...(panelPositions['ai']
                             ? { left: panelPositions['ai'].x, top: panelPositions['ai'].y }
-                            : { top: 60, right: 12 }),
+                            : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }),
                         width: 380,
                         pointerEvents: 'all',
                         zIndex: 502,
