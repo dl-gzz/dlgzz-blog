@@ -642,19 +642,13 @@ RULES for update:
         {
             icon: '✨',
             label: 'AI 助手',
-            onClick: () => {
-                setIsBlogPickerOpen(false);
-                setIsDrawToolsOpen(false);
-                setIsAiOpen(!isAiOpen);
-            },
+            onClick: () => setIsAiOpen(!isAiOpen),
             active: isAiOpen,
         },
         {
             icon: '📝',
             label: '博客文章',
             onClick: () => {
-                setIsAiOpen(false);
-                setIsDrawToolsOpen(false);
                 setIsBlogPickerOpen(!isBlogPickerOpen);
                 if (!isBlogPickerOpen) fetchBlogPosts();
             },
@@ -681,11 +675,7 @@ RULES for update:
         {
             icon: '🧰',
             label: '绘图工具',
-            onClick: () => {
-                setIsAiOpen(false);
-                setIsBlogPickerOpen(false);
-                setIsDrawToolsOpen(!isDrawToolsOpen);
-            },
+            onClick: () => setIsDrawToolsOpen(!isDrawToolsOpen),
             active: isDrawToolsOpen,
         },
     ];
