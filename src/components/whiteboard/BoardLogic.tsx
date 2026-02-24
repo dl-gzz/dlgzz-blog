@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useEditor, createShapeId } from 'tldraw';
 
 // Helper function to extract image data from shapes
@@ -693,24 +693,73 @@ RULES for update:
     // Dock tooltip state
     const [hoveredDock, setHoveredDock] = useState<number | null>(null);
 
+    // ═══════════ Panel drag logic ═══════════
+    const [panelPositions, setPanelPositions] = useState<Record<string, { x: number; y: number }>>({});
+    const dragState = useRef<{
+        active: boolean;
+        panelId: string;
+        startMouseX: number;
+        startMouseY: number;
+        startPanelX: number;
+        startPanelY: number;
+    }>({ active: false, panelId: '', startMouseX: 0, startMouseY: 0, startPanelX: 0, startPanelY: 0 });
+
+    const handleDragStart = useCallback((e: React.MouseEvent, panelId: string) => {
+        e.preventDefault();
+        const panel = (e.currentTarget as HTMLElement).closest('[data-panel]') as HTMLElement;
+        if (!panel) return;
+        const rect = panel.getBoundingClientRect();
+        const pos = panelPositions[panelId] || { x: rect.left, y: rect.top };
+        dragState.current = {
+            active: true,
+            panelId,
+            startMouseX: e.clientX,
+            startMouseY: e.clientY,
+            startPanelX: pos.x,
+            startPanelY: pos.y,
+        };
+        if (!panelPositions[panelId]) {
+            setPanelPositions(prev => ({ ...prev, [panelId]: { x: rect.left, y: rect.top } }));
+        }
+    }, [panelPositions]);
+
+    useEffect(() => {
+        const onMove = (e: MouseEvent) => {
+            if (!dragState.current.active) return;
+            const { panelId, startMouseX, startMouseY, startPanelX, startPanelY } = dragState.current;
+            setPanelPositions(prev => ({
+                ...prev,
+                [panelId]: {
+                    x: startPanelX + (e.clientX - startMouseX),
+                    y: startPanelY + (e.clientY - startMouseY),
+                },
+            }));
+        };
+        const onUp = () => { dragState.current.active = false; };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        return () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+    }, []);
+
     return (
         <>
-            {/* Floating panels container (top-right, below tldraw style panel) */}
-            <div
-                style={{
-                    position: 'absolute',
-                    top: 60,
-                    right: 12,
-                    width: 380,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                    pointerEvents: 'none',
-                    maxHeight: 'calc(100vh - 120px)',
-                }}
-            >
-                {/* Blog Picker Panel */}
-                {isBlogPickerOpen && (
+            {/* ═══════════ Blog Picker Panel (draggable) ═══════════ */}
+            {isBlogPickerOpen && (
+                <div
+                    data-panel="blog"
+                    style={{
+                        position: 'absolute',
+                        ...(panelPositions['blog']
+                            ? { left: panelPositions['blog'].x, top: panelPositions['blog'].y }
+                            : { top: 60, right: 12 }),
+                        width: 380,
+                        pointerEvents: 'all',
+                        zIndex: 502,
+                    }}
+                >
                     <div style={{
                         background: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(12px)',
@@ -721,18 +770,22 @@ RULES for update:
                         maxHeight: 500,
                         display: 'flex',
                         flexDirection: 'column',
-                        pointerEvents: 'all'
                     }}>
-                        {/* Header */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginBottom: 12,
-                            paddingBottom: 8,
-                            borderBottom: '1px solid #e5e7eb'
-                        }}>
+                        {/* Drag Handle Header */}
+                        <div
+                            onMouseDown={(e) => handleDragStart(e, 'blog')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: 12,
+                                paddingBottom: 8,
+                                borderBottom: '1px solid #e5e7eb',
+                                cursor: 'grab',
+                            }}
+                        >
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ color: '#ccc', fontSize: 10, letterSpacing: 2, userSelect: 'none' }}>⠿</span>
                                 <span style={{ fontSize: 16 }}>📝</span>
                                 <span style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>
                                     插入博客文章
@@ -838,10 +891,23 @@ RULES for update:
                             )}
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* AI Chat Panel */}
-                {isAiOpen && (
+            {/* ═══════════ AI Chat Panel (draggable) ═══════════ */}
+            {isAiOpen && (
+                <div
+                    data-panel="ai"
+                    style={{
+                        position: 'absolute',
+                        ...(panelPositions['ai']
+                            ? { left: panelPositions['ai'].x, top: panelPositions['ai'].y }
+                            : { top: 60, right: 12 }),
+                        width: 380,
+                        pointerEvents: 'all',
+                        zIndex: 502,
+                    }}
+                >
                     <div style={{
                         background: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(12px)',
@@ -852,18 +918,22 @@ RULES for update:
                         maxHeight: 500,
                         display: 'flex',
                         flexDirection: 'column',
-                        pointerEvents: 'all'
                     }}>
-                        {/* Header */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginBottom: 12,
-                            paddingBottom: 8,
-                            borderBottom: '1px solid #e5e7eb'
-                        }}>
+                        {/* Drag Handle Header */}
+                        <div
+                            onMouseDown={(e) => handleDragStart(e, 'ai')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: 12,
+                                paddingBottom: 8,
+                                borderBottom: '1px solid #e5e7eb',
+                                cursor: 'grab',
+                            }}
+                        >
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ color: '#ccc', fontSize: 10, letterSpacing: 2, userSelect: 'none' }}>⠿</span>
                                 <span style={{ fontSize: 16 }}>✨</span>
                                 <span style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>AI 助手</span>
                                 <span style={{
@@ -973,19 +1043,22 @@ RULES for update:
                             </button>
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
-            {/* ═══════════ Drawing Tools Panel (above Dock) ═══════════ */}
+            {/* ═══════════ Drawing Tools Panel (draggable, above Dock) ═══════════ */}
             {isDrawToolsOpen && (
-                <div style={{
-                    position: 'absolute',
-                    bottom: 100,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    pointerEvents: 'all',
-                    zIndex: 501,
-                }}>
+                <div
+                    data-panel="tools"
+                    style={{
+                        position: 'absolute',
+                        ...(panelPositions['tools']
+                            ? { left: panelPositions['tools'].x, top: panelPositions['tools'].y }
+                            : { bottom: 100, left: '50%', transform: 'translateX(-50%)' }),
+                        pointerEvents: 'all',
+                        zIndex: 501,
+                    }}
+                >
                     <div style={{
                         background: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(20px)',
@@ -1000,6 +1073,22 @@ RULES for update:
                             gap: 6,
                             alignItems: 'center',
                         }}>
+                            {/* Drag grip */}
+                            <div
+                                onMouseDown={(e) => handleDragStart(e, 'tools')}
+                                style={{
+                                    cursor: 'grab',
+                                    color: '#ccc',
+                                    fontSize: 10,
+                                    letterSpacing: 2,
+                                    userSelect: 'none',
+                                    padding: '4px 2px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                ⠿
+                            </div>
                             {([
                                 { id: 'select', icon: '➤', label: '选择' },
                                 { id: 'hand', icon: '🤚', label: '平移' },
