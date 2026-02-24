@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
+import ServiceWorkerRegistration from '@/components/whiteboard/ServiceWorkerRegistration';
 
 // 动态导入 Tldraw 组件（避免 SSR 问题）
 const TldrawBoard = dynamic(
@@ -25,6 +26,7 @@ const TldrawBoard = dynamic(
 export default function WhiteboardPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
+      <ServiceWorkerRegistration />
       <TldrawBoard />
     </Suspense>
   );

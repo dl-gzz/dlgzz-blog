@@ -16,6 +16,11 @@ type BlogPostShape = TLBaseShape<'blog_post', BlogPostShapeProps>;
 export class BlogPostShapeUtil extends BaseBoxShapeUtil<BlogPostShape> {
   static override type = 'blog_post' as const;
 
+  // 禁用编辑模式，防止点击进入编辑态导致拖拽失效
+  override canEdit() {
+    return false;
+  }
+
   override getDefaultProps(): BlogPostShapeProps {
     return {
       w: 320,
@@ -44,7 +49,6 @@ export class BlogPostShapeUtil extends BaseBoxShapeUtil<BlogPostShape> {
     return (
       <HTMLContainer
         style={{
-          pointerEvents: 'all',
           background: '#fff',
           borderRadius: 12,
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
@@ -54,32 +58,25 @@ export class BlogPostShapeUtil extends BaseBoxShapeUtil<BlogPostShape> {
           flexDirection: 'column',
           fontFamily:
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          userSelect: 'none',
         }}
       >
-        {/* 封面图 */}
+        {/* 封面图 — 用 background-image 避免原生图片拖拽 */}
         {image && (
           <div
             style={{
               width: '100%',
               height: 180,
-              overflow: 'hidden',
-              background: '#f3f4f6',
               flexShrink: 0,
+              backgroundImage: `url(${image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundColor: '#f3f4f6',
             }}
-          >
-            <img
-              src={image}
-              alt={title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-          </div>
+          />
         )}
 
-        {/* 内容区 */}
+        {/* 内容区 — 不拦截指针事件 */}
         <div
           style={{
             padding: 16,
@@ -87,6 +84,7 @@ export class BlogPostShapeUtil extends BaseBoxShapeUtil<BlogPostShape> {
             flexDirection: 'column',
             gap: 8,
             flex: 1,
+            pointerEvents: 'none',
           }}
         >
           {/* 分类标签 */}
@@ -169,6 +167,7 @@ export class BlogPostShapeUtil extends BaseBoxShapeUtil<BlogPostShape> {
                   color: '#3b82f6',
                   textDecoration: 'none',
                   fontWeight: 500,
+                  pointerEvents: 'all',
                 }}
                 onPointerDown={(e) => e.stopPropagation()}
               >

@@ -29,6 +29,15 @@ interface Message {
     text: string;
 }
 
+interface CustomDockItem {
+    id: string;
+    icon: string;
+    label: string;
+    type: string;
+    props: Record<string, any>;
+    createdAt: number;
+}
+
 const BoardLogic: React.FC = () => {
     const editor = useEditor();
 
@@ -46,6 +55,85 @@ const BoardLogic: React.FC = () => {
     const [blogPosts, setBlogPosts] = useState<any[]>([]);
     const [blogLoading, setBlogLoading] = useState(false);
     const [blogSearch, setBlogSearch] = useState('');
+
+    // Drawing Tools Panel State
+    const [isDrawToolsOpen, setIsDrawToolsOpen] = useState(false);
+    // Custom Dock Items (persisted in localStorage)
+    const [customDockItems, setCustomDockItems] = useState<CustomDockItem[]>([]);
+    const [selectedShapeForSave, setSelectedShapeForSave] = useState<string | null>(null);
+
+    // Load custom dock items from localStorage on mount
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('ow-os-custom-dock-items');
+            if (stored) setCustomDockItems(JSON.parse(stored));
+        } catch (_) { /* ignore */ }
+    }, []);
+
+    // Persist custom dock items
+    const persistCustomDockItems = (items: CustomDockItem[]) => {
+        setCustomDockItems(items);
+        try {
+            localStorage.setItem('ow-os-custom-dock-items', JSON.stringify(items));
+        } catch (_) { /* ignore */ }
+    };
+
+    // Listen for shape selection changes → show "Save to Dock" button
+    useEffect(() => {
+        if (!editor) return;
+        const check = () => {
+            const ids = editor.getSelectedShapeIds();
+            if (ids.length === 1) {
+                const shape = editor.getShape(ids[0]);
+                if (shape && ['preview_html', 'ai_result', 'blog_post'].includes(shape.type)) {
+                    setSelectedShapeForSave(ids[0] as string);
+                    return;
+                }
+            }
+            setSelectedShapeForSave(null);
+        };
+        const unsubscribe = editor.store.listen(check, { scope: 'document', source: 'user' });
+        return unsubscribe;
+    }, [editor]);
+
+    // Save a shape's config to Dock
+    const saveShapeToDock = (shapeId: string) => {
+        if (customDockItems.length >= 10) return; // max 10 custom items
+        const shape = editor.getShape(shapeId as any);
+        if (!shape) return;
+
+        let label = '自定义应用';
+        let icon = '📌';
+        const props = { ...(shape.props as any) };
+
+        if (shape.type === 'preview_html') {
+            icon = '🌐';
+            const titleMatch = props.html?.match(/<title>(.*?)<\/title>/i);
+            const h1Match = props.html?.match(/<h1[^>]*>(.*?)<\/h1>/i);
+            label = (titleMatch?.[1] || h1Match?.[1] || 'HTML 应用').replace(/<[^>]*>/g, '').trim().substring(0, 20);
+        } else if (shape.type === 'ai_result') {
+            icon = '📄';
+            label = (props.text || '').split('\n')[0].substring(0, 20) || '文本卡片';
+        } else if (shape.type === 'blog_post') {
+            icon = '📝';
+            label = props.title?.substring(0, 20) || '博客文章';
+        }
+
+        persistCustomDockItems([...customDockItems, {
+            id: `custom-${Date.now()}`,
+            icon,
+            label,
+            type: shape.type,
+            props,
+            createdAt: Date.now(),
+        }]);
+        setSelectedShapeForSave(null);
+    };
+
+    // Delete a custom dock item
+    const deleteCustomDockItem = (itemId: string) => {
+        persistCustomDockItems(customDockItems.filter(item => item.id !== itemId));
+    };
 
     const fetchBlogPosts = async () => {
         if (blogPosts.length > 0) return;
@@ -254,8 +342,24 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
 
 🎯 SUPPORTED TYPES:
 - "preview_html": Full HTML applications/slides with CSS/JS
-- "ai_result": Text cards (props: {text: "...", w: 300, h: 200})
+- "ai_result": Text cards (props: {text: "...", w: 300, h: 200, color: "#f0fdf4"})
 - "arrow": Connections (props: {start: {x, y}, end: {x, y}})
+
+🔄 UPDATE EXISTING SHAPES:
+When shapes are selected (shown in CURRENT CONTEXT with [ID: shape:xxx]), you can modify them:
+{"action":"update","id":"shape:xxxxxx","props":{...only_changed_props}}
+
+Updatable props by type:
+- "ai_result": {text, w, h, color} (color is CSS color like "#f0fdf4")
+- "preview_html": {html, w, h} (html must be complete HTML document)
+- "blog_post": {title, description, image, date, categories, url, w, h}
+
+RULES for update:
+- Use the EXACT id from CURRENT CONTEXT (format: "shape:xxxxxxxx")
+- Only include props you want to change (partial update)
+- If user says 修改/改/换/调整/fix/improve on selected shape → use "update"
+- If user wants something NEW → use "create"
+- Can mix "create" and "update" in same response
 
 💡 HTML REQUIREMENTS (for preview_html):
 - Self-contained: Include ALL CSS/JS inline
@@ -277,8 +381,11 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
 - Explain what you will do
 - Return anything except pure JSON
 
-✅ EXAMPLE RESPONSE:
-{"thought":"我将创建一个太阳系幻灯片，包含8大行星介绍","voice_response":"好的，我已经为您创建了太阳系演示文稿","operations":[{"action":"create","type":"preview_html","props":{"w":800,"h":600,"html":"<!DOCTYPE html><html><head><style>body{margin:0;padding:20px;background:#000;color:#fff;font-family:Arial}</style></head><body><h1>太阳系</h1></body></html>"}}]}
+✅ EXAMPLE (create):
+{"thought":"我将创建一个太阳系幻灯片","voice_response":"好的，已创建太阳系演示文稿","operations":[{"action":"create","type":"preview_html","props":{"w":800,"h":600,"html":"<!DOCTYPE html><html><head><style>body{margin:0;padding:20px;background:#000;color:#fff;font-family:Arial}</style></head><body><h1>太阳系</h1></body></html>"}}]}
+
+✅ EXAMPLE (update selected shape):
+{"thought":"用户要求修改选中的应用背景色","voice_response":"已将背景改为深色","operations":[{"action":"update","id":"shape:abc123","props":{"html":"<!DOCTYPE html><html><head><style>body{margin:0;background:#1a1a2e;color:#fff}</style></head><body><h1>Updated</h1></body></html>"}}]}
     `;
 
     // AI Call Handler
@@ -305,11 +412,17 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                     let content = '';
 
                     if (shape.type === 'ai_result' || shape.type === 'text') {
-                        content = `Content: "${(shape.props as any).text}"`;
+                        const p = shape.props as any;
+                        content = `Content: "${p.text}", color: "${p.color || '#f0fdf4'}"`;
                     } else if (shape.type === 'preview_html') {
-                        content = `Code: "${(shape.props as any).html?.substring(0, 200)}..."`;
+                        const html = (shape.props as any).html || '';
+                        content = `HTML App: "${html.substring(0, 2000)}${html.length > 2000 ? '...(truncated)' : ''}"`;
+                    } else if (shape.type === 'blog_post') {
+                        const p = shape.props as any;
+                        content = `Blog: title="${p.title}", description="${p.description}", image="${p.image}", date="${p.date}", categories=${JSON.stringify(p.categories)}, url="${p.url}"`;
                     } else if (shape.type === 'ai_terminal') {
-                        content = `AI Terminal (interactive chat component)`;
+                        const p = shape.props as any;
+                        content = `AI Terminal: ${(p.messages || []).length} messages, status="${p.status || 'idle'}"`;
                     } else if (shape.type === 'image') {
                         const imgData = extractDataFromShape(editor, shape);
                         if (imgData && imgData.type === 'image') {
@@ -326,7 +439,7 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                         const propsStr = JSON.stringify(shape.props).substring(0, 100);
                         content = `Props: ${propsStr}...`;
                     }
-                    contextData += `- ID: ${shape.id}, Type: ${shape.type}, ${content}, Size: ${Math.round((shape.props as any).w || 0)}x${Math.round((shape.props as any).h || 0)}\n`;
+                    contextData += `- [ID: ${shape.id}] Type: ${shape.type}, ${content}, Size: ${Math.round((shape.props as any).w || 0)}x${Math.round((shape.props as any).h || 0)}\n`;
                 });
             } else {
                 contextData += 'No shapes selected.\n';
@@ -467,10 +580,14 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                             });
                             offset += 40;
                         } else if (op.action === 'update' && op.id) {
-                            editor.updateShape({
-                                id: op.id,
-                                props: op.props
-                            } as any);
+                            const existing = editor.getShape(op.id);
+                            if (existing) {
+                                editor.updateShape({
+                                    id: op.id,
+                                    type: existing.type,
+                                    props: op.props,
+                                });
+                            }
                         }
                     });
                 }
@@ -486,19 +603,110 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
         }
     }
 
+    // Dock: Quick-insert shape at viewport center
+    const insertQuickShape = (type: string, defaultProps: Record<string, any>) => {
+        const center = editor.getViewportPageBounds().center;
+        const w = defaultProps.w || 300;
+        const h = defaultProps.h || 200;
+        editor.createShape({
+            id: createShapeId(),
+            type,
+            x: center.x - w / 2,
+            y: center.y - h / 2,
+            props: defaultProps,
+        });
+    };
+
+    // Current tldraw tool tracking
+    const [currentTool, setCurrentTool] = useState('select');
+
+    useEffect(() => {
+        if (!editor) return;
+        setCurrentTool(editor.getCurrentToolId());
+        const unsubscribe = editor.store.listen(() => {
+            setCurrentTool(editor.getCurrentToolId());
+        }, { scope: 'session' });
+        return unsubscribe;
+    }, [editor]);
+
+    // Dock items config
+    const dockItems = [
+        {
+            icon: '🏠',
+            label: '返回首页',
+            onClick: () => {
+                window.location.href = '/';
+            },
+            active: false,
+        },
+        {
+            icon: '✨',
+            label: 'AI 助手',
+            onClick: () => {
+                setIsBlogPickerOpen(false);
+                setIsDrawToolsOpen(false);
+                setIsAiOpen(!isAiOpen);
+            },
+            active: isAiOpen,
+        },
+        {
+            icon: '📝',
+            label: '博客文章',
+            onClick: () => {
+                setIsAiOpen(false);
+                setIsDrawToolsOpen(false);
+                setIsBlogPickerOpen(!isBlogPickerOpen);
+                if (!isBlogPickerOpen) fetchBlogPosts();
+            },
+            active: isBlogPickerOpen,
+        },
+        {
+            icon: '🌐',
+            label: 'HTML 应用',
+            onClick: () => insertQuickShape('preview_html', {
+                w: 480, h: 640,
+                html: '<!DOCTYPE html><html><head><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#667eea,#764ba2);font-family:system-ui;color:#fff}h1{font-size:2em;text-align:center}</style></head><body><h1>New App</h1></body></html>',
+            }),
+            active: false,
+        },
+        {
+            icon: '📄',
+            label: '文本卡片',
+            onClick: () => insertQuickShape('ai_result', {
+                w: 300, h: 200,
+                text: '在此输入内容...',
+            }),
+            active: false,
+        },
+        {
+            icon: '🧰',
+            label: '绘图工具',
+            onClick: () => {
+                setIsAiOpen(false);
+                setIsBlogPickerOpen(false);
+                setIsDrawToolsOpen(!isDrawToolsOpen);
+            },
+            active: isDrawToolsOpen,
+        },
+    ];
+
+    // Dock tooltip state
+    const [hoveredDock, setHoveredDock] = useState<number | null>(null);
+
     return (
         <>
-            {/* AI Widget / Chat Panel */}
+            {/* Floating panels container (top-right, below tldraw style panel) */}
             <div
                 style={{
                     position: 'absolute',
-                    top: 12,
-                    right: 180,
+                    top: 60,
+                    right: 12,
                     width: 380,
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 8,
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
+                    maxHeight: 'calc(100vh - 120px)',
                 }}
             >
                 {/* Blog Picker Panel */}
@@ -596,7 +804,6 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                                         onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#f9fafb'; }}
                                         onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
                                     >
-                                        {/* Thumbnail */}
                                         {post.image && (
                                             <img
                                                 src={post.image}
@@ -610,7 +817,6 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                                                 }}
                                             />
                                         )}
-                                        {/* Info */}
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{
                                                 fontSize: 13,
@@ -634,7 +840,7 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                     </div>
                 )}
 
-                {/* Chat Bubble */}
+                {/* AI Chat Panel */}
                 {isAiOpen && (
                     <div style={{
                         background: 'rgba(255, 255, 255, 0.95)',
@@ -648,7 +854,7 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                         flexDirection: 'column',
                         pointerEvents: 'all'
                     }}>
-                        {/* Header with Clear Button */}
+                        {/* Header */}
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -734,7 +940,6 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                                 onChange={e => setAiInput(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && callAI()}
                             />
-                            {/* Voice Button */}
                             <button
                                 onClick={startVoiceInput}
                                 style={{
@@ -748,11 +953,10 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                 }}
-                                title="Voice Input"
+                                title="语音输入"
                             >
                                 🎤
                             </button>
-                            {/* Send Button */}
                             <button
                                 onClick={() => callAI()}
                                 style={{
@@ -770,74 +974,298 @@ You are a Courseware Designer & Developer specialized in creating interactive ed
                         </div>
                     </div>
                 )}
+            </div>
 
-                {/* Floating Action Button (FAB) */}
+            {/* ═══════════ Drawing Tools Panel (above Dock) ═══════════ */}
+            {isDrawToolsOpen && (
+                <div style={{
+                    position: 'absolute',
+                    bottom: 100,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    pointerEvents: 'all',
+                    zIndex: 501,
+                }}>
+                    <div style={{
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        borderRadius: 16,
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                        border: '1px solid rgba(255,255,255,0.5)',
+                        padding: 12,
+                    }}>
+                        <div style={{
+                            display: 'flex',
+                            gap: 6,
+                            alignItems: 'center',
+                        }}>
+                            {([
+                                { id: 'select', icon: '➤', label: '选择' },
+                                { id: 'hand', icon: '🤚', label: '平移' },
+                                { id: 'draw', icon: '✏️', label: '画笔' },
+                                { id: 'eraser', icon: '🧹', label: '橡皮擦' },
+                                { id: 'geo', icon: '⬜', label: '形状' },
+                                { id: 'arrow', icon: '↗️', label: '箭头' },
+                                { id: 'text', icon: '🔤', label: '文字' },
+                                { id: 'note', icon: '🟨', label: '便签' },
+                            ] as const).map((tool, idx) => {
+                                const isActive = currentTool === tool.id;
+                                const hoverKey = 2000 + idx;
+                                return (
+                                    <div
+                                        key={tool.id}
+                                        style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                                        onMouseEnter={() => setHoveredDock(hoverKey)}
+                                        onMouseLeave={() => setHoveredDock(null)}
+                                    >
+                                        {hoveredDock === hoverKey && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                bottom: '100%',
+                                                marginBottom: 6,
+                                                padding: '3px 8px',
+                                                background: 'rgba(0,0,0,0.8)',
+                                                color: '#fff',
+                                                fontSize: 11,
+                                                fontWeight: 500,
+                                                borderRadius: 6,
+                                                whiteSpace: 'nowrap',
+                                                pointerEvents: 'none',
+                                            }}>
+                                                {tool.label}
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={() => editor.setCurrentTool(tool.id)}
+                                            style={{
+                                                width: 44,
+                                                height: 44,
+                                                borderRadius: 10,
+                                                border: 'none',
+                                                background: isActive
+                                                    ? 'rgba(59,130,246,0.15)'
+                                                    : 'transparent',
+                                                fontSize: 20,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'background 0.15s',
+                                                boxShadow: isActive ? '0 0 0 2px #3b82f6' : 'none',
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (!isActive) e.currentTarget.style.background = 'rgba(0,0,0,0.05)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!isActive) e.currentTarget.style.background = isActive ? 'rgba(59,130,246,0.15)' : 'transparent';
+                                            }}
+                                        >
+                                            {tool.icon}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══════════ "Save to Dock" floating button ═══════════ */}
+            {selectedShapeForSave && (
+                <div style={{
+                    position: 'absolute',
+                    bottom: 90,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    pointerEvents: 'all',
+                    zIndex: 501,
+                }}>
+                    <button
+                        onClick={() => saveShapeToDock(selectedShapeForSave)}
+                        style={{
+                            padding: '8px 16px',
+                            background: 'rgba(0, 0, 0, 0.85)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: 12,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            backdropFilter: 'blur(12px)',
+                            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                            transition: 'transform 0.15s',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                        📌 保存到 Dock
+                    </button>
+                </div>
+            )}
+
+            {/* ═══════════ macOS-style Dock Bar ═══════════ */}
+            <div
+                style={{
+                    position: 'absolute',
+                    bottom: 16,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    pointerEvents: 'all',
+                    zIndex: 500,
+                }}
+            >
                 <div style={{
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
-                    pointerEvents: 'all'
+                    alignItems: 'flex-end',
+                    gap: 4,
+                    padding: '8px 16px',
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    borderRadius: 20,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5)',
+                    border: '1px solid rgba(255,255,255,0.4)',
                 }}>
-                    {/* AI 助手按钮 */}
-                    <button
-                        onClick={() => setIsAiOpen(!isAiOpen)}
-                        title="AI 助手"
-                        style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 24,
-                            background: '#000',
-                            color: '#fff',
-                            border: 'none',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                            fontSize: 20,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s cubic-bezier(0.25, 1, 0.5, 1)'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'scale(1.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                    >
-                        {isAiOpen ? '✕' : '✨'}
-                    </button>
+                    {/* Built-in dock items */}
+                    {dockItems.map((item, idx) => (
+                        <div
+                            key={idx}
+                            style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                            onMouseEnter={() => setHoveredDock(idx)}
+                            onMouseLeave={() => setHoveredDock(null)}
+                        >
+                            {hoveredDock === idx && (
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: '100%',
+                                    marginBottom: 8,
+                                    padding: '4px 10px',
+                                    background: 'rgba(0,0,0,0.8)',
+                                    color: '#fff',
+                                    fontSize: 11,
+                                    fontWeight: 500,
+                                    borderRadius: 6,
+                                    whiteSpace: 'nowrap',
+                                    pointerEvents: 'none',
+                                }}>
+                                    {item.label}
+                                </div>
+                            )}
+                            <button
+                                onClick={item.onClick}
+                                style={{
+                                    width: 52,
+                                    height: 52,
+                                    borderRadius: 14,
+                                    border: 'none',
+                                    background: item.active
+                                        ? 'rgba(0,0,0,0.1)'
+                                        : 'rgba(255,255,255,0.6)',
+                                    fontSize: 24,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), background 0.15s',
+                                    transform: hoveredDock === idx ? 'scale(1.3) translateY(-6px)' : 'scale(1)',
+                                    boxShadow: item.active ? 'inset 0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                }}
+                            >
+                                {item.icon}
+                            </button>
+                            {item.active && (
+                                <div style={{
+                                    width: 4,
+                                    height: 4,
+                                    borderRadius: 2,
+                                    background: '#000',
+                                    marginTop: 4,
+                                }} />
+                            )}
+                        </div>
+                    ))}
 
-                    {/* 博客插入按钮 */}
-                    <button
-                        onClick={() => {
-                            setIsBlogPickerOpen(!isBlogPickerOpen);
-                            if (!isBlogPickerOpen) fetchBlogPosts();
-                        }}
-                        title="插入博客文章"
-                        style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 24,
-                            background: '#1e40af',
-                            color: '#fff',
-                            border: 'none',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                            fontSize: 20,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s cubic-bezier(0.25, 1, 0.5, 1)'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'scale(1.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                    >
-                        {isBlogPickerOpen ? '✕' : '📝'}
-                    </button>
+                    {/* Separator + Custom dock items */}
+                    {customDockItems.length > 0 && (
+                        <div style={{
+                            width: 1,
+                            height: 36,
+                            background: 'rgba(0,0,0,0.12)',
+                            margin: '0 4px',
+                            alignSelf: 'center',
+                        }} />
+                    )}
+                    {customDockItems.map((item, idx) => {
+                        const hoverIdx = dockItems.length + 1 + idx;
+                        return (
+                            <div
+                                key={item.id}
+                                style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                                onMouseEnter={() => setHoveredDock(hoverIdx)}
+                                onMouseLeave={() => setHoveredDock(null)}
+                            >
+                                {hoveredDock === hoverIdx && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        bottom: '100%',
+                                        marginBottom: 8,
+                                        padding: '4px 10px',
+                                        background: 'rgba(0,0,0,0.8)',
+                                        color: '#fff',
+                                        fontSize: 11,
+                                        fontWeight: 500,
+                                        borderRadius: 6,
+                                        whiteSpace: 'nowrap',
+                                        pointerEvents: 'auto',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8,
+                                    }}>
+                                        {item.label}
+                                        <span
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteCustomDockItem(item.id);
+                                            }}
+                                            style={{
+                                                cursor: 'pointer',
+                                                opacity: 0.7,
+                                                fontSize: 10,
+                                                padding: '0 2px',
+                                            }}
+                                            onMouseEnter={(e) => { (e.target as HTMLElement).style.opacity = '1'; }}
+                                            onMouseLeave={(e) => { (e.target as HTMLElement).style.opacity = '0.7'; }}
+                                        >
+                                            ✕
+                                        </span>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => insertQuickShape(item.type, { ...item.props })}
+                                    style={{
+                                        width: 52,
+                                        height: 52,
+                                        borderRadius: 14,
+                                        border: 'none',
+                                        background: 'rgba(255,255,255,0.6)',
+                                        fontSize: 24,
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), background 0.15s',
+                                        transform: hoveredDock === hoverIdx ? 'scale(1.3) translateY(-6px)' : 'scale(1)',
+                                    }}
+                                >
+                                    {item.icon}
+                                </button>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </>
