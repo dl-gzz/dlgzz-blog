@@ -20,7 +20,7 @@ export default function BlogCard({ locale, post }: BlogCardProps) {
 
   return (
     <LocaleLink href={`/blog/${post.slugs}`} className="block h-full">
-      <div className="group flex flex-col border rounded-lg overflow-hidden h-full">
+      <div className="group flex flex-col border rounded-lg overflow-hidden h-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
         {/* Image container - fixed aspect ratio */}
         <div className="group overflow-hidden relative aspect-16/9 w-full">
           {image && (
@@ -41,7 +41,7 @@ export default function BlogCard({ locale, post }: BlogCardProps) {
                     {blogCategories.map((category, index) => (
                       <span
                         key={`${category?.slugs[0]}-${index}`}
-                        className="text-xs font-medium text-white bg-black bg-opacity-50 px-2 py-1 rounded-md"
+                        className="text-xs font-medium text-white bg-black/40 backdrop-blur-sm px-2 py-1 rounded-md"
                       >
                         {category?.data.name}
                       </span>
@@ -57,18 +57,8 @@ export default function BlogCard({ locale, post }: BlogCardProps) {
         <div className="flex flex-col justify-between p-4 flex-1">
           <div>
             {/* Post title */}
-            <h3 className="text-lg line-clamp-2 font-medium">
-              <span
-                className="bg-linear-to-r from-green-200 to-green-100
-                  bg-[length:0px_10px] bg-left-bottom bg-no-repeat
-                  transition-[background-size]
-                  duration-500
-                  hover:bg-[length:100%_3px]
-                  group-hover:bg-[length:100%_10px]
-                  dark:from-purple-800 dark:to-purple-900"
-              >
-                {title}
-              </span>
+            <h3 className="text-lg line-clamp-2 font-medium group-hover:text-primary transition-colors duration-300">
+              {title}
             </h3>
 
             {/* Post excerpt */}
@@ -89,7 +79,7 @@ export default function BlogCard({ locale, post }: BlogCardProps) {
                   <Image
                     src={blogAuthor?.data.avatar}
                     alt={`avatar for ${blogAuthor?.data.name}`}
-                    className="rounded-full object-cover border"
+                    className="rounded-full object-cover border-2 border-background"
                     fill
                   />
                 )}

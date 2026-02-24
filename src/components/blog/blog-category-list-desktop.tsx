@@ -24,14 +24,14 @@ export function BlogCategoryListDesktop({
         type="single"
         value={slug || 'All'}
         aria-label="Toggle blog category"
-        className="h-9 overflow-hidden rounded-md space-x-1 border bg-background p-1 *:h-7 *:text-muted-foreground"
+        className="h-9 overflow-hidden rounded-full space-x-1 border bg-background p-1 *:h-7 *:text-muted-foreground"
       >
         <ToggleGroupItem
           key="All"
           value="All"
           className={cn(
-            'rounded-sm px-2 cursor-pointer',
-            'data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
+            'rounded-full px-2 cursor-pointer',
+            'data-[state=on]:bg-foreground data-[state=on]:text-background',
             'hover:bg-accent hover:text-accent-foreground'
           )}
           aria-label={'Toggle all blog categories'}

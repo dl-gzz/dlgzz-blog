@@ -142,7 +142,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
             </div>
 
             {/* blog post title */}
-            <h1 className="text-3xl font-bold">{title}</h1>
+            <h1 className="text-4xl font-bold">{title}</h1>
 
             {/* blog post description */}
             <p className="text-lg text-muted-foreground">{description}</p>
@@ -176,7 +176,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
           <div className="space-y-4 lg:sticky lg:top-24">
             {/* author info */}
             {blogAuthor && (
-              <div className="bg-muted/50 rounded-lg p-6">
+              <div className="bg-card rounded-xl border p-6">
                 <h2 className="text-lg font-semibold mb-4">{t('author')}</h2>
                 <div className="flex items-center gap-4">
                   <div className="relative h-8 w-8 shrink-0">
@@ -221,7 +221,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
                   items={post.data.toc}
                   open={true}
                   defaultOpen={true}
-                  className="bg-muted/50 border-none"
+                  className="bg-card rounded-xl border"
                 />
               )}
             </div>
@@ -234,7 +234,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
         <div className="flex flex-col gap-8 mt-8">
           <div className="flex items-center gap-2">
             <FileTextIcon className="size-4 text-muted-foreground" />
-            <h2 className="text-lg tracking-wider font-semibold text-gradient_indigo-purple">
+            <h2 className="text-lg tracking-wider font-semibold">
               {t('morePosts')}
             </h2>
           </div>
