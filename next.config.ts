@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   devIndicators: false,
 
+  // ESM-only packages that need transpiling for Next.js/webpack compatibility
+  transpilePackages: ['react-markdown'],
+
   // https://nextjs.org/docs/architecture/nextjs-compiler#remove-console
   // Remove all console.* calls in production only
   compiler: {
