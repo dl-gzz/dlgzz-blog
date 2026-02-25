@@ -17,25 +17,25 @@ export default function Integration2Section() {
               <div className="mx-auto mb-2 flex w-fit justify-center gap-2">
                 <IntegrationCard>
                   <img
-                    className="size-8 object-contain dark:invert"
-                    src="/images/marketing/nike-logo.png"
-                    alt="Nike"
+                    className="size-8 object-contain"
+                    src="/images/marketing/one-worker-logo.png"
+                    alt="独立工作者"
                   />
                 </IntegrationCard>
                 <IntegrationCard>
                   <img
-                    className="size-8 object-contain dark:invert"
-                    src="/images/marketing/lv-logo.png"
-                    alt="Louis Vuitton"
+                    className="size-8 object-contain"
+                    src="/images/marketing/one-worker-logo.png"
+                    alt="独立工作者"
                   />
                 </IntegrationCard>
               </div>
               <div className="mx-auto my-2 flex w-fit justify-center gap-2">
                 <IntegrationCard>
                   <img
-                    className="size-8 object-contain dark:invert"
-                    src="/images/marketing/zara-logo.webp"
-                    alt="Zara"
+                    className="size-8 object-contain"
+                    src="/images/marketing/one-worker-logo.png"
+                    alt="独立工作者"
                   />
                 </IntegrationCard>
                 <IntegrationCard
@@ -46,9 +46,9 @@ export default function Integration2Section() {
                 </IntegrationCard>
                 <IntegrationCard>
                   <img
-                    className="size-8 object-contain dark:invert"
-                    src="/images/marketing/uniqlo-logo.png"
-                    alt="Uniqlo"
+                    className="size-8 object-contain"
+                    src="/images/marketing/one-worker-logo.png"
+                    alt="独立工作者"
                   />
                 </IntegrationCard>
               </div>
@@ -56,17 +56,16 @@ export default function Integration2Section() {
               <div className="mx-auto flex w-fit justify-center gap-2">
                 <IntegrationCard>
                   <img
-                    className="size-8 object-contain dark:invert"
-                    src="/images/marketing/supreme-logo.png"
-                    alt="Supreme"
+                    className="size-8 object-contain"
+                    src="/images/marketing/one-worker-logo.png"
+                    alt="独立工作者"
                   />
                 </IntegrationCard>
-
                 <IntegrationCard>
                   <img
-                    className="size-8 object-contain dark:invert"
-                    src="/images/marketing/lululemon-logo.png"
-                    alt="Lululemon"
+                    className="size-8 object-contain"
+                    src="/images/marketing/one-worker-logo.png"
+                    alt="独立工作者"
                   />
                 </IntegrationCard>
               </div>
@@ -79,13 +78,13 @@ export default function Integration2Section() {
 
               <div className="mt-12 flex flex-wrap justify-start gap-4">
                 <Button asChild size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-                  <LocaleLink href="/outfit">
+                  <LocaleLink href="/blog">
                     <span>{t('primaryButton')}</span>
                   </LocaleLink>
                 </Button>
 
                 <Button asChild size="lg" variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-900/20">
-                  <LocaleLink href="https://demo.outfitai.com">
+                  <LocaleLink href="/about">
                     <span>{t('secondaryButton')}</span>
                   </LocaleLink>
                 </Button>

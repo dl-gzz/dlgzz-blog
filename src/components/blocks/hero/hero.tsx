@@ -29,7 +29,7 @@ const transitionVariants = {
 
 export default function HeroSection() {
   const t = useTranslations('HomePage.hero');
-  const linkIntroduction = 'https://x.com/outfitai';
+  const linkIntroduction = '/about';
   const linkPrimary = '/blog';
   const linkSecondary = '/about';
 
@@ -165,14 +165,14 @@ export default function HeroSection() {
                   <Image
                     className="bg-background relative hidden rounded-2xl dark:block"
                     src="/images/marketing/hero.png"
-                    alt="独立工作者 virtual try-on platform interface"
+                    alt="独立工作者平台界面"
                     width={2796}
                     height={2008}
                   />
                   <Image
                     className="z-2 border-border/25 relative rounded-2xl border dark:hidden"
                     src="/images/marketing/hero.png"
-                    alt="独立工作者 virtual try-on platform interface"
+                    alt="独立工作者平台界面"
                     width={2796}
                     height={2008}
                   />

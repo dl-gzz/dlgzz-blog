@@ -31,22 +31,22 @@ export default function FeaturesSection() {
     'item-1': {
       image: '/images/marketing/feature1.png',
       darkImage: '/images/marketing/feature1.png',
-      alt: 'Virtual Try-On Technology',
+      alt: 'AI问答功能界面',
     },
     'item-2': {
       image: '/images/marketing/feature2.png',
       darkImage: '/images/marketing/feature2.png',
-      alt: 'Smart Size Recommendations',
+      alt: '内容交互功能界面',
     },
     'item-3': {
       image: '/images/marketing/feature3.png',
       darkImage: '/images/marketing/feature3.png',
-      alt: 'Style Matching AI',
+      alt: '文档下载功能界面',
     },
     'item-4': {
       image: '/images/marketing/feature4.png',
       darkImage: '/images/marketing/feature4.png',
-      alt: 'Real-time Outfit Combinations',
+      alt: '多模态体验功能界面',
     },
   };
 

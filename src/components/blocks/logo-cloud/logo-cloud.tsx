@@ -11,8 +11,8 @@ export default function LogoCloudSection() {
         <div className="mx-auto mt-20 flex max-w-4xl flex-wrap items-center justify-center gap-x-12 gap-y-8 sm:gap-x-16 sm:gap-y-12">
           <img
             className="h-16 w-fit"
-            src="/images/marketing/独立沉思录头像.png"
-            alt="独立沉思录"
+            src="/images/marketing/one-worker-logo.png"
+            alt="独立工作者"
             height="64"
             width="auto"
           />
