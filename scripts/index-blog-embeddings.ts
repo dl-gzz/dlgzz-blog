@@ -2,21 +2,16 @@
  * 博客文章向量化脚本
  * 运行: npx tsx scripts/index-blog-embeddings.ts
  *
- * 功能: 读取所有中文博客文章 → 生成 OpenAI 向量 → 存入 Supabase
+ * 功能: 读取所有中文博客文章 → 生成智谱 embedding-3 向量 → 存入 Supabase
  */
 
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import matter from 'gray-matter';
-import OpenAI from 'openai';
 import postgres from 'postgres';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: join(process.cwd(), '.env') });
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 const sql = postgres(process.env.DATABASE_URL!, { ssl: 'require' });
 
@@ -63,12 +58,17 @@ function loadBlogPosts() {
  * 生成单条文本的嵌入向量
  */
 async function getEmbedding(text: string): Promise<number[]> {
-  const response = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: text,
-    encoding_format: 'float',
+  const resp = await fetch('https://open.bigmodel.cn/api/paas/v4/embeddings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.ZHIPU_API_KEY}`,
+    },
+    body: JSON.stringify({ model: 'embedding-3', input: text }),
   });
-  return response.data[0].embedding;
+  if (!resp.ok) throw new Error(`智谱 embedding 失败: ${resp.status}`);
+  const data = await resp.json() as { data: Array<{ embedding: number[] }> };
+  return data.data[0].embedding;
 }
 
 /**

@@ -1,8 +1,8 @@
 /**
  * 基于 pgvector 的博客语义搜索（含关键词兜底）
+ * 使用智谱 embedding-3（512 维，中文效果更好，国内可访问）
  */
 
-import OpenAI from 'openai';
 import postgres from 'postgres';
 
 export interface BlogSearchResult {
@@ -14,8 +14,19 @@ export interface BlogSearchResult {
   score: number;
 }
 
-function getOpenAI() {
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+/** 直接调智谱 embedding API（绕过 OpenAI SDK 的精度问题） */
+async function getZhipuEmbedding(text: string): Promise<number[]> {
+  const resp = await fetch('https://open.bigmodel.cn/api/paas/v4/embeddings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.ZHIPU_API_KEY}`,
+    },
+    body: JSON.stringify({ model: 'embedding-3', input: text }),
+  });
+  if (!resp.ok) throw new Error(`智谱 embedding 请求失败: ${resp.status}`);
+  const data = await resp.json() as { data: Array<{ embedding: number[] }> };
+  return data.data[0].embedding;
 }
 
 function getDb() {
@@ -79,12 +90,7 @@ export async function searchBlogContent(
 ): Promise<BlogSearchResult[]> {
   // 1. 尝试向量搜索
   try {
-    const embeddingResponse = await getOpenAI().embeddings.create({
-      model: 'text-embedding-3-small',
-      input: query,
-      encoding_format: 'float',
-    });
-    const queryEmbedding = embeddingResponse.data[0].embedding;
+    const queryEmbedding = await getZhipuEmbedding(query);
 
     const sql = getDb();
     const vecStr = `[${queryEmbedding.join(',')}]`;
