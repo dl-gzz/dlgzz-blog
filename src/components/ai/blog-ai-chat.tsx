@@ -4,6 +4,7 @@ import { useChat } from 'ai/react';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Send, Sparkles, Trash2, BookOpen, ExternalLink } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface BlogSource {
   title: string;
@@ -131,7 +132,16 @@ export function BlogAIChat() {
                       : 'bg-muted rounded-tl-sm'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {msg.role === 'user' ? (
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  ) : (
+                    <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none
+                      prose-p:my-1 prose-headings:mb-2 prose-headings:mt-3 prose-headings:font-semibold
+                      prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
+                      prose-strong:font-semibold prose-code:text-xs prose-code:bg-background/60 prose-code:px-1 prose-code:rounded">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
