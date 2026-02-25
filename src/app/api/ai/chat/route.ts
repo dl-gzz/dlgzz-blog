@@ -1,4 +1,4 @@
-import { streamText } from 'ai';
+import { streamText, createDataStreamResponse } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
@@ -117,30 +117,34 @@ ${relevantContext}
 
 请使用友好、专业的语气回复。`;
 
-    // 7. 调用 DeepSeek API 生成回答
-    const result = streamText({
-      model: deepseek(process.env.DEEPSEEK_MODEL || 'deepseek-chat'),
-      system: systemPrompt,
-      messages,
-      maxTokens: 2000,
-      temperature: 0.7,
-      onFinish: async ({ text, finishReason, usage }) => {
-        // 记录 API 使用情况
-        console.log('AI Chat completed:', {
-          userId: session?.user?.id || 'anonymous',
-          query: userQuery.substring(0, 100),
-          finishReason,
-          usage,
-          sourcesCount: sources.length,
+    // 7. 返回流式响应（包含来源数据）
+    return createDataStreamResponse({
+      execute: async (dataStream) => {
+        // 先把来源数据写入流，前端可通过 useChat 的 data 字段读取
+        if (sources.length > 0) {
+          dataStream.writeData({ sources });
+        }
+
+        const result = streamText({
+          model: deepseek(process.env.DEEPSEEK_MODEL || 'deepseek-chat'),
+          system: systemPrompt,
+          messages,
+          maxTokens: 2000,
+          temperature: 0.7,
+          onFinish: ({ finishReason, usage }) => {
+            console.log('AI Chat completed:', {
+              userId: session?.user?.id || 'anonymous',
+              query: userQuery.substring(0, 100),
+              finishReason,
+              usage,
+              sourcesCount: sources.length,
+            });
+          },
         });
 
-        // TODO: 可以在这里记录到数据库，用于计费或分析
+        result.mergeIntoDataStream(dataStream);
       },
     });
-
-    // 8. 返回流式响应
-    // 注意：不在响应头中传递来源信息,避免中文字符导致的 ByteString 错误
-    return result.toDataStreamResponse();
   } catch (error) {
     console.error('AI Chat API error:', error);
 

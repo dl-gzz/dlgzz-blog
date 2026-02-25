@@ -25,31 +25,31 @@ export function BlogAIChat() {
   const [sources, setSources] = useState<BlogSource[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, input, setInput, handleInputChange, handleSubmit, isLoading, error, setMessages } =
+  const { messages, input, setInput, handleInputChange, handleSubmit, isLoading, error, setMessages, data } =
     useChat({
       api: '/api/ai/chat',
-      onResponse: (response) => {
-        const sourcesHeader = response.headers.get('X-AI-Sources');
-        if (sourcesHeader) {
-          try {
-            const sourcesJson = decodeURIComponent(
-              atob(sourcesHeader)
-                .split('')
-                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-            );
-            setSources(JSON.parse(sourcesJson));
-          } catch (e) {
-            console.error('Failed to parse sources:', e);
-          }
-        }
-      },
     });
+
+  // 从流式数据中提取来源
+  useEffect(() => {
+    if (!data || data.length === 0) return;
+    for (const item of data) {
+      if (item && typeof item === 'object' && 'sources' in item) {
+        setSources(item.sources as BlogSource[]);
+        break;
+      }
+    }
+  }, [data]);
 
   const handleClearChat = () => {
     setMessages([]);
     setSources([]);
   };
+
+  // 切换对话时清空来源
+  useEffect(() => {
+    if (messages.length === 0) setSources([]);
+  }, [messages.length]);
 
   const handleQuickQuestion = (q: string) => {
     setInput(q);
@@ -174,7 +174,7 @@ export function BlogAIChat() {
       {/* Sources */}
       {sources.length > 0 && (
         <div className="border-t px-6 py-3">
-          <p className="mb-2 text-xs font-medium text-muted-foreground">参考来源</p>
+          <p className="mb-2 text-xs font-medium text-muted-foreground">参考文章</p>
           <div className="flex flex-wrap gap-2">
             {sources.map((source, i) => (
               <a
@@ -182,9 +182,10 @@ export function BlogAIChat() {
                 href={source.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-full border bg-muted/50 px-3 py-1 text-xs hover:bg-muted transition-colors"
+                title={source.excerpt}
+                className="inline-flex items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1.5 text-xs font-medium hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-colors"
               >
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-3 w-3 shrink-0" />
                 {source.title}
               </a>
             ))}
