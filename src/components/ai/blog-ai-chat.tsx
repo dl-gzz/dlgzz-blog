@@ -35,7 +35,7 @@ export function BlogAIChat() {
     if (!data || data.length === 0) return;
     for (const item of data) {
       if (item && typeof item === 'object' && 'sources' in item) {
-        setSources(item.sources as BlogSource[]);
+        setSources(item.sources as unknown as BlogSource[]);
         break;
       }
     }
