@@ -2,7 +2,7 @@ import { streamText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
-import { searchBlogContent } from '@/lib/blog-search-simple';
+import { searchBlogContent } from '@/lib/blog-search-vector';
 
 // 配置 DeepSeek API（使用 OpenAI 兼容接口）
 const deepseek = createOpenAI({
