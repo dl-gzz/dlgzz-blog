@@ -24,7 +24,7 @@ export function BlogAIChat() {
   const [sources, setSources] = useState<BlogSource[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages } =
+  const { messages, input, setInput, handleInputChange, handleSubmit, isLoading, error, setMessages } =
     useChat({
       api: '/api/ai/chat',
       onResponse: (response) => {
@@ -51,7 +51,7 @@ export function BlogAIChat() {
   };
 
   const handleQuickQuestion = (q: string) => {
-    handleInputChange({ target: { value: q } } as React.ChangeEvent<HTMLInputElement>);
+    setInput(q);
   };
 
   useEffect(() => {
@@ -88,7 +88,7 @@ export function BlogAIChat() {
       <div className="flex-1 overflow-y-auto px-6 py-4">
         {messages.length === 0 ? (
           /* Empty state */
-          <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
+          <div className="flex min-h-full flex-col items-center justify-center gap-6 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
               <BookOpen className="h-8 w-8 text-muted-foreground" />
             </div>
