@@ -31,7 +31,7 @@ export function BlogCategoryListDesktop({
           value="All"
           className={cn(
             'rounded-full px-2 cursor-pointer',
-            'data-[state=on]:bg-foreground data-[state=on]:text-background',
+            'data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
             'hover:bg-accent hover:text-accent-foreground'
           )}
           aria-label={'Toggle all blog categories'}
@@ -47,7 +47,7 @@ export function BlogCategoryListDesktop({
             value={category.slug}
             className={cn(
               'rounded-full px-2 cursor-pointer',
-              'data-[state=on]:bg-foreground data-[state=on]:text-background',
+              'data-[state=on]:bg-primary data-[state=on]:text-primary-foreground',
               'hover:bg-accent hover:text-accent-foreground'
             )}
             aria-label={`Toggle blog category of ${category.name}`}
