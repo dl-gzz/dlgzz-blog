@@ -15,9 +15,9 @@ export interface BlogSearchResult {
   score: number;
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 function getDb() {
   return postgres(process.env.DATABASE_URL!, { ssl: 'require', max: 1 });
@@ -32,7 +32,7 @@ export async function searchBlogContent(
 ): Promise<BlogSearchResult[]> {
   try {
     // 1. 生成查询向量
-    const embeddingResponse = await openai.embeddings.create({
+    const embeddingResponse = await getOpenAI().embeddings.create({
       model: 'text-embedding-3-small',
       input: query,
       encoding_format: 'float',
