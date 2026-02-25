@@ -3,13 +3,14 @@
 import { useChat } from 'ai/react';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, Sparkles, Trash2, BookOpen, ExternalLink } from 'lucide-react';
+import { Loader2, Send, Sparkles, Trash2, BookOpen, ExternalLink, Link2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface BlogSource {
   title: string;
   url: string;
   excerpt: string;
+  links?: Array<{ text: string; url: string }>;
 }
 
 const QUICK_QUESTIONS = [
@@ -179,23 +180,58 @@ export function BlogAIChat() {
 
       {/* Sources */}
       {sources.length > 0 && (
-        <div className="border-t px-6 py-3">
-          <p className="mb-2 text-xs font-medium text-muted-foreground">参考文章</p>
-          <div className="flex flex-wrap gap-2">
-            {sources.map((source, i) => (
-              <a
-                key={i}
-                href={source.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={source.excerpt}
-                className="inline-flex items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1.5 text-xs font-medium hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-colors"
-              >
-                <ExternalLink className="h-3 w-3 shrink-0" />
-                {source.title}
-              </a>
-            ))}
+        <div className="border-t px-6 py-3 space-y-3">
+          {/* 参考文章 */}
+          <div>
+            <p className="mb-2 text-xs font-medium text-muted-foreground">参考文章</p>
+            <div className="flex flex-wrap gap-2">
+              {sources.map((source, i) => (
+                <a
+                  key={i}
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={source.excerpt}
+                  className="inline-flex items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1.5 text-xs font-medium hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                  {source.title}
+                </a>
+              ))}
+            </div>
           </div>
+
+          {/* 文章中的外部链接（去重合并） */}
+          {(() => {
+            const allLinks = sources.flatMap((s) => s.links ?? []);
+            const seen = new Set<string>();
+            const uniqueLinks = allLinks.filter(({ url }) => {
+              if (seen.has(url)) return false;
+              seen.add(url);
+              return true;
+            });
+            if (uniqueLinks.length === 0) return null;
+            return (
+              <div>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">文章中的链接</p>
+                <div className="flex flex-wrap gap-2">
+                  {uniqueLinks.map((link, i) => (
+                    <a
+                      key={i}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={link.url}
+                      className="inline-flex items-center gap-1.5 rounded-full border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                    >
+                      <Link2 className="h-3 w-3 shrink-0" />
+                      {link.text}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 

@@ -3,6 +3,40 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { searchBlogContent } from '@/lib/blog-search-vector';
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * 从 MDX 原文中提取外部链接（http/https）
+ * 返回去重后的 { text, url } 列表
+ */
+function extractLinksFromMdx(slug: string): Array<{ text: string; url: string }> {
+  const contentDir = path.join(process.cwd(), 'content', 'blog');
+  // 依次尝试 .zh.mdx → .mdx
+  const candidates = [
+    path.join(contentDir, `${slug}.zh.mdx`),
+    path.join(contentDir, `${slug}.mdx`),
+  ];
+
+  for (const filePath of candidates) {
+    if (!fs.existsSync(filePath)) continue;
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const links: Array<{ text: string; url: string }> = [];
+    const seen = new Set<string>();
+    // 匹配 [text](https://...) 格式
+    const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+    let match;
+    while ((match = linkRegex.exec(raw)) !== null) {
+      const url = match[2];
+      if (!seen.has(url)) {
+        seen.add(url);
+        links.push({ text: match[1], url });
+      }
+    }
+    return links;
+  }
+  return [];
+}
 
 // 配置 DeepSeek API（使用 OpenAI 兼容接口）
 const deepseek = createOpenAI({
@@ -57,7 +91,12 @@ export async function POST(req: Request) {
 
     // 5. 搜索相关博客内容
     let relevantContext = '';
-    let sources: Array<{ title: string; url: string; excerpt: string }> = [];
+    let sources: Array<{
+      title: string;
+      url: string;
+      excerpt: string;
+      links: Array<{ text: string; url: string }>;
+    }> = [];
 
     try {
       const searchResults = await searchBlogContent(userQuery);
@@ -73,17 +112,21 @@ export async function POST(req: Request) {
           })
           .join('\n---\n\n');
 
-        // 保存来源信息
-        // result.content 已经在 blog-search-simple.ts 中清理过了，直接使用
+        // 保存来源信息（含文章内部链接）
         sources = topResults.map((result) => {
           const excerpt = (result.description || result.content)
             .substring(0, 150)
             .trim();
 
+          // 从 URL /blog/slug 解析 slug，再读原始 MDX 文件提取链接
+          const slug = result.url.replace(/^\/blog\//, '');
+          const links = extractLinksFromMdx(slug);
+
           return {
             title: result.title,
             url: result.url,
             excerpt: excerpt,
+            links,
           };
         });
       }
