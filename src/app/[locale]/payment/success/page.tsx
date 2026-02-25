@@ -93,7 +93,7 @@ export default function PaymentSuccessPage() {
                   <div className="border-t border-gray-200"></div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">支付金额</span>
-                    <span className="text-2xl font-bold text-green-600">¥{orderInfo.amount}</span>
+                    <span className="text-2xl font-bold text-green-600">¥{(orderInfo.amount / 100).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
