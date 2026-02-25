@@ -30,16 +30,22 @@ export function BlogAIChat() {
       api: '/api/ai/chat',
     });
 
-  // 从流式数据中提取来源
+  // 从流式数据中提取来源（取最新一条，而非第一条）
   useEffect(() => {
     if (!data || data.length === 0) return;
+    let latest: BlogSource[] | null = null;
     for (const item of data) {
       if (item && typeof item === 'object' && 'sources' in item) {
-        setSources(item.sources as unknown as BlogSource[]);
-        break;
+        latest = item.sources as unknown as BlogSource[];
       }
     }
+    if (latest !== null) setSources(latest);
   }, [data]);
+
+  // 提交新问题时立即清空旧来源
+  useEffect(() => {
+    if (isLoading) setSources([]);
+  }, [isLoading]);
 
   const handleClearChat = () => {
     setMessages([]);
