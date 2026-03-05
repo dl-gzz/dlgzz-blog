@@ -128,6 +128,7 @@ export class GeminiAI {
                   model: this.model,
                   messages,
                   stream: false,
+                  max_tokens: 8192,
                 }
           ),
         });

@@ -25,6 +25,7 @@ export class DeepSeekAI {
         model: this.model,
         messages,
         stream: false,
+        max_tokens: 8192,
       }),
     });
 
