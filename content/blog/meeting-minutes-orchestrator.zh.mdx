@@ -1,0 +1,159 @@
+---
+title: meeting-minutes-orchestrator：会议记录自动结构化入库 Notion
+description: 介绍 meeting-minutes-orchestrator 的用途、核心能力，以及完整的安装配置与使用方法。
+image: /images/blog/post-3.png
+date: "2026-03-06"
+published: true
+categories: [ai-arsenal, indie-work-log]
+author: baiyang
+premium: false
+featured: false
+---
+
+## 是什么
+
+`meeting-minutes-orchestrator` 是一个 Claude Code Skill，专门用来处理会议记录。
+
+它的工作是：接收一段原始的会议内容，调用大模型把它理解并拆解成结构化字段，然后自动写进 Notion 数据库，同时生成一页完整的会议纪要正文。
+
+整个过程一条命令完成，不需要手动打开任何工具。
+
+## 能解决什么问题
+
+会议纪要难以落地，通常有几个原因：
+
+**结论没有标准出口。** 会议结束后，关键结论往往散落在微信群、飞书消息或个人笔记里，没有统一的地方可以查。
+
+**行动项没有归属。** "下周跟进一下"说了很多次，但谁跟进、什么时候、结果是什么，没有记录。
+
+**写纪要有时间成本。** 会后还要打开文档，回忆内容，整理格式，这段摩擦足以让大多数人放弃。
+
+这个 Skill 把上面三件事合并成一步：原始内容进，结构化纪要出，直接存档。
+
+## 它能做什么
+
+### 提炼核心字段
+
+从任意格式的会议内容中提炼：
+
+- 会议名称与日期
+- 一句话摘要
+- 核心结论（编号列表）
+- 关键行动项（事项｜负责人｜截止时间）
+- 参会人员（按组分类）
+
+### 自动写入 Notion
+
+提炼完成后，脚本通过 Notion API 完成两件事：
+
+- 在数据库中创建一条结构化记录，每个字段对应数据库的列
+- 在页面正文里追加完整的会议纪要内容
+
+结果是：数据库可以按日期、关键词检索，页面可以完整阅读。
+
+### 支持多种输入格式
+
+不限制输入格式，以下内容都可以直接丢给它处理：
+
+- 微信群聊记录（复制文本即可）
+- 腾讯会议 / Zoom 自动转写文本
+- 录音 OCR 识别结果
+- 手写笔记整理成的文字
+- 口述的会议摘要
+
+大模型负责理解，缺失信息统一写"待确认"，不会编造内容。
+
+### 模型可替换
+
+内置兼容 OpenAI 格式的调用方式，只需要改环境变量，可以换成任意支持该格式的模型：DeepSeek、Gemini、Zhipu、Qwen 都可以。
+
+---
+
+## 安装
+
+```bash
+cd meeting-minutes-orchestrator
+npm install
+cp .env.example .env
+```
+
+## 配置
+
+### 大模型
+
+编辑 `.env`，填入模型接口信息：
+
+```bash
+LLM_BASE_URL=https://api.deepseek.com
+LLM_API_KEY=sk-xxxxxx
+LLM_MODEL=deepseek-chat
+```
+
+### Notion
+
+```bash
+NOTION_API_KEY=secret_xxxxxx
+NOTION_DATABASE_ID=xxxxxx
+```
+
+**获取 API Key：** 打开 [notion.so/my-integrations](https://www.notion.so/my-integrations)，新建 Integration，复制 `Internal Integration Secret`。
+
+**获取 Database ID：** 打开数据库页面，URL 中 `notion.so/` 后面、`?v=` 前面那段 32 位字符就是 ID。
+
+**连接数据库：** 在 Notion 数据库页面右上角 → `...` → `Connect to` → 选择刚建的 Integration。
+
+### Notion 数据库字段
+
+数据库需要提前建好以下字段（名称必须一致）：
+
+| 字段名 | 类型 |
+|--------|------|
+| 名称 | Title |
+| 会议日期 | Date |
+| 会议摘要 | Text |
+| 核心结论 | Text |
+| 关键行动项 | Text |
+| 参会人员 | Text |
+
+---
+
+## 使用
+
+### 直接传入文本
+
+```bash
+node scripts/orchestrate.js --content "今天讨论了 Q2 路线图。结论：4 月底发布新版本，负责人张三。参会：张三（产品）、李四（研发）。"
+```
+
+### 从文件读取
+
+```bash
+node scripts/orchestrate.js --content-file ./meeting-2026-03-06.txt
+```
+
+### 输出
+
+```
+✅ 调度完成并入库
+page_id: abc123...
+url: https://notion.so/abc123...
+```
+
+打开链接，Notion 里的记录大致如下：
+
+- **名称**：Q2 产品路线图对齐会
+- **会议日期**：2026-03-06
+- **会议摘要**：对齐 Q2 发布节奏，确认负责人与时间线
+- **核心结论**：1. 4 月底发布新版本
+- **关键行动项**：新版本研发｜张三｜2026-04-30
+- **参会人员**：产品：张三；研发：李四
+
+页面正文会附上完整纪要内容，方便回看细节。
+
+## 在 Claude Code 里直接调用
+
+把这个 Skill 加入 Claude Code 工作区后，对话里直接说：
+
+> 帮我把这段会议记录整理成纪要写到 Notion
+
+Claude 会自动识别场景并运行脚本，不需要手动执行命令。
