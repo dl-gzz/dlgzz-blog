@@ -198,19 +198,18 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
         </div>
 
         {/* ── ② 滚动区 + 自定义滚动条（绕过 tldraw 全局隐藏） ── */}
-        <div
-          onPointerDown={(e) => e.stopPropagation()}
-          style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex' }}
-        >
-          {/* 内容滚动区：隐藏原生滚动条，右侧留 10px 给自定义轨道 */}
+        {/* ⚠️ 外层 wrapper 不放 onPointerDown，让 tldraw 可以从空白区域拖动 */}
+        <div style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex' }}>
+          {/* 内容滚动区：stopPropagation 只在内容 div 上，防止 tldraw 在滚动时抢焦点 */}
           <div
             ref={scrollRef}
+            onPointerDown={(e) => e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}
             onScroll={updateThumb}
             style={{
               flex: 1, overflowY: 'scroll', padding: '10px 4px 10px 14px',
               pointerEvents: 'auto',
-              /* 隐藏原生滚动条（tldraw 已经全局隐藏，此处双重保险） */
+              /* 隐藏原生滚动条（tldraw 已全局隐藏，此处双重保险） */
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
             }}
