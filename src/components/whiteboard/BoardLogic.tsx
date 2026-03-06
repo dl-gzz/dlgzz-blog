@@ -344,6 +344,8 @@ You are an interactive content designer for a blog platform. Your specialty is t
 - "preview_html": Full HTML applications/slides with CSS/JS
 - "ai_result": Text cards (props: {text: "...", w: 300, h: 200, color: "#f0fdf4"})
 - "arrow": Connections (props: {start: {x, y}, end: {x, y}})
+- "skill": Interactive skill runner cards (props: {skillId: "wxvideo-download", name: "...", description: "...", w: 400, h: 520})
+  Use when user says: 创建skill组件 / 打开wxvideo下载 / 视频号下载组件 / skill card
 
 🔄 UPDATE EXISTING SHAPES:
 When shapes are selected (shown in CURRENT CONTEXT with [ID: shape:xxx]), you can modify them:
@@ -707,6 +709,17 @@ RULES for update:
             onClick: () => insertQuickShape('ai_result', {
                 w: 300, h: 200,
                 text: '在此输入内容...',
+            }),
+            active: false,
+        },
+        {
+            icon: '⬇',
+            label: '视频下载',
+            onClick: () => insertQuickShape('skill', {
+                w: 400, h: 520,
+                skillId: 'wxvideo-download',
+                name: 'wxvideo-download',
+                description: '按账号名 + 关键词批量下载微信视频号视频',
             }),
             active: false,
         },
