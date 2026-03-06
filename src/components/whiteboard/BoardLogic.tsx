@@ -221,6 +221,32 @@ const BoardLogic: React.FC = () => {
             let offset = 0;
 
             for (const file of files) {
+                // Handle Video Files
+                if (file.type.startsWith('video/') ||
+                    file.name.toLowerCase().endsWith('.mp4') ||
+                    file.name.toLowerCase().endsWith('.webm') ||
+                    file.name.toLowerCase().endsWith('.mov') ||
+                    file.name.toLowerCase().endsWith('.ogg')) {
+
+                    const videoUrl = URL.createObjectURL(file);
+
+                    editor.createShape({
+                        id: createShapeId(),
+                        type: 'video_player',
+                        x: point.x + offset,
+                        y: point.y + offset,
+                        props: {
+                            w: 640,
+                            h: 380,
+                            videoUrl,
+                            fileName: file.name,
+                        }
+                    });
+
+                    offset += 40;
+                    continue;
+                }
+
                 // Handle Image Files
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
@@ -721,6 +747,12 @@ RULES for update:
                 name: 'wxvideo-download',
                 description: '按账号名 + 关键词批量下载微信视频号视频',
             }),
+            active: false,
+        },
+        {
+            icon: '🤖',
+            label: '视频分析',
+            onClick: () => insertQuickShape('ai_video_analyzer', { w: 380, h: 480 }),
             active: false,
         },
         {

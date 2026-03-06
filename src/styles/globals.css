@@ -452,3 +452,26 @@ div[class*="border-t"][class*="bg-fd-secondary"]:not(:has(*)):not(
 [class*="fd-secondary"]:empty:not([data-banner-content]) {
   display: none !important;
 }
+
+/* ── AI Video Analyzer 滚动条：覆盖 tldraw 的全局 display:none ── */
+.ai-analyzer-scroll::-webkit-scrollbar {
+  display: block !important;        /* 覆盖 tldraw 的 ::-webkit-scrollbar { display: none } */
+  -webkit-appearance: none !important;
+  width: 8px !important;
+}
+.ai-analyzer-scroll::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-radius: 4px !important;
+}
+.ai-analyzer-scroll::-webkit-scrollbar-thumb {
+  background: #4b5563 !important;
+  border-radius: 4px !important;
+  min-height: 20px !important;
+}
+.ai-analyzer-scroll::-webkit-scrollbar-thumb:hover {
+  background: #6366f1 !important;
+}
+.ai-analyzer-scroll {
+  scrollbar-width: thin !important;
+  scrollbar-color: #4b5563 rgba(30, 41, 59, 0.8) !important;
+}
