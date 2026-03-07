@@ -1,20 +1,87 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
 
-const execAsync = promisify(exec);
+const API = 'https://www.dajiala.com/fbmain/monitor/v3/wxvideo';
 
-const SCRIPT_PATH =
-  process.env.WXVIDEO_SCRIPT_PATH ||
-  path.resolve('/Users/baiyang/Desktop/wxvideo-download/scripts/download_wxvideo.py');
+// POST 请求到 dajiala API（params 作为 query string）
+async function postJson(params: Record<string, string>, retries = 5): Promise<any> {
+  const url = new URL(API);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  let lastErr: unknown;
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url.toString(), { method: 'POST', signal: AbortSignal.timeout(45_000) });
+      if (res.status >= 500) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      if (!text.trim()) throw new Error('empty response');
+      return JSON.parse(text);
+    } catch (e) {
+      lastErr = e;
+      await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
 
-const DEFAULT_OUT_DIR =
-  process.env.WXVIDEO_OUT_DIR || path.resolve('/Users/baiyang/Desktop/视频下载');
+// 账号名 → v2_name
+async function resolveV2Name(key: string, accountName: string): Promise<string> {
+  const js = await postJson({ type: '6', key, keywords: accountName, verifycode: '' });
+  const v2Name = js?.v2_info_list?.contact?.username;
+  if (!v2Name) throw new Error(`无法解析账号：${accountName}`);
+  return v2Name;
+}
+
+// 翻页拉取视频列表，按关键词过滤
+async function fetchCandidates(
+  key: string, v2Name: string, keyword: string,
+  limit: number, afterTs: number, maxPages = 12
+): Promise<any[]> {
+  const matches: any[] = [];
+  const seen = new Set<string>();
+  let lastBuffer = '';
+
+  for (let page = 0; page < maxPages; page++) {
+    const js = await postJson({ type: '1', key, v2_name: v2Name, last_buffer: lastBuffer, verifycode: '' });
+    const arr: any[] = js?.object ?? [];
+
+    for (const item of arr) {
+      const oid = String(item?.object_id ?? '').trim();
+      if (!oid || seen.has(oid)) continue;
+      seen.add(oid);
+
+      // 时间过滤
+      if (afterTs) {
+        const pt: string = item?.publish_time ?? '';
+        try {
+          const ts = Math.floor(new Date(pt.replace(' ', 'T')).getTime() / 1000);
+          if (ts < afterTs) continue;
+        } catch { /* 无法解析则不过滤 */ }
+      }
+
+      if (String(item?.title ?? '').includes(keyword)) {
+        matches.push(item);
+        if (matches.length >= limit) return matches;
+      }
+    }
+
+    const next = js?.last_buffer ?? '';
+    if (js?.continue_flag !== 1 || !next || next === lastBuffer) break;
+    lastBuffer = next;
+  }
+  return matches;
+}
+
+// 获取单条视频的下载详情
+async function getDownloadDetail(key: string, objectId: string, objectNonceId = ''): Promise<any> {
+  const params: Record<string, string> = { type: '3', key, object_id: objectId, verifycode: '' };
+  if (objectNonceId) params.object_nonce_id = objectNonceId;
+  const js = await postJson(params);
+  if (js?.code !== 0) throw new Error(`获取下载链接失败：object_id=${objectId}`);
+  return js;
+}
 
 export async function POST(request: NextRequest) {
-  // 此功能依赖本地 Python 脚本，仅支持本地开发环境
-  if (!process.env.XHS_API_KEY) {
+  const apiKey = process.env.XHS_API_KEY;
+  if (!apiKey) {
     return NextResponse.json(
       { success: false, error: '视频下载功能仅在本地开发环境可用，生产端暂不支持' },
       { status: 503 }
@@ -22,44 +89,50 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { accountName, keyword, days, limit = 5, outDir } = await request.json();
+    const { accountName, v2Name: v2NameInput, keyword, days, limit = 5 } = await request.json();
 
-    if (!keyword) {
-      return NextResponse.json({ success: false, error: '缺少关键词' }, { status: 400 });
-    }
-    if (!accountName) {
-      return NextResponse.json({ success: false, error: '缺少账号名称' }, { status: 400 });
-    }
+    if (!keyword) return NextResponse.json({ success: false, error: '缺少关键词' }, { status: 400 });
+    if (!accountName && !v2NameInput) return NextResponse.json({ success: false, error: '缺少账号名称' }, { status: 400 });
 
-    const apiKey = process.env.XHS_API_KEY;
+    const afterTs = days ? Math.floor(Date.now() / 1000) - Number(days) * 86400 : 0;
 
-    const resolvedOutDir = outDir?.replace('~', process.env.HOME || '') || DEFAULT_OUT_DIR;
+    // 解析 v2_name
+    const v2Name: string = v2NameInput || await resolveV2Name(apiKey, accountName);
 
-    // 时间过滤：如果指定了天数，计算截止时间戳
-    const afterTs = days ? Math.floor(Date.now() / 1000) - Number(days) * 86400 : null;
+    // 拉取候选视频
+    const candidates = await fetchCandidates(apiKey, v2Name, keyword, Number(limit) || 5, afterTs);
 
-    const cmd = [
-      'python3',
-      JSON.stringify(SCRIPT_PATH),
-      '--key', JSON.stringify(apiKey),
-      '--account-name', JSON.stringify(accountName),
-      '--keyword', JSON.stringify(keyword),
-      '--limit', String(Number(limit) || 5),
-      '--out-dir', JSON.stringify(resolvedOutDir),
-      ...(afterTs ? ['--after-ts', String(afterTs)] : []),
-    ].join(' ');
+    // 获取每条视频下载链接（不下载到服务器，直接返回 URL）
+    const items = await Promise.all(
+      candidates.map(async (c, idx) => {
+        const oid = String(c?.object_id ?? '');
+        const nonce = String(c?.object_nonce_id ?? '');
+        try {
+          const detail = await getDownloadDetail(apiKey, oid, nonce);
+          return {
+            index: idx + 1,
+            title: detail?.title || c?.title || oid,
+            publishTime: detail?.publish_time || c?.publish_time || '',
+            nickname: detail?.nickname || '',
+            v2Name: detail?.v2_name || v2Name,
+            objectId: oid,
+            objectNonceId: detail?.object_nonce_id || nonce,
+            downloadUrl: detail?.download_url || '',
+          };
+        } catch (e: any) {
+          return { index: idx + 1, title: c?.title || oid, error: e.message };
+        }
+      })
+    );
 
-    const { stdout } = await execAsync(cmd, { timeout: 120_000 });
-
-    const summary = JSON.parse(stdout);
     return NextResponse.json({
       success: true,
-      count: summary.count,
-      items: summary.items,
-      outDir: resolvedOutDir,
+      count: items.length,
+      keyword,
+      v2Name,
+      items,
     });
   } catch (error: any) {
-    const msg = error?.stderr || error?.message || '未知错误';
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || '未知错误' }, { status: 500 });
   }
 }
