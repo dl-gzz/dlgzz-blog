@@ -68,7 +68,6 @@ function SkillRunner({
   const [keyword, setKeyword] = useState('');
   const [days, setDays] = useState('');
   const [limit, setLimit] = useState('5');
-  const [outDir, setOutDir] = useState('~/Desktop/视频下载');
   const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [result, setResult] = useState('');
 
@@ -81,18 +80,27 @@ function SkillRunner({
       const res = await fetch('/api/skill/wxvideo-download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountName, keyword, days: days ? Number(days) : undefined, limit: Number(limit), outDir }),
+        body: JSON.stringify({ accountName, keyword, days: days ? Number(days) : undefined, limit: Number(limit) }),
       });
       const data = await res.json();
       if (data.success) {
         setStatus('done');
-        const lines = [`✅ 下载完成：${data.count} 条视频`, `保存至：${data.outDir}`];
+        const lines = [`✅ 找到 ${data.count} 条视频，正在触发浏览器下载...`];
         for (const item of (data.items ?? [])) {
           if (item.error) {
             lines.push(`  ❌ ${item.title}：${item.error}`);
           } else {
-            const mb = item.fileSize ? ` (${(item.fileSize / 1024 / 1024).toFixed(1)}MB)` : '';
-            lines.push(`  ✓ ${item.index}. ${item.title}${mb}`);
+            lines.push(`  ✓ ${item.index}. ${item.title}`);
+            // 通过代理端点触发浏览器下载，用户可在浏览器选择保存位置
+            const proxyUrl = `/api/skill/wxvideo-proxy?url=${encodeURIComponent(item.downloadUrl)}&filename=${encodeURIComponent(item.filename)}`;
+            const a = document.createElement('a');
+            a.href = proxyUrl;
+            a.download = item.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            // 多个文件时错开触发，避免浏览器拦截
+            await new Promise(r => setTimeout(r, 800));
           }
         }
         setResult(lines.join('\n'));
@@ -207,16 +215,6 @@ function SkillRunner({
             />
           </div>
         </div>
-        <div>
-          <label style={labelStyle}>保存目录</label>
-          <input
-            style={inputStyle}
-            placeholder="~/Desktop/视频下载"
-            value={outDir}
-            onChange={(e) => setOutDir(e.target.value)}
-          />
-        </div>
-
         {/* Run Button */}
         <button
           onClick={handleRun}
