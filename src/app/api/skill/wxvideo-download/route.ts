@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs/promises';
+import path from 'path';
+import os from 'os';
 
 const API = 'https://www.dajiala.com/fbmain/monitor/v3/wxvideo';
+
+function resolvePath(p: string): string {
+  if (p.startsWith('~/') || p === '~') {
+    return path.join(os.homedir(), p.slice(2));
+  }
+  return p;
+}
+
+function sanitizeFilename(text: string, maxLen = 64): string {
+  return text.replace(/[\\/:*?"<>|\n\r]+/g, '_').trim().slice(0, maxLen);
+}
 
 async function postJson(params: Record<string, string>, retries = 5): Promise<any> {
   const url = new URL(API);
@@ -67,50 +81,76 @@ async function getDownloadDetail(key: string, objectId: string, objectNonceId = 
   return js;
 }
 
+async function downloadFile(url: string, filePath: string): Promise<number> {
+  const res = await fetch(url, { signal: AbortSignal.timeout(180_000) });
+  if (!res.ok) throw new Error(`下载失败 HTTP ${res.status}`);
+  const buffer = await res.arrayBuffer();
+  await fs.writeFile(filePath, Buffer.from(buffer));
+  return buffer.byteLength;
+}
+
 export async function POST(request: NextRequest) {
   const apiKey = process.env.XHS_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { success: false, error: '缺少 XHS_API_KEY 环境变量' },
+      { success: false, error: '缺少 XHS_API_KEY 环境变量，请在 .env.local 中配置' },
       { status: 503 }
     );
   }
 
   try {
-    const { accountName, v2Name: v2NameInput, keyword, days, limit = 5 } = await request.json();
+    const { accountName, v2Name: v2NameInput, keyword, days, limit = 5, outDir = '~/Desktop/视频下载' } = await request.json();
     if (!keyword) return NextResponse.json({ success: false, error: '缺少关键词' }, { status: 400 });
     if (!accountName && !v2NameInput) return NextResponse.json({ success: false, error: '缺少账号名称' }, { status: 400 });
 
     const afterTs = days ? Math.floor(Date.now() / 1000) - Number(days) * 86400 : 0;
+    const resolvedOutDir = resolvePath(outDir);
+    await fs.mkdir(resolvedOutDir, { recursive: true });
+
     const v2Name: string = v2NameInput || await resolveV2Name(apiKey, accountName);
     const candidates = await fetchCandidates(apiKey, v2Name, keyword, Number(limit) || 5, afterTs);
 
-    const items = await Promise.all(
-      candidates.map(async (c, idx) => {
-        const oid = String(c?.object_id ?? '');
-        const nonce = String(c?.object_nonce_id ?? '');
-        try {
-          const detail = await getDownloadDetail(apiKey, oid, nonce);
-          const title = String(detail?.title || c?.title || oid);
-          const publishTime = String(detail?.publish_time || c?.publish_time || '');
-          // 生成安全的文件名
-          const safeName = title.replace(/[\\/:*?"<>|\n\r]+/g, '_').trim().slice(0, 60);
-          const stamp = publishTime.replace(' ', '_').replace(/:/g, '-') || oid;
-          const filename = `${String(idx + 1).padStart(2, '0')}_${safeName}_${stamp}.mp4`;
-          return {
-            index: idx + 1,
-            title,
-            publishTime,
-            filename,
-            downloadUrl: detail?.download_url || '',
-          };
-        } catch (e: any) {
-          return { index: idx + 1, title: c?.title || oid, filename: '', downloadUrl: '', error: e.message };
-        }
-      })
-    );
+    const items: any[] = [];
+    for (let idx = 0; idx < candidates.length; idx++) {
+      const c = candidates[idx];
+      const oid = String(c?.object_id ?? '');
+      const nonce = String(c?.object_nonce_id ?? '');
+      try {
+        const detail = await getDownloadDetail(apiKey, oid, nonce);
+        const title = String(detail?.title || c?.title || oid);
+        const publishTime = String(detail?.publish_time || c?.publish_time || '');
+        const base = sanitizeFilename(title, 60);
+        const stamp = publishTime.replace(' ', '_').replace(/:/g, '-') || oid;
+        const filename = `${String(idx + 1).padStart(2, '0')}_${base}_${stamp}.mp4`;
+        const filePath = path.join(resolvedOutDir, filename);
 
-    return NextResponse.json({ success: true, count: items.filter(i => !i.error).length, keyword, v2Name, items });
+        const fileSize = await downloadFile(detail.download_url, filePath);
+
+        const meta = {
+          title, publishTime,
+          nickname: detail?.nickname || '',
+          v2Name: detail?.v2_name || v2Name,
+          objectId: oid,
+          objectNonceId: detail?.object_nonce_id || nonce,
+          downloadUrl: detail?.download_url || '',
+          fileSize,
+        };
+        await fs.writeFile(filePath.replace('.mp4', '.json'), JSON.stringify(meta, null, 2), 'utf-8');
+
+        items.push({ index: idx + 1, title, publishTime, filePath, fileSize });
+      } catch (e: any) {
+        items.push({ index: idx + 1, title: c?.title || oid, error: e.message });
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      count: items.filter(i => !i.error).length,
+      keyword,
+      v2Name,
+      outDir: resolvedOutDir,
+      items,
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || '未知错误' }, { status: 500 });
   }
