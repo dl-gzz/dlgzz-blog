@@ -140,7 +140,7 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
   const isLoading = status === 'capturing' || status === 'analyzing';
 
   return (
-    <HTMLContainer style={{ pointerEvents: 'all' }}>
+    <HTMLContainer>
       {/* 外层容器：固定宽高，flex 列布局 */}
       <div style={{
         width: w, height: h,
@@ -270,6 +270,7 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
               color: !nearbyVideo || isLoading ? '#475569' : '#fff',
               fontSize: 13, fontWeight: 600,
               cursor: !nearbyVideo || isLoading ? 'not-allowed' : 'pointer',
+              pointerEvents: 'auto',
             }}
           >
             {isLoading ? '分析中...' : '▶ 分析视频'}
@@ -278,7 +279,7 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
             <button
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => { setStatus('idle'); setAnalysis(''); setErrorMsg(''); }}
-              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #334155', background: 'transparent', color: '#64748b', fontSize: 12, cursor: 'pointer' }}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #334155', background: 'transparent', color: '#64748b', fontSize: 12, cursor: 'pointer', pointerEvents: 'auto' }}
             >
               重置
             </button>
