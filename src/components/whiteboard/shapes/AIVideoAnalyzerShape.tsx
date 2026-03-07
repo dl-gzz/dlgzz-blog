@@ -72,6 +72,12 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
   const [thumbTop, setThumbTop] = useState(0);
   const [thumbHeight, setThumbHeight] = useState(0);
   const [showThumb, setShowThumb] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // 拖拽滑块用的 ref（不需要触发重渲染）
+  const isDraggingThumb = useRef(false);
+  const dragStartY = useRef(0);
+  const dragStartScrollTop = useRef(0);
 
   const updateThumb = useCallback(() => {
     const el = scrollRef.current;
@@ -81,6 +87,50 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
     setShowThumb(true);
     setThumbHeight(Math.max(24, ratio * el.clientHeight));
     setThumbTop((el.scrollTop / (el.scrollHeight - el.clientHeight)) * (el.clientHeight - Math.max(24, ratio * el.clientHeight)));
+  }, []);
+
+  // 点击轨道空白区域 → 跳转到对应位置
+  const handleTrackPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    // 只处理点在轨道本身（不是滑块）的情况
+    if ((e.target as HTMLElement) !== e.currentTarget) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickRatio = (e.clientY - rect.top) / rect.height;
+    el.scrollTop = Math.max(0, Math.min(clickRatio * (el.scrollHeight - el.clientHeight), el.scrollHeight - el.clientHeight));
+    updateThumb();
+  }, [updateThumb]);
+
+  // 按下滑块 → 开始拖拽
+  const handleThumbPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    isDraggingThumb.current = true;
+    setIsDragging(true);
+    dragStartY.current = e.clientY;
+    dragStartScrollTop.current = scrollRef.current?.scrollTop ?? 0;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, []);
+
+  // 拖拽中 → 实时滚动
+  const handleThumbPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingThumb.current) return;
+    e.stopPropagation();
+    const el = scrollRef.current;
+    if (!el) return;
+    const deltaY = e.clientY - dragStartY.current;
+    // 与 updateThumb 保持一致：用 el.clientHeight 作为虚拟轨道高度
+    const maxThumbTravel = el.clientHeight - thumbHeight;
+    if (maxThumbTravel <= 0) return;
+    const newScrollTop = dragStartScrollTop.current + (deltaY / maxThumbTravel) * (el.scrollHeight - el.clientHeight);
+    el.scrollTop = Math.max(0, Math.min(newScrollTop, el.scrollHeight - el.clientHeight));
+    updateThumb();
+  }, [updateThumb, thumbHeight]);
+
+  // 松开滑块 → 结束拖拽
+  const handleThumbPointerUp = useCallback(() => {
+    isDraggingThumb.current = false;
+    setIsDragging(false);
   }, []);
 
   // 内容变化后重新计算滑块（分析完成、重置等场景）
@@ -240,18 +290,32 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
             )}
           </div>
 
-          {/* 自定义滚动条轨道（始终可见） */}
+          {/* 自定义滚动条轨道：加宽至 8px，支持点击跳转 */}
           {showThumb && (
-            <div style={{
-              width: 5, flexShrink: 0, margin: '6px 4px 6px 0',
-              background: 'rgba(255,255,255,0.07)', borderRadius: 3, position: 'relative',
-            }}>
-              <div style={{
-                position: 'absolute', left: 0, right: 0,
-                top: thumbTop, height: thumbHeight,
-                background: 'rgba(255,255,255,0.35)', borderRadius: 3,
-                transition: 'top 0.1s ease-out',
-              }} />
+            <div
+              onPointerDown={handleTrackPointerDown}
+              onWheel={(e) => e.stopPropagation()}
+              style={{
+                width: 8, flexShrink: 0, margin: '6px 4px 6px 0',
+                background: 'rgba(255,255,255,0.07)', borderRadius: 4, position: 'relative',
+                cursor: 'pointer', pointerEvents: 'auto',
+              }}
+            >
+              {/* 滑块：支持拖拽滚动 */}
+              <div
+                onPointerDown={handleThumbPointerDown}
+                onPointerMove={handleThumbPointerMove}
+                onPointerUp={handleThumbPointerUp}
+                style={{
+                  position: 'absolute', left: 0, right: 0,
+                  top: thumbTop, height: thumbHeight,
+                  background: isDragging ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.35)',
+                  borderRadius: 4,
+                  transition: isDragging ? 'none' : 'top 0.1s ease-out',
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  userSelect: 'none',
+                }}
+              />
             </div>
           )}
         </div>
