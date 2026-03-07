@@ -86,7 +86,16 @@ function SkillRunner({
       const data = await res.json();
       if (data.success) {
         setStatus('done');
-        setResult(`✅ 下载完成：${data.count} 条视频\n保存至：${outDir}`);
+        const lines = [`✅ 下载完成：${data.count} 条视频`, `保存至：${data.outDir}`];
+        for (const item of (data.items ?? [])) {
+          if (item.error) {
+            lines.push(`  ❌ ${item.title}：${item.error}`);
+          } else {
+            const mb = item.fileSize ? ` (${(item.fileSize / 1024 / 1024).toFixed(1)}MB)` : '';
+            lines.push(`  ✓ ${item.index}. ${item.title}${mb}`);
+          }
+        }
+        setResult(lines.join('\n'));
       } else {
         setStatus('error');
         setResult(`❌ 失败：${data.error}`);
