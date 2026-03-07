@@ -13,6 +13,14 @@ const DEFAULT_OUT_DIR =
   process.env.WXVIDEO_OUT_DIR || path.resolve('/Users/baiyang/Desktop/视频下载');
 
 export async function POST(request: NextRequest) {
+  // 此功能依赖本地 Python 脚本，仅支持本地开发环境
+  if (!process.env.XHS_API_KEY) {
+    return NextResponse.json(
+      { success: false, error: '视频下载功能仅在本地开发环境可用，生产端暂不支持' },
+      { status: 503 }
+    );
+  }
+
   try {
     const { accountName, keyword, days, limit = 5, outDir } = await request.json();
 
@@ -24,9 +32,6 @@ export async function POST(request: NextRequest) {
     }
 
     const apiKey = process.env.XHS_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ success: false, error: '缺少 XHS_API_KEY 环境变量' }, { status: 500 });
-    }
 
     const resolvedOutDir = outDir?.replace('~', process.env.HOME || '') || DEFAULT_OUT_DIR;
 
