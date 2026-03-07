@@ -180,8 +180,8 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
           </div>
         </div>
 
-        {/* ── ① 状态卡（固定高度） ── */}
-        <div onPointerDown={(e) => e.stopPropagation()} style={{ flexShrink: 0, padding: '10px 14px 0' }}>
+        {/* ── ① 状态卡（只展示，无交互，不阻断 tldraw 拖动） ── */}
+        <div style={{ flexShrink: 0, padding: '10px 14px 0', cursor: 'grab', userSelect: 'none' }}>
           {nearbyVideo ? (
             <div style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 8, padding: '7px 10px' }}>
               <div style={{ color: '#a5b4fc', fontSize: 11, marginBottom: 2 }}>✅ 检测到视频</div>
@@ -256,12 +256,12 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
           )}
         </div>
 
-        {/* ── ③ 底部按钮（固定高度） ── */}
+        {/* ── ③ 底部按钮（wrapper 不阻断，stopPropagation 只在按钮本身） ── */}
         <div
-          onPointerDown={(e) => e.stopPropagation()}
           style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8, flexShrink: 0 }}
         >
           <button
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={handleAnalyze}
             disabled={!nearbyVideo || isLoading}
             style={{
@@ -276,6 +276,7 @@ function AIVideoAnalyzerComponent({ shape }: { shape: AIVideoAnalyzerShape }) {
           </button>
           {(status === 'done' || status === 'error') && (
             <button
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={() => { setStatus('idle'); setAnalysis(''); setErrorMsg(''); }}
               style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #334155', background: 'transparent', color: '#64748b', fontSize: 12, cursor: 'pointer' }}
             >
