@@ -99,11 +99,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { accountName, v2Name: v2NameInput, keyword, days, limit = 5, outDir = '~/Desktop/视频下载' } = await request.json();
+    const { accountName, v2Name: v2NameInput, keyword, afterDate, limit = 5, outDir = '~/Desktop/视频下载' } = await request.json();
     if (!keyword) return NextResponse.json({ success: false, error: '缺少关键词' }, { status: 400 });
     if (!accountName && !v2NameInput) return NextResponse.json({ success: false, error: '缺少账号名称' }, { status: 400 });
 
-    const afterTs = days ? Math.floor(Date.now() / 1000) - Number(days) * 86400 : 0;
+    // afterDate 格式 "YYYY-MM-DD"，转为当天零点的 Unix 时间戳
+    const afterTs = afterDate ? Math.floor(new Date(afterDate + 'T00:00:00').getTime() / 1000) : 0;
     const resolvedOutDir = resolvePath(outDir);
     await fs.mkdir(resolvedOutDir, { recursive: true });
 

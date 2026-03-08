@@ -66,7 +66,7 @@ function SkillRunner({
 }) {
   const [accountName, setAccountName] = useState('');
   const [keyword, setKeyword] = useState('');
-  const [days, setDays] = useState('');
+  const [afterDate, setAfterDate] = useState('');
   const [limit, setLimit] = useState('5');
   const [outDir, setOutDir] = useState('~/Desktop/视频下载');
   const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
@@ -81,7 +81,7 @@ function SkillRunner({
       const res = await fetch('/api/skill/wxvideo-download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountName, keyword, days: days ? Number(days) : undefined, limit: Number(limit), outDir }),
+        body: JSON.stringify({ accountName, keyword, afterDate: afterDate || undefined, limit: Number(limit), outDir }),
       });
       const data = await res.json();
       if (data.success) {
@@ -185,14 +185,12 @@ function SkillRunner({
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <div style={{ flex: 1 }}>
-            <label style={labelStyle}>最近N天</label>
+            <label style={labelStyle}>发布日期不早于</label>
             <input
-              style={inputStyle}
-              type="number"
-              min={1}
-              placeholder="不限"
-              value={days}
-              onChange={(e) => setDays(e.target.value)}
+              style={{ ...inputStyle, colorScheme: 'dark' }}
+              type="date"
+              value={afterDate}
+              onChange={(e) => setAfterDate(e.target.value)}
             />
           </div>
           <div style={{ flex: 1 }}>
