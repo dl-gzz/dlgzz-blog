@@ -50,6 +50,11 @@ const TldrawBoard: React.FC = () => {
             <Tldraw
                 shapeUtils={customShapeUtils}
                 licenseKey={licenseKey}
+                overrides={{
+                    translations: {
+                        'zh-cn': { 'fill-style.lined-fill': '线条填充' },
+                    },
+                }}
             >
                 <BoardLogic />
             </Tldraw>
