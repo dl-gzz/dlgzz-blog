@@ -1,5 +1,5 @@
-// One Worker OS — Service Worker v1
-const CACHE_NAME = 'ow-os-cache-v1';
+// One Worker OS — Service Worker v2
+const CACHE_NAME = 'ow-os-cache-v2';
 
 // Pre-cache on install
 const PRE_CACHE_URLS = [
@@ -53,10 +53,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets (images, fonts, css, js) → Cache First
-  if (
-    url.pathname.match(/\.(png|jpg|jpeg|svg|gif|ico|woff2?|ttf|eot|css|js)$/)
-  ) {
+  // JS / CSS → Network First（每次都取最新，避免缓存旧 bundle）
+  if (url.pathname.match(/\.(js|css)$/)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // 真正静态的资源（图片、字体、图标）→ Cache First
+  if (url.pathname.match(/\.(png|jpg|jpeg|svg|gif|ico|woff2?|ttf|eot)$/)) {
     event.respondWith(
       caches.match(request).then(
         (cached) =>
