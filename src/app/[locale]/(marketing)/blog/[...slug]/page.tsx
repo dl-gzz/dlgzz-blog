@@ -1,4 +1,5 @@
 import AllPostsButton from '@/components/blog/all-posts-button';
+import { InstallToLocalButton } from '@/components/blog/InstallToLocalButton';
 import ArticleCircleToSearch from '@/components/blog/ArticleCircleToSearch';
 import { ArticleChat } from '@/components/blog/article-chat';
 import BlogGrid from '@/components/blog/blog-grid';
@@ -88,7 +89,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
     notFound();
   }
 
-  const { date, title, description, image, author, categories, premium = false } = post.data;
+  const { date, title, description, image, author, categories, premium = false, whiteboard_prompt } = post.data;
   const publishDate = formatDate(new Date(date));
 
   const blogAuthor = authorSource.getPage([author], locale);
@@ -137,8 +138,18 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
                   {publishDate}
                 </span>
               </div>
-              {/* Premium badge - only show if user doesn't have access */}
-              {premium && !hasAccess && <PremiumBadge />}
+              <div className="flex items-center gap-2">
+                {/* Premium badge - only show if user doesn't have access */}
+                {premium && !hasAccess && <PremiumBadge />}
+                {whiteboard_prompt && (
+                  <InstallToLocalButton
+                    title={title}
+                    description={description ?? ''}
+                    slug={slug.join('/')}
+                    whiteboardPrompt={whiteboard_prompt}
+                  />
+                )}
+              </div>
             </div>
 
             {/* blog post title */}

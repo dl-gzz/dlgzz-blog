@@ -97,5 +97,6 @@ export const blog = defineCollections({
     categories: z.array(z.string()),
     author: z.string(),
     premium: z.boolean().default(false), // Premium/paid content flag
+    whiteboard_prompt: z.string().optional(), // 安装到本地白板的生成指令
   }),
 });
