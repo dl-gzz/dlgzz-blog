@@ -112,6 +112,36 @@ export const websiteConfig: WebsiteConfig = {
         isLifetime: false,
         recommended: true,
       },
+      text2imageStudio: {
+        id: 'text2imageStudio',
+        prices: [
+          {
+            type: PaymentTypes.ONE_TIME,
+            priceId:
+              process.env.NEXT_PUBLIC_STRIPE_PRICE_TEXT2IMAGE_STUDIO_ONE_TIME ||
+              'price_text2image_studio_one_time',
+            amount: 180, // 180 分 = 1.80 元 (test amount)
+            currency: 'CNY',
+          },
+        ],
+        isFree: false,
+        isLifetime: false,
+      },
+      ideaSecretaryLite: {
+        id: 'ideaSecretaryLite',
+        prices: [
+          {
+            type: PaymentTypes.ONE_TIME,
+            priceId:
+              process.env.NEXT_PUBLIC_STRIPE_PRICE_IDEA_SECRETARY_LITE_ONE_TIME ||
+              'price_idea_secretary_lite_one_time',
+            amount: 100, // 100 分 = 1.00 元 (install verification)
+            currency: 'CNY',
+          },
+        ],
+        isFree: false,
+        isLifetime: false,
+      },
     },
   },
 };

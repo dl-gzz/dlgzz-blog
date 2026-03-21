@@ -1,0 +1,117 @@
+---
+title: 抖音综合搜索 Pro：会员版热点侦察组件
+description: 把抖音综合搜索做成可安装到本地客户端的会员组件，用来做热点侦察、选题采样和竞品观察。
+image: /images/blog/post-2.png
+date: "2026-03-20"
+published: true
+categories: [ai-arsenal, north-star]
+author: baiyang
+premium: true
+featured: false
+whiteboard_prompt: "创建一个抖音搜索组件，尺寸 w:420 h:560，名称使用抖音综合搜索 Pro，界面文案使用中文。"
+service_manifest:
+  id: douyin-search-pro
+  name: 抖音综合搜索 Pro
+  summary: 面向会员的抖音热点侦察组件，支持关键词搜索、时间筛选与结果沉淀。
+  version: 1.0.0
+  icon: 🔎
+  category: douyin
+  install_type: shape
+  entry:
+    type: shape
+    shape_type: douyin_search
+    title: 抖音综合搜索 Pro
+    icon: 🔎
+    props:
+      w: 420
+      h: 560
+      name: 抖音综合搜索 Pro
+      description: 会员版抖音热点侦察，支持关键词搜索与结果沉淀
+  runtime:
+    mode: local
+    route: /whiteboard
+  source:
+    article_slug: douyin-search-pro
+    locale: zh
+  api:
+    - id: douyin-search
+      endpoint: /api/skill/douyin-search
+      method: POST
+      auth: optional
+  outputs:
+    primary: [search_results, takeaway]
+    cards: [douyin_search, ai_result]
+  permissions: [network]
+  pricing:
+    mode: premium
+  install:
+    auto_add_to_shape_library: true
+    auto_create_entry_shape: true
+  compatibility:
+    min_host_version: 0.1.0
+    fallback_prompt: "创建一个抖音搜索组件，尺寸 w:420 h:560，名称使用抖音综合搜索 Pro，界面文案使用中文。"
+---
+
+## 这个会员组件是做什么的
+
+这是一个给客户端母体安装的抖音搜索组件。
+
+它不是一篇单纯的教程，而是一个可以放进本地工作台里的实际能力入口。安装后，你可以直接在客户端里输入关键词，按时间和排序规则拉取抖音结果，用它做热点侦察和选题采样。
+
+## 它解决的核心问题
+
+做抖音分析时，最浪费时间的不是看视频，而是前面的几个动作：
+
+- 想到一个词，不知道最近有没有热起来
+- 想看最近 1 天、7 天还是 180 天的数据
+- 想先做粗筛，再决定要不要继续分析评论、作者或单条视频
+
+这个组件把第一步固定下来：先用搜索把样本拉出来，再决定后面跑什么。
+
+## 安装后的典型流程
+
+### 1. 输入关键词，先拿样本
+
+比如你想做“杭州民宿”“减脂早餐”“老板IP”这类选题，先输入关键词，快速拿到一批视频样本。
+
+### 2. 先筛时间，再看排序
+
+你可以先看最近 1 天，判断是不是突然爆量；也可以切到最多点赞，看历史高赞样本长什么样。
+
+### 3. 把搜索结果接到后续流程
+
+当结果里出现值得深挖的视频或作者时，再继续串：
+
+- 单条视频拆解
+- 评论洞察
+- 作者画像
+- 总结报告
+
+也就是说，这个组件更像抖音工作流的第一步入口。
+
+## 为什么它放到会员里
+
+我希望商店端卖的不是一篇文章，而是“文章 + 组件 + 本地运行入口”的完整服务。
+
+这个组件就是第一批会员能力的测试样板：
+
+- 商店端负责展示和权限校验
+- 客户端负责安装和本地运行
+- 会员状态决定能不能真正装进母体
+
+## 适合谁
+
+- 想做抖音选题库的人
+- 想做竞品热点观察的人
+- 想把搜索作为工作流起点的人
+- 想购买本地工具而不是只看教程的人
+
+## 你会看到什么
+
+在商店端点击“安装到客户端”后：
+
+- 未登录：提示先登录
+- 已登录但不是会员：提示先升级会员
+- 已是会员：客户端直接安装到 Shape 栏，并可进入本地工作流
+
+这就是“文章即服务”的第一版成交路径。

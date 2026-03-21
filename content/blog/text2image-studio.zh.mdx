@@ -1,0 +1,102 @@
+---
+title: Text2Image Studio：单独购买的海报生成组件
+description: 把文生图做成一个可单独购买授权的组件，适合做海报草图、封面图和社媒视觉稿的本地生成入口。
+image: /images/blog/post-3.png
+date: "2026-03-20"
+published: true
+categories: [ai-arsenal, indie-work-log]
+author: baiyang
+premium: false
+featured: false
+whiteboard_prompt: "创建一个文生图组件，尺寸 w:420 h:560，名称使用 Text2Image Studio，界面文案使用中文。"
+service_manifest:
+  id: text2image-studio
+  name: Text2Image Studio
+  summary: 面向单独购买授权的文生图组件，用来做海报、封面和视觉草图生成。
+  version: 1.0.0
+  icon: 🎨
+  category: ai-visual
+  install_type: shape
+  entry:
+    type: shape
+    shape_type: text2image
+    title: Text2Image Studio
+    icon: 🎨
+    props:
+      w: 420
+      h: 560
+      name: Text2Image Studio
+      description: 单独购买授权的海报与视觉草图生成组件
+  runtime:
+    mode: local
+    route: /whiteboard
+  source:
+    article_slug: text2image-studio
+    locale: zh
+  api:
+    - id: text2image
+      endpoint: /api/skill/text2image
+      method: POST
+      auth: optional
+  outputs:
+    primary: [images, summary]
+    cards: [text2image, ai_result]
+  permissions: [network]
+  pricing:
+    mode: license
+    price_id: price_text2image_studio_one_time
+    purchase_url: /zh/services/buy/text2image-studio
+  install:
+    auto_add_to_shape_library: true
+    auto_create_entry_shape: true
+  compatibility:
+    min_host_version: 0.1.0
+    fallback_prompt: "创建一个文生图组件，尺寸 w:420 h:560，名称使用 Text2Image Studio，界面文案使用中文。"
+---
+
+## 这是一个什么组件
+
+这是一个可以单独购买的文生图组件，不走会员订阅，而是按组件授权。
+
+安装到本地客户端之后，你可以直接在白板里输入提示词，生成海报草图、封面图和社媒视觉稿，把它当成一个固定的生产工具，而不是一篇临时教程。
+
+## 为什么要做单独购买
+
+有些用户并不想订整套会员，只想买一个确定能用、能长期放在本地母体里的组件。
+
+所以这条线解决的是另一种成交方式：
+
+- 不订阅会员
+- 单独买一个组件授权
+- 买完后永久装进自己的本地工作台
+
+## 适合谁
+
+- 只想购买某一个明确能力的人
+- 想把文生图变成固定工作台入口的人
+- 想做海报、封面、社媒视觉草图的人
+
+## 购买后的流程
+
+### 1. 先完成单独购买
+
+这个组件不是会员通用权限，而是这个组件自己的授权。
+
+### 2. 商店端校验授权状态
+
+当你登录后再次点击安装，系统会检查当前账号是否已经拥有这个组件对应的购买记录。
+
+### 3. 客户端安装并运行
+
+授权通过后，客户端会把它加入 Shape 栏，后面你就可以直接在本地工作流里使用它。
+
+## 这条线的意义
+
+这代表你的产品不只有“会员订阅”一条路，还可以卖单个能力。
+
+也就是：
+
+- 会员适合卖工作流能力包
+- license 适合卖单点爆款组件
+
+这两条线一起，商业结构会更完整。

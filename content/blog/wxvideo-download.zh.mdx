@@ -8,7 +8,48 @@ categories: [ai-arsenal, indie-work-log]
 author: baiyang
 premium: false
 featured: false
-whiteboard_prompt: "根据这篇文章生成一个微信视频号下载工具，使用 preview_html 类型，用纯 HTML/CSS/JS 实现，尺寸 w:460 h:520。功能：账号名输入框、关键词输入框、下载按钮（点击后 fetch POST /api/skill/wxvideo-download，body:{account,keyword}），结果区域显示下载进度和视频列表。深色风格，中文文案。"
+whiteboard_prompt: "根据这篇文章生成一个微信视频号下载工具，优先直接创建现有的 skill 组件，尺寸 w:400 h:520，skillId 使用 wxvideo-download，界面文案使用中文。"
+service_manifest:
+  id: wxvideo-download
+  name: 微信视频号下载
+  summary: 按账号名和关键词批量下载微信视频号视频。
+  version: 1.0.0
+  icon: ⬇
+  category: content-tool
+  install_type: shape
+  entry:
+    type: shape
+    shape_type: skill
+    title: 视频下载
+    props:
+      w: 400
+      h: 520
+      skillId: wxvideo-download
+      name: 视频下载
+      description: 按账号名 + 关键词批量下载微信视频号视频
+  runtime:
+    mode: local
+    route: /whiteboard
+  source:
+    article_slug: wxvideo-download
+    locale: zh
+  api:
+    - id: wxvideo-download
+      endpoint: /api/skill/wxvideo-download
+      method: POST
+      auth: optional
+  outputs:
+    primary: [download_list, summary]
+    cards: [skill, ai_result]
+  permissions: [network, local_file]
+  pricing:
+    mode: free
+  install:
+    auto_add_to_shape_library: true
+    auto_create_entry_shape: true
+  compatibility:
+    min_host_version: 0.1.0
+    fallback_prompt: "根据这篇文章生成一个微信视频号下载工具，优先直接创建现有的 skill 组件，尺寸 w:400 h:520，skillId 使用 wxvideo-download，界面文案使用中文。"
 ---
 
 ## 是什么

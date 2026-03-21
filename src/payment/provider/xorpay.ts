@@ -249,8 +249,10 @@ export class XorPayProvider implements PaymentProvider {
       const qrCodeUrl = encodeURIComponent(result.info.qr);
       const expiresIn = result.expires_in || 7200;
 
+      const encodedReturnUrl = successUrl ? `&return_url=${encodeURIComponent(successUrl)}` : '';
+
       return {
-        url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/checkout?aoid=${result.aoid}&qr=${qrCodeUrl}&expires=${expiresIn}`,
+        url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/checkout?aoid=${result.aoid}&qr=${qrCodeUrl}&expires=${expiresIn}${encodedReturnUrl}`,
         id: result.aoid, // XorPay order ID
       };
     } catch (error) {
