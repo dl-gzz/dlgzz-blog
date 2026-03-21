@@ -41,8 +41,8 @@ export function getNavbarLinks(): NestedMenuItem[] {
       external: false,
     },
     {
-      title: t('pricing.title'),
-      href: Routes.Pricing,
+      title: t('services.title'),
+      href: Routes.Services,
       external: false,
     },
     {
