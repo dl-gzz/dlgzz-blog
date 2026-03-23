@@ -1,14 +1,11 @@
-import { InstallToLocalButton } from '@/components/blog/InstallToLocalButton';
-import { ServiceCheckoutButton } from '@/components/services/ServiceCheckoutButton';
-import { getServiceAccessState } from '@/lib/service-access';
+import ServicesMarketClient from '@/components/services/ServicesMarketClient';
 import { LocaleLink } from '@/i18n/navigation';
+import { getServiceAccessState } from '@/lib/service-access';
 import { getServiceCatalog } from '@/lib/service-catalog';
-import { formatDate } from '@/lib/formatter';
 import { constructMetadata } from '@/lib/metadata';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { getSession } from '@/lib/server';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 
 export async function generateMetadata(): Promise<Metadata> {
   return constructMetadata({
@@ -16,22 +13,6 @@ export async function generateMetadata(): Promise<Metadata> {
     description: '浏览可安装到本地客户端的组件、工具和服务。',
     canonicalUrl: '/services',
   });
-}
-
-function getPricingLabel(mode: string) {
-  if (mode === 'premium') return '会员专享';
-  if (mode === 'license') return '单独购买';
-  return '免费安装';
-}
-
-function getPricingClassName(mode: string) {
-  if (mode === 'premium') {
-    return 'rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700';
-  }
-  if (mode === 'license') {
-    return 'rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700';
-  }
-  return 'rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700';
 }
 
 export default async function ServicesMarketPage({
@@ -106,104 +87,11 @@ export default async function ServicesMarketPage({
             当前状态：{!isLoggedIn ? '未登录' : hasPremium ? '会员已解锁' : '已登录'}
           </span>
           <span className="rounded-full border bg-white px-3 py-1">动作：看文章 → 安装到客户端</span>
+          <span className="rounded-full border bg-white px-3 py-1">筛选：全部 / 未安装 / 可升级 / 已安装</span>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {itemsWithAccess.map(({ item, access }) => (
-          <div
-            key={item.slug}
-            className="group overflow-hidden rounded-[28px] border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-              {item.image ? (
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-5xl">
-                  {item.manifest.entry.icon || item.manifest.icon || '🧩'}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4 p-5">
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  {item.manifest.category}
-                </span>
-                <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
-                  v{item.manifest.version}
-                </span>
-                <span className={getPricingClassName(item.manifest.pricing.mode)}>
-                  {getPricingLabel(item.manifest.pricing.mode)}
-                </span>
-              </div>
-
-              <div>
-                <h2 className="text-xl font-bold">{item.manifest.entry.title || item.manifest.name}</h2>
-                <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
-                  {item.description || item.manifest.summary}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                <span>文章：{item.slug}</span>
-                <span>发布：{formatDate(new Date(item.date))}</span>
-                <span>{access.statusLabel}</span>
-              </div>
-
-              <div className="rounded-2xl border bg-muted/30 px-4 py-3 text-sm leading-6 text-muted-foreground">
-                {access.helperText}
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <div className="flex flex-wrap gap-3">
-                  <InstallToLocalButton
-                    title={item.title}
-                    description={item.description}
-                    slug={item.slug}
-                    locale={locale}
-                    whiteboardPrompt={item.whiteboardPrompt}
-                    serviceManifest={item.manifest}
-                  />
-                  <LocaleLink
-                    href={`/blog/${item.slug}`}
-                    className="inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent"
-                  >
-                    查看文章
-                  </LocaleLink>
-                  {access.actionLabel && access.actionHref && (
-                    access.code === 'LICENSE_REQUIRED' && userId && item.manifest.pricing.price_id ? (
-                      <ServiceCheckoutButton
-                        userId={userId}
-                        slug={item.slug}
-                        serviceId={item.manifest.id}
-                        serviceName={item.manifest.name}
-                        priceId={item.manifest.pricing.price_id}
-                        className="border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
-                        variant="outline"
-                      >
-                        {access.actionLabel}
-                      </ServiceCheckoutButton>
-                    ) : (
-                      <a
-                        href={access.actionHref}
-                        className="inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100"
-                      >
-                        {access.actionLabel}
-                      </a>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <ServicesMarketClient locale={locale} items={itemsWithAccess} userId={userId} />
     </div>
   );
 }

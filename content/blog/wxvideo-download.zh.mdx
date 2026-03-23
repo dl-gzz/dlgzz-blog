@@ -9,6 +9,57 @@ author: baiyang
 premium: false
 featured: false
 whiteboard_prompt: "根据这篇文章生成一个微信视频号下载工具，优先直接创建现有的 skill 组件，尺寸 w:400 h:520，skillId 使用 wxvideo-download，界面文案使用中文。"
+agent_spec:
+  version: 1
+  serviceId: wxvideo-download
+  toolId: wxvideo-download
+  shapeType: skill
+  title: 微信视频号下载
+  purpose: 根据账号名和关键词批量下载微信视频号视频，并输出视频文件和元数据。
+  whenToUse:
+    - 用户要按账号和关键词批量抓取视频号内容
+    - 用户要把视频素材保存到本地继续分析
+    - 用户明确提到视频下载、归档、批量抓取
+  whenNotToUse:
+    - 用户只想看一篇文章摘要，不需要下载视频
+    - 用户要抓的是抖音或小红书而不是视频号
+  inputs:
+    - name: accountName
+      type: string
+      required: true
+      description: 视频号账号名称
+    - name: keyword
+      type: string
+      required: true
+      description: 标题关键词
+    - name: afterDate
+      type: string
+      required: false
+      description: 限制发布日期不早于这个日期
+    - name: limit
+      type: number
+      required: false
+      description: 下载数量上限
+    - name: outDir
+      type: string
+      required: true
+      description: 本地保存目录
+  outputs:
+    - download_list
+    - summary
+    - local_files
+  actions:
+    - kind: api
+      target: /api/skill/wxvideo-download
+      method: POST
+      description: 调用视频号下载接口执行批量下载
+    - kind: shape
+      target: skill
+      description: 优先打开或复用现有的视频下载组件
+  operatingNotes:
+    - 下载前先向用户确认账号名、关键词和保存目录
+    - 如果用户没有给 limit，可以使用默认值
+    - 结果里要明确告诉用户文件保存位置
 service_manifest:
   id: wxvideo-download
   name: 微信视频号下载

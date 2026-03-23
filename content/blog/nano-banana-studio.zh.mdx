@@ -1,0 +1,191 @@
+---
+title: Nano Banana 工坊：商店下载插件版做图组件
+description: 一个真正按插件包方式安装的做图组件。线上打包后，线下通过通用插件容器解析安装，不再要求线下预装具体组件代码。
+image: /images/blog/post-3.png
+date: "2026-03-22"
+published: true
+categories: [ai-arsenal, indie-work-log]
+author: baiyang
+premium: false
+featured: false
+whiteboard_prompt: "创建一个插件组件，尺寸 w:430 h:580，标题使用 Nano Banana 工坊，图标使用 🍌。"
+agent_spec:
+  version: 1
+  serviceId: nano-banana-studio
+  toolId: nano-banana-studio
+  shapeType: plugin_shape
+  title: Nano Banana 工坊
+  purpose: 通过 Nano Banana 图像接口生成海报、封面和社媒视觉图，并把图片回写到本地白板。
+  whenToUse:
+    - 用户要生成海报、封面或社媒视觉草图
+    - 用户想测试真正插件包模式是否能从线上装到线下
+    - 用户要用 Nano Banana 图像能力做快速出图
+  whenNotToUse:
+    - 用户要剪视频或分析视频而不是生成图片
+    - 用户要做复杂排版或专业级后期修图
+  inputs:
+    - name: prompt
+      type: string
+      required: true
+      description: 图片提示词
+    - name: aspectRatio
+      type: string
+      required: false
+      description: 输出宽高比
+    - name: imageSize
+      type: string
+      required: false
+      description: 输出分辨率等级
+    - name: referenceImages
+      type: string[]
+      required: false
+      description: 参考图 URL、data URL 或本机绝对路径
+  outputs:
+    - image
+    - publicUrl
+    - localAsset
+  actions:
+    - kind: api
+      target: /api/plugins/run
+      method: POST
+      description: 调用本地通用插件执行器运行 Nano Banana
+    - kind: shape
+      target: plugin_shape
+      description: 打开或复用 Nano Banana 工坊插件容器
+  operatingNotes:
+    - 这是第一版插件包样板，不依赖线下预装专用 shape
+    - 安装后通过通用插件容器渲染表单和结果区
+    - 图片成功生成后要自动进入白板资源目录
+plugin_spec:
+  schema_version: '1'
+  plugin_id: nano-banana-studio
+  version: 1.0.0
+  title: Nano Banana 工坊
+  summary: 使用 Nano Banana 图像接口生成海报、封面与社媒视觉图。
+  icon: 🍌
+  fields:
+    - id: prompt
+      label: 提示词
+      type: textarea
+      required: true
+      placeholder: 例如：一张极简科技风海报，银白与青绿色，未来感光影，适合产品发布会封面
+      defaultValue: 一张极简科技风海报，银白与青绿色，未来感光影，适合产品发布会封面
+      description: 直接描述你要生成的画面内容和风格。
+    - id: aspectRatio
+      label: 画面比例
+      type: select
+      required: true
+      defaultValue: '1:1'
+      options:
+        - label: 1:1 方图
+          value: '1:1'
+        - label: 16:9 横版
+          value: '16:9'
+        - label: 9:16 竖版
+          value: '9:16'
+        - label: 4:5 封面
+          value: '4:5'
+    - id: imageSize
+      label: 图片尺寸
+      type: select
+      required: true
+      defaultValue: 2K
+      options:
+        - label: 1K
+          value: 1K
+        - label: 2K
+          value: 2K
+        - label: 4K
+          value: 4K
+    - id: referenceImages
+      label: 参考图
+      type: multi_text
+      placeholder: 每行一张参考图，支持 http(s) URL、data URL 或本机绝对路径
+      description: 可选。每行输入一张参考图。
+  action:
+    kind: http_image_generation
+    endpoint: https://api.apiyi.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent
+    method: POST
+    auth:
+      type: bearer_env
+      env_key: NANO_BANANA_API_KEY
+    request:
+      prompt_field: prompt
+      aspect_ratio_field: aspectRatio
+      image_size_field: imageSize
+      reference_images_field: referenceImages
+    response:
+      image_base64_path: candidates.0.content.parts.0.inlineData.data
+      mime_type_path: candidates.0.content.parts.0.inlineData.mimeType
+service_manifest:
+  id: nano-banana-studio
+  name: Nano Banana 工坊
+  summary: 通过真正插件包方式安装的做图组件，使用 Nano Banana 图像接口生成海报与封面图。
+  version: 1.0.0
+  icon: 🍌
+  category: ai-visual
+  install_type: shape
+  entry:
+    type: shape
+    shape_type: plugin_shape
+    title: Nano Banana 工坊
+    icon: 🍌
+    props:
+      w: 430
+      h: 580
+      title: Nano Banana 工坊
+      description: 通用插件容器正在运行 Nano Banana 做图插件
+      icon: 🍌
+  runtime:
+    mode: local
+    route: /whiteboard
+  source:
+    article_slug: nano-banana-studio
+    locale: zh
+  api:
+    - id: nano-banana-studio
+      endpoint: /api/plugins/run
+      method: POST
+      auth: optional
+  outputs:
+    primary: [images, summary]
+    cards: [plugin_shape, ai_result]
+  permissions: [network, local_file]
+  pricing:
+    mode: free
+  install:
+    auto_add_to_shape_library: true
+    auto_create_entry_shape: true
+  compatibility:
+    min_host_version: 0.1.0
+    fallback_prompt: "创建一个插件组件，尺寸 w:430 h:580，标题使用 Nano Banana 工坊，图标使用 🍌。"
+---
+
+## 这个组件是什么
+
+这是第一版真正按插件包方式安装的做图组件。
+
+它不再要求线下预装一个专门写死的 Nano Banana Shape，而是通过统一的插件容器解析 `plugin_spec`，在本地渲染输入表单、执行接口请求并展示结果。
+
+## 这次验证的重点
+
+这次不是只验证“商店文章能不能下载”。
+
+这次要验证的是：
+
+- 线上文章可以打包成插件包
+- 线下可以下载并解析这个插件包
+- 线下原本没有 Nano Banana 专用代码，也能运行它
+
+如果这条链跑通，就说明你的线上线下生态已经从“宿主组件模式”跨到“解析安装模式”的第一步了。
+
+## 适合怎么用
+
+你可以用它来生成：
+
+- 产品发布海报
+- 视频封面草图
+- 社媒配图
+- 概念视觉图
+
+如果你还提供参考图，它也可以往“参考风格延展”这个方向去走。

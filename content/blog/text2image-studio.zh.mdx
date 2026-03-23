@@ -9,6 +9,50 @@ author: baiyang
 premium: false
 featured: false
 whiteboard_prompt: "创建一个文生图组件，尺寸 w:420 h:560，名称使用 Text2Image Studio，界面文案使用中文。"
+agent_spec:
+  version: 1
+  serviceId: text2image-studio
+  toolId: text2image
+  shapeType: text2image
+  title: Text2Image Studio
+  purpose: 根据提示词生成海报草图、封面图或社媒视觉稿，并把结果落到本地白板。
+  whenToUse:
+    - 用户要快速生成海报、封面或视觉草图
+    - 用户已经购买并安装了这个独立授权组件
+    - 用户想直接在白板里完成文生图
+  whenNotToUse:
+    - 用户要做专业级排版或复杂后期修图
+    - 用户要生成视频内容而不是静态图片
+  inputs:
+    - name: prompt
+      type: string
+      required: true
+      description: 用户输入的文生图提示词
+    - name: provider
+      type: enum
+      required: false
+      description: 生成通道，google 或 jimeng，默认 google
+      enum: [google, jimeng]
+    - name: refImages
+      type: string[]
+      required: false
+      description: 可选参考图地址数组
+  outputs:
+    - image
+    - publicUrl
+    - localAsset
+  actions:
+    - kind: api
+      target: /api/skill/text2image
+      method: POST
+      description: 调用文生图接口生成图片
+    - kind: shape
+      target: text2image
+      description: 优先打开已安装的 Text2Image Studio 组件
+  operatingNotes:
+    - 优先复用现有组件，不要重复创建多个同类入口
+    - 如果用户没有指定通道，默认先用 google
+    - 结果返回时提醒用户图片已经进入本地工作区
 service_manifest:
   id: text2image-studio
   name: Text2Image Studio

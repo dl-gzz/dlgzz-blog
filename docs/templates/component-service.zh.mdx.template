@@ -1,0 +1,147 @@
+---
+title: 组件标题：一句话卖点
+description: 这篇组件博客既是人类说明书，也是安装入口和 OpenClaw 说明容器。
+image: /images/blog/post-x.png
+date: "2026-03-21"
+published: false
+categories: [ai-arsenal, indie-work-log]
+author: baiyang
+premium: false
+featured: false
+whiteboard_prompt: "创建一个对应组件，优先复用现有 shape，尺寸按组件需求设置，界面文案使用中文。"
+agent_spec:
+  version: 1
+  serviceId: your-service-id
+  toolId: your-tool-id
+  shapeType: your-shape-type
+  title: 组件标题
+  purpose: 这个组件对 agent 来说到底是干什么的。
+  whenToUse:
+    - 用户提到这个组件对应的明确任务场景
+    - 用户已经在白板里，希望直接调用这个能力
+    - 用户描述的问题与这个组件高度匹配
+  whenNotToUse:
+    - 用户的问题属于别的组件或别的内容平台
+    - 用户其实不需要执行，只是在看文章或做概念了解
+  inputs:
+    - name: inputA
+      type: string
+      required: true
+      description: 关键输入字段说明
+    - name: inputB
+      type: enum
+      required: false
+      description: 可选枚举输入
+      enum: [option1, option2]
+  outputs:
+    - primary_result
+    - summary
+    - local_files
+  actions:
+    - kind: api
+      target: /api/skill/your-api
+      method: POST
+      description: 组件实际调用的接口
+    - kind: shape
+      target: your-shape-type
+      description: 优先打开或复用已安装组件
+  operatingNotes:
+    - 优先复用已安装组件，不要重复创建多个相同入口
+    - 如果用户没给关键参数，要先补齐再执行
+    - 返回结果时告诉用户结果在白板哪里、文件在哪里
+service_manifest:
+  id: your-service-id
+  name: 组件标题
+  summary: 一句话说明这个组件解决什么问题。
+  version: 1.0.0
+  icon: 🧩
+  category: your-category
+  install_type: shape
+  entry:
+    type: shape
+    shape_type: your-shape-type
+    title: 组件标题
+    icon: 🧩
+    props:
+      w: 420
+      h: 560
+      name: 组件标题
+      description: 白板里显示的简短说明
+  runtime:
+    mode: local
+    route: /whiteboard
+  source:
+    article_slug: your-article-slug
+    locale: zh
+  api:
+    - id: your-tool-id
+      endpoint: /api/skill/your-api
+      method: POST
+      auth: optional
+  outputs:
+    primary: [primary_result]
+    cards: [your-shape-type, ai_result]
+  permissions: [network]
+  pricing:
+    mode: free
+  install:
+    auto_add_to_shape_library: true
+    auto_create_entry_shape: true
+  compatibility:
+    min_host_version: 0.1.0
+    fallback_prompt: "当本地没有这个组件时，如何让系统退化生成一个可用版本。"
+---
+
+## 这个组件是做什么的
+
+先用人能看懂的话，直接解释这个组件到底解决什么问题。
+
+建议写法：
+
+- 它服务哪一类工作流
+- 它是入口组件、执行组件，还是结果组件
+- 用户安装后在白板里会看到什么
+
+## 它解决的核心问题
+
+把用户原来的卡点拆成 2-4 条：
+
+- 原来为什么麻烦
+- 为什么手动做很慢
+- 这个组件固定了哪一步
+
+## 安装后怎么用
+
+### 1. 进入组件
+
+写用户从哪里打开组件，安装后会生成什么 shape。
+
+### 2. 输入必要参数
+
+写最小必填参数，避免用户不知道从哪开始。
+
+### 3. 得到结果
+
+写结果会显示在哪里，是否写入本地文件，是否会生成总结卡。
+
+## OpenClaw 怎么理解这个组件
+
+这一段是写给人看的，不是隐藏 spec。
+
+你只需要说明：
+
+- agent 在什么任务里应该想到它
+- 它和别的组件如何衔接
+- 它在工作流里是前置、中间还是收尾
+
+## 适合谁
+
+- 哪类用户最适合
+- 哪种使用频率适合安装成固定组件
+- 它更适合卖会员、单买，还是免费引流
+
+## 安装成功后你应该看到什么
+
+- Shape 栏里出现什么名字
+- 点击后会出现什么卡片
+- 说明页、结果页、本地文件会出现什么

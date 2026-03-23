@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getServiceAccessState } from '@/lib/service-access';
 import { getServiceCatalogItem } from '@/lib/service-catalog';
-import { getServiceArticleBundle } from '@/lib/service-article';
+import { buildShapePackage } from '@/lib/shape-package';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { getSession } from '@/lib/server';
 
@@ -78,45 +78,36 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      if (access.code === 'LICENSE_CONFIG_INVALID') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: '组件授权配置缺失，暂时无法安装',
-            code: access.code,
-          },
-          { status: 500 }
-        );
-      }
+      return NextResponse.json(
+        {
+          success: false,
+          error: '组件授权配置缺失，暂时无法安装',
+          code: access.code || 'LICENSE_CONFIG_INVALID',
+        },
+        { status: 500 }
+      );
     }
 
-    const articleBundle = await getServiceArticleBundle(locale, slug);
+    const shapePackage = await buildShapePackage(locale, slug, request.nextUrl.origin);
+    if (!shapePackage) {
+      return NextResponse.json(
+        { success: false, error: '构建 shape package 失败', code: 'PACKAGE_BUILD_FAILED' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      article: {
-        locale: item.locale,
-        slug: item.slug,
-        url: item.url,
-        title: item.title,
-        description: item.description,
-        image: item.image,
-        date: item.date,
-        premium: item.premium,
-        categories: item.categories,
-      },
-      article_bundle: articleBundle,
-      manifest: item.manifest,
-      whiteboard_prompt: item.whiteboardPrompt || null,
+      shape_package: shapePackage,
       access: {
         premium: item.manifest.pricing.mode === 'premium',
         license: item.manifest.pricing.mode === 'license',
         granted: true,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { success: false, error: '读取服务安装信息失败', code: 'INSTALL_ROUTE_FAILED' },
+      { success: false, error: '读取 shape package 失败', code: 'PACKAGE_ROUTE_FAILED' },
       { status: 500 }
     );
   }

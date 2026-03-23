@@ -9,6 +9,56 @@ author: baiyang
 premium: true
 featured: false
 whiteboard_prompt: "创建一个抖音搜索组件，尺寸 w:420 h:560，名称使用抖音综合搜索 Pro，界面文案使用中文。"
+agent_spec:
+  version: 1
+  serviceId: douyin-search-pro
+  toolId: douyin-search
+  shapeType: douyin_search
+  title: 抖音综合搜索 Pro
+  purpose: 根据关键词拉取抖音搜索结果，帮助用户做热点侦察、选题采样和竞品观察。
+  whenToUse:
+    - 用户要先拉一批抖音样本再决定后续分析
+    - 用户在做热点观察、选题研究或竞品采样
+    - 用户提到关键词搜索、最近爆款、最多点赞、最新发布
+  whenNotToUse:
+    - 用户已经有明确视频链接，需要做单条视频拆解
+    - 用户要分析评论区而不是先搜索样本
+  inputs:
+    - name: keyword
+      type: string
+      required: true
+      description: 抖音搜索关键词
+    - name: publish_time
+      type: enum
+      required: false
+      description: 发布时间筛选，0/1/7/180
+      enum: ['0', '1', '7', '180']
+    - name: content_type
+      type: enum
+      required: false
+      description: 内容类型筛选，0不限，1视频，2图文
+      enum: ['0', '1', '2']
+    - name: sort_type
+      type: enum
+      required: false
+      description: 排序方式，0综合，1最多点赞，2最新发布
+      enum: ['0', '1', '2']
+  outputs:
+    - search_results
+    - cursor
+    - takeaways
+  actions:
+    - kind: api
+      target: /api/skill/douyin-search
+      method: POST
+      description: 调用抖音搜索接口获取结果
+    - kind: shape
+      target: douyin_search
+      description: 优先打开已安装的抖音综合搜索 Pro 组件
+  operatingNotes:
+    - 搜索结果出来后，优先引导用户继续做评论洞察、作者分析或单条视频拆解
+    - 如果用户没给筛选条件，先用综合排序和不限时间
+    - 这是工作流前置入口，不替代深度分析节点
 service_manifest:
   id: douyin-search-pro
   name: 抖音综合搜索 Pro
