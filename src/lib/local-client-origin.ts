@@ -1,4 +1,4 @@
-const DEFAULT_LOCAL_CLIENT_ORIGIN = 'http://localhost:3001';
+const DEFAULT_LOCAL_CLIENT_ORIGIN = 'http://127.0.0.1:19527';
 
 function trimTrailingSlash(value: string) {
   return value.replace(/\/+$/, '');
