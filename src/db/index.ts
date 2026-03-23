@@ -8,15 +8,42 @@ import * as schema from './schema';
 
 let db: ReturnType<typeof drizzle> | null = null;
 
+function resolveSslOption(connectionString: string) {
+  const explicit = (process.env.DATABASE_SSL || '').trim().toLowerCase();
+
+  if (explicit === 'false' || explicit === 'disable' || explicit === 'off') {
+    return false;
+  }
+
+  if (explicit === 'true' || explicit === 'require' || explicit === 'on') {
+    return 'require' as const;
+  }
+
+  // Supabase / Neon / managed poolers usually require SSL in production.
+  if (
+    connectionString.includes('supabase.com') ||
+    connectionString.includes('neon.tech') ||
+    connectionString.includes('pooler.') ||
+    process.env.NODE_ENV === 'production'
+  ) {
+    return 'require' as const;
+  }
+
+  // Keep local / self-hosted databases compatible by default.
+  return false;
+}
+
 export async function getDb() {
   if (db) return db;
-  const connectionString = process.env.DATABASE_URL!;
+  const connectionString = process.env.DATABASE_URL;
 
-  // Tencent Cloud PostgreSQL: Disable SSL for now as it causes ERR_SSL_PACKET_LENGTH_TOO_LONG
-  // The database works fine without SSL in both development and production
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not set');
+  }
+
   const client = postgres(connectionString, {
     prepare: false,
-    ssl: false, // Disable SSL - Tencent Cloud works without it
+    ssl: resolveSslOption(connectionString),
     max: 10,
     idle_timeout: 20,
     connect_timeout: 10,

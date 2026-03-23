@@ -10,9 +10,14 @@ import { auth } from './auth';
  * NOTICE: do not call it from middleware
  */
 export const getSession = cache(async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
-  return session;
+    return session;
+  } catch (error) {
+    console.error('getSession failed, falling back to anonymous session:', error);
+    return null;
+  }
 });
