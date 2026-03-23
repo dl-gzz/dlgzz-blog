@@ -120,12 +120,7 @@ export default function ServicesMarketClient({
   items: ServiceMarketCardData[];
   userId?: string | null;
 }) {
-  const localOrigin = useMemo(() => {
-    const hostname =
-      typeof window !== 'undefined' ? window.location.hostname || 'localhost' : 'localhost';
-
-    return getLocalClientOrigin().replace(/localhost/gi, hostname);
-  }, []);
+  const localOrigin = useMemo(() => getLocalClientOrigin(), []);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [localStates, setLocalStates] = useState<Record<string, { state: LocalInstallState; version?: string | null }>>(
     {}

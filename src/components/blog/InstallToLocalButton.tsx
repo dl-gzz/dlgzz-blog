@@ -86,12 +86,7 @@ export function InstallToLocalButton({
   );
   const [localVersion, setLocalVersion] = useState<string | null>(null);
   const [installFeedback, setInstallFeedback] = useState('');
-  const localOrigin = useMemo(() => {
-    const hostname =
-      typeof window !== 'undefined' ? window.location.hostname || 'localhost' : 'localhost';
-
-    return getLocalClientOrigin().replace(/localhost/gi, hostname);
-  }, []);
+  const localOrigin = useMemo(() => getLocalClientOrigin(), []);
 
   useEffect(() => {
     if (!serviceManifest) {
