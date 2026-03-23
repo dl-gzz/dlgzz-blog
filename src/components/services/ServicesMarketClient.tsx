@@ -4,6 +4,7 @@ import { InstallToLocalButton } from '@/components/blog/InstallToLocalButton';
 import { ServiceCheckoutButton } from '@/components/services/ServiceCheckoutButton';
 import { LocaleLink } from '@/i18n/navigation';
 import { formatDate } from '@/lib/formatter';
+import { getLocalClientOrigin } from '@/lib/local-client-origin';
 import type { ServiceManifestV1 } from '@/lib/service-manifest';
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
@@ -119,6 +120,12 @@ export default function ServicesMarketClient({
   items: ServiceMarketCardData[];
   userId?: string | null;
 }) {
+  const localOrigin = useMemo(() => {
+    const hostname =
+      typeof window !== 'undefined' ? window.location.hostname || 'localhost' : 'localhost';
+
+    return getLocalClientOrigin().replace(/localhost/gi, hostname);
+  }, []);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [localStates, setLocalStates] = useState<Record<string, { state: LocalInstallState; version?: string | null }>>(
     {}
@@ -129,7 +136,7 @@ export default function ServicesMarketClient({
 
     const loadLocalStates = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/shape-packages/installed', {
+        const response = await fetch(`${localOrigin}/api/shape-packages/installed`, {
           method: 'GET',
           cache: 'no-store',
         });
@@ -180,7 +187,7 @@ export default function ServicesMarketClient({
     return () => {
       cancelled = true;
     };
-  }, [items]);
+  }, [items, localOrigin]);
 
   const counts = useMemo(() => {
     const summary = {

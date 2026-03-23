@@ -2,6 +2,7 @@ import ServicesMarketClient from '@/components/services/ServicesMarketClient';
 import { LocaleLink } from '@/i18n/navigation';
 import { getServiceAccessState } from '@/lib/service-access';
 import { getServiceCatalog } from '@/lib/service-catalog';
+import { getLocalClientOrigin } from '@/lib/local-client-origin';
 import { constructMetadata } from '@/lib/metadata';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { getSession } from '@/lib/server';
@@ -24,6 +25,7 @@ export default async function ServicesMarketPage({
   const items = getServiceCatalog(locale);
   const premiumCount = items.filter((item) => item.manifest.pricing.mode === 'premium').length;
   const licenseCount = items.filter((item) => item.manifest.pricing.mode === 'license').length;
+  const localClientOrigin = getLocalClientOrigin();
   const session = await getSession();
   const userId = session?.user?.id || null;
   const isLoggedIn = Boolean(userId);
@@ -68,7 +70,7 @@ export default async function ServicesMarketPage({
               查看已安装说明
             </LocaleLink>
             <a
-              href={`http://localhost:3001/${locale}/services/installed`}
+              href={`${localClientOrigin}/${locale}/services/installed`}
               target="_blank"
               rel="noreferrer"
               className="rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"

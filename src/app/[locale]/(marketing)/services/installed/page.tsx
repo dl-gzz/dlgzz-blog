@@ -1,4 +1,5 @@
 import { constructMetadata } from '@/lib/metadata';
+import { getLocalClientOrigin } from '@/lib/local-client-origin';
 import type { Metadata } from 'next';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,8 +16,9 @@ export default async function InstalledServicesGuidePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const clientInstalledUrl = `http://localhost:3001/${locale}/services/installed`;
-  const clientWhiteboardUrl = `http://localhost:3001/${locale}/whiteboard`;
+  const localClientOrigin = getLocalClientOrigin();
+  const clientInstalledUrl = `${localClientOrigin}/${locale}/services/installed`;
+  const clientWhiteboardUrl = `${localClientOrigin}/${locale}/whiteboard`;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-12 md:px-6">

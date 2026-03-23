@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { buildServicePackageApiPath } from '@/lib/service-routes';
 import type { ServiceManifestV1 } from '@/lib/service-manifest';
+import { getLocalClientOrigin } from '@/lib/local-client-origin';
 
 interface InstallToLocalButtonProps {
   title: string;
@@ -79,13 +80,18 @@ export function InstallToLocalButton({
   locale = 'zh',
   whiteboardPrompt,
   serviceManifest,
-  localPort = 3001,
 }: InstallToLocalButtonProps) {
   const [localInstallState, setLocalInstallState] = useState<LocalInstallState>(
     serviceManifest ? 'checking' : 'not_installed'
   );
   const [localVersion, setLocalVersion] = useState<string | null>(null);
   const [installFeedback, setInstallFeedback] = useState('');
+  const localOrigin = useMemo(() => {
+    const hostname =
+      typeof window !== 'undefined' ? window.location.hostname || 'localhost' : 'localhost';
+
+    return getLocalClientOrigin().replace(/localhost/gi, hostname);
+  }, []);
 
   useEffect(() => {
     if (!serviceManifest) {
@@ -98,7 +104,7 @@ export function InstallToLocalButton({
 
     const loadLocalStatus = async () => {
       try {
-        const response = await fetch(`http://localhost:${localPort}/api/shape-packages/installed`, {
+        const response = await fetch(`${localOrigin}/api/shape-packages/installed`, {
           method: 'GET',
           cache: 'no-store',
           signal: controller.signal,
@@ -135,7 +141,7 @@ export function InstallToLocalButton({
     void loadLocalStatus();
 
     return () => controller.abort();
-  }, [localPort, serviceManifest]);
+  }, [localOrigin, serviceManifest]);
 
   const localStatusText = useMemo(() => {
     if (!serviceManifest) return '';
@@ -187,7 +193,7 @@ export function InstallToLocalButton({
         desc: description,
         ...(whiteboardPrompt ? { prompt: whiteboardPrompt } : {}),
       });
-      window.open(`http://localhost:${localPort}/${locale}/whiteboard?${params.toString()}`, '_blank');
+      window.open(`${localOrigin}/${locale}/whiteboard?${params.toString()}`, '_blank');
       return;
     }
 
@@ -215,7 +221,7 @@ export function InstallToLocalButton({
         return;
       }
 
-      const localInstallResponse = await fetch(`http://localhost:${localPort}/api/shape-packages/install`, {
+      const localInstallResponse = await fetch(`${localOrigin}/api/shape-packages/install`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ shape_package: packageData.shape_package }),
@@ -246,7 +252,7 @@ export function InstallToLocalButton({
       setLocalVersion(nextVersion);
       setInstallFeedback(feedback);
 
-      window.open(`http://localhost:${localPort}/${locale}/services/installed`, '_blank');
+      window.open(`${localOrigin}/${locale}/services/installed`, '_blank');
     } catch {
       setLocalInstallState('local_unreachable');
       window.alert('本地客户端安装失败，请确认线下客户端已经启动。');

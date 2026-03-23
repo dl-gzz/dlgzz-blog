@@ -1,6 +1,7 @@
 import { InstallToLocalButton } from '@/components/blog/InstallToLocalButton';
 import { LocaleLink } from '@/i18n/navigation';
 import { formatDate } from '@/lib/formatter';
+import { getLocalClientOrigin } from '@/lib/local-client-origin';
 import { constructMetadata } from '@/lib/metadata';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { getSession } from '@/lib/server';
@@ -22,6 +23,7 @@ export default async function PurchasedServicesPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const localClientOrigin = getLocalClientOrigin();
   const session = await getSession();
   const userId = session?.user?.id || null;
 
@@ -82,7 +84,7 @@ export default async function PurchasedServicesPage({
               返回组件市场
             </LocaleLink>
             <a
-              href={`http://localhost:3001/${locale}/services/installed`}
+              href={`${localClientOrigin}/${locale}/services/installed`}
               target="_blank"
               rel="noreferrer"
               className="rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
