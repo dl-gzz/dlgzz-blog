@@ -1,0 +1,136 @@
+---
+title: 即梦出图工坊：单独购买的即梦文生图组件
+description: 把即梦做成一个可单独安装的文生图组件，适合封面图、海报草图和社媒视觉稿快速生成。
+image: /images/blog/post-3.png
+date: "2026-03-27"
+published: true
+categories: [ai-arsenal, indie-work-log]
+author: baiyang
+premium: false
+featured: false
+whiteboard_prompt: "创建一个文生图组件，尺寸 w:420 h:560，名称使用 即梦出图工坊，默认通道使用 jimeng，界面文案使用中文。"
+agent_spec:
+  version: 1
+  serviceId: jimeng-image-studio
+  toolId: text2image
+  shapeType: text2image
+  title: 即梦出图工坊
+  purpose: 使用即梦通道根据提示词生成封面图、海报草图和社媒视觉稿，并把结果落到本地白板。
+  whenToUse:
+    - 用户明确想走即梦通道出图
+    - 用户要生成中文语境更贴近的海报、封面和社媒视觉图
+    - 用户想把即梦做成白板里的固定生产入口
+  whenNotToUse:
+    - 用户更想优先测试 Google 通道
+    - 用户要做复杂修图或专业级后期处理
+  inputs:
+    - name: prompt
+      type: string
+      required: true
+      description: 用户输入的文生图提示词
+    - name: refImages
+      type: string[]
+      required: false
+      description: 可选参考图地址数组
+  outputs:
+    - image
+    - publicUrl
+    - localAsset
+  actions:
+    - kind: api
+      target: /api/skill/text2image
+      method: POST
+      description: 调用文生图接口，并固定使用 jimeng 通道生成图片
+    - kind: shape
+      target: text2image
+      description: 优先打开已安装的 即梦出图工坊 组件
+  operatingNotes:
+    - 默认通道使用 jimeng
+    - 如果用户没有提供参考图，可以直接按提示词生成
+    - 结果返回时提醒用户图片已经进入本地工作区
+service_manifest:
+  id: jimeng-image-studio
+  name: 即梦出图工坊
+  summary: 面向即梦通道的独立文生图组件，用来做封面图、海报和社媒视觉草图生成。
+  version: 1.0.0
+  icon: ✨
+  category: ai-visual
+  install_type: shape
+  entry:
+    type: shape
+    shape_type: text2image
+    title: 即梦出图工坊
+    icon: ✨
+    props:
+      w: 420
+      h: 560
+      name: 即梦出图工坊
+      description: 默认走即梦通道的海报与视觉草图生成组件
+      defaultProvider: jimeng
+      articleSlug: jimeng-image-studio
+      articleLocale: zh
+  runtime:
+    mode: local
+    route: /whiteboard
+  source:
+    article_slug: jimeng-image-studio
+    locale: zh
+  api:
+    - id: text2image
+      endpoint: /api/skill/text2image
+      method: POST
+      auth: optional
+  outputs:
+    primary: [images, summary]
+    cards: [text2image, ai_result]
+  permissions: [network]
+  pricing:
+    mode: free
+  install:
+    auto_add_to_shape_library: true
+    auto_create_entry_shape: true
+  compatibility:
+    min_host_version: 0.1.0
+    fallback_prompt: "创建一个文生图组件，尺寸 w:420 h:560，名称使用 即梦出图工坊，默认通道使用 jimeng，界面文案使用中文。"
+---
+
+## 这是一个什么组件
+
+这是一个专门面向即梦通道的独立文生图组件。
+
+它不是让用户先装一整个大而全的视觉套件，而是把“即梦出图”单独拆成一个固定入口。安装到本地后，你可以把它当成日常白板工作流里的稳定生产工具。
+
+## 为什么单独做一个即梦版本
+
+很多时候，用户并不是想比较所有模型，而是已经明确知道自己要什么风格、什么语言环境、什么工作方式。
+
+所以即梦版解决的是一个非常明确的问题：
+
+- 不用每次切通道
+- 不用先解释自己要用哪个模型
+- 直接进入即梦出图
+
+这会让组件更像一个成品工具，而不是一个实验面板。
+
+## 适合谁
+
+- 想把即梦做成固定生产入口的人
+- 经常生成封面图、海报草图、社媒图的人
+- 更习惯中文提示词表达的人
+
+## 安装后的体验
+
+安装完成后，你会在本地 Shape 栏看到一个新的独立组件：`即梦出图工坊`。
+
+它和通用文生图组件的区别不是“能不能出图”，而是它直接围绕即梦通道设计，更适合把即梦作为长期稳定能力来使用。
+
+## 这条线的意义
+
+这代表你的商店不只是卖“文生图”这个大类，而是可以继续往下拆成：
+
+- 通用文生图组件
+- 即梦专用版
+- Google 专用版
+- 特定风格版
+
+当组件开始按通道、用途、场景拆分后，商店就会更像真正的组件市场，而不是一组笼统功能集合。
