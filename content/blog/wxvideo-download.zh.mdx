@@ -1,6 +1,6 @@
 ---
-title: wxvideo-download：按关键词批量下载微信视频号视频
-description: 介绍 wxvideo-download Skill 的用途与核心能力，以及如何通过账号名 + 关键词一条命令批量下载视频号视频并保存元数据。
+title: 微信视频号下载：按关键词批量下载视频号视频
+description: 一个安装到线下白板里的视频下载组件，用账号名加关键词批量抓取微信视频号内容，并保存视频与元数据。
 image: /images/blog/post-5.png
 date: "2026-03-06"
 published: true
@@ -8,12 +8,12 @@ categories: [ai-arsenal, indie-work-log]
 author: baiyang
 premium: false
 featured: false
-whiteboard_prompt: "根据这篇文章生成一个微信视频号下载工具，优先直接创建现有的 skill 组件，尺寸 w:400 h:520，skillId 使用 wxvideo-download，界面文案使用中文。"
+whiteboard_prompt: "根据这篇文章生成一个微信视频号下载工具，直接创建现有的 wxvideo_download 组件，尺寸 w:400 h:520，名称使用 视频下载，界面文案使用中文。"
 agent_spec:
   version: 1
   serviceId: wxvideo-download
   toolId: wxvideo-download
-  shapeType: skill
+  shapeType: wxvideo_download
   title: 微信视频号下载
   purpose: 根据账号名和关键词批量下载微信视频号视频，并输出视频文件和元数据。
   whenToUse:
@@ -54,7 +54,7 @@ agent_spec:
       method: POST
       description: 调用视频号下载接口执行批量下载
     - kind: shape
-      target: skill
+      target: wxvideo_download
       description: 优先打开或复用现有的视频下载组件
   operatingNotes:
     - 下载前先向用户确认账号名、关键词和保存目录
@@ -70,14 +70,14 @@ service_manifest:
   install_type: shape
   entry:
     type: shape
-    shape_type: skill
+    shape_type: wxvideo_download
     title: 视频下载
     props:
       w: 400
       h: 520
-      skillId: wxvideo-download
       name: 视频下载
       description: 按账号名 + 关键词批量下载微信视频号视频
+      defaultOutDir: ~/Desktop/视频下载
   runtime:
     mode: local
     route: /whiteboard
@@ -91,7 +91,7 @@ service_manifest:
       auth: optional
   outputs:
     primary: [download_list, summary]
-    cards: [skill, ai_result]
+    cards: [wxvideo_download, ai_result]
   permissions: [network, local_file]
   pricing:
     mode: free
@@ -100,128 +100,88 @@ service_manifest:
     auto_create_entry_shape: true
   compatibility:
     min_host_version: 0.1.0
-    fallback_prompt: "根据这篇文章生成一个微信视频号下载工具，优先直接创建现有的 skill 组件，尺寸 w:400 h:520，skillId 使用 wxvideo-download，界面文案使用中文。"
+    fallback_prompt: "根据这篇文章生成一个微信视频号下载工具，直接创建现有的 wxvideo_download 组件，尺寸 w:400 h:520，名称使用 视频下载，界面文案使用中文。"
 ---
 
-## 是什么
+## 这是什么组件
 
-`wxvideo-download` 是一个 Claude Code Skill，用来批量下载微信视频号的视频。
+这是一个安装到线下白板里的微信视频号下载组件。
 
-输入账号名称和关键词，它会自动翻页匹配标题、解析下载链接、保存视频文件，同时为每条视频生成元数据 JSON。整个过程一条命令完成。
+你输入账号名称和标题关键词，它会自动去拉取该账号的视频列表，筛出匹配内容，下载 `.mp4` 文件，并且在同目录写出对应的元数据 `.json`。执行完成后，结果会直接回到你的本地工作区。
 
-## 能解决什么问题
+它不是旧的脚本说明页，也不是一次性的命令行工具说明，而是一个真正可以从线上商店安装到线下客户端里的组件。
 
-视频号没有官方下载入口。想保存一条视频，通常只有两条路：
+## 它解决什么问题
 
-- 用第三方工具手动一条条操作，效率低
-- 找到视频链接后自己想办法解析，步骤繁琐
+视频号本身没有很顺手的批量保存入口。
 
-当需要批量归档某个账号的特定内容时，手动方式基本不可行。
+如果只是偶尔保存一条视频，手动操作还勉强能接受；但只要进入下面这些场景，手动方式就会明显拖慢：
 
-这个 Skill 解决的正是这种场景：给一个账号名、一个关键词、一个数量上限，剩下的全自动处理。
+- 想持续追某个账号的某类题材
+- 想按关键词批量归档素材
+- 想把视频下载到本地继续做分析、拆解和再创作
 
-## 它能做什么
+这个组件就是为这种“按账号 + 关键词批量拿素材”的工作流准备的。
 
-### 按账号 + 关键词匹配视频
+## 安装后你会得到什么
 
-输入视频号账号名称，Skill 会先解析出对应的内部 ID（`v2_name`），然后翻页拉取该账号的视频列表，逐条检查标题是否包含指定关键词，匹配到足够数量后停止。
+安装完成后，线下白板里会出现一个新的组件入口：`视频下载`。
 
-### 自动解析下载链接
+它默认提供这些输入项：
 
-每条匹配到的视频，都会调用接口获取真实的 `.mp4` 下载地址，然后流式写入本地文件，支持大文件。
+- 账号名称
+- 标题关键词
+- 最早发布日期
+- 下载数量
+- 本地保存目录
 
-### 输出视频 + 元数据
+你不需要再手动拼命令，只要在卡片里填好内容，直接点开始下载就可以了。
 
-每条视频下载完成后，同目录生成一个同名 `.json` 文件，包含：
+## 需要什么本地配置
 
-- 标题、发布时间、账号昵称
-- `object_id` / `object_nonce_id`（可用于后续直接下载）
-- 文件大小、下载地址
+这个组件运行时依赖一个本地密钥：`XHS_API_KEY`。
 
-所有视频处理完后，还会生成一个汇总 `summary.json`，记录本次下载的全部结果。
+如果你的线下宿主已经配置过这个 key，安装后就可以直接使用；如果没配置，组件会提示“待配置”，而不是假装运行成功。
 
-### 失败自动重试
+## 下载完成后会输出什么
 
-网络抖动或接口超时时，脚本会自动重试最多 5 次，间隔递增，避免因临时故障中断整批下载。
+每条命中的视频会输出两类文件：
 
-### 支持快捷路径
+- 一个 `.mp4` 视频文件
+- 一个同名 `.json` 元数据文件
 
-如果已知 `v2_name` 或 `object_id`，可以跳过账号解析步骤，直接进入下载环节，速度更快。
+同时还会额外生成一份本次任务的汇总文件：
 
----
+- `wxvideo_download_summary_<关键词>.json`
 
-## 安装
+这份汇总里会记录本次下载的关键词、输出目录、命中结果和文件位置，方便后续继续交给别的组件或 AI 做整理。
 
-```bash
-pip install requests
-```
+## 典型使用方式
 
-脚本无其他依赖，`requests` 是唯一需要安装的库。
+如果你要抓一个账号里所有标题包含某个词的视频，可以这样理解这张卡的使用方式：
 
-## 配置
+1. 填账号名称，比如 `大湾区之声`
+2. 填关键词，比如 `李家超`
+3. 需要限定时间就填“发布日期不早于”
+4. 需要控制数量就设置 `limit`
+5. 选择本地保存目录
+6. 点击 `开始下载`
 
-需要一个 API Key，设置为环境变量：
+执行结束后，卡片会告诉你：
 
-```bash
-export XHS_API_KEY=你的key
-```
+- 本次成功下载了几条
+- 文件保存到了哪里
+- 每条视频的标题和大小
+- 汇总文件路径
 
-或者每次运行时通过 `--key` 参数传入。
+## 适合接到什么流程后面
 
-## 使用
+这个组件适合放在内容采集链路的前面。
 
-### 基本用法：账号名 + 关键词
+比如：
 
-```bash
-python3 scripts/download_wxvideo.py \
-  --account-name "大湾区之声" \
-  --keyword "李家超" \
-  --limit 5 \
-  --out-dir "~/Desktop/视频下载"
-```
+- 先下载视频号素材
+- 再把视频交给本地分析组件做拆解
+- 再把结论写回白板或博客
 
-### 已知 v2_name 时直接使用
-
-```bash
-python3 scripts/download_wxvideo.py \
-  --v2-name "v2_xxx@finder" \
-  --keyword "李家超" \
-  --limit 3 \
-  --out-dir "~/Desktop/视频下载"
-```
-
-### 参数说明
-
-| 参数 | 说明 | 是否必填 |
-|------|------|----------|
-| `--account-name` | 视频号账号名称 | 与 `--v2-name` 二选一 |
-| `--v2-name` | 账号内部 ID | 与 `--account-name` 二选一 |
-| `--keyword` | 标题关键词 | 必填 |
-| `--limit` | 下载数量上限，默认 5 | 可选 |
-| `--out-dir` | 输出目录 | 必填 |
-| `--key` | API Key | 可选（优先读环境变量） |
-
-### 输出示例
-
-```
-下载目录/
-├── 01_李家超出席立法会_2026-03-01_10-00-00.mp4
-├── 01_李家超出席立法会_2026-03-01_10-00-00.json
-├── 02_李家超回应记者提问_2026-02-28_15-30-00.mp4
-├── 02_李家超回应记者提问_2026-02-28_15-30-00.json
-└── wxvideo_download_summary_李家超.json
-```
-
-## 在 Claude Code 里使用
-
-加入 Skill 后，直接用自然语言描述需求：
-
-> 下载大湾区之声，标题含"李家超"，最近 5 条，保存到桌面/视频下载
-
-Claude 会自动识别并运行脚本，不需要手动拼命令。
-
-## 适用场景
-
-- 内容研究：批量归档特定话题的视频素材
-- 媒体监测：定期抓取指定账号的关键内容
-- 个人存档：保存想留存但担心被删的视频
+它的定位不是“看文章”，而是“先把素材拿下来”。
