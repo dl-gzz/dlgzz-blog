@@ -52,6 +52,9 @@ agent_spec:
     - kind: shape
       target: plugin_shape
       description: 打开或复用 Nano Banana 工坊插件容器
+  commandExamples:
+    - oneworker run nano-banana-studio --prompt "一张极简科技海报，银白与青绿色，未来感光影，适合产品发布会封面" --aspect-ratio "1:1" --image-size "2K"
+    - oneworker run nano-banana-studio --prompt "一张竖版社媒封面，主题是 Agent 工作流，现代、锐利、带空间感" --aspect-ratio "9:16" --image-size "2K" --reference-image "https://example.com/reference-1.png"
   operatingNotes:
     - 这是第一版插件包样板，不依赖线下预装专用 shape
     - 安装后通过通用插件容器渲染表单和结果区

@@ -44,6 +44,9 @@ agent_spec:
     - kind: shape
       target: text2image
       description: 优先打开已安装的 即梦出图工坊 组件
+  commandExamples:
+    - oneworker run jimeng-image-studio --prompt "一张极简科技风发布会海报，银白与青绿色，未来感光影，中文标题留白" 
+    - oneworker run jimeng-image-studio --prompt "一张社媒封面图，主题是独立开发者工作流，明亮、克制、现代" --ref-image "https://example.com/reference-1.png"
   operatingNotes:
     - 这个组件为即梦单通道入口，不显示 Google 切换
     - 如果用户没有提供参考图，可以直接按提示词生成

@@ -55,6 +55,9 @@ agent_spec:
     - kind: shape
       target: douyin_search
       description: 优先打开已安装的抖音综合搜索 Pro 组件
+  commandExamples:
+    - oneworker run douyin-search-pro --keyword "杭州" --publish-time "7" --content-type "1" --sort-type "1"
+    - oneworker run douyin-search-pro --keyword "AI 办公" --publish-time "1" --content-type "0" --sort-type "2"
   operatingNotes:
     - 搜索结果出来后，优先引导用户继续做评论洞察、作者分析或单条视频拆解
     - 如果用户没给筛选条件，先用综合排序和不限时间

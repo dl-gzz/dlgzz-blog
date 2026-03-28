@@ -56,6 +56,9 @@ agent_spec:
     - kind: shape
       target: wxvideo_download
       description: 优先打开或复用现有的视频下载组件
+  commandExamples:
+    - oneworker run wxvideo-download --account-name "大湾区之声" --keyword "李家超" --limit 3 --out-dir "~/Desktop/视频下载"
+    - oneworker run wxvideo-download --account-name "央视新闻" --keyword "发布会" --after-date "2026-03-01" --limit 5 --out-dir "~/Desktop/视频下载"
   operatingNotes:
     - 下载前先向用户确认账号名、关键词和保存目录
     - 如果用户没有给 limit，可以使用默认值

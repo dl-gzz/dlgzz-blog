@@ -34,6 +34,7 @@ export interface AgentSpecV1 {
   inputs: AgentSpecField[];
   outputs: string[];
   actions: AgentSpecAction[];
+  commandExamples: string[];
   operatingNotes: string[];
 }
 
@@ -152,6 +153,9 @@ function normalizeAgentSpec(
     inputs,
     outputs: normalizeStringList(record.outputs),
     actions,
+    commandExamples: normalizeStringList(
+      record.commandExamples || record.command_examples || record.usageExamples
+    ),
     operatingNotes: normalizeStringList(record.operatingNotes),
   } satisfies AgentSpecV1;
 }

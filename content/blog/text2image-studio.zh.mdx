@@ -49,6 +49,9 @@ agent_spec:
     - kind: shape
       target: text2image
       description: 优先打开已安装的 Text2Image Studio 组件
+  commandExamples:
+    - oneworker run text2image-studio --prompt "一张极简产品海报，黑金配色，现代排版，适合作为社媒封面"
+    - oneworker run text2image-studio --prompt "一张竖版封面图，主题是 AI 办公流，明亮科技感" --provider "jimeng" --ref-image "https://example.com/reference-1.png"
   operatingNotes:
     - 优先复用现有组件，不要重复创建多个同类入口
     - 如果用户没有指定通道，默认先用 google
