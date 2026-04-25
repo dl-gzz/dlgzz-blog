@@ -1,0 +1,21 @@
+<view class="page-shell profile-page">
+  <view class="profile-hero card">
+    <view class="profile-title">当前进度</view>
+    <view class="profile-status">{{statusText}}</view>
+    <view class="profile-desc">
+      现在这版先聚焦博客阅读体验和内容接口联调，账号和支付会在这个骨架上继续补。
+    </view>
+  </view>
+
+  <view class="roadmap-card card">
+    <view class="section-title">接下来三步</view>
+    <view class="section-subtitle">保持范围清晰，避免把工程做重</view>
+
+    <view class="roadmap-list">
+      <view wx:for="{{tasks}}" wx:key="index" class="roadmap-item">
+        <view class="roadmap-index">{{index + 1}}</view>
+        <view class="roadmap-text">{{item}}</view>
+      </view>
+    </view>
+  </view>
+</view>

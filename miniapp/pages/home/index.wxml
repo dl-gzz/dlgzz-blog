@@ -1,0 +1,65 @@
+<view class="page-shell home-page">
+  <view class="hero card">
+    <view class="hero-badge">内容中台已打通</view>
+    <view class="hero-title">{{appName}} 博客</view>
+    <view class="hero-desc">
+      先把博客内容闭环跑通，再接登录、会员与微信支付。这个版本只保留最关键的阅读路径。
+    </view>
+  </view>
+
+  <view wx:if="{{hero}}" class="featured" bindtap="openPost" data-slug="{{hero.slug}}">
+    <view class="featured-head">
+      <view>
+        <view class="section-title">精选文章</view>
+        <view class="section-subtitle">先把详情页和内容接口打通</view>
+      </view>
+      <view wx:if="{{hero.premium}}" class="pill premium-pill">会员</view>
+    </view>
+
+    <view class="featured-card card">
+      <image
+        wx:if="{{hero.image}}"
+        class="featured-image"
+        mode="aspectFill"
+        src="{{hero.image}}"
+      />
+      <view class="featured-body">
+        <view class="featured-date">{{hero.date}}</view>
+        <view class="featured-title">{{hero.title}}</view>
+        <view class="featured-desc">{{hero.description}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="feed-head">
+    <view>
+      <view class="section-title">最新内容</view>
+      <view class="section-subtitle">当前直接读取 Next.js 博客内容源</view>
+    </view>
+  </view>
+
+  <view wx:if="{{!hero && loading}}" class="loading-state">正在加载文章...</view>
+
+  <view wx:if="{{!hero && !loading}}" class="empty-state">
+    暂时还没有可展示的文章
+  </view>
+
+  <view wx:for="{{posts}}" wx:key="slug" class="post-card card" bindtap="openPost" data-slug="{{item.slug}}">
+    <image wx:if="{{item.image}}" class="post-image" mode="aspectFill" src="{{item.image}}" />
+    <view class="post-body">
+      <view class="post-meta">
+        <text class="post-date">{{item.date}}</text>
+        <text wx:if="{{item.premium}}" class="post-tag">会员</text>
+      </view>
+      <view class="post-title">{{item.title}}</view>
+      <view class="post-desc">{{item.description}}</view>
+      <view class="post-footer">
+        <text>{{item.authorName || '独立工作者'}}</text>
+        <text>查看详情</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading && hero}}" class="loading-state">正在加载更多...</view>
+  <view wx:if="{{!hasMore && hero}}" class="loading-state">已经到底了</view>
+</view>

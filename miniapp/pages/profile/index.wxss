@@ -1,0 +1,70 @@
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 28rpx;
+}
+
+.profile-hero,
+.roadmap-card {
+  padding: 32rpx;
+}
+
+.profile-hero {
+  background: linear-gradient(145deg, #ffffff 0%, #ecfeff 100%);
+}
+
+.profile-title {
+  font-size: 24rpx;
+  color: #0891b2;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+
+.profile-status {
+  margin-top: 20rpx;
+  font-size: 44rpx;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.profile-desc {
+  margin-top: 18rpx;
+  font-size: 26rpx;
+  line-height: 1.85;
+  color: #475569;
+}
+
+.roadmap-list {
+  margin-top: 26rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 22rpx;
+}
+
+.roadmap-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 18rpx;
+}
+
+.roadmap-index {
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-top: 6rpx;
+}
+
+.roadmap-text {
+  font-size: 27rpx;
+  line-height: 1.85;
+  color: #334155;
+}
