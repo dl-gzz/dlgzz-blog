@@ -8,6 +8,7 @@ Page({
     hasMore: true,
     loading: false,
     hero: null,
+    allPosts: [],
     posts: [],
     appName: '独立工作者',
   },
@@ -31,6 +32,7 @@ Page({
       page: 1,
       hasMore: true,
       hero: null,
+      allPosts: [],
       posts: [],
     });
 
@@ -63,10 +65,11 @@ Page({
         ...item,
         image: toAbsoluteImageUrl(item.image),
       }));
-      const merged = reset ? incoming : this.data.posts.concat(incoming);
+      const merged = reset ? incoming : this.data.allPosts.concat(incoming);
 
       this.setData({
         hero: merged[0] || null,
+        allPosts: merged,
         posts: merged.slice(1),
         page: nextPage + 1,
         hasMore: Boolean(res?.data?.pagination?.hasMore),

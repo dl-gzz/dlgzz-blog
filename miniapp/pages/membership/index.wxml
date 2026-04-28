@@ -1,16 +1,16 @@
 <view class="page-shell membership-page">
   <view class="membership-hero card">
-    <view class="membership-badge">唯一套餐</view>
+    <view class="membership-badge">即将开放</view>
     <view class="membership-title">{{planName}}</view>
     <view class="membership-price">{{priceText}}</view>
     <view class="membership-copy">
-      你前面已经明确只做年会员，所以这里先把套餐结构彻底收敛。后面接微信支付时，我们只保留这一条购买链路。
+      我们正在打磨年度会员内容服务。当前版本先开放博客阅读，会员权益会在后续版本中逐步上线。
     </view>
   </view>
 
   <view class="benefit-card card">
-    <view class="section-title">会员权益</view>
-    <view class="section-subtitle">现在先把权益文案和支付入口占住</view>
+    <view class="section-title">规划内容</view>
+    <view class="section-subtitle">以下能力正在规划中，具体开放时间以小程序后续公告为准</view>
 
     <view class="benefit-list">
       <view wx:for="{{benefits}}" wx:key="index" class="benefit-item">
@@ -20,11 +20,11 @@
     </view>
   </view>
 
-  <view class="purchase-card card">
-    <view class="purchase-title">支付接入说明</view>
+  <view class="purchase-card card coming-soon-card">
+    <view class="purchase-title">当前状态</view>
     <view class="purchase-text">
-      下一步会把这里接到微信支付下单接口，再由小程序端调用 wx.requestPayment 完成购买。
+      年度会员暂未开放。你可以先阅读公开博客内容，后续内容服务上线后会在这里展示入口。
     </view>
-    <button class="button-primary" bindtap="handlePurchase">预留支付按钮</button>
+    <button class="button-primary button-disabled" bindtap="handleComingSoon">年度会员即将开放</button>
   </view>
 </view>

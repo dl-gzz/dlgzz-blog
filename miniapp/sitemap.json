@@ -1,4 +1,9 @@
 {
   "desc": "独立工作者博客小程序页面索引",
-  "rules": []
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
 }

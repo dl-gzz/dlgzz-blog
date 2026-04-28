@@ -4,6 +4,161 @@
   gap: 28rpx;
 }
 
+.note-gallery {
+  position: relative;
+  overflow: hidden;
+  border-radius: 36rpx;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  box-shadow: 0 28rpx 70rpx rgba(15, 23, 42, 0.18);
+}
+
+.note-swiper {
+  width: 100%;
+  height: 888rpx;
+}
+
+.note-cover {
+  display: block;
+  width: 100%;
+  height: 888rpx;
+  background: #e2e8f0;
+}
+
+.note-count {
+  position: absolute;
+  top: 22rpx;
+  right: 22rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(15, 23, 42, 0.72);
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.note-panel {
+  position: relative;
+  margin-top: -8rpx;
+  padding: 34rpx 32rpx;
+  overflow: hidden;
+}
+
+.note-panel::before {
+  content: "";
+  position: absolute;
+  top: -120rpx;
+  right: -90rpx;
+  width: 260rpx;
+  height: 260rpx;
+  border-radius: 50%;
+  background: rgba(217, 119, 6, 0.12);
+}
+
+.note-eyebrow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  font-size: 22rpx;
+  color: #94a3b8;
+}
+
+.note-title {
+  position: relative;
+  margin-top: 18rpx;
+  font-size: 44rpx;
+  font-weight: 800;
+  line-height: 1.28;
+  color: #0f172a;
+}
+
+.note-description {
+  position: relative;
+  margin-top: 18rpx;
+  font-size: 27rpx;
+  line-height: 1.85;
+  color: #475569;
+}
+
+.note-author-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  margin-top: 28rpx;
+}
+
+.note-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.note-author {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.note-hint {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #94a3b8;
+}
+
+.note-author-row .premium-pill {
+  margin-left: auto;
+}
+
+.note-content {
+  padding: 30rpx;
+}
+
+.note-paragraph-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22rpx;
+  margin-top: 28rpx;
+}
+
+.note-paragraph-item {
+  display: flex;
+  gap: 18rpx;
+  padding: 24rpx;
+  border-radius: 28rpx;
+  background: #f8fafc;
+}
+
+.note-paragraph-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 50%;
+  background: #fff7ed;
+  color: #b45309;
+  font-size: 22rpx;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.note-paragraph-text {
+  flex: 1;
+  font-size: 29rpx;
+  line-height: 1.9;
+  color: #1e293b;
+}
+
 .post-hero {
   overflow: hidden;
 }

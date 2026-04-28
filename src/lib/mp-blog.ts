@@ -11,6 +11,7 @@ export interface MiniappBlogListItem {
   title: string;
   description: string;
   image?: string;
+  images?: string[];
   date: string;
   premium: boolean;
   authorName?: string;
@@ -111,6 +112,7 @@ export async function getMiniappBlogPosts(locale?: string) {
         title: post.data.title,
         description: post.data.description || '',
         image: post.data.image || undefined,
+        images: post.data.images || undefined,
         date: post.data.date,
         premium: Boolean(post.data.premium),
         authorName: author?.data.name,
@@ -160,6 +162,7 @@ export async function getMiniappBlogDetail(
     title: post.data.title,
     description: post.data.description || '',
     image: post.data.image || undefined,
+    images: post.data.images || undefined,
     date: post.data.date,
     premium,
     authorName: author?.data.name,

@@ -40,7 +40,12 @@ function toAbsoluteImageUrl(imageUrl) {
   return imageUrl;
 }
 
+function toAbsoluteImageUrls(imageUrls = []) {
+  return imageUrls.map(toAbsoluteImageUrl).filter(Boolean);
+}
+
 module.exports = {
   request,
   toAbsoluteImageUrl,
+  toAbsoluteImageUrls,
 };

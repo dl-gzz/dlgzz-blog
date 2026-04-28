@@ -87,3 +87,12 @@
 .purchase-card .button-primary {
   margin-top: 24rpx;
 }
+
+.button-disabled {
+  background: #94a3b8;
+  color: #ffffff;
+}
+
+.coming-soon-card {
+  border: 1rpx solid rgba(148, 163, 184, 0.35);
+}

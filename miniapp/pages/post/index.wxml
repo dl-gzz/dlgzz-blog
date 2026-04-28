@@ -2,38 +2,96 @@
   <view wx:if="{{loading}}" class="loading-state">正在加载文章...</view>
 
   <block wx:if="{{detail}}">
-    <view class="post-hero card">
-      <image wx:if="{{detail.image}}" class="post-cover" mode="aspectFill" src="{{detail.image}}" />
-      <view class="post-content">
-        <view class="post-topline">
-          <text class="post-date">{{detail.date}}</text>
-          <text wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</text>
-        </view>
-        <view class="post-title">{{detail.title}}</view>
-        <view class="post-description">{{detail.description}}</view>
-        <view class="post-author">{{detail.authorName || '独立工作者'}}</view>
-      </view>
-    </view>
-
-    <view wx:if="{{detail.locked}}" class="locked-card card">
-      <view class="locked-title">当前是预览模式</view>
-      <view class="locked-desc">
-        这篇文章已经标记为会员内容。现在先展示预览段落，后面接上登录与支付后就能直接按会员态解锁全文。
-      </view>
-      <button class="button-primary" bindtap="openMembership">查看年度会员</button>
-    </view>
-
-    <view class="content-card card">
-      <view class="section-title">正文</view>
-      <view class="section-subtitle">
-        {{detail.locked ? '以下为预览内容' : '当前内容直接来自博客文章源'}}
-      </view>
-
-      <view class="paragraph-list">
-        <view wx:for="{{detail.contentParagraphs}}" wx:key="index" class="paragraph-item">
-          {{item}}
+    <block wx:if="{{detail.galleryImages.length}}">
+      <view class="note-gallery">
+        <swiper
+          class="note-swiper"
+          indicator-dots="{{detail.galleryImages.length > 1}}"
+          indicator-color="rgba(15, 23, 42, 0.18)"
+          indicator-active-color="#0f172a"
+        >
+          <swiper-item wx:for="{{detail.galleryImages}}" wx:key="index">
+            <image class="note-cover" mode="aspectFill" src="{{item}}" />
+          </swiper-item>
+        </swiper>
+        <view wx:if="{{detail.galleryImages.length > 1}}" class="note-count">
+          {{detail.galleryImages.length}} 图
         </view>
       </view>
-    </view>
+
+      <view class="note-panel card">
+        <view class="note-eyebrow">
+          <text>图文阅读</text>
+          <text>{{detail.date}}</text>
+        </view>
+        <view class="note-title">{{detail.title}}</view>
+        <view class="note-description">{{detail.description}}</view>
+        <view class="note-author-row">
+          <view class="note-avatar">{{detail.authorInitial}}</view>
+          <view>
+            <view class="note-author">{{detail.authorName || '独立工作者'}}</view>
+            <view class="note-hint">内容来自网站同步</view>
+          </view>
+          <view wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</view>
+        </view>
+      </view>
+
+      <view wx:if="{{detail.locked}}" class="locked-card card">
+        <view class="locked-title">内容暂未开放</view>
+        <view class="locked-desc">
+          这篇文章属于后续规划内容，当前先展示公开预览部分。
+        </view>
+        <button class="button-primary" bindtap="openMembership">查看开放计划</button>
+      </view>
+
+      <view class="note-content card">
+        <view class="section-title">笔记正文</view>
+        <view class="section-subtitle">
+          {{detail.locked ? '以下为预览内容' : '向下阅读完整内容'}}
+        </view>
+
+        <view class="note-paragraph-list">
+          <view wx:for="{{detail.contentParagraphs}}" wx:key="index" class="note-paragraph-item">
+            <view class="note-paragraph-index">{{index + 1}}</view>
+            <view class="note-paragraph-text">{{item}}</view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="post-hero card">
+        <view class="post-content">
+          <view class="post-topline">
+            <text class="post-date">{{detail.date}}</text>
+            <text wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</text>
+          </view>
+          <view class="post-title">{{detail.title}}</view>
+          <view class="post-description">{{detail.description}}</view>
+          <view class="post-author">{{detail.authorName || '独立工作者'}}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{detail.locked}}" class="locked-card card">
+        <view class="locked-title">内容暂未开放</view>
+        <view class="locked-desc">
+          这篇文章属于后续规划内容，当前先展示公开预览部分。
+        </view>
+        <button class="button-primary" bindtap="openMembership">查看开放计划</button>
+      </view>
+
+      <view class="content-card card">
+        <view class="section-title">正文</view>
+        <view class="section-subtitle">
+          {{detail.locked ? '以下为预览内容' : '当前内容直接来自博客文章源'}}
+        </view>
+
+        <view class="paragraph-list">
+          <view wx:for="{{detail.contentParagraphs}}" wx:key="index" class="paragraph-item">
+            {{item}}
+          </view>
+        </view>
+      </view>
+    </block>
   </block>
 </view>

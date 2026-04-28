@@ -3,7 +3,7 @@
     <view class="hero-badge">内容中台已打通</view>
     <view class="hero-title">{{appName}} 博客</view>
     <view class="hero-desc">
-      先把博客内容闭环跑通，再接登录、会员与微信支付。这个版本只保留最关键的阅读路径。
+      这里会持续同步网站最新内容，精选独立思考、工具实践与数字化服务经验。
     </view>
   </view>
 
@@ -11,7 +11,7 @@
     <view class="featured-head">
       <view>
         <view class="section-title">精选文章</view>
-        <view class="section-subtitle">先把详情页和内容接口打通</view>
+        <view class="section-subtitle">从最近更新里挑一篇开始阅读</view>
       </view>
       <view wx:if="{{hero.premium}}" class="pill premium-pill">会员</view>
     </view>
@@ -34,7 +34,7 @@
   <view class="feed-head">
     <view>
       <view class="section-title">最新内容</view>
-      <view class="section-subtitle">当前直接读取 Next.js 博客内容源</view>
+      <view class="section-subtitle">内容会随网站更新同步展示</view>
     </view>
   </view>
 

@@ -1,5 +1,5 @@
 const { getPostDetail } = require('../../utils/api');
-const { toAbsoluteImageUrl } = require('../../utils/request');
+const { toAbsoluteImageUrl, toAbsoluteImageUrls } = require('../../utils/request');
 
 Page({
   data: {
@@ -30,9 +30,16 @@ Page({
       const detail = res?.data
         ? {
             ...res.data,
+            authorName: res.data.authorName || '独立工作者',
+            authorInitial: (res.data.authorName || '独').slice(0, 1),
             image: toAbsoluteImageUrl(res.data.image),
           }
         : null;
+      if (detail) {
+        const galleryImages = toAbsoluteImageUrls(detail.images || []);
+        const coverImage = detail.image ? [detail.image] : [];
+        detail.galleryImages = galleryImages.length > 0 ? galleryImages : coverImage;
+      }
 
       this.setData({ detail });
       if (detail?.title) {

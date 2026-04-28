@@ -2,9 +2,9 @@ const { getConfig } = require('../../utils/api');
 
 Page({
   data: {
-    planName: '年度会员',
-    priceText: '待接入正式支付',
-    benefits: [],
+    planName: '年度会员即将开放',
+    priceText: '敬请期待',
+    benefits: ['会员文章阅读权益', '年度会员身份标识', '更多内容服务优先体验'],
   },
 
   onLoad() {
@@ -16,18 +16,20 @@ Page({
       const res = await getConfig();
       const membership = res?.data?.membership || {};
       this.setData({
-        planName: membership.planName || '年度会员',
-        priceText: membership.priceText || '待接入正式支付',
-        benefits: membership.benefits || [],
+        planName: membership.planName
+          ? `${membership.planName}即将开放`
+          : '年度会员即将开放',
+        priceText: '敬请期待',
+        benefits: ['精选内容规划中', '年度内容服务筹备中', '更多阅读体验持续优化'],
       });
     } catch (error) {
       console.error('load membership config failed', error);
     }
   },
 
-  handlePurchase() {
+  handleComingSoon() {
     wx.showToast({
-      title: '下一步接微信支付',
+      title: '年度会员即将开放',
       icon: 'none',
     });
   },

@@ -3,13 +3,13 @@
     <view class="profile-title">当前进度</view>
     <view class="profile-status">{{statusText}}</view>
     <view class="profile-desc">
-      现在这版先聚焦博客阅读体验和内容接口联调，账号和支付会在这个骨架上继续补。
+      当前版本聚焦博客阅读与内容更新，更多内容服务会在后续版本逐步开放。
     </view>
   </view>
 
   <view class="roadmap-card card">
-    <view class="section-title">接下来三步</view>
-    <view class="section-subtitle">保持范围清晰，避免把工程做重</view>
+    <view class="section-title">后续计划</view>
+    <view class="section-subtitle">围绕内容阅读继续优化</view>
 
     <view class="roadmap-list">
       <view wx:for="{{tasks}}" wx:key="index" class="roadmap-item">
