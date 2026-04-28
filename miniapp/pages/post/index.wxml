@@ -3,50 +3,52 @@
 
   <block wx:if="{{detail}}">
     <block wx:if="{{detail.galleryImages.length}}">
-      <view class="note-gallery">
-        <swiper
-          class="note-swiper"
-          indicator-dots="{{detail.galleryImages.length > 1}}"
-          indicator-color="rgba(15, 23, 42, 0.18)"
-          indicator-active-color="#0f172a"
-        >
-          <swiper-item wx:for="{{detail.galleryImages}}" wx:key="index">
-            <image class="note-cover" mode="aspectFit" src="{{item}}" />
-          </swiper-item>
-        </swiper>
-        <view wx:if="{{detail.galleryImages.length > 1}}" class="note-count">
-          {{detail.galleryImages.length}} 图
-        </view>
-      </view>
-
-      <view wx:if="{{detail.locked}}" class="locked-card card">
-        <view class="locked-title">内容暂未开放</view>
-        <view class="locked-desc">
-          这篇文章属于后续规划内容，当前先展示公开预览部分。
-        </view>
-        <button class="button-primary" bindtap="openMembership">查看开放计划</button>
-      </view>
-
-      <view class="note-content card">
-        <view class="note-eyebrow">
-          <text>笔记内容</text>
-          <text>{{detail.date}}</text>
-        </view>
-        <view class="note-title">{{detail.title}}</view>
-        <view class="note-description">{{detail.description}}</view>
-        <view class="note-author-row">
-          <view class="note-avatar">{{detail.authorInitial}}</view>
-          <view>
-            <view class="note-author">{{detail.authorName || '独立工作者'}}</view>
-            <view class="note-hint">内容来自网站同步</view>
+      <view class="note-article">
+        <view class="note-gallery">
+          <swiper
+            class="note-swiper"
+            indicator-dots="{{detail.galleryImages.length > 1}}"
+            indicator-color="rgba(15, 23, 42, 0.18)"
+            indicator-active-color="#0f172a"
+          >
+            <swiper-item wx:for="{{detail.galleryImages}}" wx:key="index">
+              <image class="note-cover" mode="aspectFit" src="{{item}}" />
+            </swiper-item>
+          </swiper>
+          <view wx:if="{{detail.galleryImages.length > 1}}" class="note-count">
+            {{detail.galleryImages.length}} 图
           </view>
-          <view wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</view>
         </view>
 
-        <view class="note-paragraph-list">
-          <view wx:for="{{detail.contentParagraphs}}" wx:key="index" class="note-paragraph-item">
-            <view class="note-paragraph-index">{{index + 1}}</view>
-            <view class="note-paragraph-text">{{item}}</view>
+        <view wx:if="{{detail.locked}}" class="locked-card note-locked">
+          <view class="locked-title">内容暂未开放</view>
+          <view class="locked-desc">
+            这篇文章属于后续规划内容，当前先展示公开预览部分。
+          </view>
+          <button class="button-primary" bindtap="openMembership">查看开放计划</button>
+        </view>
+
+        <view class="note-content">
+          <view class="note-eyebrow">
+            <text>笔记内容</text>
+            <text>{{detail.date}}</text>
+          </view>
+          <view class="note-title">{{detail.title}}</view>
+          <view class="note-description">{{detail.description}}</view>
+          <view class="note-author-row">
+            <view class="note-avatar">{{detail.authorInitial}}</view>
+            <view>
+              <view class="note-author">{{detail.authorName || '独立工作者'}}</view>
+              <view class="note-hint">内容来自网站同步</view>
+            </view>
+            <view wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</view>
+          </view>
+
+          <view class="note-paragraph-list">
+            <view wx:for="{{detail.contentParagraphs}}" wx:key="index" class="note-paragraph-item">
+              <view class="note-paragraph-index">{{index + 1}}</view>
+              <view class="note-paragraph-text">{{item}}</view>
+            </view>
           </view>
         </view>
       </view>
