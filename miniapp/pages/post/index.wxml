@@ -11,28 +11,11 @@
           indicator-active-color="#0f172a"
         >
           <swiper-item wx:for="{{detail.galleryImages}}" wx:key="index">
-            <image class="note-cover" mode="aspectFill" src="{{item}}" />
+            <image class="note-cover" mode="aspectFit" src="{{item}}" />
           </swiper-item>
         </swiper>
         <view wx:if="{{detail.galleryImages.length > 1}}" class="note-count">
           {{detail.galleryImages.length}} 图
-        </view>
-      </view>
-
-      <view class="note-panel card">
-        <view class="note-eyebrow">
-          <text>图文阅读</text>
-          <text>{{detail.date}}</text>
-        </view>
-        <view class="note-title">{{detail.title}}</view>
-        <view class="note-description">{{detail.description}}</view>
-        <view class="note-author-row">
-          <view class="note-avatar">{{detail.authorInitial}}</view>
-          <view>
-            <view class="note-author">{{detail.authorName || '独立工作者'}}</view>
-            <view class="note-hint">内容来自网站同步</view>
-          </view>
-          <view wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</view>
         </view>
       </view>
 
@@ -45,9 +28,19 @@
       </view>
 
       <view class="note-content card">
-        <view class="section-title">笔记正文</view>
-        <view class="section-subtitle">
-          {{detail.locked ? '以下为预览内容' : '向下阅读完整内容'}}
+        <view class="note-eyebrow">
+          <text>笔记内容</text>
+          <text>{{detail.date}}</text>
+        </view>
+        <view class="note-title">{{detail.title}}</view>
+        <view class="note-description">{{detail.description}}</view>
+        <view class="note-author-row">
+          <view class="note-avatar">{{detail.authorInitial}}</view>
+          <view>
+            <view class="note-author">{{detail.authorName || '独立工作者'}}</view>
+            <view class="note-hint">内容来自网站同步</view>
+          </view>
+          <view wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</view>
         </view>
 
         <view class="note-paragraph-list">

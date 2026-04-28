@@ -8,20 +8,20 @@
   position: relative;
   overflow: hidden;
   border-radius: 36rpx;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  background: #ffffff;
   box-shadow: 0 28rpx 70rpx rgba(15, 23, 42, 0.18);
 }
 
 .note-swiper {
   width: 100%;
-  height: 888rpx;
+  height: 925rpx;
 }
 
 .note-cover {
   display: block;
   width: 100%;
-  height: 888rpx;
-  background: #e2e8f0;
+  height: 925rpx;
+  background: #ffffff;
 }
 
 .note-count {
@@ -34,24 +34,6 @@
   color: #ffffff;
   font-size: 22rpx;
   font-weight: 600;
-}
-
-.note-panel {
-  position: relative;
-  margin-top: -8rpx;
-  padding: 34rpx 32rpx;
-  overflow: hidden;
-}
-
-.note-panel::before {
-  content: "";
-  position: absolute;
-  top: -120rpx;
-  right: -90rpx;
-  width: 260rpx;
-  height: 260rpx;
-  border-radius: 50%;
-  background: rgba(217, 119, 6, 0.12);
 }
 
 .note-eyebrow {
@@ -120,14 +102,28 @@
 }
 
 .note-content {
-  padding: 30rpx;
+  position: relative;
+  padding: 34rpx 32rpx;
+  overflow: hidden;
+}
+
+.note-content::before {
+  content: "";
+  position: absolute;
+  top: -120rpx;
+  right: -90rpx;
+  width: 260rpx;
+  height: 260rpx;
+  border-radius: 50%;
+  background: rgba(217, 119, 6, 0.12);
 }
 
 .note-paragraph-list {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 22rpx;
-  margin-top: 28rpx;
+  margin-top: 30rpx;
 }
 
 .note-paragraph-item {
