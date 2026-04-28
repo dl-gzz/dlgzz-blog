@@ -1,7 +1,7 @@
 import { websiteConfig } from '@/config/website';
 import { getLocalePathname } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
-import { blogSource, categorySource, source } from '@/lib/source';
+import { blogSource, source } from '@/lib/source';
 import type { MetadataRoute } from 'next';
 import type { Locale } from 'next-intl';
 import { getBaseUrl } from '../lib/urls/urls';
@@ -48,18 +48,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   );
 
-  // add categories
-  sitemapList.push(
-    ...categorySource.getPages().flatMap((category) =>
-      routing.locales.map((locale) => ({
-        url: getUrl(`/blog/category/${category.slugs[0]}`, locale),
-        lastModified: new Date(),
-        priority: 0.8,
-        changeFrequency: 'weekly' as const,
-      }))
-    )
-  );
-
   // add paginated blog list pages
   routing.locales.forEach((locale) => {
     const posts = blogSource
@@ -78,43 +66,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly' as const,
       });
     }
-  });
-
-  // add paginated category pages
-  routing.locales.forEach((locale) => {
-    const localeCategories = categorySource.getPages(locale);
-    localeCategories.forEach((category) => {
-      // posts in this category and locale
-      const postsInCategory = blogSource
-        .getPages(locale)
-        .filter((post) => post.data.published)
-        .filter((post) =>
-          post.data.categories.some((cat) => cat === category.slugs[0])
-        );
-      const totalPages = Math.max(
-        1,
-        Math.ceil(postsInCategory.length / websiteConfig.blog.paginationSize)
-      );
-      // /blog/category/[slug] (first page)
-      sitemapList.push({
-        url: getUrl(`/blog/category/${category.slugs[0]}`, locale),
-        lastModified: new Date(),
-        priority: 0.8,
-        changeFrequency: 'weekly' as const,
-      });
-      // /blog/category/[slug]/page/[page] (from 2)
-      for (let page = 2; page <= totalPages; page++) {
-        sitemapList.push({
-          url: getUrl(
-            `/blog/category/${category.slugs[0]}/page/${page}`,
-            locale
-          ),
-          lastModified: new Date(),
-          priority: 0.8,
-          changeFrequency: 'weekly' as const,
-        });
-      }
-    });
   });
 
   // add posts (single post pages)

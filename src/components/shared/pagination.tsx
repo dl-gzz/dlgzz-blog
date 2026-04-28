@@ -35,10 +35,10 @@ export default function CustomPagination({
   const handlePageChange = (page: number | string) => {
     const pageNum = Number(page);
     if (pageNum === 1) {
-      // Go to /blog or /blog/category/[slug] for page 1
+      // Go to the list root for page 1.
       router.push(routePrefix);
     } else {
-      // Go to /blog/page/x or /blog/category/[slug]/page/x
+      // Go to the paginated list route for pages >= 2.
       router.push(`${routePrefix}/page/${pageNum}`);
     }
   };

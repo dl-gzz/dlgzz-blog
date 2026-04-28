@@ -20,7 +20,6 @@ import {
   type BlogType,
   authorSource,
   blogSource,
-  categorySource,
 } from '@/lib/source';
 import { getUrlWithLocale } from '@/lib/urls/urls';
 import { CalendarIcon, FileTextIcon } from 'lucide-react';
@@ -89,14 +88,11 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
     notFound();
   }
 
-  const { date, title, description, image, author, categories, premium = false, whiteboard_prompt } = post.data;
+  const { date, title, description, image, author, premium = false, whiteboard_prompt } = post.data;
   const serviceManifest = normalizeServiceManifest((post.data as any).service_manifest);
   const publishDate = formatDate(new Date(date));
 
   const blogAuthor = authorSource.getPage([author], locale);
-  const blogCategories = categorySource
-    .getPages(locale)
-    .filter((category) => categories.includes(category.slugs[0] ?? ''));
 
   const MDX = post.data.body;
   const t = await getTranslations('BlogPage');
@@ -251,26 +247,6 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
                 </div>
               </div>
             )}
-
-            <div className="bg-muted/50 rounded-lg p-6">
-              <h2 className="text-lg font-semibold mb-4">{t('categories')}</h2>
-              <ul className="flex flex-wrap gap-4">
-                {blogCategories.map(
-                  (category) =>
-                    category && (
-                      <li key={category.slugs[0]}>
-                        <LocaleLink
-                          href={`/blog/category/${category.slugs[0]}`}
-                          className="text-sm font-medium text-muted-foreground hover:text-primary"
-                        >
-                          {category.data.name}
-                        </LocaleLink>
-                      </li>
-                    )
-                )}
-              </ul>
-            </div>
-
             <div className="max-h-[calc(100vh-18rem)] overflow-y-auto">
               {post.data.toc && (
                 <InlineTOC

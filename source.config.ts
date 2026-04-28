@@ -69,20 +69,6 @@ export const author = defineCollections({
 });
 
 /**
- * Blog categories
- *
- * description is optional in frontmatter, but we must add it to the schema
- */
-export const category = defineCollections({
-  type: 'doc',
-  dir: 'content/category',
-  schema: z.object({
-    name: z.string(),
-    description: z.string().optional(),
-  }),
-});
-
-/**
  * Blog posts
  *
  * dtitle is required, but description is optional in frontmatter
@@ -95,7 +81,6 @@ export const blog = defineCollections({
     images: z.array(z.string()).optional(),
     date: z.string().date(),
     published: z.boolean().default(true),
-    categories: z.array(z.string()),
     author: z.string(),
     premium: z.boolean().default(false), // Premium/paid content flag
     whiteboard_prompt: z.string().optional(), // 安装到本地白板的生成指令

@@ -13,7 +13,6 @@ export interface ServiceCatalogItem {
   image: string;
   date: string;
   premium: boolean;
-  categories: string[];
   whiteboardPrompt?: string;
   manifest: ServiceManifestV1;
   installApiPath: string;
@@ -50,7 +49,6 @@ export function getServiceCatalog(locale: string) {
         image: post.data.image || '',
         date: post.data.date,
         premium,
-        categories: Array.isArray(post.data.categories) ? post.data.categories : [],
         whiteboardPrompt:
           typeof (post.data as any).whiteboard_prompt === 'string'
             ? (post.data as any).whiteboard_prompt

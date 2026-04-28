@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
         image: item.image,
         date: item.date,
         premium: item.premium,
-        categories: item.categories,
         installApiPath: item.installApiPath,
         manifest: item.manifest,
       })),

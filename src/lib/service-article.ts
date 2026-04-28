@@ -46,7 +46,6 @@ export interface ServiceArticleBundle {
   image?: string;
   date: string;
   premium: boolean;
-  categories: string[];
   author?: string;
   authorName?: string;
   authorAvatar?: string;
@@ -213,7 +212,6 @@ export async function getServiceArticleBundle(locale: string, slug: string) {
     image: item.image || undefined,
     date: item.date,
     premium: item.premium,
-    categories: Array.isArray(item.categories) ? item.categories : [],
     author: authorSlug,
     authorName: author?.data.name,
     authorAvatar: author?.data.avatar,

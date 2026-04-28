@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { LocaleLink } from '@/i18n/navigation';
 import { PLACEHOLDER_IMAGE } from '@/lib/constants';
 import { formatDate } from '@/lib/formatter';
-import { type BlogType, authorSource, categorySource } from '@/lib/source';
+import { type BlogType, authorSource } from '@/lib/source';
 import Image from 'next/image';
 
 interface BlogCardProps {
@@ -11,12 +11,9 @@ interface BlogCardProps {
 }
 
 export default function BlogCard({ locale, post }: BlogCardProps) {
-  const { date, title, description, image, author, categories } = post.data;
+  const { date, title, description, image, author } = post.data;
   const publishDate = formatDate(new Date(date));
   const blogAuthor = authorSource.getPage([author], locale);
-  const blogCategories = categorySource
-    .getPages(locale)
-    .filter((category) => categories.includes(category.slugs[0] ?? ''));
 
   return (
     <LocaleLink href={`/blog/${post.slugs}`} className="block h-full">
@@ -34,21 +31,6 @@ export default function BlogCard({ locale, post }: BlogCardProps) {
                 blurDataURL={PLACEHOLDER_IMAGE}
                 fill
               />
-
-              {blogCategories && blogCategories.length > 0 && (
-                <div className="absolute left-2 bottom-2 opacity-100 transition-opacity duration-300">
-                  <div className="flex flex-wrap gap-1">
-                    {blogCategories.map((category, index) => (
-                      <span
-                        key={`${category?.slugs[0]}-${index}`}
-                        className="text-xs font-medium text-white bg-black/40 backdrop-blur-sm px-2 py-1 rounded-md"
-                      >
-                        {category?.data.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
