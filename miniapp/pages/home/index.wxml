@@ -18,9 +18,9 @@
   </view>
 
   <view class="club-entry-grid">
-    <view class="club-entry">
+    <view class="club-entry {{xhsOpen ? 'is-active' : ''}}" bindtap="openXhsBook">
       <view class="entry-icon entry-book"></view>
-      <view class="entry-text">年度专栏</view>
+      <view class="entry-text">小红书</view>
     </view>
     <view class="club-entry">
       <view class="entry-icon entry-search"></view>
@@ -38,6 +38,69 @@
       <view class="entry-icon entry-box"></view>
       <view class="entry-text">装备库</view>
     </view>
+  </view>
+
+  <view wx:if="{{xhsOpen}}" class="xhs-shelf {{xhsOpening ? 'is-opening' : 'is-open'}}">
+    <view class="xhs-book-stage">
+      <view class="xhs-book-shadow"></view>
+      <view class="xhs-book">
+        <view class="xhs-book-page xhs-book-left">
+          <text>小红书</text>
+          <text>图文笔记</text>
+        </view>
+        <view class="xhs-book-spine"></view>
+        <view class="xhs-book-page xhs-book-right">
+          <text>打开灵感册</text>
+          <text>双列浏览</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="xhs-waterfall-head">
+      <view>
+        <view class="xhs-kicker">XIAOHONGSHU NOTES</view>
+        <view class="xhs-title">小红书内容集</view>
+      </view>
+      <view class="xhs-count">{{xhsCount}} 篇</view>
+    </view>
+
+    <view wx:if="{{xhsCount}}" class="xhs-waterfall">
+      <view class="xhs-column">
+        <view
+          wx:for="{{xhsLeftPosts}}"
+          wx:key="slug"
+          class="xhs-card"
+          bindtap="openPost"
+          data-slug="{{item.slug}}"
+        >
+          <image wx:if="{{item.image}}" class="xhs-card-cover" mode="aspectFill" src="{{item.image}}" />
+          <view wx:else class="xhs-card-cover xhs-card-cover-placeholder">{{item.title}}</view>
+          <view class="xhs-card-body">
+            <view class="xhs-card-title">{{item.title}}</view>
+            <view class="xhs-card-desc">{{item.description}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="xhs-column xhs-column-right">
+        <view
+          wx:for="{{xhsRightPosts}}"
+          wx:key="slug"
+          class="xhs-card"
+          bindtap="openPost"
+          data-slug="{{item.slug}}"
+        >
+          <image wx:if="{{item.image}}" class="xhs-card-cover" mode="aspectFill" src="{{item.image}}" />
+          <view wx:else class="xhs-card-cover xhs-card-cover-placeholder">{{item.title}}</view>
+          <view class="xhs-card-body">
+            <view class="xhs-card-title">{{item.title}}</view>
+            <view class="xhs-card-desc">{{item.description}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="xhs-empty">图片内容加载后，会在这里展开成双瀑布。</view>
   </view>
 
   <view class="club-section">
