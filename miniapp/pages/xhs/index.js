@@ -79,9 +79,14 @@ Page({
     leftNotes: [],
     rightNotes: [],
     noteCount: 0,
+    introReady: false,
   },
 
   onLoad() {
+    this.introTimer = setTimeout(() => {
+      this.setData({ introReady: true });
+    }, 720);
+
     this.loadXhsPosts(true);
   },
 
@@ -161,5 +166,11 @@ Page({
     wx.navigateTo({
       url: `/pages/post/index?slug=${encodeURIComponent(slug)}`,
     });
+  },
+
+  onUnload() {
+    if (this.introTimer) {
+      clearTimeout(this.introTimer);
+    }
   },
 });

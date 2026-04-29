@@ -92,6 +92,8 @@ Page({
   openXhsPage() {
     wx.navigateTo({
       url: '/pages/xhs/index',
+      animationType: 'fade-in',
+      animationDuration: 180,
     });
   },
 
