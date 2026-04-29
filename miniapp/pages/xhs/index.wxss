@@ -1,0 +1,289 @@
+.xhs-page {
+  min-height: 100vh;
+  padding: 32rpx 32rpx 118rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 10% 6%, rgba(255, 177, 143, 0.32), transparent 32%),
+    linear-gradient(180deg, #fffaf5 0%, #ffffff 46%, #f8fafc 100%);
+}
+
+.xhs-hero {
+  overflow: hidden;
+  padding: 22rpx 0 28rpx;
+}
+
+.xhs-book-stage {
+  position: relative;
+  height: 250rpx;
+  perspective: 1000rpx;
+}
+
+.xhs-book-shadow {
+  position: absolute;
+  left: 86rpx;
+  right: 86rpx;
+  bottom: 20rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.16);
+  animation: xhsShadowOpen 760ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+.xhs-book {
+  position: absolute;
+  left: 50%;
+  top: 20rpx;
+  display: flex;
+  width: 560rpx;
+  height: 188rpx;
+  transform: translateX(-50%);
+  transform-style: preserve-3d;
+}
+
+.xhs-book-page {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14rpx;
+  padding: 30rpx;
+  box-sizing: border-box;
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 1.18;
+  background:
+    radial-gradient(circle at 28% 26%, rgba(255, 255, 255, 0.82), transparent 32%),
+    linear-gradient(135deg, #fff0e4 0%, #fffdf9 52%, #f7cba7 100%);
+  box-shadow: 0 22rpx 56rpx rgba(15, 23, 42, 0.15);
+  backface-visibility: hidden;
+}
+
+.xhs-book-left {
+  align-items: flex-end;
+  border-radius: 32rpx 8rpx 8rpx 32rpx;
+  transform-origin: right center;
+  animation: xhsBookLeft 760ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+.xhs-book-right {
+  align-items: flex-start;
+  border-radius: 8rpx 32rpx 32rpx 8rpx;
+  transform-origin: left center;
+  animation: xhsBookRight 760ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+.xhs-book-spine {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 3;
+  width: 12rpx;
+  height: 188rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(180deg, #1f2937 0%, #0f172a 100%);
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 8rpx rgba(255, 255, 255, 0.8);
+}
+
+.xhs-kicker {
+  margin-top: 14rpx;
+  color: #e35b5f;
+  font-size: 19rpx;
+  font-weight: 900;
+  letter-spacing: 3rpx;
+}
+
+.xhs-title {
+  margin-top: 10rpx;
+  color: #111827;
+  font-size: 56rpx;
+  font-weight: 900;
+  letter-spacing: 2rpx;
+  font-family: "STKaiti", "KaiTi", "Songti SC", serif;
+}
+
+.xhs-subtitle {
+  width: 560rpx;
+  margin-top: 14rpx;
+  color: #6b7280;
+  font-size: 25rpx;
+  line-height: 1.65;
+}
+
+.xhs-categories {
+  display: flex;
+  width: 100%;
+  margin-top: 18rpx;
+  white-space: nowrap;
+}
+
+.xhs-category {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+  padding: 16rpx 26rpx;
+  border: 2rpx solid rgba(17, 24, 39, 0.08);
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.82);
+  color: #6b7280;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.xhs-category.is-active {
+  border-color: #111827;
+  background: #111827;
+  color: #ffffff;
+}
+
+.xhs-summary {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 38rpx;
+}
+
+.xhs-summary-title {
+  color: #111827;
+  font-size: 38rpx;
+  font-weight: 900;
+}
+
+.xhs-summary-desc {
+  margin-top: 8rpx;
+  color: #8b8f98;
+  font-size: 23rpx;
+}
+
+.xhs-count {
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  background: #fff1e8;
+  color: #d94d50;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.xhs-waterfall {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  margin-top: 28rpx;
+}
+
+.xhs-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 22rpx;
+}
+
+.xhs-column-right {
+  padding-top: 42rpx;
+}
+
+.xhs-card {
+  overflow: hidden;
+  border-radius: 30rpx;
+  background: #ffffff;
+  box-shadow: 0 18rpx 48rpx rgba(15, 23, 42, 0.08);
+  animation: xhsCardIn 520ms ease both;
+}
+
+.xhs-card-cover {
+  display: block;
+  width: 100%;
+  height: 420rpx;
+  background: #f4f4f5;
+}
+
+.xhs-card-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26rpx;
+  box-sizing: border-box;
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 900;
+  font-family: "STKaiti", "KaiTi", serif;
+  line-height: 1.35;
+}
+
+.xhs-card-body {
+  padding: 18rpx 18rpx 22rpx;
+}
+
+.xhs-card-title {
+  color: #111827;
+  font-size: 27rpx;
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.xhs-card-desc {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 8rpx;
+  color: #6b7280;
+  font-size: 22rpx;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.xhs-state,
+.xhs-empty {
+  margin-top: 34rpx;
+  padding: 34rpx 28rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.86);
+  color: #6b7280;
+  font-size: 24rpx;
+  line-height: 1.65;
+  text-align: center;
+}
+
+@keyframes xhsBookLeft {
+  from {
+    transform: rotateY(-70deg) translateX(88rpx) scale(0.92);
+  }
+  to {
+    transform: rotateY(0deg) translateX(-8rpx) scale(1);
+  }
+}
+
+@keyframes xhsBookRight {
+  from {
+    transform: rotateY(70deg) translateX(-88rpx) scale(0.92);
+  }
+  to {
+    transform: rotateY(0deg) translateX(8rpx) scale(1);
+  }
+}
+
+@keyframes xhsShadowOpen {
+  from {
+    opacity: 0.18;
+    transform: scaleX(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(0.78);
+  }
+}
+
+@keyframes xhsCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(26rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

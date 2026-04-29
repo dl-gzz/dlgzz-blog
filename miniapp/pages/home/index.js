@@ -1,24 +1,6 @@
 const { getPosts, getConfig } = require('../../utils/api');
 const { toAbsoluteImageUrl } = require('../../utils/request');
 
-function splitWaterfall(items) {
-  const left = [];
-  const right = [];
-
-  items.forEach((item, index) => {
-    if (index % 2 === 0) {
-      left.push(item);
-    } else {
-      right.push(item);
-    }
-  });
-
-  return {
-    xhsLeftPosts: left,
-    xhsRightPosts: right,
-  };
-}
-
 Page({
   data: {
     page: 1,
@@ -28,11 +10,6 @@ Page({
     hero: null,
     allPosts: [],
     posts: [],
-    xhsOpen: false,
-    xhsOpening: false,
-    xhsLeftPosts: [],
-    xhsRightPosts: [],
-    xhsCount: 0,
     appName: '独立工作者',
   },
 
@@ -57,11 +34,6 @@ Page({
       hero: null,
       allPosts: [],
       posts: [],
-      xhsOpen: false,
-      xhsOpening: false,
-      xhsLeftPosts: [],
-      xhsRightPosts: [],
-      xhsCount: 0,
     });
 
     try {
@@ -91,24 +63,18 @@ Page({
       });
       const incoming = (res?.data?.items || []).map((item) => {
         const rawImages = Array.isArray(item.images) ? item.images : [];
-        const images = rawImages.map((image) => toAbsoluteImageUrl(image));
 
         return {
           ...item,
           image: toAbsoluteImageUrl(item.image || rawImages[0]),
-          images,
         };
       });
       const merged = reset ? incoming : this.data.allPosts.concat(incoming);
-      const imagePosts = merged.filter((item) => item.image || item.images.length > 0);
-      const xhsGroups = splitWaterfall(imagePosts.length ? imagePosts : merged);
 
       this.setData({
         hero: merged[0] || null,
         allPosts: merged,
         posts: merged.slice(1),
-        ...xhsGroups,
-        xhsCount: xhsGroups.xhsLeftPosts.length + xhsGroups.xhsRightPosts.length,
         page: nextPage + 1,
         hasMore: Boolean(res?.data?.pagination?.hasMore),
       });
@@ -123,30 +89,10 @@ Page({
     }
   },
 
-  openXhsBook() {
-    const shouldAnimate = !this.data.xhsOpen;
-
-    this.setData({
-      xhsOpen: true,
-      xhsOpening: shouldAnimate,
+  openXhsPage() {
+    wx.navigateTo({
+      url: '/pages/xhs/index',
     });
-
-    if (this.xhsTimer) {
-      clearTimeout(this.xhsTimer);
-    }
-
-    if (shouldAnimate) {
-      this.xhsTimer = setTimeout(() => {
-        this.setData({ xhsOpening: false });
-      }, 760);
-    }
-
-    setTimeout(() => {
-      wx.pageScrollTo({
-        selector: '.xhs-shelf',
-        duration: 320,
-      });
-    }, 80);
   },
 
   openPost(event) {
@@ -156,11 +102,5 @@ Page({
     wx.navigateTo({
       url: `/pages/post/index?slug=${encodeURIComponent(slug)}`,
     });
-  },
-
-  onUnload() {
-    if (this.xhsTimer) {
-      clearTimeout(this.xhsTimer);
-    }
   },
 });

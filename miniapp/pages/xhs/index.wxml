@@ -1,0 +1,87 @@
+<view class="xhs-page">
+  <view class="xhs-hero">
+    <view class="xhs-book-stage">
+      <view class="xhs-book-shadow"></view>
+      <view class="xhs-book">
+        <view class="xhs-book-page xhs-book-left">
+          <text>小红书</text>
+          <text>内容册</text>
+        </view>
+        <view class="xhs-book-spine"></view>
+        <view class="xhs-book-page xhs-book-right">
+          <text>图文</text>
+          <text>双瀑布</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="xhs-kicker">XIAOHONGSHU NOTES</view>
+    <view class="xhs-title">小红书内容集</view>
+    <view class="xhs-subtitle">这里先收纳小红书相关图文，后面可以继续扩展成分类入口。</view>
+  </view>
+
+  <scroll-view class="xhs-categories" scroll-x enable-flex>
+    <view
+      wx:for="{{categories}}"
+      wx:key="*this"
+      class="xhs-category {{activeCategory === item ? 'is-active' : ''}}"
+      bindtap="switchCategory"
+      data-category="{{item}}"
+    >
+      {{item}}
+    </view>
+  </scroll-view>
+
+  <view class="xhs-summary">
+    <view>
+      <view class="xhs-summary-title">灵感笔记</view>
+      <view class="xhs-summary-desc">来自线上博客 API 的小红书内容</view>
+    </view>
+    <view class="xhs-count">{{noteCount}} 条</view>
+  </view>
+
+  <view wx:if="{{!noteCount && loading}}" class="xhs-state">正在加载小红书内容...</view>
+
+  <view wx:if="{{!noteCount && !loading}}" class="xhs-empty">
+    暂时没有匹配到小红书内容。后面博客里发布带“小红书”或“xhs”的文章后，这里会自动出现。
+  </view>
+
+  <view wx:if="{{noteCount}}" class="xhs-waterfall">
+    <view class="xhs-column">
+      <view
+        wx:for="{{leftNotes}}"
+        wx:key="key"
+        class="xhs-card"
+        bindtap="openPost"
+        data-slug="{{item.slug}}"
+      >
+        <image wx:if="{{item.image}}" class="xhs-card-cover" mode="aspectFill" src="{{item.image}}" />
+        <view wx:else class="xhs-card-cover xhs-card-cover-placeholder">{{item.title}}</view>
+        <view class="xhs-card-body">
+          <view class="xhs-card-title">{{item.title}}</view>
+          <view class="xhs-card-desc">{{item.description}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="xhs-column xhs-column-right">
+      <view
+        wx:for="{{rightNotes}}"
+        wx:key="key"
+        class="xhs-card"
+        bindtap="openPost"
+        data-slug="{{item.slug}}"
+      >
+        <image wx:if="{{item.image}}" class="xhs-card-cover" mode="aspectFill" src="{{item.image}}" />
+        <view wx:else class="xhs-card-cover xhs-card-cover-placeholder">{{item.title}}</view>
+        <view class="xhs-card-body">
+          <view class="xhs-card-title">{{item.title}}</view>
+          <view class="xhs-card-desc">{{item.description}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading && noteCount}}" class="xhs-state">正在加载更多...</view>
+  <view wx:if="{{!hasMore && noteCount}}" class="xhs-state">已经到底了</view>
+</view>
