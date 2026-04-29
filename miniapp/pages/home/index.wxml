@@ -1,41 +1,48 @@
-<view class="page-shell home-page">
-  <view class="hero card">
-    <view class="hero-badge">内容中台已打通</view>
-    <view class="hero-title">{{appName}} 博客</view>
-    <view class="hero-desc">
-      这里会持续同步网站最新内容，精选独立思考、工具实践与数字化服务经验。
+<view class="page-shell home-page club-home">
+  <view class="club-header">
+    <view class="club-logo">高级</view>
+    <view class="club-actions">
+      <view class="club-badge">小</view>
+      <view class="club-bell"></view>
     </view>
   </view>
 
-  <view wx:if="{{hero}}" class="featured" bindtap="openPost" data-slug="{{hero.slug}}">
-    <view class="featured-head">
-      <view>
-        <view class="section-title">精选文章</view>
-        <view class="section-subtitle">从最近更新里挑一篇开始阅读</view>
-      </view>
-      <view wx:if="{{hero.premium}}" class="pill premium-pill">会员</view>
+  <view class="club-hero">
+    <view class="club-orbit"></view>
+    <view class="club-title">
+      <text>高级个体户</text>
+      <text>俱乐部</text>
+      <text class="club-title-en">SECRET LUMINARY SPACE</text>
     </view>
+    <view class="club-slogan">打造一个微小但圆满的未来</view>
+  </view>
 
-    <view class="featured-card card">
-      <image
-        wx:if="{{hero.image}}"
-        class="featured-image"
-        mode="aspectFill"
-        src="{{hero.image}}"
-      />
-      <view class="featured-body">
-        <view class="featured-date">{{hero.date}}</view>
-        <view class="featured-title">{{hero.title}}</view>
-        <view class="featured-desc">{{hero.description}}</view>
-      </view>
+  <view class="club-entry-grid">
+    <view class="club-entry">
+      <view class="entry-icon entry-book"></view>
+      <view class="entry-text">年度专栏</view>
+    </view>
+    <view class="club-entry">
+      <view class="entry-icon entry-search"></view>
+      <view class="entry-text">百万提案</view>
+    </view>
+    <view class="club-entry">
+      <view class="entry-icon entry-camera"></view>
+      <view class="entry-text">图文笔记</view>
+    </view>
+    <view class="club-entry">
+      <view class="entry-icon entry-smile"></view>
+      <view class="entry-text">实践手记</view>
+    </view>
+    <view class="club-entry">
+      <view class="entry-icon entry-box"></view>
+      <view class="entry-text">装备库</view>
     </view>
   </view>
 
-  <view class="feed-head">
-    <view>
-      <view class="section-title">最新内容</view>
-      <view class="section-subtitle">内容会随网站更新同步展示</view>
-    </view>
+  <view class="club-section">
+    <view class="club-section-title">独立工作者年度专栏·精选</view>
+    <view class="club-section-subtitle">线上博客更新后，这里会自动同步最新内容</view>
   </view>
 
   <view wx:if="{{!hero && loading}}" class="loading-state">正在加载文章...</view>
@@ -44,18 +51,24 @@
     暂时还没有可展示的文章
   </view>
 
-  <view wx:for="{{posts}}" wx:key="slug" class="post-card card" bindtap="openPost" data-slug="{{item.slug}}">
-    <image wx:if="{{item.image}}" class="post-image" mode="aspectFill" src="{{item.image}}" />
-    <view class="post-body">
-      <view class="post-meta">
-        <text class="post-date">{{item.date}}</text>
-        <text wx:if="{{item.premium}}" class="post-tag">会员</text>
+  <view class="club-card-grid">
+    <view
+      wx:for="{{allPosts}}"
+      wx:key="slug"
+      class="club-card"
+      bindtap="openPost"
+      data-slug="{{item.slug}}"
+    >
+      <view class="club-cover-wrap">
+        <image wx:if="{{item.image}}" class="club-cover" mode="aspectFill" src="{{item.image}}" />
+        <view wx:else class="club-cover-placeholder">
+          <text>{{item.title}}</text>
+        </view>
+        <view wx:if="{{index < 2 || item.premium}}" class="club-new">New</view>
       </view>
-      <view class="post-title">{{item.title}}</view>
-      <view class="post-desc">{{item.description}}</view>
-      <view class="post-footer">
-        <text>{{item.authorName || '独立工作者'}}</text>
-        <text>查看详情</text>
+      <view class="club-card-body">
+        <view class="club-card-title">{{item.title}}</view>
+        <view class="club-card-desc">{{item.description}}</view>
       </view>
     </view>
   </view>
