@@ -2,25 +2,39 @@
   <view wx:if="{{loading}}" class="loading-state">正在加载文章...</view>
 
   <block wx:if="{{detail}}">
-    <block wx:if="{{detail.galleryImages.length}}">
-      <view class="note-article">
-        <view class="note-gallery">
-          <swiper
-            class="note-swiper"
-            indicator-dots="{{detail.galleryImages.length > 1}}"
-            indicator-color="rgba(15, 23, 42, 0.18)"
-            indicator-active-color="#0f172a"
-          >
-            <swiper-item wx:for="{{detail.galleryImages}}" wx:key="index">
-              <image class="note-cover" mode="aspectFit" src="{{item}}" />
-            </swiper-item>
-          </swiper>
-          <view wx:if="{{detail.galleryImages.length > 1}}" class="note-count">
-            {{detail.galleryImages.length}} 图
+    <view wx:if="{{detail.isGalleryPost}}" class="xhs-shell">
+      <view class="xhs-gallery">
+        <swiper
+          class="xhs-swiper"
+          indicator-dots="{{detail.galleryImages.length > 1}}"
+          indicator-color="rgba(15, 23, 42, 0.2)"
+          indicator-active-color="#2563eb"
+          bindchange="handleGalleryChange"
+        >
+          <swiper-item wx:for="{{detail.galleryImages}}" wx:key="index">
+            <image class="xhs-cover" mode="aspectFit" src="{{item}}" />
+          </swiper-item>
+        </swiper>
+        <view wx:if="{{detail.galleryImages.length > 1}}" class="xhs-count">
+          {{detail.currentImageIndex + 1}} / {{detail.galleryImages.length}}
+        </view>
+      </view>
+
+      <view class="xhs-content">
+        <view class="xhs-title">{{detail.title}}</view>
+        <view wx:if="{{detail.description}}" class="xhs-description">
+          {{detail.description}}
+        </view>
+        <view class="xhs-author-row">
+          <view class="xhs-avatar">{{detail.authorInitial}}</view>
+          <view>
+            <view class="xhs-author">{{detail.authorName || '独立工作者'}}</view>
+            <view class="xhs-date">{{detail.date}}</view>
           </view>
+          <view wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</view>
         </view>
 
-        <view wx:if="{{detail.locked}}" class="locked-card note-locked">
+        <view wx:if="{{detail.locked}}" class="locked-card xhs-locked">
           <view class="locked-title">内容暂未开放</view>
           <view class="locked-desc">
             这篇文章属于后续规划内容，当前先展示公开预览部分。
@@ -28,46 +42,41 @@
           <button class="button-primary" bindtap="openMembership">查看开放计划</button>
         </view>
 
-        <view class="note-content">
-          <view class="note-eyebrow">
-            <text>笔记内容</text>
-            <text>{{detail.date}}</text>
-          </view>
-          <view class="note-title">{{detail.title}}</view>
-          <view class="note-description">{{detail.description}}</view>
-          <view class="note-author-row">
-            <view class="note-avatar">{{detail.authorInitial}}</view>
-            <view>
-              <view class="note-author">{{detail.authorName || '独立工作者'}}</view>
-              <view class="note-hint">内容来自网站同步</view>
-            </view>
-            <view wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</view>
-          </view>
-
-          <view class="note-paragraph-list">
-            <view wx:for="{{detail.contentParagraphs}}" wx:key="index" class="note-paragraph-item">
-              <view class="note-paragraph-index">{{index + 1}}</view>
-              <view class="note-paragraph-text">{{item}}</view>
-            </view>
+        <view class="xhs-text-list">
+          <view wx:for="{{detail.contentParagraphs}}" wx:key="index" class="xhs-paragraph">
+            {{item}}
           </view>
         </view>
       </view>
-    </block>
+    </view>
 
-    <block wx:else>
-      <view class="post-hero card">
-        <view class="post-content">
-          <view class="post-topline">
-            <text class="post-date">{{detail.date}}</text>
-            <text wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</text>
+    <view wx:else class="article-shell">
+      <image
+        wx:if="{{detail.articleCover}}"
+        class="article-cover"
+        mode="aspectFill"
+        src="{{detail.articleCover}}"
+      />
+
+      <view class="article-header">
+        <view class="article-meta">
+          <text>{{detail.date}}</text>
+          <text wx:if="{{detail.premium}}" class="pill premium-pill">会员文章</text>
+        </view>
+        <view class="article-title">{{detail.title}}</view>
+        <view wx:if="{{detail.description}}" class="article-description">
+          {{detail.description}}
+        </view>
+        <view class="article-author-row">
+          <view class="article-avatar">{{detail.authorInitial}}</view>
+          <view>
+            <view class="article-author">{{detail.authorName || '独立工作者'}}</view>
+            <view class="article-source">内容来自博客同步</view>
           </view>
-          <view class="post-title">{{detail.title}}</view>
-          <view class="post-description">{{detail.description}}</view>
-          <view class="post-author">{{detail.authorName || '独立工作者'}}</view>
         </view>
       </view>
 
-      <view wx:if="{{detail.locked}}" class="locked-card card">
+      <view wx:if="{{detail.locked}}" class="locked-card">
         <view class="locked-title">内容暂未开放</view>
         <view class="locked-desc">
           这篇文章属于后续规划内容，当前先展示公开预览部分。
@@ -75,18 +84,64 @@
         <button class="button-primary" bindtap="openMembership">查看开放计划</button>
       </view>
 
-      <view class="content-card card">
-        <view class="section-title">正文</view>
-        <view class="section-subtitle">
-          {{detail.locked ? '以下为预览内容' : '当前内容直接来自博客文章源'}}
-        </view>
+      <view class="article-body">
+        <block wx:if="{{detail.contentBlocks && detail.contentBlocks.length}}">
+          <block wx:for="{{detail.contentBlocks}}" wx:key="index">
+            <view
+              wx:if="{{item.type === 'heading'}}"
+              class="article-heading article-heading-{{item.level}}"
+            >
+              {{item.text}}
+            </view>
 
-        <view class="paragraph-list">
-          <view wx:for="{{detail.contentParagraphs}}" wx:key="index" class="paragraph-item">
+            <view wx:elif="{{item.type === 'paragraph'}}" class="article-paragraph">
+              {{item.text}}
+            </view>
+
+            <view wx:elif="{{item.type === 'quote'}}" class="article-quote">
+              {{item.text}}
+            </view>
+
+            <view wx:elif="{{item.type === 'list'}}" class="article-list">
+              <view
+                wx:for="{{item.items}}"
+                wx:for-item="listItem"
+                wx:for-index="listIndex"
+                wx:key="index"
+                class="article-list-item"
+              >
+                <text class="article-list-marker">
+                  {{item.ordered ? listIndex + 1 : '•'}}
+                </text>
+                <text class="article-list-text">{{listItem}}</text>
+              </view>
+            </view>
+
+            <image
+              wx:elif="{{item.type === 'image'}}"
+              class="article-inline-image"
+              mode="widthFix"
+              src="{{item.url}}"
+            />
+
+            <scroll-view
+              wx:elif="{{item.type === 'code'}}"
+              class="article-code"
+              scroll-x
+            >
+              <text>{{item.text}}</text>
+            </scroll-view>
+
+            <view wx:elif="{{item.type === 'divider'}}" class="article-divider"></view>
+          </block>
+        </block>
+
+        <block wx:else>
+          <view wx:for="{{detail.contentParagraphs}}" wx:key="index" class="article-paragraph">
             {{item}}
           </view>
-        </view>
+        </block>
       </view>
-    </block>
+    </view>
   </block>
 </view>

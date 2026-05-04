@@ -1,4 +1,5 @@
 import AllPostsButton from '@/components/blog/all-posts-button';
+import { BlogImageCarousel } from '@/components/blog/blog-image-carousel';
 import { InstallToLocalButton } from '@/components/blog/InstallToLocalButton';
 import { ServiceCheckoutButton } from '@/components/services/ServiceCheckoutButton';
 import ArticleCircleToSearch from '@/components/blog/ArticleCircleToSearch';
@@ -88,7 +89,17 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
     notFound();
   }
 
-  const { date, title, description, image, author, premium = false, whiteboard_prompt } = post.data;
+  const {
+    date,
+    title,
+    description,
+    image,
+    images,
+    author,
+    premium = false,
+    whiteboard_prompt,
+  } = post.data;
+  const heroImages = images?.length ? images : image ? [image] : [];
   const serviceManifest = normalizeServiceManifest((post.data as any).service_manifest);
   const publishDate = formatDate(new Date(date));
 
@@ -115,18 +126,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 flex flex-col">
           <div className="space-y-8">
-            <div className="group overflow-hidden relative aspect-16/9 rounded-lg transition-all border">
-              {image && (
-                <Image
-                  src={image}
-                  alt={title || 'image for blog post'}
-                  title={title || 'image for blog post'}
-                  loading="eager"
-                  fill
-                  className="object-cover"
-                />
-              )}
-            </div>
+            <BlogImageCarousel images={heroImages} title={title} />
 
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">

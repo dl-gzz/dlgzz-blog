@@ -1,6 +1,6 @@
 <view class="page-shell home-page club-home">
   <view class="club-header">
-    <view class="club-logo">高级</view>
+    <view class="club-logo">独立</view>
     <view class="club-actions">
       <view class="club-badge">小</view>
       <view class="club-bell"></view>
@@ -10,39 +10,35 @@
   <view class="club-hero">
     <view class="club-orbit"></view>
     <view class="club-title">
-      <text>高级个体户</text>
+      <text>独立工作者</text>
       <text>俱乐部</text>
-      <text class="club-title-en">SECRET LUMINARY SPACE</text>
     </view>
-    <view class="club-slogan">打造一个微小但圆满的未来</view>
+    <view class="club-slogan">独立是人生重要主题之一</view>
   </view>
 
   <view class="club-entry-grid">
     <view class="club-entry" bindtap="openXhsPage">
-      <view class="entry-icon entry-book"></view>
-      <view class="entry-text">小红书</view>
+      <view class="entry-icon-frame">
+        <image class="entry-image-icon" mode="aspectFit" src="/assets/icons/xiaohongshu.png" />
+      </view>
+      <view class="entry-text">小红书专栏</view>
     </view>
     <view class="club-entry">
-      <view class="entry-icon entry-search"></view>
-      <view class="entry-text">百万提案</view>
+      <view class="entry-icon-frame">
+        <image class="entry-image-icon" mode="aspectFit" src="/assets/icons/ai.png" />
+      </view>
+      <view class="entry-text">AI专栏</view>
     </view>
     <view class="club-entry">
-      <view class="entry-icon entry-camera"></view>
-      <view class="entry-text">图文笔记</view>
-    </view>
-    <view class="club-entry">
-      <view class="entry-icon entry-smile"></view>
-      <view class="entry-text">实践手记</view>
-    </view>
-    <view class="club-entry">
-      <view class="entry-icon entry-box"></view>
-      <view class="entry-text">装备库</view>
+      <view class="entry-icon-frame">
+        <image class="entry-image-icon" mode="aspectFit" src="/assets/icons/thinking.png" />
+      </view>
+      <view class="entry-text">独立沉思录</view>
     </view>
   </view>
 
   <view class="club-section">
-    <view class="club-section-title">独立工作者年度专栏·精选</view>
-    <view class="club-section-subtitle">线上博客更新后，这里会自动同步最新内容</view>
+    <view class="club-section-title">独立工作者专栏</view>
   </view>
 
   <view wx:if="{{!hero && loading}}" class="loading-state">正在加载文章...</view>
@@ -60,15 +56,10 @@
       data-slug="{{item.slug}}"
     >
       <view class="club-cover-wrap">
-        <image wx:if="{{item.image}}" class="club-cover" mode="aspectFill" src="{{item.image}}" />
-        <view wx:else class="club-cover-placeholder">
-          <text>{{item.title}}</text>
+        <view class="club-cover-placeholder">
+          <view class="club-card-title">{{item.title}}</view>
+          <view class="club-card-desc">{{item.description || '阅读全文，继续打开这个微小但圆满的未来。'}}</view>
         </view>
-        <view wx:if="{{index < 2 || item.premium}}" class="club-new">New</view>
-      </view>
-      <view class="club-card-body">
-        <view class="club-card-title">{{item.title}}</view>
-        <view class="club-card-desc">{{item.description}}</view>
       </view>
     </view>
   </view>
