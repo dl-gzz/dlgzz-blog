@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { blogSource, categorySource } from '@/lib/source';
+import { blogSource } from '@/lib/source';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,22 +15,12 @@ export async function GET(request: NextRequest) {
           new Date(a.data.date).getTime()
       );
 
-    const allCategories = categorySource.getPages(locale);
-
     const posts = publishedPosts.map((post) => {
-      const categoryNames = post.data.categories.map((catSlug) => {
-        const found = allCategories.find(
-          (c) => c.slugs[0] === catSlug
-        );
-        return found ? found.data.name : catSlug;
-      });
-
       return {
         title: post.data.title,
         description: post.data.description || '',
         image: post.data.image || '',
         date: post.data.date,
-        categories: categoryNames,
         url: post.url,
         slugs: post.slugs,
       };
