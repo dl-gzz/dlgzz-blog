@@ -1,30 +1,33 @@
-<view class="page-shell membership-page">
-  <view class="membership-hero card">
-    <view class="membership-badge">即将开放</view>
-    <view class="membership-title">{{planName}}</view>
-    <view class="membership-price">{{priceText}}</view>
-    <view class="membership-copy">
-      我们正在打磨年度会员内容服务。当前版本先开放博客阅读，会员权益会在后续版本中逐步上线。
+<view class="page-shell columns-page">
+  <view class="columns-hero">
+    <view class="columns-kicker">独立工作者专栏</view>
+    <view class="columns-title">把独立工作写成可持续的方法</view>
+    <view class="columns-copy">
+      这里整理小红书运营、AI 工具实践和独立思考相关内容，所有内容均为正式公开阅读栏目。
     </view>
   </view>
 
-  <view class="benefit-card card">
-    <view class="section-title">规划内容</view>
-    <view class="section-subtitle">以下能力正在规划中，具体开放时间以小程序后续公告为准</view>
-
-    <view class="benefit-list">
-      <view wx:for="{{benefits}}" wx:key="index" class="benefit-item">
-        <view class="benefit-dot"></view>
-        <view class="benefit-text">{{item}}</view>
+  <view class="column-list">
+    <view
+      wx:for="{{columns}}"
+      wx:key="id"
+      class="column-card"
+      bindtap="openColumn"
+      data-id="{{item.id}}"
+    >
+      <view class="column-icon">{{item.icon}}</view>
+      <view class="column-body">
+        <view class="column-title">{{item.title}}</view>
+        <view class="column-desc">{{item.description}}</view>
+        <view class="column-meta">{{item.meta}}</view>
       </view>
     </view>
   </view>
 
-  <view class="purchase-card card coming-soon-card">
-    <view class="purchase-title">当前状态</view>
-    <view class="purchase-text">
-      年度会员暂未开放。你可以先阅读公开博客内容，后续内容服务上线后会在这里展示入口。
+  <view class="notice-card">
+    <view class="notice-title">内容说明</view>
+    <view class="notice-text">
+      当前小程序提供公开博客、图文专栏与文章阅读服务；如后续开放付费内容，将按平台要求补充明确商品信息、价格和服务说明。
     </view>
-    <button class="button-primary button-disabled" bindtap="handleComingSoon">年度会员即将开放</button>
   </view>
 </view>
