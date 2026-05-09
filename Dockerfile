@@ -10,7 +10,7 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 # Install dependencies
-COPY package.json pnpm-lock.yaml* ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 # Copy config files needed for fumadocs-mdx postinstall
 COPY source.config.ts ./
 COPY content ./content
