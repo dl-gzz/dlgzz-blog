@@ -35,7 +35,11 @@ function resolveSslOption(connectionString: string) {
 
 export async function getDb() {
   if (db) return db;
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString =
+    process.env.DATABASE_URL ||
+    (process.env.DOCKER_BUILD === 'true'
+      ? 'postgres://build:build@localhost:5432/build'
+      : undefined);
 
   if (!connectionString) {
     throw new Error('DATABASE_URL is not set');
