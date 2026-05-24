@@ -2,6 +2,7 @@ import { websiteConfig } from '@/config/website';
 import { getDb } from '@/db/index';
 import { defaultMessages } from '@/i18n/messages';
 import { LOCALE_COOKIE_NAME, routing } from '@/i18n/routing';
+import { getLocalClientOrigin } from '@/lib/local-client-origin';
 import { sendEmail } from '@/mail';
 import { subscribe } from '@/newsletter';
 import { betterAuth } from 'better-auth';
@@ -9,7 +10,56 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
 import { parse as parseCookies } from 'cookie';
 import type { Locale } from 'next-intl';
-import { getBaseUrl, getUrlWithLocaleInCallbackUrl } from './urls/urls';
+import {
+  getBaseUrl,
+  getOriginFromRequest,
+  getUrlWithLocaleInCallbackUrl,
+} from './urls/urls';
+
+function getTrustedOrigins(request?: Request) {
+  const envOrigins = (process.env.AUTH_TRUSTED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return Array.from(
+    new Set(
+      [
+        getBaseUrl(),
+        getOriginFromRequest(request),
+        getLocalClientOrigin(),
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        ...envOrigins,
+      ].filter(Boolean) as string[]
+    )
+  );
+}
+
+const socialProviders = {
+  ...(websiteConfig.auth.enableGithubLogin &&
+  process.env.GITHUB_CLIENT_ID &&
+  process.env.GITHUB_CLIENT_SECRET
+    ? {
+        github: {
+          clientId: process.env.GITHUB_CLIENT_ID,
+          clientSecret: process.env.GITHUB_CLIENT_SECRET,
+        },
+      }
+    : {}),
+  ...(websiteConfig.auth.enableGoogleLogin &&
+  process.env.GOOGLE_CLIENT_ID &&
+  process.env.GOOGLE_CLIENT_SECRET
+    ? {
+        google: {
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        },
+      }
+    : {}),
+};
+
+const trustedSocialProviders = Object.keys(socialProviders);
 
 /**
  * Better Auth configuration
@@ -20,6 +70,7 @@ import { getBaseUrl, getUrlWithLocaleInCallbackUrl } from './urls/urls';
  */
 export const auth = betterAuth({
   baseURL: getBaseUrl(),
+  trustedOrigins: getTrustedOrigins,
   appName: defaultMessages.Metadata.name,
   database: drizzleAdapter(await getDb(), {
     provider: 'pg', // or "mysql", "sqlite"
@@ -77,23 +128,12 @@ export const auth = betterAuth({
       });
     },
   },
-  socialProviders: {
-    // https://www.better-auth.com/docs/authentication/github
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    },
-    // https://www.better-auth.com/docs/authentication/google
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    },
-  },
+  socialProviders,
   account: {
     // https://www.better-auth.com/docs/concepts/users-accounts#account-linking
     accountLinking: {
       enabled: true,
-      trustedProviders: ['google', 'github'],
+      trustedProviders: trustedSocialProviders,
     },
   },
   user: {

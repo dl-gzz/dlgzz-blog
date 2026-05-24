@@ -1,9 +1,10 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { getServiceAccessState } from '@/lib/service-access';
 import { getServiceCatalogItem } from '@/lib/service-catalog';
+import {
+  buildServiceAccessErrorResponse,
+  getServiceRequestAccess,
+} from '@/lib/service-route-access';
 import { buildShapePackage } from '@/lib/shape-package';
-import { hasAccessToPremiumContent } from '@/lib/premium-access';
-import { getSession } from '@/lib/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,78 +21,39 @@ export async function GET(request: NextRequest) {
     const item = getServiceCatalogItem(locale, slug);
     if (!item) {
       return NextResponse.json(
-        { success: false, error: '服务不存在或未发布', code: 'SERVICE_NOT_FOUND' },
+        {
+          success: false,
+          error: '服务不存在或未发布',
+          code: 'SERVICE_NOT_FOUND',
+        },
         { status: 404 }
       );
     }
 
-    const session = await getSession();
-    const userId = session?.user?.id || null;
-    const premiumGranted = userId ? await hasAccessToPremiumContent() : false;
-    const access = await getServiceAccessState({
+    const { access } = await getServiceRequestAccess({
       locale,
-      manifest: item.manifest,
-      userId,
-      hasPremium: premiumGranted,
+      item,
     });
+    const accessErrorResponse = buildServiceAccessErrorResponse({
+      locale,
+      access,
+    });
+    if (accessErrorResponse) {
+      return accessErrorResponse;
+    }
 
-    if (!access.granted) {
-      if (access.code === 'AUTH_REQUIRED') {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              access.mode === 'license'
-                ? '请先登录后再购买或安装这个授权组件'
-                : '请先登录后再安装这个付费组件',
-            code: access.code,
-            loginPage: access.loginHref || `/${locale}/auth/login`,
-            pricingPage: access.purchaseHref || `/${locale}/pricing`,
-            purchasePage: access.purchaseHref || `/${locale}/pricing`,
-          },
-          { status: 401 }
-        );
-      }
-
-      if (access.code === 'PREMIUM_REQUIRED') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: '此组件需要付费订阅后才能安装',
-            code: access.code,
-            pricingPage: access.purchaseHref || `/${locale}/pricing`,
-          },
-          { status: 403 }
-        );
-      }
-
-      if (access.code === 'LICENSE_REQUIRED') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: '此组件需要单独购买授权后才能安装',
-            code: access.code,
-            purchasePage: access.purchaseHref || `/${locale}/pricing`,
-            pricingPage: access.purchaseHref || `/${locale}/pricing`,
-          },
-          { status: 403 }
-        );
-      }
-
+    const shapePackage = await buildShapePackage(
+      locale,
+      slug,
+      request.nextUrl.origin
+    );
+    if (!shapePackage) {
       return NextResponse.json(
         {
           success: false,
-          error: '组件授权配置缺失，暂时无法安装',
-          code: access.code || 'LICENSE_CONFIG_INVALID',
+          error: '构建 shape package 失败',
+          code: 'PACKAGE_BUILD_FAILED',
         },
-        { status: 500 }
-      );
-    }
-
-    const shapePackage = await buildShapePackage(locale, slug, request.nextUrl.origin);
-    if (!shapePackage) {
-      return NextResponse.json(
-        { success: false, error: '构建 shape package 失败', code: 'PACKAGE_BUILD_FAILED' },
         { status: 500 }
       );
     }
@@ -99,6 +61,35 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       shape_package: shapePackage,
+      component_package: shapePackage,
+      skill_package: shapePackage.skill_spec
+        ? {
+            schema_version: '1',
+            package_kind: 'skill',
+            service_id: shapePackage.service_id,
+            slug: shapePackage.slug,
+            locale: shapePackage.locale,
+            packaged_at: shapePackage.packaged_at,
+            skill_spec: shapePackage.skill_spec,
+            shape_hint: shapePackage.shape_hint,
+            manifest: shapePackage.manifest,
+            runtime: {
+              mode: 'skill_shape',
+              shape_type: 'skill_shape',
+              entry_props: {
+                serviceId: shapePackage.service_id,
+                title: shapePackage.skill_spec.title,
+                description: shapePackage.skill_spec.summary,
+                icon: shapePackage.shape_hint?.icon,
+                articleSlug: shapePackage.slug,
+                articleLocale: shapePackage.locale,
+              },
+            },
+            article_bundle: shapePackage.article_bundle,
+            agent_spec: shapePackage.agent_spec,
+            source: shapePackage.source,
+          }
+        : null,
       access: {
         premium: item.manifest.pricing.mode === 'premium',
         license: item.manifest.pricing.mode === 'license',
@@ -107,7 +98,11 @@ export async function GET(request: NextRequest) {
     });
   } catch {
     return NextResponse.json(
-      { success: false, error: '读取 shape package 失败', code: 'PACKAGE_ROUTE_FAILED' },
+      {
+        success: false,
+        error: '读取 shape package 失败',
+        code: 'PACKAGE_ROUTE_FAILED',
+      },
       { status: 500 }
     );
   }

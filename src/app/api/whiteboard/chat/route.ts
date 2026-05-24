@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { GeminiAI } from '@/lib/ai/gemini';
-import { ZhipuAI } from '@/lib/ai/zhipu';
-import { DeepSeekAI } from '@/lib/ai/deepseek';
+import { chatWithResolvedServerProvider } from '@/lib/ai/provider';
+import { hasAccessToPremiumContent } from '@/lib/premium-access';
+import { getSession } from '@/lib/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export const maxDuration = 60;
 
@@ -14,6 +14,22 @@ export const maxDuration = 60;
  */
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: '请先登录后再使用白板 AI' },
+        { status: 401 }
+      );
+    }
+
+    const hasPremiumAccess = await hasAccessToPremiumContent();
+    if (!hasPremiumAccess) {
+      return NextResponse.json(
+        { success: false, error: '白板 AI 功能仅限付费用户使用' },
+        { status: 403 }
+      );
+    }
+
     const { messages } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -23,43 +39,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const provider = (process.env.WHITEBOARD_AI_PROVIDER || '').trim().toLowerCase();
-    const hasGemini = Boolean(process.env.GEMINI_API_KEY);
-    const hasZhipu = Boolean(process.env.ZHIPU_API_KEY);
-    const hasDeepSeek = Boolean(process.env.DEEPSEEK_API_KEY);
-
-    let response = '';
-    let usedProvider = '';
-
-    if (provider === 'gemini' || (!provider && hasGemini)) {
-      const gemini = new GeminiAI();
-      response = await gemini.chat(messages);
-      usedProvider = 'gemini';
-    } else if (provider === 'zhipu' || (!provider && hasZhipu)) {
-      const zhipu = new ZhipuAI();
-      response = await zhipu.chat(messages);
-      usedProvider = 'zhipu';
-    } else if (provider === 'deepseek' || (!provider && hasDeepSeek)) {
-      const deepseek = new DeepSeekAI();
-      response = await deepseek.chat(messages);
-      usedProvider = 'deepseek';
-    } else {
-      throw new Error(
-        'No whiteboard AI provider configured. Set GEMINI_API_KEY, ZHIPU_API_KEY, or DEEPSEEK_API_KEY.'
-      );
-    }
+    const { message, provider } = await chatWithResolvedServerProvider({
+      messages,
+      preferredProvider: process.env.WHITEBOARD_AI_PROVIDER,
+    });
 
     return NextResponse.json({
       success: true,
-      message: response,
-      provider: usedProvider,
+      message,
+      provider,
     });
   } catch (error) {
     console.error('Whiteboard AI Chat Error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'AI 请求失败'
+        error: error instanceof Error ? error.message : 'AI 请求失败',
       },
       { status: 500 }
     );

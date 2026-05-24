@@ -70,38 +70,6 @@ export const payment = pgTable("payment", {
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const customModel = pgTable("custom_model", {
-	id: text("id").primaryKey(),
-	name: text('name').notNull(),
-	height: text('height').notNull(),
-	weight: text('weight').notNull(),
-	bodyType: text('body_type').notNull(),
-	style: text('style').notNull(),
-	imageUrl: text('image_url').notNull(),
-	ossKey: text('oss_key').notNull(),
-	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-	isActive: boolean('is_active').notNull().default(true),
-	createdAt: timestamp('created_at').notNull().defaultNow(),
-	updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
-export const tryOnHistory = pgTable("try_on_history", {
-	id: text("id").primaryKey(),
-	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-	modelName: text('model_name').notNull(),
-	modelImageUrl: text('model_image_url').notNull(),
-	clothingType: text('clothing_type').notNull(), // 'topAndBottom' or 'onepiece'
-	topGarmentUrl: text('top_garment_url'),
-	bottomGarmentUrl: text('bottom_garment_url'),
-	resultImageUrl: text('result_image_url').notNull(), // 保存到我们OSS的URL
-	resultOssKey: text('result_oss_key').notNull(),
-	originalResultUrl: text('original_result_url'), // AI返回的原始URL（24h有效期）
-	taskId: text('task_id'), // AI任务ID
-	outfitId: text('outfit_id'), // 如果来自套装，记录套装ID
-	createdAt: timestamp('created_at').notNull().defaultNow(),
-	updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
 // 文件下载统计表
 export const fileDownload = pgTable("file_download", {
 	id: text("id").primaryKey(),

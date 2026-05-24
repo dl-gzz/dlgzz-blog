@@ -41,9 +41,8 @@
 
 - 文件：`docs/ai-api.md`
 
-### 7. OSS 相关
+### 7. 文件存储与上传
 
-- 文件：`docs/aliyun-oss.md`
 - 文件：`docs/oss-setup.md`
 
 ## 建议阅读顺序

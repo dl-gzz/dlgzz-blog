@@ -612,13 +612,10 @@
       "loadingTryOnHistory": "Loading try-on history...",
       "noTryOnHistory": "No try-on history",
       "startFirstTryOn": "Start your first AI try-on experience!",
-      "startTryOn": "Start Try-On",
       "tryOnHistory": "Try-On History",
       "yourTryOnRecords": "Your AI try-on records",
       "records": "records",
-      "refresh": "Refresh",
-      "aiTryOnResult": "AI Try-On Result",
-      "download": "Download"
+      "refresh": "Refresh"
     },
     "admin": {
       "title": "Admin",

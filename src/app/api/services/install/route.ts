@@ -1,9 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getServiceAccessState } from '@/lib/service-access';
 import { getServiceCatalogItem } from '@/lib/service-catalog';
+import {
+  buildServiceAccessErrorResponse,
+  getServiceRequestAccess,
+} from '@/lib/service-route-access';
 import { getServiceArticleBundle } from '@/lib/service-article';
-import { hasAccessToPremiumContent } from '@/lib/premium-access';
-import { getSession } from '@/lib/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,69 +26,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const session = await getSession();
-    const userId = session?.user?.id || null;
-    const premiumGranted = userId ? await hasAccessToPremiumContent() : false;
-    const access = await getServiceAccessState({
+    const { access } = await getServiceRequestAccess({
       locale,
-      manifest: item.manifest,
-      userId,
-      hasPremium: premiumGranted,
+      item,
     });
-
-    if (!access.granted) {
-      if (access.code === 'AUTH_REQUIRED') {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              access.mode === 'license'
-                ? '请先登录后再购买或安装这个授权组件'
-                : '请先登录后再安装这个付费组件',
-            code: access.code,
-            loginPage: access.loginHref || `/${locale}/auth/login`,
-            pricingPage: access.purchaseHref || `/${locale}/pricing`,
-            purchasePage: access.purchaseHref || `/${locale}/pricing`,
-          },
-          { status: 401 }
-        );
-      }
-
-      if (access.code === 'PREMIUM_REQUIRED') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: '此组件需要付费订阅后才能安装',
-            code: access.code,
-            pricingPage: access.purchaseHref || `/${locale}/pricing`,
-          },
-          { status: 403 }
-        );
-      }
-
-      if (access.code === 'LICENSE_REQUIRED') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: '此组件需要单独购买授权后才能安装',
-            code: access.code,
-            purchasePage: access.purchaseHref || `/${locale}/pricing`,
-            pricingPage: access.purchaseHref || `/${locale}/pricing`,
-          },
-          { status: 403 }
-        );
-      }
-
-      if (access.code === 'LICENSE_CONFIG_INVALID') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: '组件授权配置缺失，暂时无法安装',
-            code: access.code,
-          },
-          { status: 500 }
-        );
-      }
+    const accessErrorResponse = buildServiceAccessErrorResponse({
+      locale,
+      access,
+    });
+    if (accessErrorResponse) {
+      return accessErrorResponse;
     }
 
     const articleBundle = await getServiceArticleBundle(locale, slug);

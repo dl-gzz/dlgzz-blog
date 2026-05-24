@@ -59,7 +59,11 @@ export const getActiveSubscriptionAction = actionClient
       if (subscriptions && subscriptions.length > 0) {
         // First try to find an active subscription
         const activeSubscription = subscriptions.find(
-          (sub) => sub.status === 'active' || sub.status === 'trialing' || sub.status === 'completed'
+          (sub) =>
+            sub.type === 'subscription' &&
+            (sub.status === 'active' ||
+              sub.status === 'trialing' ||
+              sub.status === 'completed')
         );
 
         // If found, use it

@@ -1,5 +1,5 @@
 import { streamText, createDataStreamResponse } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
+import { createOpenAICompatibleSdk } from '@/lib/ai/openai-compatible';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { searchBlogContent } from '@/lib/blog-search-vector';
@@ -38,12 +38,6 @@ function extractLinksFromMdx(slug: string): Array<{ text: string; url: string }>
   return [];
 }
 
-// 配置 DeepSeek API（使用 OpenAI 兼容接口）
-const deepseek = createOpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || '',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
-
 export const maxDuration = 60; // 设置最大执行时间 60 秒
 
 /**
@@ -57,6 +51,10 @@ export const maxDuration = 60; // 设置最大执行时间 60 秒
  */
 export async function POST(req: Request) {
   try {
+    const { sdk, config: aiConfig } = createOpenAICompatibleSdk({
+      defaultOpenAIModel: 'gpt-4o-mini',
+    });
+
     // 1. 验证用户登录状态
     const session = await getSession();
     if (!session?.user) {
@@ -169,7 +167,7 @@ ${relevantContext}
         }
 
         const result = streamText({
-          model: deepseek(process.env.DEEPSEEK_MODEL || 'deepseek-chat'),
+          model: sdk(aiConfig.model),
           system: systemPrompt,
           messages,
           maxTokens: 2000,

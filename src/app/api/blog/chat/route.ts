@@ -4,7 +4,7 @@
  * 支持 DeepSeek API (OpenAI 兼容格式)
  */
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { createOpenAICompatibleClient } from '@/lib/ai/openai-compatible';
 import { blogSource } from '@/lib/source';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
@@ -15,14 +15,6 @@ import path from 'path';
 function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
 }
-
-// 初始化 OpenAI 客户端 (DeepSeek 兼容)
-const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY || '',
-  baseURL: process.env.DEEPSEEK_API_KEY
-    ? 'https://api.deepseek.com'
-    : 'https://api.openai.com/v1',
-});
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,13 +28,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 验证 API Key
-    if (!process.env.DEEPSEEK_API_KEY && !process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'API 密钥未配置，请设置 DEEPSEEK_API_KEY 或 OPENAI_API_KEY' },
-        { status: 500 }
-      );
-    }
+    const { client: openai, config: aiConfig } = createOpenAICompatibleClient();
 
     // 获取文章元数据
     const post = blogSource.getPage([slug], locale);
@@ -146,14 +132,9 @@ ${articleContent}
 
 请根据上述文章内容回答用户的问题。`;
 
-    // 选择模型
-    const model = process.env.DEEPSEEK_API_KEY
-      ? 'deepseek-chat'  // DeepSeek 模型
-      : 'gpt-3.5-turbo'; // OpenAI 模型
-
     // 调用 API - 启用流式输出
     const stream = await openai.chat.completions.create({
-      model,
+      model: aiConfig.model,
       messages: [
         {
           role: 'system',

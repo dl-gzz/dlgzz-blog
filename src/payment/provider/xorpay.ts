@@ -289,7 +289,13 @@ export class XorPayProvider implements PaymentProvider {
 
     // Convert payments to subscriptions format
     return payments
-      .filter((p) => p.status === 'active' || p.status === 'completed')
+      .filter(
+        (p) =>
+          p.type === PaymentTypes.SUBSCRIPTION &&
+          (p.status === 'active' ||
+            p.status === 'trialing' ||
+            p.status === 'completed')
+      )
       .map((p) => ({
         id: p.subscriptionId || p.id,
         customerId: p.customerId,

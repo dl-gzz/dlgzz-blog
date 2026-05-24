@@ -1,4 +1,5 @@
-import { ossClient, generateUniqueFileName, getOssUrl } from '@/lib/oss-client';
+import { uploadFile } from '@/storage';
+import { StorageError } from '@/storage/types';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
@@ -39,44 +40,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 生成唯一文件名
-    const prefix = type === 'model' ? 'models/' : 'clothes/';
-    const ossKey = generateUniqueFileName(file.name, prefix);
+    const folder = type === 'model' ? 'models' : 'clothes';
+    const result = await uploadFile(file, file.name, file.type, folder);
 
-    // 将文件转换为Buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // 设置自定义请求头
-    const headers = {
-      'x-oss-storage-class': 'Standard',
-      'x-oss-object-acl': 'public-read', // 设置为公共读取
-      'Content-Type': file.type,
-    };
-
-    // 上传到OSS
-    const result = await ossClient.put(ossKey, buffer, { headers });
-
-    if (result.res?.status === 200) {
-      const publicUrl = getOssUrl(ossKey);
-      
-      return NextResponse.json({
-        success: true,
-        url: publicUrl,
-        ossKey: ossKey,
-        filename: file.name,
-        size: file.size,
-        type: file.type
-      });
-    } else {
-      throw new Error('Upload failed');
-    }
-
+    return NextResponse.json({
+      success: true,
+      url: result.url,
+      ossKey: result.key,
+      storageKey: result.key,
+      filename: file.name,
+      size: file.size,
+      type: file.type,
+    });
   } catch (error) {
     console.error('Upload error:', error);
+
+    if (error instanceof StorageError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Upload failed. Please try again.' },
       { status: 500 }
     );
   }
-} 
+}

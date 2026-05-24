@@ -7,12 +7,25 @@ function request({ url, method = 'GET', data }) {
       method,
       data,
       success(res) {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(res.data);
+        const { statusCode } = res;
+        const payload = res.data;
+
+        if (statusCode < 200 || statusCode >= 300) {
+          reject(new Error(`Request failed with status ${statusCode}`));
           return;
         }
 
-        reject(new Error(`Request failed with status ${res.statusCode}`));
+        if (
+          payload &&
+          typeof payload === 'object' &&
+          Object.prototype.hasOwnProperty.call(payload, 'success') &&
+          payload.success === false
+        ) {
+          reject(new Error(payload.error || '请求失败'));
+          return;
+        }
+
+        resolve(payload);
       },
       fail(error) {
         reject(error);
@@ -31,10 +44,9 @@ function toAbsoluteImageUrl(imageUrl) {
   }
 
   if (imageUrl.startsWith('/')) {
-    const absoluteUrl = `${baseUrl}${imageUrl}`;
-    return absoluteUrl.startsWith('http://') && !allowHttpImages
-      ? ''
-      : absoluteUrl;
+    const baseOrigin = baseUrl.replace(/\/api(?:\/.*)?$/, '');
+    const absoluteUrl = `${baseOrigin}${imageUrl}`;
+    return absoluteUrl.startsWith('http://') && !allowHttpImages ? '' : absoluteUrl;
   }
 
   return imageUrl;

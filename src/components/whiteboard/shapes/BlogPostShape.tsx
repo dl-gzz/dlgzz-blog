@@ -7,7 +7,6 @@ interface BlogPostShapeProps {
   description: string;
   image: string;
   date: string;
-  categories: string[];
   url: string;
 }
 
@@ -29,13 +28,12 @@ export class BlogPostShapeUtil extends BaseBoxShapeUtil<BlogPostShape> {
       description: '',
       image: '',
       date: '',
-      categories: [],
       url: '',
     };
   }
 
   override component(shape: BlogPostShape) {
-    const { title, description, image, date, categories, url } =
+    const { title, description, image, date, url } =
       shape.props;
 
     const formattedDate = date
@@ -87,27 +85,6 @@ export class BlogPostShapeUtil extends BaseBoxShapeUtil<BlogPostShape> {
             pointerEvents: 'none',
           }}
         >
-          {/* 分类标签 */}
-          {categories.length > 0 && (
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-              {categories.map((cat, i) => (
-                <span
-                  key={i}
-                  style={{
-                    fontSize: 11,
-                    padding: '2px 8px',
-                    background: '#dbeafe',
-                    color: '#1e40af',
-                    borderRadius: 4,
-                    fontWeight: 500,
-                  }}
-                >
-                  {cat}
-                </span>
-              ))}
-            </div>
-          )}
-
           {/* 标题 */}
           <h3
             style={{

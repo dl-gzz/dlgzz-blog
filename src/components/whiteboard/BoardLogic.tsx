@@ -163,7 +163,6 @@ const BoardLogic: React.FC = () => {
                 description: post.description,
                 image: post.image,
                 date: post.date,
-                categories: post.categories,
                 url: post.url,
                 w: 320,
                 h: 380,
@@ -485,7 +484,7 @@ RULES for update:
                         content = `HTML App: "${html.substring(0, 2000)}${html.length > 2000 ? '...(truncated)' : ''}"`;
                     } else if (shape.type === 'blog_post') {
                         const p = shape.props as any;
-                        content = `Blog: title="${p.title}", description="${p.description}", image="${p.image}", date="${p.date}", categories=${JSON.stringify(p.categories)}, url="${p.url}"`;
+                        content = `Blog: title="${p.title}", description="${p.description}", image="${p.image}", date="${p.date}", url="${p.url}"`;
                     } else if (shape.type === 'ai_terminal') {
                         const p = shape.props as any;
                         content = `AI Terminal: ${(p.messages || []).length} messages, status="${p.status || 'idle'}"`;
@@ -956,7 +955,6 @@ RULES for update:
                                             </div>
                                             <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
                                                 {new Date(post.date).toLocaleDateString('zh-CN')}
-                                                {post.categories.length > 0 && ` · ${post.categories.join(', ')}`}
                                             </div>
                                         </div>
                                     </div>

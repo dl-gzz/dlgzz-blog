@@ -6,6 +6,7 @@ import { LocaleLink } from '@/i18n/navigation';
 import { formatDate } from '@/lib/formatter';
 import { getLocalClientOrigin } from '@/lib/local-client-origin';
 import type { ServiceManifestV1 } from '@/lib/service-manifest';
+import { compareVersions } from '@/lib/version';
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -42,27 +43,6 @@ interface InstalledShapeItem {
     id?: string;
     version?: string;
   };
-}
-
-function compareVersions(a: string, b: string) {
-  const left = a
-    .trim()
-    .split('.')
-    .map((segment) => Number(segment.match(/\d+/)?.[0] || 0));
-  const right = b
-    .trim()
-    .split('.')
-    .map((segment) => Number(segment.match(/\d+/)?.[0] || 0));
-  const length = Math.max(left.length, right.length);
-
-  for (let index = 0; index < length; index += 1) {
-    const l = left[index] ?? 0;
-    const r = right[index] ?? 0;
-    if (l > r) return 1;
-    if (l < r) return -1;
-  }
-
-  return 0;
 }
 
 function getPricingLabel(mode: string) {

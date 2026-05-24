@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { buildServicePackageApiPath } from '@/lib/service-routes';
-import type { ServiceManifestV1 } from '@/lib/service-manifest';
 import { getLocalClientOrigin } from '@/lib/local-client-origin';
+import type { ServiceManifestV1 } from '@/lib/service-manifest';
+import { buildServicePackageApiPath } from '@/lib/service-routes';
+import { compareVersions } from '@/lib/version';
+import { useEffect, useMemo, useState } from 'react';
 
 interface InstallToLocalButtonProps {
   title: string;
@@ -21,27 +22,6 @@ type LocalInstallState =
   | 'installed'
   | 'upgrade_available'
   | 'local_unreachable';
-
-function compareVersions(a: string, b: string) {
-  const left = a
-    .trim()
-    .split('.')
-    .map((segment) => Number(segment.match(/\d+/)?.[0] || 0));
-  const right = b
-    .trim()
-    .split('.')
-    .map((segment) => Number(segment.match(/\d+/)?.[0] || 0));
-  const length = Math.max(left.length, right.length);
-
-  for (let index = 0; index < length; index += 1) {
-    const l = left[index] ?? 0;
-    const r = right[index] ?? 0;
-    if (l > r) return 1;
-    if (l < r) return -1;
-  }
-
-  return 0;
-}
 
 function getLocalBadge(state: LocalInstallState, localVersion?: string | null) {
   switch (state) {
@@ -99,11 +79,14 @@ export function InstallToLocalButton({
 
     const loadLocalStatus = async () => {
       try {
-        const response = await fetch(`${localOrigin}/api/shape-packages/installed`, {
-          method: 'GET',
-          cache: 'no-store',
-          signal: controller.signal,
-        });
+        const response = await fetch(
+          `${localOrigin}/api/shape-packages/installed`,
+          {
+            method: 'GET',
+            cache: 'no-store',
+            signal: controller.signal,
+          }
+        );
         const data = await response.json().catch(() => null);
         if (!response.ok || !Array.isArray(data?.items)) {
           throw new Error('LOCAL_STATUS_FAILED');
@@ -176,7 +159,8 @@ export function InstallToLocalButton({
   }, [localInstallState, serviceManifest]);
 
   const badge = useMemo(
-    () => (serviceManifest ? getLocalBadge(localInstallState, localVersion) : null),
+    () =>
+      serviceManifest ? getLocalBadge(localInstallState, localVersion) : null,
     [localInstallState, localVersion, serviceManifest]
   );
 
@@ -188,12 +172,18 @@ export function InstallToLocalButton({
         desc: description,
         ...(whiteboardPrompt ? { prompt: whiteboardPrompt } : {}),
       });
-      window.open(`${localOrigin}/${locale}/whiteboard?${params.toString()}`, '_blank');
+      window.open(
+        `${localOrigin}/${locale}/whiteboard?${params.toString()}`,
+        '_blank'
+      );
       return;
     }
 
     setInstallFeedback('');
-    const packageUrl = new URL(buildServicePackageApiPath(locale, slug), window.location.origin).toString();
+    const packageUrl = new URL(
+      buildServicePackageApiPath(locale, slug),
+      window.location.origin
+    ).toString();
 
     try {
       const packageResponse = await fetch(packageUrl, {
@@ -203,36 +193,53 @@ export function InstallToLocalButton({
       });
       const packageData = await packageResponse.json().catch(() => null);
 
-      if (!packageResponse.ok || !packageData?.shape_package) {
+      const componentPackage =
+        packageData?.component_package || packageData?.shape_package;
+
+      if (!packageResponse.ok || !componentPackage) {
         const reason = String(packageData?.error || '安装前校验失败');
-        const helper = packageData?.code === 'AUTH_REQUIRED'
-          ? '请先在商店端登录，再回来安装。'
-          : packageData?.code === 'PREMIUM_REQUIRED'
-            ? '这个组件需要先在商店端升级会员后才能安装。'
-            : packageData?.code === 'LICENSE_REQUIRED'
-              ? '这个组件需要先在商店端完成单独购买后才能安装。'
+        const helper =
+          packageData?.code === 'AUTH_REQUIRED'
+            ? '请先在商店端登录，再回来安装。'
+            : packageData?.code === 'PREMIUM_REQUIRED'
+              ? '这个组件需要先在商店端升级会员后才能安装。'
+              : packageData?.code === 'LICENSE_REQUIRED'
+                ? '这个组件需要先在商店端完成单独购买后才能安装。'
+                : '';
+        window.alert(`${reason}${helper ? `\n${helper}` : ''}`);
+        return;
+      }
+
+      const localInstallResponse = await fetch(
+        `${localOrigin}/api/shape-packages/install`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ component_package: componentPackage }),
+        }
+      );
+      const localInstallData = await localInstallResponse
+        .json()
+        .catch(() => null);
+
+      if (!localInstallResponse.ok || localInstallData?.success === false) {
+        const reason = String(
+          localInstallData?.error ||
+            '本地客户端安装失败，请确认线下客户端已经启动。'
+        );
+        const helper =
+          localInstallData?.code === 'HOST_VERSION_TOO_OLD'
+            ? `请先升级线下客户端版本，再回来安装。\n当前版本：${localInstallData?.current_host_version || '-'}\n所需版本：${localInstallData?.required_host_version || '-'}`
+            : localInstallData?.code === 'HOST_CAPABILITY_UNSUPPORTED'
+              ? '这个组件当前不属于纯净版宿主支持的类型，所以现在会被拦截安装。请先改用插件版组件，或等待对应底座接入纯净版。'
               : '';
         window.alert(`${reason}${helper ? `\n${helper}` : ''}`);
         return;
       }
 
-      const localInstallResponse = await fetch(`${localOrigin}/api/shape-packages/install`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shape_package: packageData.shape_package }),
-      });
-      const localInstallData = await localInstallResponse.json().catch(() => null);
-
-      if (!localInstallResponse.ok || localInstallData?.success === false) {
-        const reason = String(localInstallData?.error || '本地客户端安装失败，请确认线下客户端已经启动。');
-        const helper = localInstallData?.code === 'HOST_VERSION_TOO_OLD'
-          ? `请先升级线下客户端版本，再回来安装。\n当前版本：${localInstallData?.current_host_version || '-'}\n所需版本：${localInstallData?.required_host_version || '-'}`
-          : '';
-        window.alert(`${reason}${helper ? `\n${helper}` : ''}`);
-        return;
-      }
-
-      const nextVersion = String(localInstallData?.next_version || serviceManifest.version);
+      const nextVersion = String(
+        localInstallData?.next_version || serviceManifest.version
+      );
       const action = String(localInstallData?.install_action || 'installed');
       const feedback =
         action === 'upgraded'
@@ -257,11 +264,14 @@ export function InstallToLocalButton({
   return (
     <div className="flex flex-col items-start gap-2">
       {badge ? (
-        <div className={`rounded-full border px-3 py-1 text-xs font-semibold ${badge.className}`}>
+        <div
+          className={`rounded-full border px-3 py-1 text-xs font-semibold ${badge.className}`}
+        >
           {badge.label}
         </div>
       ) : null}
       <button
+        type="button"
         onClick={handleClick}
         title="需要本地运行 One Worker OS"
         className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-100"
