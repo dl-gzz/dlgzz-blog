@@ -16,7 +16,8 @@ COPY source.config.ts ./
 COPY content ./content
 
 # Use China mirror first, then fallback to npmjs if mirror is unavailable
-RUN (pnpm config set registry https://registry.npmmirror.com && \
+RUN pnpm config set dangerously-allow-all-builds true && \
+    (pnpm config set registry https://registry.npmmirror.com && \
     pnpm i --frozen-lockfile) || \
     (pnpm config set registry https://registry.npmjs.org && \
     pnpm i --frozen-lockfile)
