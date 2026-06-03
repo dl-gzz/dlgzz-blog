@@ -318,7 +318,7 @@
         "title": "组件商店"
       },
       "bots": {
-        "title": "微信助手"
+        "title": "独立陪伴者"
       },
       "blog": {
         "title": "博客"
@@ -862,13 +862,13 @@
   },
   "HomePage": {
     "title": "独立工作者",
-    "description": "用AI驱动的虚拟试衣技术革新您的风格",
+    "description": "维护一个长期陪伴者和可开关技能模块，让用户通过网站登录、微信扫码使用。",
     "hero": {
-      "title": "生活即创作，创作即分享",
-      "description": "专注于独立性工作者方面的研究与探索，愿有一天可以和更多的独立工作者们一起学习、分享和成长。",
-      "introduction": "独立工作者简介",
-      "primary": "阅读博客",
-      "secondary": "关于我"
+      "title": "一个独立陪伴者，连接你的数字员工能力",
+      "description": "网站负责登录、独立实例、微信激活和技能开关；你只需要维护数字员工和知识库。",
+      "introduction": "查看独立陪伴者",
+      "primary": "启用陪伴者",
+      "secondary": "阅读博客"
     },
     "logocloud": {
       "title": "独立生活、独立工作、独立思考"
@@ -1100,10 +1100,10 @@
       }
     },
     "calltoaction": {
-      "title": "开始您的知识探索之旅",
-      "description": "加入独立工作者社区，通过AI问答功能深度理解每篇文章，让阅读成为高效的学习体验",
-      "primaryButton": "立即开始阅读",
-      "secondaryButton": "了解更多"
+      "title": "从一个陪伴者开始",
+      "description": "先把微信接入、独立记忆、技能开关和知识库问答跑稳定，再逐步增加能力。",
+      "primaryButton": "启用独立陪伴者",
+      "secondaryButton": "阅读博客"
     }
   },
   "AITextPage": {

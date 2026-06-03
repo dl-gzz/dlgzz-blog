@@ -29,9 +29,9 @@ const transitionVariants = {
 
 export default function HeroSection() {
   const t = useTranslations('HomePage.hero');
-  const linkIntroduction = '/about';
-  const linkPrimary = '/blog';
-  const linkSecondary = '/about';
+  const linkIntroduction = '/bots';
+  const linkPrimary = '/bots';
+  const linkSecondary = '/blog';
 
   return (
     <>

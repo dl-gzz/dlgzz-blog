@@ -318,7 +318,7 @@
         "title": "Store"
       },
       "bots": {
-        "title": "WeChat Bots"
+        "title": "Companion"
       },
       "blog": {
         "title": "Blog"
@@ -864,13 +864,13 @@
   },
   "HomePage": {
     "title": "Independent Worker",
-    "description": "Revolutionize your style with AI-powered virtual try-on technology",
+    "description": "Maintain one long-term companion with switchable skill modules, available through web login and WeChat activation.",
     "hero": {
-      "title": "Try On Any Outfit with AI Technology",
-      "description": "Welcome to Independent Worker's personal blog. Here I document work insights, life moments, and personal growth stories. Sharing authentic experiences and thoughts with you.",
-      "introduction": "Introducing Independent Worker Platform",
-      "primary": "Try Now",
-      "secondary": "About Me"
+      "title": "One companion connected to your digital worker capabilities",
+      "description": "The site handles login, isolated instances, WeChat activation, and skill switches. You focus on maintaining the worker and knowledge base.",
+      "introduction": "View Companion",
+      "primary": "Start Companion",
+      "secondary": "Read Blog"
     },
     "logocloud": {
       "title": "Trusted by leading fashion brands worldwide"
@@ -1102,10 +1102,10 @@
       }
     },
     "calltoaction": {
-      "title": "Start Your AI Fashion Journey",
-      "description": "Join thousands of fashion-forward users who've revolutionized their shopping experience with Independent Worker's virtual try-on technology",
-      "primaryButton": "Try Independent Worker Now",
-      "secondaryButton": "Watch Demo"
+      "title": "Start with one companion",
+      "description": "First make WeChat activation, isolated memory, skill switches, and knowledge-base answers stable, then add capabilities step by step.",
+      "primaryButton": "Start Companion",
+      "secondaryButton": "Read Blog"
     }
   },
   "AITextPage": {
