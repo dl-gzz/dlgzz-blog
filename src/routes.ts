@@ -11,6 +11,7 @@ export enum Routes {
   Features = '/#features',
   Pricing = '/pricing', // change to /#pricing if you want to use the pricing section in homepage
   Services = '/services',
+  Bots = '/bots',
   Blog = '/blog',
   Docs = '/docs',
   About = '/about',
@@ -33,6 +34,7 @@ export enum Routes {
   Dashboard = '/dashboard',
   AIChat = '/ai-chat',
   Whiteboard = '/whiteboard',
+  AdminBots = '/admin/bots',
   AdminUsers = '/admin/users',
   SettingsProfile = '/settings/profile',
   SettingsBilling = '/settings/billing',
@@ -77,6 +79,7 @@ export const routesNotAllowedByLoggedInUsers = [Routes.Login, Routes.Register];
 export const protectedRoutes = [
   Routes.Dashboard,
   Routes.AIChat,
+  Routes.AdminBots,
   Routes.AdminUsers,
   Routes.SettingsProfile,
   Routes.SettingsBilling,

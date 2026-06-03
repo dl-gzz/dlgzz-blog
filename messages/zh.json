@@ -235,7 +235,7 @@
       "confirmPassword": "确认密码",
       "confirmPasswordPlaceholder": "请再次输入密码",
       "signUp": "注册",
-      "registerSuccess": "注册成功！请查收验证邮件。",
+      "registerSuccess": "注册成功，可以直接登录使用。",
       "registerError": "注册失败，请稍后重试",
       "passwordMismatch": "两次输入的密码不一致",
       "passwordTooShort": "密码至少需要8个字符"
@@ -316,6 +316,9 @@
       },
       "services": {
         "title": "组件商店"
+      },
+      "bots": {
+        "title": "微信助手"
       },
       "blog": {
         "title": "博客"
@@ -494,6 +497,9 @@
     "dashboard": {
       "title": "仪表盘"
     },
+    "bots": {
+      "title": "助手管理"
+    },
     "subscriptionStatus": "订阅状态",
     "subscriptionStatusDesc": "查看您当前的订阅信息",
     "noSubscription": "暂无订阅",
@@ -594,13 +600,10 @@
       "loadingTryOnHistory": "加载试衣历史中...",
       "noTryOnHistory": "暂无试衣记录",
       "startFirstTryOn": "开始您的第一次AI试衣体验吧！",
-      "startTryOn": "开始试衣",
       "tryOnHistory": "试衣历史",
       "yourTryOnRecords": "您的AI试衣记录",
       "records": "条",
       "refresh": "刷新",
-      "aiTryOnResult": "AI试衣结果",
-      "download": "下载",
       "selectModelAndClothing": "选择模特和服装，开始AI试衣",
       "taskQueued": "任务排队中...",
       "preprocessing": "前置处理中...",
@@ -618,9 +621,9 @@
       "tryOnFailedMsg": "生成失败，请重试",
       "retryAttempt": "重试"
     },
-    "admin": {
-      "title": "系统管理",
-      "users": {
+  "admin": {
+    "title": "系统管理",
+    "users": {
         "title": "用户管理",
         "fakeData": "注：独立工作者平台功能演示数据",
         "error": "获取用户失败",

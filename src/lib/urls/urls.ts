@@ -1,15 +1,37 @@
 import { routing } from '@/i18n/routing';
 import type { Locale } from 'next-intl';
 
-const baseUrl =
+function trimTrailingSlash(value: string) {
+  return value.replace(/\/+$/, '');
+}
+
+const baseUrl = trimTrailingSlash(
   process.env.NEXT_PUBLIC_BASE_URL ??
-  `http://localhost:${process.env.PORT ?? 3000}`;
+    `http://localhost:${process.env.PORT ?? 3000}`
+);
 
 /**
  * Get the base URL of the application
  */
 export function getBaseUrl(): string {
   return baseUrl;
+}
+
+export function getOriginFromRequest(request?: Request): string | null {
+  const host =
+    request?.headers.get('x-forwarded-host') ?? request?.headers.get('host');
+
+  if (!host) {
+    return null;
+  }
+
+  const protocol =
+    request?.headers.get('x-forwarded-proto') ??
+    (host.startsWith('localhost') || host.startsWith('127.0.0.1')
+      ? 'http'
+      : 'https');
+
+  return `${protocol}://${host}`;
 }
 
 /**

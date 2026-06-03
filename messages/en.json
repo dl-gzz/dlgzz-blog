@@ -235,7 +235,7 @@
       "confirmPassword": "Confirm Password",
       "confirmPasswordPlaceholder": "Re-enter your password",
       "signUp": "Sign Up",
-      "registerSuccess": "Registration successful! Please check your email for verification.",
+      "registerSuccess": "Registration successful. You can sign in now.",
       "registerError": "Registration failed, please try again later",
       "passwordMismatch": "Passwords do not match",
       "passwordTooShort": "Password must be at least 8 characters"
@@ -316,6 +316,9 @@
       },
       "services": {
         "title": "Store"
+      },
+      "bots": {
+        "title": "WeChat Bots"
       },
       "blog": {
         "title": "Blog"
@@ -496,6 +499,9 @@
     "dashboard": {
       "title": "Dashboard"
     },
+    "bots": {
+      "title": "Assistants"
+    },
     "subscriptionStatus": "Subscription Status",
     "subscriptionStatusDesc": "View your current subscription information",
     "noSubscription": "No Active Subscription",
@@ -612,17 +618,14 @@
       "loadingTryOnHistory": "Loading try-on history...",
       "noTryOnHistory": "No try-on history",
       "startFirstTryOn": "Start your first AI try-on experience!",
-      "startTryOn": "Start Try-On",
       "tryOnHistory": "Try-On History",
       "yourTryOnRecords": "Your AI try-on records",
       "records": "records",
-      "refresh": "Refresh",
-      "aiTryOnResult": "AI Try-On Result",
-      "download": "Download"
+      "refresh": "Refresh"
     },
-    "admin": {
-      "title": "Admin",
-      "users": {
+  "admin": {
+    "title": "Admin",
+    "users": {
         "title": "Users",
         "fakeData": "Note: Demo data for Independent Worker platform features",
         "error": "Failed to get users",
