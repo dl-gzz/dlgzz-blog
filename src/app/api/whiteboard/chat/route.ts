@@ -9,12 +9,13 @@ export const maxDuration = 60;
  * Whiteboard AI Chat API
  *
  * Provider priority:
- * 1. WHITEBOARD_AI_PROVIDER=gemini|zhipu|deepseek
- * 2. Auto-detect by available server keys
+ * 1. Courseware requests use WHITEBOARD_COURSEWARE_PROVIDER/MODEL.
+ * 2. Other whiteboard requests use WHITEBOARD_AI_PROVIDER.
+ * 3. Auto-detect by available server keys.
  */
 export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json();
+    const { messages, purpose } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -23,23 +24,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const provider = (process.env.WHITEBOARD_AI_PROVIDER || '').trim().toLowerCase();
+    const isCoursewareGeneration = purpose === 'courseware';
+    const configuredProvider = (
+      isCoursewareGeneration
+        ? process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini'
+        : process.env.WHITEBOARD_AI_PROVIDER || ''
+    )
+      .trim()
+      .toLowerCase();
+    const coursewareModel =
+      process.env.WHITEBOARD_COURSEWARE_MODEL ||
+      process.env.GEMINI_MODEL ||
+      'gemini-3.1-pro-preview';
     const hasGemini = Boolean(process.env.GEMINI_API_KEY);
     const hasZhipu = Boolean(process.env.ZHIPU_API_KEY);
     const hasDeepSeek = Boolean(process.env.DEEPSEEK_API_KEY);
 
     let response = '';
     let usedProvider = '';
+    let usedModel: string | null = null;
 
-    if (provider === 'gemini' || (!provider && hasGemini)) {
-      const gemini = new GeminiAI();
+    if (configuredProvider === 'gemini' || (!configuredProvider && hasGemini)) {
+      const gemini = new GeminiAI({
+        model: isCoursewareGeneration ? coursewareModel : undefined,
+      });
       response = await gemini.chat(messages);
       usedProvider = 'gemini';
-    } else if (provider === 'zhipu' || (!provider && hasZhipu)) {
+      usedModel = isCoursewareGeneration ? coursewareModel : null;
+    } else if (configuredProvider === 'zhipu' || (!configuredProvider && hasZhipu)) {
       const zhipu = new ZhipuAI();
       response = await zhipu.chat(messages);
       usedProvider = 'zhipu';
-    } else if (provider === 'deepseek' || (!provider && hasDeepSeek)) {
+    } else if (configuredProvider === 'deepseek' || (!configuredProvider && hasDeepSeek)) {
       const deepseek = new DeepSeekAI();
       response = await deepseek.chat(messages);
       usedProvider = 'deepseek';
@@ -53,6 +69,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: response,
       provider: usedProvider,
+      model: usedModel,
     });
   } catch (error) {
     console.error('Whiteboard AI Chat Error:', error);

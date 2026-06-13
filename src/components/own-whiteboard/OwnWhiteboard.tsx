@@ -1293,6 +1293,7 @@ export default function OwnWhiteboard() {
         signal: controller.signal,
         body: JSON.stringify({
           sessionKey: 'own-whiteboard',
+          purpose: 'courseware',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: finalPrompt },
