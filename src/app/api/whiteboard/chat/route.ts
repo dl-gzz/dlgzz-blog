@@ -9,8 +9,9 @@ export const maxDuration = 60;
  * Whiteboard AI Chat API
  *
  * Provider priority:
- * 1. WHITEBOARD_AI_PROVIDER=gemini|zhipu|deepseek
- * 2. Auto-detect by available server keys
+ * 1. Courseware requests use WHITEBOARD_COURSEWARE_PROVIDER/MODEL.
+ * 2. Other whiteboard requests use WHITEBOARD_AI_PROVIDER.
+ * 3. Auto-detect by available server keys.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { messages } = await request.json();
+    const { messages, purpose } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -39,15 +40,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const isCoursewareGeneration = purpose === 'courseware';
+    const preferredProvider = isCoursewareGeneration
+      ? process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini'
+      : process.env.WHITEBOARD_AI_PROVIDER;
+    const model = isCoursewareGeneration
+      ? process.env.WHITEBOARD_COURSEWARE_MODEL || process.env.GEMINI_MODEL || 'gemini-3.1-pro-preview'
+      : undefined;
+
     const { message, provider } = await chatWithResolvedServerProvider({
       messages,
-      preferredProvider: process.env.WHITEBOARD_AI_PROVIDER,
+      preferredProvider,
+      model,
     });
 
     return NextResponse.json({
       success: true,
       message,
       provider,
+      model: model || null,
     });
   } catch (error) {
     console.error('Whiteboard AI Chat Error:', error);

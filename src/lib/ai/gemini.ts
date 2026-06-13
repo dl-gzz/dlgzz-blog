@@ -5,10 +5,10 @@ export class GeminiAI {
   private chatCompletionsURL: string;
   private authMode: string;
 
-  constructor() {
+  constructor(options: { model?: string } = {}) {
     this.apiKey = process.env.GEMINI_API_KEY || '';
     this.baseURL = process.env.GOOGLE_GEMINI_BASE_URL || 'https://api.aigocode.com';
-    this.model = process.env.GEMINI_MODEL || 'gemini-3-pro-preview';
+    this.model = options.model || process.env.GEMINI_MODEL || 'gemini-3-pro-preview';
     this.chatCompletionsURL = process.env.GEMINI_CHAT_COMPLETIONS_URL || '';
     this.authMode = (process.env.GEMINI_AUTH_MODE || 'auto').toLowerCase();
   }
