@@ -1,8 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
-import ServiceWorkerRegistration from '@/components/whiteboard/ServiceWorkerRegistration';
 
 const OwnWhiteboard = dynamic(
   () => import('@/components/own-whiteboard/OwnWhiteboard'),
@@ -16,11 +14,6 @@ const OwnWhiteboard = dynamic(
   }
 );
 
-export default function WhiteboardPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ServiceWorkerRegistration />
-      <OwnWhiteboard />
-    </Suspense>
-  );
+export default function OwnWhiteboardPage() {
+  return <OwnWhiteboard />;
 }
