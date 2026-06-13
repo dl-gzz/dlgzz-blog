@@ -529,7 +529,8 @@ async function buildParentBindEntryUrl(bindPayload: ParentBindQrResult['bindPayl
     studentId: bindPayload.studentId,
     token: bindPayload.bindToken,
   });
-  const locale = window.location.pathname.split('/').filter(Boolean)[0] || 'zh';
+  const firstSegment = window.location.pathname.split('/').filter(Boolean)[0];
+  const locale = firstSegment === 'zh' || firstSegment === 'en' ? firstSegment : 'zh';
   const origin = await resolvePublicOrigin();
   return `${origin}/${locale}/parent-bind?${params.toString()}`;
 }
