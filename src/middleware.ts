@@ -24,6 +24,18 @@ const intlMiddleware = createMiddleware(routing);
 export default async function middleware(req: NextRequest) {
   const { nextUrl, headers } = req;
 
+  // Get the pathname of the request (e.g. /zh/dashboard to /dashboard)
+  const pathnameWithoutLocale = getPathnameWithoutLocale(
+    nextUrl.pathname,
+    LOCALES
+  );
+  const isNotAllowedRoute = routesNotAllowedByLoggedInUsers.some((route) =>
+    new RegExp(`^${route}$`).test(pathnameWithoutLocale)
+  );
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    new RegExp(`^${route}$`).test(pathnameWithoutLocale)
+  );
+
   // do not use getSession() here, it will cause error related to edge runtime
   // const session = await getSession();
   // Always resolve the current request origin dynamically.
@@ -33,40 +45,30 @@ export default async function middleware(req: NextRequest) {
   const protocol = forwardedProto || nextUrl.protocol.replace(':', '');
   const baseURL = forwardedHost ? `${protocol}://${forwardedHost}` : nextUrl.origin;
 
-  let session: Session | null = null;
-  try {
-    const result = await betterFetch<Session>('/api/auth/get-session', {
-      baseURL,
-      headers: {
-        cookie: req.headers.get('cookie') || '', // Forward the cookies from the request
-      },
-    });
-    session = result?.data ?? null;
-  } catch {
-    // If session lookup fails in middleware, continue as guest instead of throwing.
-    session = null;
+  let isLoggedIn = false;
+  if (isProtectedRoute || isNotAllowedRoute) {
+    let session: Session | null = null;
+    try {
+      const result = await betterFetch<Session>('/api/auth/get-session', {
+        baseURL,
+        headers: {
+          cookie: req.headers.get('cookie') || '', // Forward the cookies from the request
+        },
+      });
+      session = result?.data ?? null;
+    } catch {
+      // If session lookup fails in middleware, continue as guest instead of throwing.
+      session = null;
+    }
+    isLoggedIn = !!session;
   }
-  const isLoggedIn = !!session;
-
-  // Get the pathname of the request (e.g. /zh/dashboard to /dashboard)
-  const pathnameWithoutLocale = getPathnameWithoutLocale(
-    nextUrl.pathname,
-    LOCALES
-  );
 
   // If the route can not be accessed by logged in users, redirect if the user is logged in
   if (isLoggedIn) {
-    const isNotAllowedRoute = routesNotAllowedByLoggedInUsers.some((route) =>
-      new RegExp(`^${route}$`).test(pathnameWithoutLocale)
-    );
     if (isNotAllowedRoute) {
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
   }
-
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    new RegExp(`^${route}$`).test(pathnameWithoutLocale)
-  );
 
   // If the route is a protected route, redirect to login if user is not logged in
   if (!isLoggedIn && isProtectedRoute) {

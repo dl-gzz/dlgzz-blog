@@ -2,7 +2,21 @@ import { Logo } from '@/components/layout/logo';
 import { Button } from '@/components/ui/button';
 import { LocaleLink } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+
+function WorkerLogoIcon() {
+  return (
+    <Image
+      className="size-8 object-contain"
+      src="/images/marketing/one-worker-logo.png"
+      alt="独立工作者"
+      width={32}
+      height={32}
+      sizes="32px"
+    />
+  );
+}
 
 export default function Integration2Section() {
   const t = useTranslations('HomePage.integration2');
@@ -16,27 +30,15 @@ export default function Integration2Section() {
               <div className="bg-radial to-muted dark:to-background absolute inset-0 z-10 from-transparent to-75%" />
               <div className="mx-auto mb-2 flex w-fit justify-center gap-2">
                 <IntegrationCard>
-                  <img
-                    className="size-8 object-contain"
-                    src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
-                  />
+                  <WorkerLogoIcon />
                 </IntegrationCard>
                 <IntegrationCard>
-                  <img
-                    className="size-8 object-contain"
-                    src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
-                  />
+                  <WorkerLogoIcon />
                 </IntegrationCard>
               </div>
               <div className="mx-auto my-2 flex w-fit justify-center gap-2">
                 <IntegrationCard>
-                  <img
-                    className="size-8 object-contain"
-                    src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
-                  />
+                  <WorkerLogoIcon />
                 </IntegrationCard>
                 <IntegrationCard
                   borderClassName="shadow-purple-500/20 shadow-xl border-purple-300 dark:border-purple-600"
@@ -45,28 +47,16 @@ export default function Integration2Section() {
                   <Logo />
                 </IntegrationCard>
                 <IntegrationCard>
-                  <img
-                    className="size-8 object-contain"
-                    src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
-                  />
+                  <WorkerLogoIcon />
                 </IntegrationCard>
               </div>
 
               <div className="mx-auto flex w-fit justify-center gap-2">
                 <IntegrationCard>
-                  <img
-                    className="size-8 object-contain"
-                    src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
-                  />
+                  <WorkerLogoIcon />
                 </IntegrationCard>
                 <IntegrationCard>
-                  <img
-                    className="size-8 object-contain"
-                    src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
-                  />
+                  <WorkerLogoIcon />
                 </IntegrationCard>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { InfiniteSlider } from '@/components/tailark/motion/infinite-slider';
+import Image from 'next/image';
 import { ProgressiveBlur } from './motion/progressive-blur';
 
 export const LogoCloud = () => {
@@ -12,30 +13,33 @@ export const LogoCloud = () => {
           <div className="relative py-6 md:w-[calc(100%-11rem)]">
             <InfiniteSlider speedOnHover={20} speed={40} gap={112}>
               <div className="flex">
-                <img
+                <Image
                   className="mx-auto h-10 w-fit"
                   src="/images/marketing/one-worker-logo.png"
                   alt="独立工作者"
-                  height="40"
-                  width="auto"
+                  height={40}
+                  width={40}
+                  sizes="40px"
                 />
               </div>
               <div className="flex">
-                <img
+                <Image
                   className="mx-auto h-10 w-fit"
                   src="/images/marketing/one-worker-logo.png"
                   alt="独立工作者"
-                  height="40"
-                  width="auto"
+                  height={40}
+                  width={40}
+                  sizes="40px"
                 />
               </div>
               <div className="flex">
-                <img
+                <Image
                   className="mx-auto h-10 w-fit"
                   src="/images/marketing/one-worker-logo.png"
                   alt="独立工作者"
-                  height="40"
-                  width="auto"
+                  height={40}
+                  width={40}
+                  sizes="40px"
                 />
               </div>
             </InfiniteSlider>

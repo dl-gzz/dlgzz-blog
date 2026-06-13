@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 
 export default function LogoCloudSection() {
@@ -9,12 +10,13 @@ export default function LogoCloudSection() {
         <h2 className="text-center text-xl font-medium">{t('title')}</h2>
 
         <div className="mx-auto mt-20 flex max-w-4xl flex-wrap items-center justify-center gap-x-12 gap-y-8 sm:gap-x-16 sm:gap-y-12">
-          <img
+          <Image
             className="h-16 w-fit"
             src="/images/marketing/one-worker-logo.png"
             alt="独立工作者"
-            height="64"
-            width="auto"
+            height={64}
+            width={64}
+            sizes="64px"
           />
         </div>
       </div>
