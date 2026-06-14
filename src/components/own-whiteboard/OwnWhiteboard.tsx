@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import QRCode from 'react-qr-code';
 import {
   BookOpen,
   Bot,
@@ -97,13 +95,13 @@ type ParentBindQrResult = {
   bindPayload: {
     studentId: string;
     bindToken: string;
+    bindCode?: string;
   };
   bindPayloadText: string;
   bindMessageText: string;
-  qrContent: string;
   bindEntryUrl: string;
   bindUrl?: string;
-  qrDataUrl: string;
+  bindCode?: string;
 };
 
 type EduAttemptRecord = EduAnswerPayload & {
@@ -251,19 +249,6 @@ function escapeHtml(value: string) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
-}
-
-function createQrDataUrl(value: string) {
-  const svg = renderToStaticMarkup(
-    <QRCode
-      value={value}
-      size={220}
-      level="M"
-      bgColor="#ffffff"
-      fgColor="#111827"
-    />
-  );
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 function buildFallbackHtml(userText: string, note: string) {
@@ -542,7 +527,10 @@ function buildParentBindQrHtml(bindQr: ParentBindQrResult) {
     ? `<div class="meta-row"><span>年级</span><strong>${escapeHtml(bindQr.studentGrade)}</strong></div>`
     : '';
   const expiresAt = escapeHtml(bindQr.expiresAt ? formatLocalDateTime(bindQr.expiresAt) : '未返回');
-  const qrDataUrl = escapeHtml(bindQr.qrDataUrl);
+  const bindMessage = escapeHtml(bindQr.bindMessageText);
+  const bindCode = bindQr.bindCode
+    ? `<div class="meta-row"><span>绑定码</span><strong>${escapeHtml(bindQr.bindCode)}</strong></div>`
+    : '';
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -587,18 +575,18 @@ function buildParentBindQrHtml(bindQr: ParentBindQrResult) {
       font-size: 14px;
       line-height: 1.35;
     }
-    .qr-wrap {
-      display: grid;
-      place-items: center;
-      padding: 10px;
-      border: 1px solid #e5e7eb;
+    .command {
+      margin: 2px 0;
+      padding: 14px 16px;
       border-radius: 8px;
-      background: #ffffff;
-    }
-    img {
-      width: min(54vw, 190px);
-      height: min(54vw, 190px);
-      display: block;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #0f172a;
+      font-size: 22px;
+      line-height: 1.25;
+      font-weight: 800;
+      text-align: center;
+      overflow-wrap: anywhere;
     }
     .meta {
       display: grid;
@@ -634,16 +622,15 @@ function buildParentBindQrHtml(bindQr: ParentBindQrResult) {
   <main class="card">
     <div class="eyebrow">Hermes 家长绑定</div>
     <h1>${studentTitle}</h1>
-    <p class="subtitle">家长用微信扫描二维码，打开绑定入口。</p>
-    <div class="qr-wrap">
-      <img src="${qrDataUrl}" alt="家长绑定二维码" />
-    </div>
+    <p class="subtitle">请让家长在 Hermes 微信助手里发送下面这句话。</p>
+    <div class="command">${bindMessage}</div>
     <section class="meta">
       <div class="meta-row"><span>学生编号</span><strong>${studentId}</strong></div>
       ${studentGrade}
+      ${bindCode}
       <div class="meta-row"><span>有效期</span><strong>${expiresAt}</strong></div>
     </section>
-    <p class="hint">扫码后按页面提示完成 Hermes 绑定。</p>
+    <p class="hint">Hermes 收到后会自动把当前微信绑定到这个学生档案。</p>
   </main>
 </body>
 </html>`;
@@ -1183,10 +1170,12 @@ export default function OwnWhiteboard() {
         ? {
             studentId: readText(tokenData.bindPayload.studentId, targetStudentId),
             bindToken: readText(tokenData.bindPayload.bindToken, readText(tokenData.token)),
+            bindCode: readText(tokenData.bindPayload.bindCode, readText(tokenData.bindCode)) || undefined,
           }
         : {
             studentId: targetStudentId,
             bindToken: readText(tokenData.token),
+            bindCode: readText(tokenData.bindCode) || undefined,
           };
 
       if (!bindPayload.bindToken) {
@@ -1194,10 +1183,12 @@ export default function OwnWhiteboard() {
       }
 
       const bindPayloadText = JSON.stringify(bindPayload);
-      const bindMessageText = `绑定码 ${bindPayload.bindToken}`;
+      const bindMessageText =
+        readText(tokenData.bindMessage) ||
+        (bindPayload.bindCode
+          ? `绑定 ${bindPayload.studentId} ${bindPayload.bindCode}`
+          : `绑定码 ${bindPayload.bindToken}`);
       const bindEntryUrl = await buildParentBindEntryUrl(bindPayload);
-      const qrContent = bindEntryUrl;
-      const qrDataUrl = createQrDataUrl(qrContent);
 
       const nextQr: ParentBindQrResult = {
         studentId: bindPayload.studentId,
@@ -1208,16 +1199,15 @@ export default function OwnWhiteboard() {
         bindPayload,
         bindPayloadText,
         bindMessageText,
-        qrContent,
         bindEntryUrl,
         bindUrl: readText(tokenData.bindUrl) || undefined,
-        qrDataUrl,
+        bindCode: bindPayload.bindCode,
       };
 
       setBindQr(nextQr);
       createShape('preview_html', {
         w: 390,
-        h: 480,
+        h: 320,
         html: buildParentBindQrHtml(nextQr),
       }, {
         y: 28,
@@ -1228,10 +1218,10 @@ export default function OwnWhiteboard() {
       setAiOpen(false);
       setMessages((current) => [
         ...current,
-        { role: 'system', text: `已在白板上生成 ${targetStudentId} 的家长绑定二维码。` },
+        { role: 'system', text: `已在白板上生成 ${targetStudentId} 的家长绑定口令。` },
       ]);
     } catch (error) {
-      setBindError(error instanceof Error ? error.message : '生成绑定二维码失败');
+      setBindError(error instanceof Error ? error.message : '生成绑定口令失败');
     } finally {
       setBindLoading(false);
     }
@@ -1545,7 +1535,7 @@ export default function OwnWhiteboard() {
                 ].join(' ')}
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={() => setBindPanelOpen((open) => !open)}
-                title="家长绑定二维码"
+                title="家长绑定口令"
               >
                 <QrCode size={13} />
                 绑定码
@@ -1599,7 +1589,7 @@ export default function OwnWhiteboard() {
             <div className="border-b border-black/10 p-3">
               <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#111827]">
                 <QrCode size={15} />
-                家长绑定二维码
+                家长绑定口令
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -1629,7 +1619,7 @@ export default function OwnWhiteboard() {
                 className="mt-2 inline-flex h-9 w-full items-center justify-center gap-2 rounded-md bg-[#111827] px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <QrCode size={15} />
-                {bindLoading ? '生成中...' : '生成家长绑定二维码'}
+                {bindLoading ? '生成中...' : '生成家长绑定口令'}
               </button>
               {bindError && (
                 <div className="mt-2 rounded-md bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">
@@ -1638,32 +1628,27 @@ export default function OwnWhiteboard() {
               )}
               {bindQr && (
                 <div className="mt-3 rounded-md border border-black/10 bg-white p-3">
-                  <div className="flex gap-3">
-                    <img
-                      src={bindQr.qrDataUrl}
-                      alt="家长绑定二维码"
-                      className="h-[132px] w-[132px] shrink-0 rounded-md border border-black/10 bg-white p-1"
-                    />
-                    <div className="min-w-0 flex-1 text-xs leading-5 text-black/65">
-                      <div className="font-semibold text-[#111827]">
-                        {bindQr.studentName || '未填写姓名'} · {bindQr.studentId}
-                      </div>
-                      {bindQr.studentGrade && <div>年级：{bindQr.studentGrade}</div>}
-                      <div>
-                        有效期：
-                        {bindQr.expiresAt ? formatLocalDateTime(bindQr.expiresAt) : '未返回'}
-                      </div>
-                      <div className="mt-1 text-black/55">
-                        让家长用微信扫码打开绑定入口。
-                      </div>
+                  <div className="text-xs leading-5 text-black/65">
+                    <div className="font-semibold text-[#111827]">
+                      {bindQr.studentName || '未填写姓名'} · {bindQr.studentId}
+                    </div>
+                    {bindQr.studentGrade && <div>年级：{bindQr.studentGrade}</div>}
+                    <div>
+                      有效期：
+                      {bindQr.expiresAt ? formatLocalDateTime(bindQr.expiresAt) : '未返回'}
+                    </div>
+                    <div className="mt-1 text-black/55">
+                      让家长在 Hermes 微信助手里发送下面这句话。
                     </div>
                   </div>
-                  <div className="mt-2 rounded-md bg-[#f3f4f6] px-2 py-1.5 text-xs font-semibold leading-5 text-[#111827]">
+                  <div className="mt-2 rounded-md bg-[#eff6ff] px-3 py-2 text-sm font-semibold leading-6 text-[#0f172a]">
                     {bindQr.bindMessageText}
                   </div>
-                  <div className="mt-1 text-[11px] leading-4 text-black/45">
-                    二维码地址：{bindQr.bindEntryUrl}
-                  </div>
+                  {bindQr.bindEntryUrl && (
+                    <div className="mt-1 text-[11px] leading-4 text-black/45">
+                      备用网页入口：{bindQr.bindEntryUrl}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
