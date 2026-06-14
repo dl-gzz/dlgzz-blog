@@ -18,6 +18,7 @@ import { join } from 'node:path';
 const HOST = process.env.HERMES_BRIDGE_HOST || '127.0.0.1';
 const PORT = Number(process.env.HERMES_BRIDGE_PORT || 7319);
 const TOKEN = process.env.HERMES_BRIDGE_TOKEN?.trim() || '';
+const HERMES_CLI_COMMAND = process.env.HERMES_CLI_COMMAND?.trim() || '';
 const WORKDIR =
   process.env.HERMES_BRIDGE_WORKDIR || '/Users/baiyang/Desktop/one-worker-os';
 const DRY_RUN = process.env.HERMES_BRIDGE_DRY_RUN === '1';
@@ -73,6 +74,12 @@ const PROFILE_WEIXIN_ENV_KEYS = [
   'WEIXIN_HOME_CHANNEL',
   'WEIXIN_HOME_CHANNEL_NAME',
 ] as const;
+
+type HermesCommandCandidate = {
+  command: string;
+  prefixArgs: string[];
+  label: string;
+};
 
 interface ProvisionPayload {
   assistantId?: unknown;
@@ -1050,7 +1057,9 @@ async function ensureActivatedGateway(activation: ActivationRecord) {
   const ageMs = Number.isFinite(lastUpdate) ? Date.now() - lastUpdate : Infinity;
   if (
     (activation.gatewayStatus === 'starting' && ageMs < 15_000) ||
-    (activation.gatewayStatus === 'start_failed' && ageMs < 30_000)
+    (activation.gatewayStatus === 'start_failed' &&
+      ageMs < 30_000 &&
+      !isGatewayServiceMissing(activation.gatewayError || ''))
   ) {
     return activation;
   }
@@ -1082,11 +1091,34 @@ async function ensureProfileGatewayStarted(profileName: string): Promise<{
     return { status: 'running' };
   }
 
-  const result = await runHermes(
+  let result = await runHermes(
     ['--profile', profileName, 'gateway', 'start'],
     { allowFailure: true }
   );
-  const output = `${result.stdout}\n${result.stderr}`.trim();
+  let output = `${result.stdout}\n${result.stderr}`.trim();
+
+  if (result.code !== 0 && isGatewayServiceMissing(output)) {
+    const install = await runHermes(
+      ['--profile', profileName, 'gateway', 'install'],
+      { allowFailure: true }
+    );
+    const installOutput = `${install.stdout}\n${install.stderr}`.trim();
+
+    if (install.code !== 0) {
+      return {
+        status: 'start_failed',
+        error:
+          installOutput ||
+          `hermes --profile ${profileName} gateway install 失败`,
+      };
+    }
+
+    result = await runHermes(
+      ['--profile', profileName, 'gateway', 'start'],
+      { allowFailure: true }
+    );
+    output = `${result.stdout}\n${result.stderr}`.trim();
+  }
 
   if (result.code !== 0) {
     return {
@@ -1101,6 +1133,12 @@ async function ensureProfileGatewayStarted(profileName: string): Promise<{
   }
 
   return { status: 'starting' };
+}
+
+function isGatewayServiceMissing(output: string) {
+  return /gateway service is not installed|run:\s*hermes\s+gateway\s+install/i.test(
+    output
+  );
 }
 
 async function waitForProfileGateway(profileName: string, timeoutMs: number) {
@@ -1746,12 +1784,55 @@ function runHermes(
   args: string[],
   options: { allowFailure?: boolean } = {}
 ) {
+  return runHermesCandidate(buildHermesCommandCandidates(), args, options);
+}
+
+async function runHermesCandidate(
+  candidates: HermesCommandCandidate[],
+  args: string[],
+  options: { allowFailure?: boolean }
+): Promise<{
+  code: number | null;
+  stdout: string;
+  stderr: string;
+}> {
+  let lastError: Error | null = null;
+
+  for (const candidate of candidates) {
+    if (!canUseCommandCandidate(candidate)) continue;
+
+    try {
+      return await spawnHermesCandidate(candidate, args, options);
+    } catch (error) {
+      if (isCommandNotFoundError(error)) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw (
+    lastError ||
+    new Error(
+      '找不到 Hermes CLI。请设置 HERMES_CLI_COMMAND，或把 hermes 放到 PATH。'
+    )
+  );
+}
+
+function spawnHermesCandidate(
+  candidate: HermesCommandCandidate,
+  args: string[],
+  options: { allowFailure?: boolean }
+) {
   return new Promise<{
     code: number | null;
     stdout: string;
     stderr: string;
   }>((resolve, reject) => {
-    const child = spawn('hermes', args, {
+    const finalArgs = [...candidate.prefixArgs, ...args];
+    const child = spawn(candidate.command, finalArgs, {
       cwd: WORKDIR,
       env: process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -1760,7 +1841,14 @@ function runHermes(
     const stderrChunks: Buffer[] = [];
     const timer = setTimeout(() => {
       child.kill('SIGTERM');
-      reject(new Error(`Hermes command timed out: hermes ${args.join(' ')}`));
+      reject(
+        new Error(
+          `Hermes command timed out: ${formatHermesInvocation(
+            candidate,
+            args
+          )}`
+        )
+      );
     }, COMMAND_TIMEOUT_MS);
 
     child.stdout.on('data', (chunk) => {
@@ -1781,7 +1869,10 @@ function runHermes(
       if (code !== 0 && !options.allowFailure) {
         reject(
           new Error(
-            `Hermes command failed (${code}): hermes ${args.join(' ')}\n${stderr || stdout}`
+            `Hermes command failed (${code}): ${formatHermesInvocation(
+              candidate,
+              args
+            )}\n${stderr || stdout}`
           )
         );
         return;
@@ -1790,6 +1881,95 @@ function runHermes(
       resolve({ code, stdout, stderr });
     });
   });
+}
+
+function buildHermesCommandCandidates(): HermesCommandCandidate[] {
+  const explicit = parseCommandLine(HERMES_CLI_COMMAND);
+  const hermesHome = getHermesHome();
+  const agentDir = process.env.HERMES_AGENT_DIR || join(hermesHome, 'hermes-agent');
+  const python =
+    process.env.HERMES_AGENT_PYTHON ||
+    join(agentDir, 'venv', 'bin', 'python3');
+  const candidates: HermesCommandCandidate[] = [];
+
+  if (explicit.length) {
+    candidates.push({
+      command: explicit[0]!,
+      prefixArgs: explicit.slice(1),
+      label: explicit.join(' '),
+    });
+  }
+
+  candidates.push(
+    {
+      command: 'hermes',
+      prefixArgs: [],
+      label: 'hermes',
+    },
+    {
+      command: join(homedir(), '.local', 'bin', 'hermes'),
+      prefixArgs: [],
+      label: '~/.local/bin/hermes',
+    },
+    {
+      command: join(agentDir, 'venv', 'bin', 'hermes'),
+      prefixArgs: [],
+      label: 'hermes-agent venv hermes',
+    },
+    {
+      command: python,
+      prefixArgs: [join(agentDir, 'rl_cli.py')],
+      label: 'hermes-agent rl_cli.py',
+    }
+  );
+
+  return dedupeHermesCommandCandidates(candidates);
+}
+
+function parseCommandLine(value: string) {
+  const tokens: string[] = [];
+  const pattern = /"([^"]*)"|'([^']*)'|[^\s]+/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(value))) {
+    tokens.push(match[1] ?? match[2] ?? match[0]);
+  }
+
+  return tokens.filter(Boolean);
+}
+
+function dedupeHermesCommandCandidates(candidates: HermesCommandCandidate[]) {
+  const seen = new Set<string>();
+
+  return candidates.filter((candidate) => {
+    const key = `${candidate.command}\0${candidate.prefixArgs.join('\0')}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function canUseCommandCandidate(candidate: HermesCommandCandidate) {
+  if (candidate.command.includes('/')) {
+    return existsSync(candidate.command);
+  }
+
+  return true;
+}
+
+function isCommandNotFoundError(error: unknown) {
+  return (
+    error instanceof Error &&
+    'code' in error &&
+    ['ENOENT', 'EACCES'].includes(String((error as NodeJS.ErrnoException).code))
+  );
+}
+
+function formatHermesInvocation(
+  candidate: HermesCommandCandidate,
+  args: string[]
+) {
+  return [candidate.label, ...args].join(' ');
 }
 
 function runLearningAssistantScript(
