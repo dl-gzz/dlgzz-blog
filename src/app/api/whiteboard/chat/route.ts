@@ -5,6 +5,58 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 export const maxDuration = 60;
 
+const WHITEBOARD_ACTION_SCHEMA = {
+  type: 'object',
+  properties: {
+    thought: {
+      type: 'string',
+      description: 'A short private summary of the plan.',
+    },
+    voice_response: {
+      type: 'string',
+      description: 'A short Chinese sentence shown to the teacher.',
+    },
+    operations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          action: {
+            type: 'string',
+            enum: ['create', 'update', 'delete'],
+          },
+          id: {
+            type: 'string',
+            description: 'Shape id for update/delete operations.',
+          },
+          type: {
+            type: 'string',
+            enum: ['preview_html', 'ai_result'],
+          },
+          x: { type: 'number' },
+          y: { type: 'number' },
+          props: {
+            type: 'object',
+            properties: {
+              w: { type: 'number' },
+              h: { type: 'number' },
+              html: {
+                type: 'string',
+                description:
+                  'Complete HTML document for preview_html. It must post quiz_result to window.parent after the learner submits answers.',
+              },
+              text: { type: 'string' },
+              color: { type: 'string' },
+            },
+          },
+        },
+        required: ['action'],
+      },
+    },
+  },
+  required: ['operations'],
+} satisfies Record<string, unknown>;
+
 /**
  * Whiteboard AI Chat API
  *
@@ -45,13 +97,15 @@ export async function POST(request: NextRequest) {
       ? process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini'
       : process.env.WHITEBOARD_AI_PROVIDER;
     const model = isCoursewareGeneration
-      ? process.env.WHITEBOARD_COURSEWARE_MODEL || process.env.GEMINI_MODEL || 'gemini-3.1-pro-preview'
+      ? process.env.WHITEBOARD_COURSEWARE_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash'
       : undefined;
 
     const { message, provider } = await chatWithResolvedServerProvider({
       messages,
       preferredProvider,
       model,
+      responseMimeType: isCoursewareGeneration ? 'application/json' : undefined,
+      responseSchema: isCoursewareGeneration ? WHITEBOARD_ACTION_SCHEMA : undefined,
     });
 
     return NextResponse.json({

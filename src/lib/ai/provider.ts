@@ -29,13 +29,17 @@ export async function chatWithServerProvider({
   provider,
   messages,
   model,
+  responseMimeType,
+  responseSchema,
 }: {
   provider: ServerChatProvider;
   messages: ServerChatMessage[];
   model?: string;
+  responseMimeType?: string;
+  responseSchema?: Record<string, unknown>;
 }) {
   if (provider === 'gemini') {
-    return new GeminiAI({ model }).chat(messages);
+    return new GeminiAI({ model, responseMimeType, responseSchema }).chat(messages);
   }
 
   if (provider === 'zhipu') {
@@ -49,10 +53,14 @@ export async function chatWithResolvedServerProvider({
   messages,
   preferredProvider,
   model,
+  responseMimeType,
+  responseSchema,
 }: {
   messages: ServerChatMessage[];
   preferredProvider?: string;
   model?: string;
+  responseMimeType?: string;
+  responseSchema?: Record<string, unknown>;
 }) {
   const provider = resolveServerChatProvider(preferredProvider);
 
@@ -66,6 +74,8 @@ export async function chatWithResolvedServerProvider({
     provider,
     messages,
     model,
+    responseMimeType,
+    responseSchema,
   });
 
   return {

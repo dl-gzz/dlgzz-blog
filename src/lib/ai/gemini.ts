@@ -4,13 +4,32 @@ export class GeminiAI {
   private model: string;
   private chatCompletionsURL: string;
   private authMode: string;
+  private responseMimeType?: string;
+  private responseSchema?: Record<string, unknown>;
 
-  constructor(options: { model?: string } = {}) {
+  constructor(options: {
+    model?: string;
+    responseMimeType?: string;
+    responseSchema?: Record<string, unknown>;
+  } = {}) {
     this.apiKey = process.env.GEMINI_API_KEY || '';
-    this.baseURL = process.env.GOOGLE_GEMINI_BASE_URL || 'https://api.aigocode.com';
-    this.model = options.model || process.env.GEMINI_MODEL || 'gemini-3-pro-preview';
+    this.baseURL =
+      process.env.GOOGLE_GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
+    this.model = options.model || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
     this.chatCompletionsURL = process.env.GEMINI_CHAT_COMPLETIONS_URL || '';
     this.authMode = (process.env.GEMINI_AUTH_MODE || 'auto').toLowerCase();
+    this.responseMimeType = options.responseMimeType;
+    this.responseSchema = options.responseSchema;
+  }
+
+  private shouldUseNativeGemini(normalizedBaseUrl: string) {
+    if (process.env.GEMINI_API_FORMAT?.toLowerCase() === 'native') return true;
+    if (process.env.GEMINI_API_FORMAT?.toLowerCase() === 'openai') return false;
+
+    return (
+      normalizedBaseUrl.includes('generativelanguage.googleapis.com') ||
+      normalizedBaseUrl === 'https://api.apiyi.com'
+    );
   }
 
   private getCandidateUrls() {
@@ -20,11 +39,10 @@ export class GeminiAI {
 
     const normalized = this.baseURL.replace(/\/+$/, '');
 
-    // Official Google Gemini endpoint: use native generateContent directly.
-    if (normalized.includes('generativelanguage.googleapis.com')) {
-      return [
-        `${normalized}/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`,
-      ];
+    // Native Gemini providers use the official generateContent path.
+    // API易 native Gemini requires https://api.apiyi.com, not /v1.
+    if (this.shouldUseNativeGemini(normalized)) {
+      return [`${normalized}/v1beta/models/${this.model}:generateContent`];
     }
 
     if (normalized.endsWith('/chat/completions')) {
@@ -64,6 +82,53 @@ export class GeminiAI {
     const candidates = this.getCandidateUrls();
     let lastError = '';
 
+    const buildNativeGeminiPayload = () => {
+      const systemMessages = messages
+        .filter((message) => message.role === 'system')
+        .map((message) => message.content)
+        .join('\n\n')
+        .trim();
+      const conversation = messages
+        .filter((message) => message.role !== 'system')
+        .map((message) => `${message.role}: ${message.content}`)
+        .join('\n\n')
+        .trim();
+      const generationConfig: Record<string, unknown> = {
+        temperature: 0.2,
+        maxOutputTokens: 16000,
+      };
+
+      if (this.responseMimeType) {
+        generationConfig.responseFormat = {
+          text: {
+            mimeType: this.responseMimeType,
+            ...(this.responseSchema ? { schema: this.responseSchema } : {}),
+          },
+        };
+      }
+
+      return {
+        ...(systemMessages
+          ? {
+              system_instruction: {
+                parts: [{ text: systemMessages }],
+              },
+            }
+          : {}),
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: conversation || messages.map((message) => message.content).join('\n\n'),
+              },
+            ],
+          },
+        ],
+        generationConfig,
+      };
+    };
+
     const authHeadersForMode = (): Array<Record<string, string>> => {
       if (this.authMode === 'bearer') {
         return [{ Authorization: `Bearer ${this.apiKey}` }];
@@ -82,11 +147,21 @@ export class GeminiAI {
       ];
     };
 
+    const buildOpenAICompatiblePayload = () => ({
+      model: this.model,
+      messages,
+      stream: false,
+      max_tokens: 8192,
+      ...(this.responseMimeType === 'application/json'
+        ? { response_format: { type: 'json_object' } }
+        : {}),
+    });
+
     for (const url of candidates) {
-      const isNativeGemini = url.includes(':generateContent?key=');
+      const isNativeGemini = url.includes(':generateContent');
       const isNativeMessages = url.endsWith('/v1/messages') || url.endsWith('/messages');
       const headerVariants: Array<Record<string, string>> = isNativeGemini
-        ? [{}]
+        ? [{ 'x-goog-api-key': this.apiKey }]
         : authHeadersForMode();
 
       for (const authHeaders of headerVariants) {
@@ -99,17 +174,7 @@ export class GeminiAI {
           headers,
           body: JSON.stringify(
             isNativeGemini
-              ? {
-                  contents: [
-                    {
-                      parts: [
-                        {
-                          text: messages.map((m) => `${m.role}: ${m.content}`).join('\n\n'),
-                        },
-                      ],
-                    },
-                  ],
-                }
+              ? buildNativeGeminiPayload()
               : isNativeMessages
                 ? {
                     model: this.model,
@@ -124,12 +189,7 @@ export class GeminiAI {
                       },
                     ],
                   }
-              : {
-                  model: this.model,
-                  messages,
-                  stream: false,
-                  max_tokens: 8192,
-                }
+              : buildOpenAICompatiblePayload()
           ),
         });
 
