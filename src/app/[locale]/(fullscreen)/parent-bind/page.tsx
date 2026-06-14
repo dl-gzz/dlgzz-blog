@@ -29,10 +29,9 @@ export default function ParentBindPage() {
       <div className="mx-auto flex max-w-[430px] flex-col gap-5 rounded-lg border border-black/10 bg-white p-6 shadow-[0_18px_44px_rgba(15,23,42,.12)]">
         <div>
           <div className="mb-2 text-sm font-bold text-[#2563eb]">Hermes 学习助手</div>
-          <h1 className="text-2xl font-bold leading-tight tracking-normal">绑定学生档案</h1>
+          <h1 className="text-2xl font-bold leading-tight tracking-normal">发送绑定码</h1>
           <p className="mt-3 text-sm leading-6 text-black/65">
-            这个页面已经拿到老师生成的一次性绑定码。下一步把绑定码发送给 Hermes，
-            Hermes 就能把你的微信和学生档案关联起来。
+            请把下面这句话发送给 Hermes 微信助手。发送后，Hermes 会把当前微信和学生档案绑定起来。
           </p>
         </div>
 
@@ -66,9 +65,16 @@ export default function ParentBindPage() {
           </div>
         )}
 
+        <div className="grid gap-2 rounded-lg border border-black/10 bg-[#f8fafc] px-4 py-3 text-xs leading-5 text-black/65">
+          <div className="font-bold text-black/75">现在的绑定方式</div>
+          <div>1. 点“复制绑定码”。</div>
+          <div>2. 打开 Hermes 微信助手聊天框，把这句话发过去。</div>
+          <div>3. 收到确认后，再问“今天学得怎么样”就能读到这个学生的档案。</div>
+        </div>
+
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">
-          当前本地 MVP 还没有微信 OAuth 或扫码回调，所以网页本身无法自动知道扫码者的微信 ID。
-          接入微信带参入口后，这一步会改成扫码即绑定。
+          目前二维码负责传递绑定码；自动识别扫码微信身份需要接入微信带参入口或扫码回调。
+          接上后，这里会升级成扫码即绑定。
         </div>
       </div>
     </main>
