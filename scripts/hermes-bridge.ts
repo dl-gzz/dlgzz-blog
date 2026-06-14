@@ -34,6 +34,34 @@ const ACTIVATION_TTL_MS = Number(
 const ILINK_BASE_URL = 'https://ilinkai.weixin.qq.com';
 const ILINK_APP_CLIENT_VERSION = String((2 << 16) | (2 << 8) | 0);
 const QR_TIMEOUT_MS = Number(process.env.HERMES_BRIDGE_QR_TIMEOUT_MS || 10_000);
+const LEARNING_ASSISTANT_SCRIPT =
+  process.env.LEARNING_ASSISTANT_SCRIPT ||
+  join(
+    getHermesHome(),
+    'skills',
+    'learning-assistant',
+    'scripts',
+    'learning_assistant.py'
+  );
+const LEARNING_ASSISTANT_PYTHON =
+  process.env.LEARNING_ASSISTANT_PYTHON || 'python3';
+const LEARNING_ASSISTANT_TOKEN =
+  process.env.LEARNING_ASSISTANT_TOKEN?.trim() || '';
+const LEARNING_ASSISTANT_TIMEOUT_MS =
+  Number(process.env.LEARNING_ASSISTANT_TIMEOUT_SECONDS || 60) * 1000;
+const LEARNING_ASSISTANT_ALLOWED_COMMANDS = new Set([
+  'answer_parent',
+  'bind_parent',
+  'bind_parent_from_message',
+  'create_bind_token',
+  'create_student',
+  'daily_report',
+  'list_parent_students',
+  'next_practice',
+  'record_quiz',
+  'set_profile',
+  'snapshot',
+]);
 const PROFILE_WEIXIN_ENV_KEYS = [
   'WEIXIN_ACCOUNT_ID',
   'WEIXIN_TOKEN',
@@ -140,7 +168,9 @@ interface ServiceProvision {
 
 const server = createServer(async (request, response) => {
   try {
-    if (!isAuthorized(request)) {
+    const url = new URL(request.url || '/', `http://${HOST}:${PORT}`);
+
+    if (!isAuthorized(request, url.pathname)) {
       sendJson(response, 401, {
         success: false,
         code: 'UNAUTHORIZED',
@@ -149,10 +179,16 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    const url = new URL(request.url || '/', `http://${HOST}:${PORT}`);
-
     if (request.method === 'GET' && url.pathname === '/health') {
       await handleHealth(response);
+      return;
+    }
+
+    if (
+      request.method === 'POST' &&
+      url.pathname === '/api/learning-assistant/run'
+    ) {
+      await handleLearningAssistantRun(request, response);
       return;
     }
 
@@ -216,10 +252,59 @@ async function handleHealth(response: ServerResponse) {
     mode: DRY_RUN ? 'dry_run' : 'hermes',
     workdir: WORKDIR,
     hermesHome: getHermesHome(),
+    learningAssistant: {
+      script: LEARNING_ASSISTANT_SCRIPT,
+      scriptExists: existsSync(LEARNING_ASSISTANT_SCRIPT),
+    },
     gateway,
     weixin,
     pairing,
   });
+}
+
+async function handleLearningAssistantRun(
+  request: IncomingMessage,
+  response: ServerResponse
+) {
+  const body = (await readJson(request)) as {
+    command?: unknown;
+    args?: unknown;
+    input?: unknown;
+  };
+  const command = typeof body.command === 'string' ? body.command.trim() : '';
+  const args = Array.isArray(body.args) ? body.args : [];
+
+  if (!LEARNING_ASSISTANT_ALLOWED_COMMANDS.has(command)) {
+    sendJson(response, 400, {
+      success: false,
+      error: 'unsupported command',
+    });
+    return;
+  }
+
+  if (!args.every((item) => typeof item === 'string')) {
+    sendJson(response, 400, {
+      success: false,
+      error: 'args must be a string array',
+    });
+    return;
+  }
+
+  if (!existsSync(LEARNING_ASSISTANT_SCRIPT)) {
+    sendJson(response, 500, {
+      success: false,
+      error: `script not found: ${LEARNING_ASSISTANT_SCRIPT}`,
+    });
+    return;
+  }
+
+  const result = await runLearningAssistantScript(
+    command,
+    args as string[],
+    body.input
+  );
+
+  sendJson(response, result.status, result.payload);
 }
 
 async function handleProvision(
@@ -1502,8 +1587,13 @@ function readActivations() {
   );
 }
 
-function isAuthorized(request: IncomingMessage) {
-  if (!TOKEN) return true;
+function isAuthorized(request: IncomingMessage, pathname = '/') {
+  const acceptedTokens =
+    pathname === '/api/learning-assistant/run'
+      ? [TOKEN, LEARNING_ASSISTANT_TOKEN].filter(Boolean)
+      : [TOKEN].filter(Boolean);
+
+  if (!acceptedTokens.length) return true;
 
   const authorization = request.headers.authorization || '';
   const bridgeToken = request.headers['x-hermes-bridge-token'];
@@ -1511,9 +1601,10 @@ function isAuthorized(request: IncomingMessage) {
     ? bridgeToken[0]
     : bridgeToken;
 
-  return (
-    authorization === `Bearer ${TOKEN}` ||
-    String(rawBridgeToken || '').trim() === TOKEN
+  return acceptedTokens.some(
+    (token) =>
+      authorization === `Bearer ${token}` ||
+      String(rawBridgeToken || '').trim() === token
   );
 }
 
@@ -1698,5 +1789,95 @@ function runHermes(
 
       resolve({ code, stdout, stderr });
     });
+  });
+}
+
+function runLearningAssistantScript(
+  command: string,
+  args: string[],
+  input: unknown
+) {
+  return new Promise<{
+    status: number;
+    payload: Record<string, unknown>;
+  }>((resolve, reject) => {
+    const child = spawn(
+      LEARNING_ASSISTANT_PYTHON,
+      [LEARNING_ASSISTANT_SCRIPT, command, ...args],
+      {
+        cwd: WORKDIR,
+        env: process.env,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }
+    );
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
+    const timer = setTimeout(() => {
+      child.kill('SIGTERM');
+      resolve({
+        status: 504,
+        payload: {
+          success: false,
+          error: `${command} timed out`,
+        },
+      });
+    }, LEARNING_ASSISTANT_TIMEOUT_MS);
+
+    child.stdout.on('data', (chunk) => {
+      stdoutChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    child.stderr.on('data', (chunk) => {
+      stderrChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    child.on('error', (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      const stdout = Buffer.concat(stdoutChunks).toString('utf8').trim();
+      const stderr = Buffer.concat(stderrChunks).toString('utf8').trim();
+      const raw = stdout || stderr;
+      let parsed: Record<string, unknown> | null = null;
+
+      if (raw) {
+        try {
+          parsed = JSON.parse(raw) as Record<string, unknown>;
+        } catch {
+          parsed = null;
+        }
+      }
+
+      if (code !== 0) {
+        resolve({
+          status: 400,
+          payload:
+            parsed ||
+            ({
+              success: false,
+              error: raw || `${command} exited ${code}`,
+            } as Record<string, unknown>),
+        });
+        return;
+      }
+
+      if (!parsed) {
+        resolve({
+          status: 500,
+          payload: {
+            success: false,
+            error: 'learning-assistant returned invalid JSON',
+          },
+        });
+        return;
+      }
+
+      resolve({ status: 200, payload: parsed });
+    });
+
+    if (typeof input !== 'undefined') {
+      child.stdin.write(JSON.stringify(input));
+    }
+    child.stdin.end();
   });
 }
