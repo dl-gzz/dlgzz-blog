@@ -5,6 +5,58 @@ import { DeepSeekAI } from '@/lib/ai/deepseek';
 
 export const maxDuration = 60;
 
+const WHITEBOARD_ACTION_SCHEMA = {
+  type: 'object',
+  properties: {
+    thought: {
+      type: 'string',
+      description: 'A short private summary of the plan.',
+    },
+    voice_response: {
+      type: 'string',
+      description: 'A short Chinese sentence shown to the teacher.',
+    },
+    operations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          action: {
+            type: 'string',
+            enum: ['create', 'update', 'delete'],
+          },
+          id: {
+            type: 'string',
+            description: 'Shape id for update/delete operations.',
+          },
+          type: {
+            type: 'string',
+            enum: ['preview_html', 'ai_result'],
+          },
+          x: { type: 'number' },
+          y: { type: 'number' },
+          props: {
+            type: 'object',
+            properties: {
+              w: { type: 'number' },
+              h: { type: 'number' },
+              html: {
+                type: 'string',
+                description:
+                  'Complete HTML document for preview_html. It must post quiz_result to window.parent after the learner submits answers.',
+              },
+              text: { type: 'string' },
+              color: { type: 'string' },
+            },
+          },
+        },
+        required: ['action'],
+      },
+    },
+  },
+  required: ['operations'],
+} satisfies Record<string, unknown>;
+
 /**
  * Whiteboard AI Chat API
  *
@@ -35,7 +87,7 @@ export async function POST(request: NextRequest) {
     const coursewareModel =
       process.env.WHITEBOARD_COURSEWARE_MODEL ||
       process.env.GEMINI_MODEL ||
-      'gemini-3.1-pro-preview';
+      'gemini-3.5-flash';
     const hasGemini = Boolean(process.env.GEMINI_API_KEY);
     const hasZhipu = Boolean(process.env.ZHIPU_API_KEY);
     const hasDeepSeek = Boolean(process.env.DEEPSEEK_API_KEY);
@@ -47,6 +99,8 @@ export async function POST(request: NextRequest) {
     if (configuredProvider === 'gemini' || (!configuredProvider && hasGemini)) {
       const gemini = new GeminiAI({
         model: isCoursewareGeneration ? coursewareModel : undefined,
+        responseMimeType: isCoursewareGeneration ? 'application/json' : undefined,
+        responseSchema: isCoursewareGeneration ? WHITEBOARD_ACTION_SCHEMA : undefined,
       });
       response = await gemini.chat(messages);
       usedProvider = 'gemini';
