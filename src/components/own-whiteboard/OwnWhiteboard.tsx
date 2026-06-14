@@ -16,6 +16,7 @@ import {
   Send,
   Trash2,
 } from 'lucide-react';
+import QrSvg from 'react-qr-code';
 
 type ShapeType = 'preview_html' | 'ai_result';
 
@@ -90,18 +91,18 @@ type ParentBindQrResult = {
   studentId: string;
   studentName?: string;
   studentGrade?: string;
-  token: string;
-  expiresAt: string;
-  bindPayload: {
-    studentId: string;
-    bindToken: string;
-    bindCode?: string;
-  };
-  bindPayloadText: string;
-  bindMessageText: string;
-  bindEntryUrl: string;
-  bindUrl?: string;
-  bindCode?: string;
+  assistantId?: string;
+  activationId: string;
+  status: string;
+  expiresAt?: string | null;
+  profileName?: string | null;
+  hermesProfileId?: string | null;
+  qrPayload?: string | null;
+  qrImageUrl?: string | null;
+  weixinUserId?: string | null;
+  gatewayStatus?: string | null;
+  bound?: boolean;
+  message?: string;
 };
 
 type EduAttemptRecord = EduAnswerPayload & {
@@ -493,33 +494,6 @@ function formatLocalDateTime(value: string) {
   });
 }
 
-async function resolvePublicOrigin() {
-  if (typeof window === 'undefined') return '';
-  const localHosts = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
-  if (!localHosts.has(window.location.hostname)) return window.location.origin;
-
-  try {
-    const response = await fetch('/api/local-gateway/public-origin');
-    const data = await response.json().catch(() => null);
-    const origin = readText(data?.origin);
-    return origin || window.location.origin;
-  } catch {
-    return window.location.origin;
-  }
-}
-
-async function buildParentBindEntryUrl(bindPayload: ParentBindQrResult['bindPayload']) {
-  if (typeof window === 'undefined') return '';
-  const params = new URLSearchParams({
-    studentId: bindPayload.studentId,
-    token: bindPayload.bindToken,
-  });
-  const firstSegment = window.location.pathname.split('/').filter(Boolean)[0];
-  const locale = firstSegment === 'zh' || firstSegment === 'en' ? firstSegment : 'zh';
-  const origin = await resolvePublicOrigin();
-  return `${origin}/${locale}/parent-bind?${params.toString()}`;
-}
-
 function buildParentBindQrHtml(bindQr: ParentBindQrResult) {
   const studentTitle = escapeHtml(bindQr.studentName || '未填写姓名');
   const studentId = escapeHtml(bindQr.studentId);
@@ -527,10 +501,11 @@ function buildParentBindQrHtml(bindQr: ParentBindQrResult) {
     ? `<div class="meta-row"><span>年级</span><strong>${escapeHtml(bindQr.studentGrade)}</strong></div>`
     : '';
   const expiresAt = escapeHtml(bindQr.expiresAt ? formatLocalDateTime(bindQr.expiresAt) : '未返回');
-  const bindMessage = escapeHtml(bindQr.bindMessageText);
-  const bindCode = bindQr.bindCode
-    ? `<div class="meta-row"><span>绑定码</span><strong>${escapeHtml(bindQr.bindCode)}</strong></div>`
-    : '';
+  const profileName = bindQr.profileName || bindQr.hermesProfileId || '等待创建';
+  const statusLabel = escapeHtml(getBindStatusLabel(bindQr.status, bindQr.bound));
+  const helperText = bindQr.bound
+    ? '家长微信已绑定到这个学生档案。'
+    : '请让家长使用微信扫描侧边栏二维码并确认。';
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -610,6 +585,18 @@ function buildParentBindQrHtml(bindQr: ParentBindQrResult) {
       text-align: right;
       overflow-wrap: anywhere;
     }
+    .status {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      background: #ecfeff;
+      color: #0e7490;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 800;
+    }
     .hint {
       margin: 0;
       color: #6b7280;
@@ -622,18 +609,32 @@ function buildParentBindQrHtml(bindQr: ParentBindQrResult) {
   <main class="card">
     <div class="eyebrow">Hermes 家长绑定</div>
     <h1>${studentTitle}</h1>
-    <p class="subtitle">请让家长在 Hermes 微信助手里发送下面这句话。</p>
-    <div class="command">${bindMessage}</div>
+    <p class="subtitle">${escapeHtml(helperText)}</p>
+    <div class="command">微信扫码激活 Hermes Profile</div>
+    <div class="status">${statusLabel}</div>
     <section class="meta">
       <div class="meta-row"><span>学生编号</span><strong>${studentId}</strong></div>
       ${studentGrade}
-      ${bindCode}
+      <div class="meta-row"><span>Profile</span><strong>${escapeHtml(profileName)}</strong></div>
       <div class="meta-row"><span>有效期</span><strong>${expiresAt}</strong></div>
     </section>
-    <p class="hint">Hermes 收到后会自动把当前微信绑定到这个学生档案。</p>
+    <p class="hint">扫码成功后，Hermes 会自动把家长微信身份绑定到这个学生档案。</p>
   </main>
 </body>
 </html>`;
+}
+
+function getBindStatusLabel(status: string, bound?: boolean) {
+  if (bound || status === 'activated' || status === 'active') return '已绑定';
+  if (status === 'scanned') return '已扫码，等待确认';
+  if (status === 'expired' || status === 'activation_expired') return '二维码已过期';
+  if (status === 'failed' || status === 'activation_failed') return '激活失败';
+  if (status === 'demo_ready') return '演示二维码';
+  return '等待扫码';
+}
+
+function isBindPollingStatus(status: string) {
+  return ['qr_ready', 'scanned', 'ready_to_activate', 'demo_ready'].includes(status);
 }
 
 function resolveStudentIdFromMessage(value: unknown, fallback: string) {
@@ -740,6 +741,75 @@ export default function OwnWhiteboard() {
   useEffect(() => {
     if (studentId && !bindStudentId) setBindStudentId(studentId);
   }, [bindStudentId, studentId]);
+
+  useEffect(() => {
+    if (!bindQr?.activationId || !bindQr.studentId || !isBindPollingStatus(bindQr.status)) {
+      return;
+    }
+
+    let stopped = false;
+    let timer: number | null = null;
+
+    const poll = async () => {
+      try {
+        const params = new URLSearchParams({ studentId: bindQr.studentId });
+        const response = await fetch(
+          `/api/learning-assistant/profile-activation/${encodeURIComponent(bindQr.activationId)}?${params.toString()}`,
+          { cache: 'no-store' }
+        );
+        const data = await response.json().catch(() => null);
+
+        if (response.ok && data?.success) {
+          const nextStatus = readText(data.status, bindQr.status);
+          const nextQr: ParentBindQrResult = {
+            ...bindQr,
+            activationId: readText(data.activationId, bindQr.activationId),
+            status: nextStatus,
+            expiresAt: readText(data.expiresAt, bindQr.expiresAt || '') || bindQr.expiresAt,
+            profileName: readText(data.profileName) || bindQr.profileName,
+            hermesProfileId: readText(data.hermesProfileId) || bindQr.hermesProfileId,
+            qrPayload: readText(data.qrPayload) || bindQr.qrPayload,
+            qrImageUrl: readText(data.qrImageUrl) || bindQr.qrImageUrl,
+            weixinUserId: readText(data.weixinUserId) || bindQr.weixinUserId,
+            gatewayStatus: readText(data.gatewayStatus) || bindQr.gatewayStatus,
+            bound: Boolean(data.bound) || bindQr.bound,
+            message: readText(data.message, bindQr.message || ''),
+          };
+
+          setBindQr((current) =>
+            current?.activationId === bindQr.activationId ? nextQr : current
+          );
+
+          if (nextQr.bound || nextStatus === 'activated') {
+            setMessages((current) => [
+              ...current,
+              {
+                role: 'system',
+                text: `${nextQr.studentId} 已绑定到 Hermes Profile：${nextQr.profileName || nextQr.hermesProfileId || '未返回'}`,
+              },
+            ]);
+          }
+
+          if (!stopped && isBindPollingStatus(nextStatus)) {
+            timer = window.setTimeout(poll, 2500);
+          }
+          return;
+        }
+      } catch {
+        // Keep the visible QR and try again while it is still pending.
+      }
+
+      if (!stopped && isBindPollingStatus(bindQr.status)) {
+        timer = window.setTimeout(poll, 3000);
+      }
+    };
+
+    timer = window.setTimeout(poll, 2500);
+    return () => {
+      stopped = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [bindQr]);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -1137,7 +1207,7 @@ export default function OwnWhiteboard() {
     setBindQr(null);
 
     try {
-      const createStudentResponse = await fetch('/api/learning-assistant/create-student', {
+      const activationResponse = await fetch('/api/learning-assistant/profile-activation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1146,63 +1216,36 @@ export default function OwnWhiteboard() {
           grade: bindStudentGrade.trim(),
         }),
       });
-      const createStudentData = await createStudentResponse.json().catch(() => null);
+      const activationData = await activationResponse.json().catch(() => null);
 
-      if (!createStudentResponse.ok || !createStudentData?.success) {
-        const createError = readText(createStudentData?.error, `HTTP ${createStudentResponse.status}`);
-        if (!createError.includes('已被使用')) {
-          throw new Error(createError);
-        }
+      if (!activationResponse.ok || !activationData?.success) {
+        throw new Error(activationData?.error || `HTTP ${activationResponse.status}`);
       }
-
-      const tokenResponse = await fetch('/api/learning-assistant/create-bind-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: targetStudentId }),
-      });
-      const tokenData = await tokenResponse.json().catch(() => null);
-
-      if (!tokenResponse.ok || !tokenData?.success) {
-        throw new Error(tokenData?.error || `HTTP ${tokenResponse.status}`);
-      }
-
-      const bindPayload = isObjectRecord(tokenData.bindPayload)
-        ? {
-            studentId: readText(tokenData.bindPayload.studentId, targetStudentId),
-            bindToken: readText(tokenData.bindPayload.bindToken, readText(tokenData.token)),
-            bindCode: readText(tokenData.bindPayload.bindCode, readText(tokenData.bindCode)) || undefined,
-          }
-        : {
-            studentId: targetStudentId,
-            bindToken: readText(tokenData.token),
-            bindCode: readText(tokenData.bindCode) || undefined,
-          };
-
-      if (!bindPayload.bindToken) {
-        throw new Error('Hermes 未返回 bindToken');
-      }
-
-      const bindPayloadText = JSON.stringify(bindPayload);
-      const bindMessageText =
-        readText(tokenData.bindMessage) ||
-        (bindPayload.bindCode
-          ? `绑定 ${bindPayload.studentId} ${bindPayload.bindCode}`
-          : `绑定码 ${bindPayload.bindToken}`);
-      const bindEntryUrl = await buildParentBindEntryUrl(bindPayload);
 
       const nextQr: ParentBindQrResult = {
-        studentId: bindPayload.studentId,
-        studentName: bindStudentName.trim() || undefined,
-        studentGrade: bindStudentGrade.trim() || undefined,
-        token: bindPayload.bindToken,
-        expiresAt: readText(tokenData.expiresAt),
-        bindPayload,
-        bindPayloadText,
-        bindMessageText,
-        bindEntryUrl,
-        bindUrl: readText(tokenData.bindUrl) || undefined,
-        bindCode: bindPayload.bindCode,
+        studentId: readText(activationData.studentId, targetStudentId),
+        studentName: bindStudentName.trim() || readText(activationData.studentName) || undefined,
+        studentGrade: bindStudentGrade.trim() || readText(activationData.studentGrade) || undefined,
+        assistantId: readText(activationData.assistantId) || undefined,
+        activationId: readText(activationData.activationId),
+        status: readText(activationData.status, 'qr_ready'),
+        expiresAt: readText(activationData.expiresAt) || null,
+        profileName: readText(activationData.profileName) || null,
+        hermesProfileId: readText(activationData.hermesProfileId) || null,
+        qrPayload: readText(activationData.qrPayload) || null,
+        qrImageUrl: readText(activationData.qrImageUrl) || null,
+        weixinUserId: readText(activationData.weixinUserId) || null,
+        gatewayStatus: readText(activationData.gatewayStatus) || null,
+        bound: Boolean(activationData.bound),
+        message: readText(activationData.message),
       };
+
+      if (!nextQr.activationId) {
+        throw new Error('Hermes 未返回 activationId');
+      }
+      if (!nextQr.qrPayload && !nextQr.qrImageUrl && nextQr.status !== 'activated') {
+        throw new Error('Hermes Bridge 未返回可扫码二维码');
+      }
 
       setBindQr(nextQr);
       createShape('preview_html', {
@@ -1214,14 +1257,12 @@ export default function OwnWhiteboard() {
         select: false,
       });
       setSelectedId(null);
-      setBindPanelOpen(false);
-      setAiOpen(false);
       setMessages((current) => [
         ...current,
-        { role: 'system', text: `已在白板上生成 ${targetStudentId} 的家长绑定口令。` },
+        { role: 'system', text: `已生成 ${targetStudentId} 的 Hermes 微信绑定二维码，请让家长扫码确认。` },
       ]);
     } catch (error) {
-      setBindError(error instanceof Error ? error.message : '生成绑定口令失败');
+      setBindError(error instanceof Error ? error.message : '生成 Hermes 绑定二维码失败');
     } finally {
       setBindLoading(false);
     }
@@ -1535,10 +1576,10 @@ export default function OwnWhiteboard() {
                 ].join(' ')}
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={() => setBindPanelOpen((open) => !open)}
-                title="家长绑定口令"
+                title="Hermes 微信绑定"
               >
                 <QrCode size={13} />
-                绑定码
+                绑定
               </button>
               <button
                 type="button"
@@ -1589,7 +1630,7 @@ export default function OwnWhiteboard() {
             <div className="border-b border-black/10 p-3">
               <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#111827]">
                 <QrCode size={15} />
-                家长绑定口令
+                Hermes 微信绑定
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -1619,7 +1660,7 @@ export default function OwnWhiteboard() {
                 className="mt-2 inline-flex h-9 w-full items-center justify-center gap-2 rounded-md bg-[#111827] px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <QrCode size={15} />
-                {bindLoading ? '生成中...' : '生成家长绑定口令'}
+                {bindLoading ? '生成中...' : '生成 Hermes 微信二维码'}
               </button>
               {bindError && (
                 <div className="mt-2 rounded-md bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">
@@ -1629,24 +1670,42 @@ export default function OwnWhiteboard() {
               {bindQr && (
                 <div className="mt-3 rounded-md border border-black/10 bg-white p-3">
                   <div className="text-xs leading-5 text-black/65">
-                    <div className="font-semibold text-[#111827]">
-                      {bindQr.studentName || '未填写姓名'} · {bindQr.studentId}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-semibold text-[#111827]">
+                        {bindQr.studentName || '未填写姓名'} · {bindQr.studentId}
+                      </div>
+                      <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold text-cyan-700">
+                        {getBindStatusLabel(bindQr.status, bindQr.bound)}
+                      </span>
                     </div>
                     {bindQr.studentGrade && <div>年级：{bindQr.studentGrade}</div>}
+                    <div>Profile：{bindQr.profileName || bindQr.hermesProfileId || '等待创建'}</div>
                     <div>
                       有效期：
                       {bindQr.expiresAt ? formatLocalDateTime(bindQr.expiresAt) : '未返回'}
                     </div>
-                    <div className="mt-1 text-black/55">
-                      让家长在 Hermes 微信助手里发送下面这句话。
+                  </div>
+                  {bindQr.qrImageUrl ? (
+                    <div className="mt-3 flex justify-center rounded-md border border-black/10 bg-white p-3">
+                      <img
+                        src={bindQr.qrImageUrl}
+                        alt="Hermes 微信绑定二维码"
+                        className="size-40"
+                      />
                     </div>
+                  ) : bindQr.qrPayload ? (
+                    <div className="mt-3 flex justify-center rounded-md border border-black/10 bg-white p-3">
+                      <QrSvg value={bindQr.qrPayload} size={168} />
+                    </div>
+                  ) : null}
+                  <div className="mt-2 text-xs leading-5 text-black/55">
+                    {bindQr.bound
+                      ? '绑定完成。家长之后在同一条微信聊天里提问即可读取这个学生档案。'
+                      : bindQr.message || '请让家长用微信扫码并确认，页面会自动更新状态。'}
                   </div>
-                  <div className="mt-2 rounded-md bg-[#eff6ff] px-3 py-2 text-sm font-semibold leading-6 text-[#0f172a]">
-                    {bindQr.bindMessageText}
-                  </div>
-                  {bindQr.bindEntryUrl && (
-                    <div className="mt-1 text-[11px] leading-4 text-black/45">
-                      备用网页入口：{bindQr.bindEntryUrl}
+                  {bindQr.weixinUserId && (
+                    <div className="mt-1 truncate text-[11px] leading-4 text-black/40">
+                      微信身份：{bindQr.weixinUserId}
                     </div>
                   )}
                 </div>
