@@ -123,6 +123,7 @@ function getBridgeHeaders(): Record<string, string> {
 
   return {
     Authorization: `Bearer ${token}`,
+    'X-Hermes-Bridge-Token': token,
   };
 }
 
