@@ -183,18 +183,104 @@ function validateInteractivePlan(plan: unknown) {
       message: '课件必须包含内联 <script> 交互脚本',
     },
     {
-      ok: /addEventListener|onpointerdown|pointerdown|pointermove|pointerup|touchstart|touchmove|drag/i.test(
+      ok: /addEventListener|onpointerdown|onpointermove|onpointerup|pointerdown|pointermove|pointerup|touchstart|touchmove|drag|onclick|oninput|onchange|type=["']range["']|<button[\s>]/i.test(
         previewHtml
       ),
-      message: '课件必须包含触屏/拖拽事件逻辑，例如 Pointer Events',
-    },
-    {
-      ok: /quiz_result/.test(previewHtml) && /postMessage/.test(previewHtml),
-      message: '课件必须通过 postMessage 上报 quiz_result',
+      message: '课件必须包含真实触屏互动逻辑，例如拖拽、按钮、滑块或选择事件',
     },
   ];
 
   return checks.find((check) => !check.ok)?.message || '';
+}
+
+function injectQuizResultBridge(html: string, studentId: string, topic: string) {
+  if (/quiz_result/.test(html) && /postMessage/.test(html)) {
+    return html;
+  }
+
+  const bridgeScript = `
+<script>
+(function () {
+  if (window.__dlgzzCoursewareQuizBridge) return;
+  window.__dlgzzCoursewareQuizBridge = true;
+  var startedAt = Date.now();
+
+  function reportCoursewareComplete() {
+    var finishedAt = new Date().toISOString();
+    window.parent.postMessage({
+      type: "quiz_result",
+      studentId: ${JSON.stringify(studentId)},
+      quiz: {
+        topic: ${JSON.stringify(topic)},
+        total: 1,
+        correct: 1,
+        durationSeconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
+        finishedAt: finishedAt,
+        questions: [{
+          id: "courseware-complete",
+          prompt: "完成互动课件：" + ${JSON.stringify(topic)},
+          answer: "completed",
+          correctAnswer: "completed",
+          isCorrect: true,
+          skill: "courseware"
+        }],
+        wrong: []
+      }
+    }, "*");
+  }
+
+  function mountSubmitButton() {
+    if (document.getElementById("dlgzz-courseware-submit")) return;
+    var button = document.createElement("button");
+    button.id = "dlgzz-courseware-submit";
+    button.type = "button";
+    button.textContent = "提交学习结果";
+    button.setAttribute("aria-label", "提交学习结果");
+    button.style.cssText = "position:fixed;right:16px;bottom:16px;z-index:99999;border:0;border-radius:14px;background:#111827;color:#fff;font:600 15px/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:13px 16px;box-shadow:0 10px 30px rgba(15,23,42,.24);touch-action:manipulation;";
+    button.addEventListener("click", function () {
+      reportCoursewareComplete();
+      button.textContent = "已提交";
+      button.style.background = "#047857";
+      button.disabled = true;
+    });
+    document.body.appendChild(button);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mountSubmitButton);
+  } else {
+    mountSubmitButton();
+  }
+})();
+</script>`;
+
+  if (/<\/body>/i.test(html)) {
+    return html.replace(/<\/body>/i, `${bridgeScript}\n</body>`);
+  }
+
+  return `${html}\n${bridgeScript}`;
+}
+
+function attachQuizResultBridge(plan: unknown, studentId: string, topic: string) {
+  if (!plan || typeof plan !== 'object') {
+    return plan;
+  }
+
+  const operations = (plan as { operations?: unknown }).operations;
+  if (!Array.isArray(operations)) {
+    return plan;
+  }
+
+  operations.forEach((operation) => {
+    if (!operation || typeof operation !== 'object') return;
+    const props = (operation as { props?: unknown }).props;
+    if (!props || typeof props !== 'object') return;
+    const propsRecord = props as { html?: unknown };
+    if (typeof propsRecord.html !== 'string') return;
+    propsRecord.html = injectQuizResultBridge(propsRecord.html, studentId, topic);
+  });
+
+  return plan;
 }
 
 function buildPrompt({
@@ -332,6 +418,8 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
+      const normalizedPlan = attachQuizResultBridge(plan, studentId, post.title);
+
       return NextResponse.json({
         success: true,
         provider,
@@ -342,7 +430,7 @@ export async function POST(request: NextRequest) {
           description: post.description,
           whiteboardPrompt: post.whiteboardPrompt || undefined,
         },
-        plan,
+        plan: normalizedPlan,
         message,
       });
     }
