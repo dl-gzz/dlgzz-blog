@@ -576,56 +576,62 @@ export async function POST(request: NextRequest) {
     let lastProvider = '';
     let lastValidationError = '';
 
-    for (let attempt = 0; attempt < 1; attempt += 1) {
-      const correction = lastValidationError
-        ? `\n\n上一次生成不合格：${lastValidationError}。请重新输出 JSON，props.html 必须是完整、可触屏互动、包含内联脚本和 quiz_result 上报的 HTML。`
-        : '';
-      const { message, provider } = await chatWithResolvedServerProvider({
-        preferredProvider: process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini',
-        model,
-        responseMimeType: 'application/json',
-        responseSchema: COURSEWARE_ACTION_SCHEMA,
-        messages: [
-          {
-            role: 'system',
-            content:
-              '你只输出可解析 JSON。你是触屏教育课件工程师，必须生成可点击、可拖拽、可提交成绩的自包含 HTML/SVG/JS 互动课件。静态页面是不合格答案。',
+    try {
+      for (let attempt = 0; attempt < 1; attempt += 1) {
+        const correction = lastValidationError
+          ? `\n\n上一次生成不合格：${lastValidationError}。请重新输出 JSON，props.html 必须是完整、可触屏互动、包含内联脚本和 quiz_result 上报的 HTML。`
+          : '';
+        const { message, provider } = await chatWithResolvedServerProvider({
+          preferredProvider: process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini',
+          model,
+          responseMimeType: 'application/json',
+          responseSchema: COURSEWARE_ACTION_SCHEMA,
+          messages: [
+            {
+              role: 'system',
+              content:
+                '你只输出可解析 JSON。你是触屏教育课件工程师，必须生成可点击、可拖拽、可提交成绩的自包含 HTML/SVG/JS 互动课件。静态页面是不合格答案。',
+            },
+            { role: 'user', content: `${prompt}${correction}` },
+          ],
+        });
+
+        lastMessage = message;
+        lastProvider = provider;
+
+        const extractedPlan = extractJson(message);
+        const plan = Array.isArray(extractedPlan)
+          ? { operations: extractedPlan }
+          : extractedPlan && typeof extractedPlan === 'object'
+            ? extractedPlan
+            : planFromFallbackMessage(message);
+
+        const validationError = validateInteractivePlan(plan);
+        if (validationError) {
+          lastValidationError = validationError;
+          continue;
+        }
+
+        const normalizedPlan = attachQuizResultBridge(plan, studentId, post.title);
+
+        return NextResponse.json({
+          success: true,
+          provider,
+          model,
+          post: {
+            slug: post.slug,
+            title: post.title,
+            description: post.description,
+            whiteboardPrompt: post.whiteboardPrompt || undefined,
           },
-          { role: 'user', content: `${prompt}${correction}` },
-        ],
-      });
-
-      lastMessage = message;
-      lastProvider = provider;
-
-      const extractedPlan = extractJson(message);
-      const plan = Array.isArray(extractedPlan)
-        ? { operations: extractedPlan }
-        : extractedPlan && typeof extractedPlan === 'object'
-          ? extractedPlan
-          : planFromFallbackMessage(message);
-
-      const validationError = validateInteractivePlan(plan);
-      if (validationError) {
-        lastValidationError = validationError;
-        continue;
+          plan: normalizedPlan,
+          message,
+        });
       }
-
-      const normalizedPlan = attachQuizResultBridge(plan, studentId, post.title);
-
-      return NextResponse.json({
-        success: true,
-        provider,
-        model,
-        post: {
-          slug: post.slug,
-          title: post.title,
-          description: post.description,
-          whiteboardPrompt: post.whiteboardPrompt || undefined,
-        },
-        plan: normalizedPlan,
-        message,
-      });
+    } catch (generationError) {
+      lastValidationError =
+        generationError instanceof Error ? generationError.message : 'AI 生成接口异常';
+      lastMessage = lastValidationError;
     }
 
     const fallbackPlan = buildFallbackPlan({
