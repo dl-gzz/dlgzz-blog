@@ -16,6 +16,15 @@ export async function GET(request: NextRequest) {
       );
 
     const posts = publishedPosts.map((post) => {
+      const whiteboardPrompt =
+        typeof (post.data as any).whiteboard_prompt === 'string'
+          ? (post.data as any).whiteboard_prompt.trim()
+          : '';
+      const whiteboardCategory =
+        typeof (post.data as any).whiteboard_category === 'string'
+          ? (post.data as any).whiteboard_category.trim()
+          : '';
+
       return {
         title: post.data.title,
         description: post.data.description || '',
@@ -23,6 +32,9 @@ export async function GET(request: NextRequest) {
         date: post.data.date,
         url: post.url,
         slugs: post.slugs,
+        whiteboardPrompt: whiteboardPrompt || undefined,
+        hasWhiteboardPrompt: Boolean(whiteboardPrompt),
+        whiteboardCategory: whiteboardCategory || undefined,
       };
     });
 

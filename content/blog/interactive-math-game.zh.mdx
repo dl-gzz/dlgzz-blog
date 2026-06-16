@@ -7,6 +7,8 @@ published: true
 author: admin
 premium: false
 featured: false
+whiteboard_category: education
+whiteboard_prompt: "基于这篇博客生成一个小学生十以内加减法互动课件。要求：使用自包含 HTML/CSS/JS，可用 SVG 或 Canvas 做苹果、星星、数轴等可视化；包含 5 道题，支持学生输入答案、即时反馈、鼓励动画和最终得分；触屏友好，按钮要大，拖拽或点按控件使用 Pointer Events，并设置 touch-action；最后必须通过 window.parent.postMessage 上报 quiz_result，studentId 使用当前白板提供的学生编号，quiz.topic 使用 10以内加减法，questions 包含所有题目，wrong 只包含错题。"
 ---
 
 import { MathGame } from '@/components/blog/math-game'

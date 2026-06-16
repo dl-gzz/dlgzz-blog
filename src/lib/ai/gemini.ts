@@ -99,12 +99,13 @@ export class GeminiAI {
       };
 
       if (this.responseMimeType) {
-        generationConfig.responseFormat = {
-          text: {
-            mimeType: this.responseMimeType,
-            ...(this.responseSchema ? { schema: this.responseSchema } : {}),
-          },
-        };
+        generationConfig.responseMimeType = this.responseMimeType;
+        generationConfig.response_mime_type = this.responseMimeType;
+
+        if (this.responseSchema) {
+          generationConfig.responseSchema = this.responseSchema;
+          generationConfig.response_schema = this.responseSchema;
+        }
       }
 
       return {
