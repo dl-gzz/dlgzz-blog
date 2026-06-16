@@ -67,23 +67,8 @@ const WHITEBOARD_ACTION_SCHEMA = {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: '请先登录后再使用白板 AI' },
-        { status: 401 }
-      );
-    }
-
-    const hasPremiumAccess = await hasAccessToPremiumContent();
-    if (!hasPremiumAccess) {
-      return NextResponse.json(
-        { success: false, error: '白板 AI 功能仅限付费用户使用' },
-        { status: 403 }
-      );
-    }
-
     const { messages, purpose } = await request.json();
+    const isCoursewareGeneration = purpose === 'courseware';
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -92,7 +77,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isCoursewareGeneration = purpose === 'courseware';
+    const requireCoursewareAuth = process.env.WHITEBOARD_COURSEWARE_REQUIRE_AUTH === 'true';
+    if (!isCoursewareGeneration || requireCoursewareAuth) {
+      const session = await getSession();
+      if (!session?.user) {
+        return NextResponse.json(
+          { success: false, error: '请先登录后再使用白板 AI' },
+          { status: 401 }
+        );
+      }
+
+      const hasPremiumAccess = await hasAccessToPremiumContent();
+      if (!hasPremiumAccess) {
+        return NextResponse.json(
+          { success: false, error: '白板 AI 功能仅限付费用户使用' },
+          { status: 403 }
+        );
+      }
+    }
+
     const preferredProvider = isCoursewareGeneration
       ? process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini'
       : process.env.WHITEBOARD_AI_PROVIDER;

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import QrSvg from 'react-qr-code';
 
-type ShapeType = 'preview_html' | 'ai_result';
+type ShapeType = 'preview_html' | 'ai_result' | 'math_quiz';
 
 type BoardShape = {
   id: string;
@@ -48,6 +48,7 @@ type LessonPromptPost = {
   slugs?: string[];
   whiteboardPrompt?: string;
   hasWhiteboardPrompt?: boolean;
+  whiteboardCategory?: string;
 };
 
 type EduAnswerPayload = {
@@ -86,6 +87,14 @@ type DueWrongbookItem = {
   studentAnswer?: string | null;
   correctAnswer?: string | null;
 };
+
+const TEN_WITHIN_MATH_QUESTIONS = [
+  { question: '1 + 9', a: 1, op: '+', b: 9, answer: 10 },
+  { question: '7 - 3', a: 7, op: '-', b: 3, answer: 4 },
+  { question: '4 + 5', a: 4, op: '+', b: 5, answer: 9 },
+  { question: '10 - 6', a: 10, op: '-', b: 6, answer: 4 },
+  { question: '2 + 6', a: 2, op: '+', b: 6, answer: 8 },
+];
 
 type ParentBindQrResult = {
   studentId: string;
@@ -217,6 +226,7 @@ RULES:
 💡 HTML REQUIREMENTS:
 - Self-contained: include all CSS and JS inline
 - Interactive: use buttons, onclick handlers, sliders, animations, transitions when useful
+- Touch friendly: use large tap targets, Pointer Events when dragging is needed, and set touch-action: manipulation or none for custom controls
 - Beautiful and readable: modern UI, professional spacing, 14px+ fonts, 1.5+ line-height
 - Do not load external scripts or styles
 - Educational quizzes MUST report the final result to the parent whiteboard using this exact contract:
@@ -344,19 +354,1007 @@ function buildFallbackHtml(userText: string, note: string) {
 </html>`;
 }
 
+function buildTenWithinMathCoursewareHtml(studentId = '') {
+  const serializedStudentId = JSON.stringify(studentId);
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>十以内加减法互动课件</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .app {
+      min-height: 100vh;
+      padding: 18px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid #d9e2f2;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 10px 22px rgba(34, 54, 92, .08);
+    }
+    h1 { margin: 0; font-size: 20px; line-height: 1.25; }
+    .score { font-weight: 800; color: #2563eb; white-space: nowrap; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) 210px;
+      gap: 14px;
+      min-height: 0;
+    }
+    .stage, .side {
+      border: 1px solid #d9e2f2;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 10px 22px rgba(34, 54, 92, .08);
+    }
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 18px;
+      min-height: 320px;
+    }
+    .question {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: 0;
+      color: #111827;
+      line-height: 1;
+    }
+    .visual {
+      width: min(100%, 440px);
+      min-height: 100px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+    }
+    .dot {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: #fee2e2;
+      border: 2px solid #fb7185;
+    }
+    .dot.sub {
+      background: #e0f2fe;
+      border-color: #38bdf8;
+      opacity: .45;
+    }
+    .answer-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+    }
+    input {
+      width: 110px;
+      height: 54px;
+      border: 2px solid #bfdbfe;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: 800;
+      outline: none;
+      background: #fff;
+    }
+    input:focus { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, .12); }
+    button {
+      min-height: 48px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 18px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .primary { background: #2563eb; color: white; }
+    .secondary { background: #e5e7eb; color: #111827; }
+    .feedback {
+      min-height: 30px;
+      font-size: 18px;
+      font-weight: 800;
+      text-align: center;
+    }
+    .feedback.ok { color: #047857; }
+    .feedback.no { color: #be123c; }
+    .side {
+      padding: 14px;
+      overflow: auto;
+    }
+    .side h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: #475569;
+    }
+    .item {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid #eef2f7;
+      font-size: 14px;
+    }
+    .item b { color: #111827; }
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid #d9e2f2;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .done {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .55);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .done-card {
+      width: min(420px, 100%);
+      border-radius: 8px;
+      background: white;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 24px 70px rgba(15,23,42,.25);
+    }
+    .done-card h2 { margin: 0 0 8px; font-size: 24px; }
+    .done-card p { margin: 8px 0; line-height: 1.6; }
+    @media (max-width: 640px) {
+      .app { padding: 10px; }
+      main { grid-template-columns: 1fr; }
+      .side { max-height: 150px; }
+      .question { font-size: 34px; }
+      .answer-row { flex-wrap: wrap; }
+      footer { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>十以内加减法乐园</h1>
+      <div class="score" id="score">第 1 / 5 题</div>
+    </header>
+    <main>
+      <section class="stage" aria-live="polite">
+        <div class="question" id="question">1 + 1 = ?</div>
+        <div class="visual" id="visual"></div>
+        <div class="answer-row">
+          <input id="answer" type="number" inputmode="numeric" min="0" max="10" aria-label="输入答案" />
+          <button class="primary" id="submit" type="button">提交答案</button>
+        </div>
+        <div class="feedback" id="feedback">看图想一想，再输入答案。</div>
+      </section>
+      <aside class="side">
+        <h2>答题记录</h2>
+        <div id="history"></div>
+      </aside>
+    </main>
+    <footer>
+      <button class="secondary" id="restart" type="button">重新开始</button>
+      <button class="primary" id="finish" type="button">完成并保存成绩</button>
+    </footer>
+  </div>
+  <div class="done" id="done">
+    <div class="done-card">
+      <h2 id="doneTitle">完成啦</h2>
+      <p id="doneText"></p>
+      <button class="primary" id="closeDone" type="button">继续查看</button>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var studentId = ${serializedStudentId};
+      var startedAt = Date.now();
+      var questions = [
+        { question: '1 + 9', a: 1, op: '+', b: 9, answer: 10 },
+        { question: '7 - 3', a: 7, op: '-', b: 3, answer: 4 },
+        { question: '4 + 5', a: 4, op: '+', b: 5, answer: 9 },
+        { question: '10 - 6', a: 10, op: '-', b: 6, answer: 4 },
+        { question: '2 + 6', a: 2, op: '+', b: 6, answer: 8 }
+      ];
+      var index = 0;
+      var results = [];
+
+      var questionEl = document.getElementById('question');
+      var visualEl = document.getElementById('visual');
+      var answerEl = document.getElementById('answer');
+      var submitEl = document.getElementById('submit');
+      var feedbackEl = document.getElementById('feedback');
+      var scoreEl = document.getElementById('score');
+      var historyEl = document.getElementById('history');
+      var finishEl = document.getElementById('finish');
+      var restartEl = document.getElementById('restart');
+      var doneEl = document.getElementById('done');
+      var doneTitleEl = document.getElementById('doneTitle');
+      var doneTextEl = document.getElementById('doneText');
+      var closeDoneEl = document.getElementById('closeDone');
+
+      function renderVisual(q) {
+        var count = q.op === '+' ? q.a + q.b : q.a;
+        var html = '';
+        for (var i = 0; i < count; i += 1) {
+          var removed = q.op === '-' && i >= q.answer;
+          html += '<div class="dot' + (removed ? ' sub' : '') + '">' + (removed ? '☆' : '🍎') + '</div>';
+        }
+        visualEl.innerHTML = html;
+      }
+
+      function render() {
+        var q = questions[index];
+        questionEl.textContent = q.question + ' = ?';
+        scoreEl.textContent = '第 ' + (index + 1) + ' / ' + questions.length + ' 题';
+        feedbackEl.className = 'feedback';
+        feedbackEl.textContent = '看图想一想，再输入答案。';
+        answerEl.value = '';
+        answerEl.disabled = false;
+        submitEl.disabled = false;
+        renderVisual(q);
+        setTimeout(function () { answerEl.focus(); }, 40);
+      }
+
+      function renderHistory() {
+        historyEl.innerHTML = results.length
+          ? results.map(function (item, i) {
+              return '<div class="item"><span>' + (i + 1) + '. <b>' + item.question + '</b></span><span>' + (item.isCorrect ? '✅' : '❌ ' + item.correctAnswer) + '</span></div>';
+            }).join('')
+          : '<div class="item"><span>还没有作答</span><span>—</span></div>';
+      }
+
+      function submitAnswer() {
+        if (index >= questions.length) return;
+        var raw = answerEl.value.trim();
+        if (!raw) {
+          feedbackEl.className = 'feedback no';
+          feedbackEl.textContent = '先输入一个答案哦。';
+          return;
+        }
+        var q = questions[index];
+        var isCorrect = Number(raw) === q.answer;
+        results.push({
+          question: q.question,
+          studentAnswer: raw,
+          correctAnswer: String(q.answer),
+          isCorrect: isCorrect
+        });
+        feedbackEl.className = 'feedback ' + (isCorrect ? 'ok' : 'no');
+        feedbackEl.textContent = isCorrect ? '答对了，很棒！' : '这题正确答案是 ' + q.answer + '，我们继续练。';
+        renderHistory();
+        index += 1;
+        if (index >= questions.length) {
+          answerEl.disabled = true;
+          submitEl.disabled = true;
+          setTimeout(finishQuiz, 450);
+          return;
+        }
+        setTimeout(render, 650);
+      }
+
+      function finishQuiz() {
+        var correct = results.filter(function (item) { return item.isCorrect; }).length;
+        var wrong = results.filter(function (item) { return !item.isCorrect; }).map(function (item) {
+          return {
+            question: item.question,
+            studentAnswer: item.studentAnswer,
+            correctAnswer: item.correctAnswer
+          };
+        });
+        var allQuestions = results.map(function (item) {
+          return {
+            question: item.question,
+            studentAnswer: item.studentAnswer,
+            correctAnswer: item.correctAnswer
+          };
+        });
+        var payload = {
+          type: 'quiz_result',
+          studentId: studentId,
+          quiz: {
+            topic: '10以内加减法',
+            total: questions.length,
+            correct: correct,
+            questions: allQuestions,
+            wrong: wrong,
+            durationSeconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
+            finishedAt: new Date().toISOString()
+          }
+        };
+        window.parent.postMessage(payload, '*');
+        doneTitleEl.textContent = '完成啦：' + correct + ' / ' + questions.length;
+        doneTextEl.textContent = wrong.length ? '有 ' + wrong.length + ' 道题需要复习，成绩已经上报到学习档案。' : '全部答对，成绩已经上报到学习档案。';
+        doneEl.style.display = 'flex';
+      }
+
+      function restart() {
+        index = 0;
+        results = [];
+        startedAt = Date.now();
+        renderHistory();
+        doneEl.style.display = 'none';
+        render();
+      }
+
+      submitEl.addEventListener('click', submitAnswer);
+      finishEl.addEventListener('click', finishQuiz);
+      restartEl.addEventListener('click', restart);
+      closeDoneEl.addEventListener('click', function () { doneEl.style.display = 'none'; });
+      answerEl.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') submitAnswer();
+      });
+      renderHistory();
+      render();
+    })();
+  </script>
+</body>
+</html>`;
+}
+
+function buildCircleAreaCoursewareHtml(studentId = '') {
+  const serializedStudentId = JSON.stringify(studentId);
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>圆面积推导触屏课件</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: #f4f7fb;
+      color: #152033;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+      padding: 16px;
+    }
+    header, .panel, footer {
+      border: 1px solid #d9e2ef;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 14px 30px rgba(25, 42, 70, .08);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+    }
+    h1 { margin: 0; font-size: 20px; line-height: 1.25; }
+    .badge {
+      border-radius: 999px;
+      background: #eef6ff;
+      color: #2563eb;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    main {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(300px, 1fr) 260px;
+      gap: 12px;
+    }
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid #e6edf6;
+      overflow-x: auto;
+    }
+    button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-weight: 850;
+      font-size: 14px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .tab { background: #eef2f7; color: #334155; white-space: nowrap; }
+    .tab.active { background: #1d4ed8; color: #fff; }
+    .canvas-wrap {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      background: linear-gradient(180deg, #fbfdff, #f1f5f9);
+    }
+    svg {
+      width: min(100%, 620px);
+      height: min(100%, 420px);
+      min-height: 300px;
+      touch-action: none;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+    }
+    .radius-line { stroke: #0f766e; stroke-width: 4; stroke-linecap: round; }
+    .handle { fill: #14b8a6; stroke: white; stroke-width: 4; cursor: grab; }
+    .handle:active { cursor: grabbing; }
+    .label { font-size: 15px; font-weight: 850; fill: #0f172a; }
+    .hint {
+      font-size: 12px;
+      fill: #64748b;
+    }
+    aside {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+    }
+    .control {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+    .control h2 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+    .control p {
+      margin: 0;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #2563eb;
+    }
+    .metric {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #475569;
+    }
+    .formula {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .option {
+      width: 100%;
+      background: #f1f5f9;
+      color: #0f172a;
+      text-align: left;
+    }
+    .option.selected {
+      background: #dcfce7;
+      color: #166534;
+      outline: 2px solid #22c55e;
+    }
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+    }
+    .primary { background: #2563eb; color: white; }
+    .secondary { background: #e2e8f0; color: #0f172a; }
+    .status { color: #475569; font-size: 13px; line-height: 1.5; }
+    @media (max-width: 760px) {
+      .app { padding: 10px; }
+      main { grid-template-columns: 1fr; }
+      aside { max-height: 280px; overflow: auto; }
+      h1 { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>圆面积推导：把圆拼成长方形</h1>
+      <div class="badge">SVG + 触屏拖动</div>
+    </header>
+    <main>
+      <section class="panel stage">
+        <div class="tabs">
+          <button class="tab active" data-mode="circle">1. 看圆</button>
+          <button class="tab" data-mode="cut">2. 切扇形</button>
+          <button class="tab" data-mode="rect">3. 拼长方形</button>
+        </div>
+        <div class="canvas-wrap">
+          <svg id="scene" viewBox="0 0 640 420" aria-label="圆面积推导互动图"></svg>
+        </div>
+      </section>
+      <aside class="panel">
+        <div class="control">
+          <h2>切分数量</h2>
+          <input id="pieces" type="range" min="8" max="32" step="4" value="16" />
+          <div class="metric"><span>扇形份数</span><strong id="piecesText">16 份</strong></div>
+          <p>份数越多，拼出来的图形越接近长方形。</p>
+        </div>
+        <div class="control">
+          <h2>拖动半径</h2>
+          <p>直接拖动画面里的绿色圆点，改变半径 r，观察面积如何变化。</p>
+          <div class="metric"><span>半径 r</span><strong id="radiusText">82</strong></div>
+        </div>
+        <div class="control">
+          <h2>公式检查</h2>
+          <p>圆切开重排后，长方形的长约为 πr，宽为 r，所以面积是？</p>
+          <div class="formula">
+            <button class="option" data-answer="2πr">2πr</button>
+            <button class="option" data-answer="πr²">πr²</button>
+            <button class="option" data-answer="πd">πd</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+    <footer>
+      <button class="secondary" id="reset" type="button">重置</button>
+      <div class="status" id="status">从“看圆”开始，拖动半径，再切分并拼成长方形。</div>
+      <button class="primary" id="finish" type="button">完成并保存</button>
+    </footer>
+  </div>
+  <script>
+    (function () {
+      var studentId = ${serializedStudentId};
+      var scene = document.getElementById('scene');
+      var piecesInput = document.getElementById('pieces');
+      var piecesText = document.getElementById('piecesText');
+      var radiusText = document.getElementById('radiusText');
+      var statusEl = document.getElementById('status');
+      var mode = 'circle';
+      var pieces = 16;
+      var radius = 82;
+      var dragging = false;
+      var selectedAnswer = '';
+      var startedAt = Date.now();
+      var reported = false;
+
+      function polar(cx, cy, r, angle) {
+        var rad = (angle - 90) * Math.PI / 180;
+        return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+      }
+
+      function sectorPath(cx, cy, r, startAngle, endAngle) {
+        var start = polar(cx, cy, r, endAngle);
+        var end = polar(cx, cy, r, startAngle);
+        var large = endAngle - startAngle <= 180 ? '0' : '1';
+        return ['M', cx, cy, 'L', start.x, start.y, 'A', r, r, 0, large, 0, end.x, end.y, 'Z'].join(' ');
+      }
+
+      function escapeText(value) {
+        return String(value).replace(/[&<>"']/g, function (char) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char];
+        });
+      }
+
+      function renderCircle() {
+        var cx = 240;
+        var cy = 210;
+        var handleX = cx + radius;
+        return [
+          '<circle cx="' + cx + '" cy="' + cy + '" r="' + radius + '" fill="#dbeafe" stroke="#2563eb" stroke-width="4" />',
+          '<line class="radius-line" x1="' + cx + '" y1="' + cy + '" x2="' + handleX + '" y2="' + cy + '" />',
+          '<circle id="radiusHandle" class="handle" cx="' + handleX + '" cy="' + cy + '" r="13" />',
+          '<text class="label" x="' + (cx + radius / 2 - 8) + '" y="' + (cy - 12) + '">r</text>',
+          '<text class="hint" x="36" y="54">圆的面积会随着半径变化。拖动绿色点试一试。</text>',
+          '<text class="label" x="420" y="205">面积 = ?</text>'
+        ].join('');
+      }
+
+      function renderCut() {
+        var cx = 240;
+        var cy = 210;
+        var html = '';
+        for (var i = 0; i < pieces; i += 1) {
+          var start = i * 360 / pieces;
+          var end = (i + 1) * 360 / pieces;
+          var color = i % 2 === 0 ? '#bfdbfe' : '#fecdd3';
+          html += '<path d="' + sectorPath(cx, cy, radius, start, end) + '" fill="' + color + '" stroke="#475569" stroke-width="1.2" />';
+        }
+        html += '<line class="radius-line" x1="' + cx + '" y1="' + cy + '" x2="' + (cx + radius) + '" y2="' + cy + '" />';
+        html += '<circle id="radiusHandle" class="handle" cx="' + (cx + radius) + '" cy="' + cy + '" r="13" />';
+        html += '<text class="hint" x="36" y="54">' + pieces + ' 份扇形。份数越多，边缘越接近直线。</text>';
+        return html;
+      }
+
+      function renderRect() {
+        var startX = 75;
+        var baseY = 235;
+        var width = Math.min(430, Math.PI * radius * 1.45);
+        var height = Math.max(52, radius * .9);
+        var pieceWidth = width / pieces;
+        var html = '<text class="hint" x="36" y="54">把扇形一正一反拼起来，越来越像长方形。</text>';
+        for (var i = 0; i < pieces; i += 1) {
+          var x = startX + i * pieceWidth;
+          var top = i % 2 === 0 ? baseY - height : baseY - height + 14;
+          var color = i % 2 === 0 ? '#bfdbfe' : '#fecdd3';
+          html += '<path d="M ' + x + ' ' + top + ' L ' + (x + pieceWidth) + ' ' + (top + 8) + ' L ' + (x + pieceWidth) + ' ' + (baseY + 8) + ' L ' + x + ' ' + baseY + ' Z" fill="' + color + '" stroke="#475569" stroke-width="1" />';
+        }
+        html += '<line x1="' + startX + '" y1="' + (baseY + 32) + '" x2="' + (startX + width) + '" y2="' + (baseY + 32) + '" stroke="#0f766e" stroke-width="4" stroke-linecap="round" />';
+        html += '<text class="label" x="' + (startX + width / 2 - 30) + '" y="' + (baseY + 62) + '">约 πr</text>';
+        html += '<line x1="' + (startX + width + 25) + '" y1="' + (baseY - height) + '" x2="' + (startX + width + 25) + '" y2="' + baseY + '" stroke="#dc2626" stroke-width="4" stroke-linecap="round" />';
+        html += '<text class="label" x="' + (startX + width + 36) + '" y="' + (baseY - height / 2 + 5) + '">r</text>';
+        html += '<text class="label" x="78" y="92">长方形面积 ≈ πr × r = πr²</text>';
+        return html;
+      }
+
+      function render() {
+        piecesText.textContent = pieces + ' 份';
+        radiusText.textContent = String(radius);
+        scene.innerHTML = mode === 'circle' ? renderCircle() : mode === 'cut' ? renderCut() : renderRect();
+      }
+
+      function setMode(nextMode) {
+        mode = nextMode;
+        Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (button) {
+          button.classList.toggle('active', button.getAttribute('data-mode') === mode);
+        });
+        statusEl.textContent = mode === 'circle'
+          ? '观察半径 r：拖动绿色点，圆会变大或变小。'
+          : mode === 'cut'
+            ? '圆被切成许多扇形，份数越多越接近推导过程。'
+            : '扇形重新排列后，长约 πr，宽约 r。';
+        render();
+      }
+
+      function pointerToRadius(event) {
+        var rect = scene.getBoundingClientRect();
+        var x = (event.clientX - rect.left) / rect.width * 640;
+        radius = Math.round(Math.max(50, Math.min(115, x - 240)));
+        render();
+      }
+
+      scene.addEventListener('pointerdown', function (event) {
+        if (event.target && event.target.id === 'radiusHandle') {
+          dragging = true;
+          scene.setPointerCapture(event.pointerId);
+          pointerToRadius(event);
+        }
+      });
+      scene.addEventListener('pointermove', function (event) {
+        if (dragging) pointerToRadius(event);
+      });
+      scene.addEventListener('pointerup', function (event) {
+        dragging = false;
+        try { scene.releasePointerCapture(event.pointerId); } catch (error) {}
+      });
+
+      piecesInput.addEventListener('input', function () {
+        pieces = Number(piecesInput.value);
+        if (mode === 'circle') setMode('cut');
+        render();
+      });
+
+      Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (button) {
+        button.addEventListener('click', function () {
+          setMode(button.getAttribute('data-mode'));
+        });
+      });
+
+      Array.prototype.forEach.call(document.querySelectorAll('.option'), function (button) {
+        button.addEventListener('click', function () {
+          selectedAnswer = button.getAttribute('data-answer') || '';
+          Array.prototype.forEach.call(document.querySelectorAll('.option'), function (item) {
+            item.classList.toggle('selected', item === button);
+          });
+          statusEl.textContent = '已选择：' + selectedAnswer + '。点击完成即可保存学习结果。';
+        });
+      });
+
+      document.getElementById('reset').addEventListener('click', function () {
+        mode = 'circle';
+        pieces = 16;
+        radius = 82;
+        selectedAnswer = '';
+        reported = false;
+        startedAt = Date.now();
+        piecesInput.value = '16';
+        Array.prototype.forEach.call(document.querySelectorAll('.option'), function (item) {
+          item.classList.remove('selected');
+        });
+        setMode('circle');
+      });
+
+      document.getElementById('finish').addEventListener('click', function () {
+        if (reported) return;
+        if (!selectedAnswer) {
+          statusEl.textContent = '请先选择一个面积公式，再保存。';
+          return;
+        }
+        var isCorrect = selectedAnswer === 'πr²';
+        reported = true;
+        statusEl.textContent = isCorrect ? '回答正确，已保存到学习档案。' : '已保存。正确公式是 πr²，稍后可以复习。';
+        window.parent.postMessage({
+          type: 'quiz_result',
+          studentId: studentId,
+          quiz: {
+            topic: '圆面积推导',
+            total: 1,
+            correct: isCorrect ? 1 : 0,
+            questions: [{
+              question: '圆面积公式是什么？',
+              studentAnswer: selectedAnswer,
+              correctAnswer: 'πr²'
+            }],
+            wrong: isCorrect ? [] : [{
+              question: '圆面积公式是什么？',
+              studentAnswer: selectedAnswer,
+              correctAnswer: 'πr²'
+            }],
+            durationSeconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
+            finishedAt: new Date().toISOString()
+          }
+        }, '*');
+      });
+
+      setMode('circle');
+    })();
+  </script>
+</body>
+</html>`;
+}
+
 function normalizeShapeType(type: string): ShapeType {
+  if (type === 'math_quiz' || type === 'ten_within_math_quiz') return 'math_quiz';
   if (type === 'preview_html' || type === 'html' || type === 'app') return 'preview_html';
   return 'ai_result';
 }
 
+function pickOperationProps(value: Record<string, unknown>) {
+  if (isObjectRecord(value.props)) return value.props;
+  if (isObjectRecord(value.properties)) return value.properties;
+  if (isObjectRecord(value.data)) return value.data;
+  return {};
+}
+
+function normalizeBoardOperation(value: unknown): BoardOperation | null {
+  if (!isObjectRecord(value)) return null;
+
+  const action = readText(value.action).toLowerCase();
+  const props = pickOperationProps(value);
+  const typeText = readText(value.type, readText(value.shapeType));
+  const html = readText(props.html, readText(value.html));
+  const text = readText(props.text, readText(props.content, readText(value.text)));
+
+  if (['create', 'add', 'insert'].includes(action)) {
+    const type = typeText || (html ? 'preview_html' : 'ai_result');
+    return {
+      action: 'create',
+      type,
+      x: readNumber(value.x),
+      y: readNumber(value.y),
+      props: {
+        ...props,
+        ...(html ? { html } : {}),
+        ...(text ? { text } : {}),
+      },
+    };
+  }
+
+  if (action === 'render' && (html || text)) {
+    return {
+      action: 'create',
+      type: html ? 'preview_html' : 'ai_result',
+      x: readNumber(value.x),
+      y: readNumber(value.y),
+      props: {
+        ...props,
+        ...(html ? { html } : {}),
+        ...(text ? { text } : {}),
+      },
+    };
+  }
+
+  if (action === 'update') {
+    const id = readText(value.id);
+    if (!id) return null;
+    return {
+      action: 'update',
+      id,
+      props: {
+        ...props,
+        ...(html ? { html } : {}),
+        ...(text ? { text } : {}),
+      },
+    };
+  }
+
+  if (action === 'delete') {
+    const id = readText(value.id);
+    return id ? { action: 'delete', id } : null;
+  }
+
+  return null;
+}
+
 function extractJson(raw: string) {
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const source = fenced?.[1] || raw;
-  const jsonMatch = source.match(/\{[\s\S]*\}/);
-  return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+  const source = (fenced?.[1] || raw).trim();
+
+  try {
+    return JSON.parse(source);
+  } catch {
+    // Continue with balanced-object extraction below.
+  }
+
+  for (let start = source.indexOf('{'); start >= 0; start = source.indexOf('{', start + 1)) {
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let index = start; index < source.length; index += 1) {
+      const char = source[index];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (char === '\\') {
+          escaped = true;
+        } else if (char === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (char === '"') {
+        inString = true;
+        continue;
+      }
+
+      if (char === '{') depth += 1;
+      if (char === '}') depth -= 1;
+
+      if (depth === 0) {
+        try {
+          return JSON.parse(source.slice(start, index + 1));
+        } catch {
+          break;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+function decodeJsonishText(value: string) {
+  return value
+    .replace(/\\u003c/gi, '<')
+    .replace(/\\u003e/gi, '>')
+    .replace(/\\u0026/gi, '&')
+    .replace(/\\"/g, '"')
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t')
+    .replace(/\\\\/g, '\\');
+}
+
+function extractHtmlDocument(value: unknown): string {
+  if (typeof value === 'string') {
+    const source = value.trim();
+    const fencedHtml = source.match(/```html\s*([\s\S]*?)```/i);
+    const htmlSource = decodeJsonishText(fencedHtml?.[1] || source).trim();
+    const startsAtDocument = htmlSource.search(/<!doctype\s+html|<html[\s>]/i);
+    const rawDocumentSource = startsAtDocument >= 0 ? htmlSource.slice(startsAtDocument) : htmlSource;
+    const endMatch = rawDocumentSource.match(/<\/html>/i);
+    const documentSource = endMatch
+      ? rawDocumentSource.slice(0, (endMatch.index || 0) + endMatch[0].length)
+      : rawDocumentSource;
+
+    if (
+      /<!doctype\s+html|<html[\s>]|<body[\s>]/i.test(documentSource) &&
+      /<\/html>|<\/body>|<script[\s>]|<style[\s>]/i.test(documentSource)
+    ) {
+      return documentSource;
+    }
+    return '';
+  }
+
+  if (!isObjectRecord(value)) return '';
+
+  const props = pickOperationProps(value);
+  return (
+    extractHtmlDocument(props.html) ||
+    extractHtmlDocument(props.content) ||
+    extractHtmlDocument(value.html) ||
+    extractHtmlDocument(value.content) ||
+    extractHtmlDocument(value.message)
+  );
+}
+
+function collectBoardOperations(plan: unknown, responseText: string): BoardOperation[] {
+  const normalizedOperations = isObjectRecord(plan) && Array.isArray(plan.operations)
+    ? plan.operations
+        .map((operation: unknown) => normalizeBoardOperation(operation))
+        .filter((operation: BoardOperation | null): operation is BoardOperation => Boolean(operation))
+    : [];
+
+  if (normalizedOperations.length > 0) return normalizedOperations;
+
+  if (isObjectRecord(plan)) {
+    const nestedPlan = typeof plan.message === 'string' ? extractJson(plan.message) : null;
+    const nestedOperations = nestedPlan && nestedPlan !== plan
+      ? collectBoardOperations(nestedPlan, plan.message as string)
+      : [];
+    if (nestedOperations.length > 0) return nestedOperations;
+
+    const html = extractHtmlDocument(plan);
+    if (html) {
+      return [
+        {
+          action: 'create',
+          type: 'preview_html',
+          props: { w: 760, h: 560, html },
+        },
+      ];
+    }
+  }
+
+  const html = extractHtmlDocument(responseText);
+  return html
+    ? [
+        {
+          action: 'create',
+          type: 'preview_html',
+          props: { w: 760, h: 560, html },
+        },
+      ]
+    : [];
 }
 
 function getShapeTitle(shape: BoardShape) {
+  if (shape.type === 'math_quiz') return '十以内加减法互动课件';
   if (shape.type === 'preview_html') {
     const title = shape.props.html?.match(/<title>(.*?)<\/title>/i)?.[1];
     const h1 = shape.props.html?.match(/<h1[^>]*>(.*?)<\/h1>/i)?.[1];
@@ -673,7 +1671,7 @@ function formatDueWrongbookPrompt(items: DueWrongbookItem[]) {
 export default function OwnWhiteboard() {
   const [shapes, setShapes] = useState<BoardShape[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [aiOpen, setAiOpen] = useState(true);
+  const [aiOpen, setAiOpen] = useState(false);
   const [lessonLibraryOpen, setLessonLibraryOpen] = useState(false);
   const [lessonPosts, setLessonPosts] = useState<LessonPromptPost[]>([]);
   const [lessonLoading, setLessonLoading] = useState(false);
@@ -687,8 +1685,11 @@ export default function OwnWhiteboard() {
   ]);
   const [ready, setReady] = useState(false);
   const dragRef = useRef<DragState | null>(null);
+  const autoPromptStartedRef = useRef(false);
   const studentId = useMemo(() => readSearchParam('studentId', ''), []);
   const lessonId = useMemo(() => readSearchParam('lessonId', 'own-whiteboard-demo'), []);
+  const initialPrompt = useMemo(() => readSearchParam('prompt', ''), []);
+  const initialPromptTitle = useMemo(() => readSearchParam('title', ''), []);
   const [bindPanelOpen, setBindPanelOpen] = useState(false);
   const [bindStudentId, setBindStudentId] = useState(studentId);
   const [bindStudentName, setBindStudentName] = useState('');
@@ -703,7 +1704,10 @@ export default function OwnWhiteboard() {
   );
 
   const lessonPromptPosts = useMemo(
-    () => lessonPosts.filter((post) => post.whiteboardPrompt?.trim()),
+    () =>
+      lessonPosts.filter(
+        (post) => post.whiteboardPrompt?.trim() && post.whiteboardCategory === 'education'
+      ),
     [lessonPosts]
   );
 
@@ -811,6 +1815,35 @@ export default function OwnWhiteboard() {
     };
   }, [bindQr]);
 
+  function handleQuizResult(quiz: QuizResultPayload, messageStudentId?: unknown) {
+    const targetStudentId = resolveStudentIdFromMessage(messageStudentId, studentId);
+    const record: EduAttemptRecord = {
+      id: `quiz:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
+      kind: 'quiz',
+      studentId: targetStudentId,
+      lessonId,
+      subject: 'math',
+      skill: quiz.topic,
+      question: `${quiz.topic}：${quiz.correct}/${quiz.total}`,
+      isCorrect: quiz.correct === quiz.total,
+      total: quiz.total,
+      correct: quiz.correct,
+      wrongCount: quiz.wrong.length,
+      receivedAt: new Date().toISOString(),
+      saveStatus: 'saving',
+    };
+
+    setEduAttempts((current) => [record, ...current].slice(0, 20));
+    setMessages((current) => [
+      ...current,
+      {
+        role: 'system',
+        text: `收到成绩：${quiz.topic}，${quiz.correct}/${quiz.total}，错题 ${quiz.wrong.length} 道`,
+      },
+    ]);
+    void persistQuizResult(record, quiz);
+  }
+
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       const data = event.data;
@@ -820,32 +1853,7 @@ export default function OwnWhiteboard() {
         const quiz = normalizeQuizResultPayload(data.quiz);
         if (!quiz) return;
 
-        const targetStudentId = resolveStudentIdFromMessage(data.studentId, studentId);
-        const record: EduAttemptRecord = {
-          id: `quiz:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
-          kind: 'quiz',
-          studentId: targetStudentId,
-          lessonId,
-          subject: 'math',
-          skill: quiz.topic,
-          question: `${quiz.topic}：${quiz.correct}/${quiz.total}`,
-          isCorrect: quiz.correct === quiz.total,
-          total: quiz.total,
-          correct: quiz.correct,
-          wrongCount: quiz.wrong.length,
-          receivedAt: new Date().toISOString(),
-          saveStatus: 'saving',
-        };
-
-        setEduAttempts((current) => [record, ...current].slice(0, 20));
-        setMessages((current) => [
-          ...current,
-          {
-            role: 'system',
-            text: `收到成绩：${quiz.topic}，${quiz.correct}/${quiz.total}，错题 ${quiz.wrong.length} 道`,
-          },
-        ]);
-        void persistQuizResult(record, quiz);
+        handleQuizResult(quiz, data.studentId);
         return;
       }
 
@@ -946,7 +1954,9 @@ export default function OwnWhiteboard() {
     const content =
       selectedShape.type === 'preview_html'
         ? `HTML App: "${(selectedShape.props.html || '').slice(0, 1800)}"`
-        : `Text: "${(selectedShape.props.text || '').slice(0, 1800)}"`;
+        : selectedShape.type === 'math_quiz'
+          ? `Interactive Quiz: "十以内加减法课件，可答题并上报 quiz_result"`
+          : `Text: "${(selectedShape.props.text || '').slice(0, 1800)}"`;
     return [
       'Selected Shapes:',
       `- [ID: ${selectedShape.id}] Type: ${selectedShape.type}, ${content}, Size: ${Math.round(
@@ -960,8 +1970,9 @@ export default function OwnWhiteboard() {
     props?: Partial<BoardShape['props']>,
     placement?: { x?: number; y?: number; select?: boolean }
   ) {
-    const w = props?.w || (type === 'preview_html' ? 620 : 320);
-    const h = props?.h || (type === 'preview_html' ? 460 : 220);
+    const isInteractiveHtml = type === 'preview_html' || type === 'math_quiz';
+    const w = props?.w || (isInteractiveHtml ? 620 : 320);
+    const h = props?.h || (isInteractiveHtml ? 460 : 220);
     const next: BoardShape = {
       id: createId(),
       type,
@@ -970,7 +1981,12 @@ export default function OwnWhiteboard() {
       props: {
         w,
         h,
-        html: type === 'preview_html' ? props?.html || getDefaultHtml(studentId) : undefined,
+        html:
+          type === 'preview_html'
+            ? props?.html || getDefaultHtml(studentId)
+            : type === 'math_quiz'
+              ? props?.html || buildTenWithinMathCoursewareHtml(studentId)
+              : undefined,
         text: type === 'ai_result' ? props?.text || '新的文本卡片' : undefined,
         color: props?.color || '#ffffff',
       },
@@ -990,8 +2006,9 @@ export default function OwnWhiteboard() {
         if (op.action === 'create') {
           const type = normalizeShapeType(op.type);
           const props = (op.props || {}) as BoardShape['props'];
-          const w = Number(props.w || (type === 'preview_html' ? 680 : 340));
-          const h = Number(props.h || (type === 'preview_html' ? 500 : 220));
+          const isInteractiveHtml = type === 'preview_html' || type === 'math_quiz';
+          const w = Number(props.w || (isInteractiveHtml ? 680 : 340));
+          const h = Number(props.h || (isInteractiveHtml ? 500 : 220));
           const shape: BoardShape = {
             id: createId(),
             type,
@@ -1000,7 +2017,12 @@ export default function OwnWhiteboard() {
             props: {
               w,
               h,
-              html: type === 'preview_html' ? String(props.html || getDefaultHtml(studentId)) : undefined,
+              html:
+                type === 'preview_html'
+                  ? String(props.html || getDefaultHtml(studentId))
+                  : type === 'math_quiz'
+                    ? String(props.html || buildTenWithinMathCoursewareHtml(studentId))
+                    : undefined,
               text: type === 'ai_result' ? String(props.text || 'AI 结果') : undefined,
               color: String(props.color || '#ffffff'),
             },
@@ -1188,6 +2210,68 @@ export default function OwnWhiteboard() {
   }
 
   function runLessonPrompt(post: LessonPromptPost) {
+    const isCircleAreaLesson =
+      post.url.includes('circle-area-touch-courseware') ||
+      post.slugs?.includes('circle-area-touch-courseware') ||
+      /圆面积|圆的面积|扇形|徐老师/.test(`${post.title} ${post.description} ${post.whiteboardPrompt || ''}`);
+
+    if (isCircleAreaLesson) {
+      setLessonLibraryOpen(false);
+      setAiOpen(false);
+      const shapeWidth = Math.min(820, Math.max(360, window.innerWidth - 32));
+      const shapeHeight = Math.min(620, Math.max(480, window.innerHeight - 128));
+      executeOperations([
+        {
+          action: 'create',
+          type: 'preview_html',
+          x: 16,
+          y: 72,
+          props: {
+            w: shapeWidth,
+            h: shapeHeight,
+            html: buildCircleAreaCoursewareHtml(studentId),
+          },
+        },
+      ]);
+      setMessages((current) => [
+        ...current,
+        { role: 'user', text: `课件库：${post.title}` },
+        { role: 'assistant', text: '已生成圆面积推导触屏课件，支持拖动半径、切分扇形和公式检查。' },
+      ]);
+      return;
+    }
+
+    const isTenWithinMathLesson =
+      post.url.includes('interactive-math-game') ||
+      post.slugs?.includes('interactive-math-game') ||
+      /十以内加减法|数学游戏/.test(`${post.title} ${post.description} ${post.whiteboardPrompt || ''}`);
+
+    if (isTenWithinMathLesson) {
+      setLessonLibraryOpen(false);
+      setAiOpen(false);
+      const shapeWidth = Math.min(760, Math.max(360, window.innerWidth - 32));
+      const shapeHeight = Math.min(560, Math.max(430, window.innerHeight - 128));
+      executeOperations([
+        {
+          action: 'create',
+          type: 'math_quiz',
+          x: 16,
+          y: 72,
+          props: {
+            w: shapeWidth,
+            h: shapeHeight,
+            html: buildTenWithinMathCoursewareHtml(studentId),
+          },
+        },
+      ]);
+      setMessages((current) => [
+        ...current,
+        { role: 'user', text: `课件库：${post.title}` },
+        { role: 'assistant', text: '已生成可交互的十以内加减法课件，答完会自动写入学习档案。' },
+      ]);
+      return;
+    }
+
     const prompt =
       post.whiteboardPrompt?.trim() ||
       `帮我基于博客《${post.title}》生成一个互动教育课件。博客简介：${post.description}`;
@@ -1340,7 +2424,9 @@ export default function OwnWhiteboard() {
 
       const responseText = String(data.message || '');
       const plan = extractJson(responseText);
-      if (!plan || !Array.isArray(plan.operations)) {
+      const normalizedOperations = collectBoardOperations(plan, responseText);
+
+      if (normalizedOperations.length === 0) {
         createFallbackShape(userText, 'Hermes 没有返回 JSON operations，因此已自动生成本地 HTML 组件。');
         setMessages((current) => [
           ...current,
@@ -1349,10 +2435,13 @@ export default function OwnWhiteboard() {
         return;
       }
 
-      executeOperations(plan.operations as BoardOperation[]);
+      executeOperations(normalizedOperations);
+      const assistantText = isObjectRecord(plan)
+        ? readText(plan.thought, readText(plan.voice_response, '已生成互动课件。'))
+        : '已从 Hermes 返回中恢复并生成互动课件。';
       setMessages((current) => [
         ...current,
-        { role: 'assistant', text: plan.thought || plan.voice_response || '已执行。' },
+        { role: 'assistant', text: assistantText },
       ]);
     } catch (error) {
       createFallbackShape(
@@ -1377,6 +2466,16 @@ export default function OwnWhiteboard() {
     }
   }
 
+  useEffect(() => {
+    if (!ready || !initialPrompt || autoPromptStartedRef.current) return;
+    autoPromptStartedRef.current = true;
+    setAiOpen(true);
+    void runAIWithPrompt(
+      initialPrompt,
+      initialPromptTitle ? `博客：${initialPromptTitle}` : '博客提示词'
+    );
+  }, [initialPrompt, initialPromptTitle, ready]);
+
   function callAI() {
     void runAIWithPrompt(input);
   }
@@ -1388,7 +2487,7 @@ export default function OwnWhiteboard() {
   }
 
   function downloadSelectedHtml() {
-    if (!selectedShape || selectedShape.type !== 'preview_html') return;
+    if (!selectedShape?.props.html) return;
     const blob = new Blob([selectedShape.props.html || ''], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -1432,6 +2531,7 @@ export default function OwnWhiteboard() {
           shape={shape}
           selected={shape.id === selectedId}
           onSelect={() => setSelectedId(shape.id)}
+          onQuizResult={(quiz) => handleQuizResult(quiz, studentId)}
           onMoveStart={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -1597,14 +2697,14 @@ export default function OwnWhiteboard() {
               <input
                 value={lessonSearch}
                 onChange={(event) => setLessonSearch(event.target.value)}
-                placeholder="搜索课件博客..."
+                placeholder="搜索教育课件..."
                 className="mb-2 h-9 w-full rounded-md border border-black/15 px-3 text-sm outline-none focus:border-[#111827]"
               />
               <div className="max-h-44 overflow-y-auto rounded-md border border-black/10">
                 {lessonLoading ? (
                   <div className="px-3 py-4 text-center text-xs text-black/50">加载中...</div>
                 ) : filteredLessonPosts.length === 0 ? (
-                  <div className="px-3 py-4 text-center text-xs text-black/45">暂无课件提示词</div>
+                  <div className="px-3 py-4 text-center text-xs text-black/45">暂无教育课件</div>
                 ) : (
                   filteredLessonPosts.map((post) => (
                     <button
@@ -1770,7 +2870,7 @@ export default function OwnWhiteboard() {
           <FileText size={18} />
         </IconButton>
         <div className="mx-1 h-7 w-px bg-black/10" />
-        <IconButton title="下载选中 HTML" disabled={selectedShape?.type !== 'preview_html'} onClick={downloadSelectedHtml}>
+        <IconButton title="下载选中 HTML" disabled={!selectedShape?.props.html} onClick={downloadSelectedHtml}>
           <Download size={18} />
         </IconButton>
         <IconButton title="删除选中组件" disabled={!selectedId} onClick={deleteSelected}>
@@ -1791,16 +2891,228 @@ export default function OwnWhiteboard() {
   );
 }
 
+function MathQuizShape({
+  onQuizResult,
+}: {
+  onQuizResult: (quiz: QuizResultPayload) => void;
+}) {
+  const [index, setIndex] = useState(0);
+  const [answer, setAnswer] = useState('');
+  const [results, setResults] = useState<Array<QuizWrongItem & { isCorrect: boolean }>>([]);
+  const [feedback, setFeedback] = useState('看图想一想，再输入答案。');
+  const [feedbackKind, setFeedbackKind] = useState<'idle' | 'ok' | 'no'>('idle');
+  const [reported, setReported] = useState(false);
+  const [startedAt, setStartedAt] = useState(() => Date.now());
+
+  const question = TEN_WITHIN_MATH_QUESTIONS[Math.min(index, TEN_WITHIN_MATH_QUESTIONS.length - 1)];
+  const isDone = results.length >= TEN_WITHIN_MATH_QUESTIONS.length;
+  const correct = results.filter((item) => item.isCorrect).length;
+
+  function buildQuiz(nextResults: Array<QuizWrongItem & { isCorrect: boolean }>): QuizResultPayload {
+    const wrong = nextResults
+      .filter((item) => !item.isCorrect)
+      .map(({ question, studentAnswer, correctAnswer }) => ({
+        question,
+        studentAnswer,
+        correctAnswer,
+      }));
+    const questions = nextResults.map(({ question, studentAnswer, correctAnswer }) => ({
+      question,
+      studentAnswer,
+      correctAnswer,
+    }));
+
+    return {
+      topic: '10以内加减法',
+      total: TEN_WITHIN_MATH_QUESTIONS.length,
+      correct: nextResults.filter((item) => item.isCorrect).length,
+      questions,
+      wrong,
+      durationSeconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
+      finishedAt: new Date().toISOString(),
+    };
+  }
+
+  function finish(nextResults = results) {
+    if (nextResults.length === 0 || reported) return;
+    setReported(true);
+    onQuizResult(buildQuiz(nextResults));
+  }
+
+  function submit() {
+    if (isDone) return;
+
+    const normalizedAnswer = answer.trim();
+    if (!normalizedAnswer) {
+      setFeedback('先输入一个答案哦。');
+      setFeedbackKind('no');
+      return;
+    }
+
+    const isCorrect = Number(normalizedAnswer) === question.answer;
+    const nextResults = [
+      ...results,
+      {
+        question: question.question,
+        studentAnswer: normalizedAnswer,
+        correctAnswer: String(question.answer),
+        isCorrect,
+      },
+    ];
+
+    setResults(nextResults);
+    setAnswer('');
+    setFeedback(isCorrect ? '答对了，很棒！' : `这题正确答案是 ${question.answer}，我们继续练。`);
+    setFeedbackKind(isCorrect ? 'ok' : 'no');
+
+    if (nextResults.length >= TEN_WITHIN_MATH_QUESTIONS.length) {
+      finish(nextResults);
+      return;
+    }
+
+    window.setTimeout(() => {
+      setIndex((current) => Math.min(current + 1, TEN_WITHIN_MATH_QUESTIONS.length - 1));
+      setFeedback('看图想一想，再输入答案。');
+      setFeedbackKind('idle');
+    }, 450);
+  }
+
+  function restart() {
+    setIndex(0);
+    setAnswer('');
+    setResults([]);
+    setFeedback('看图想一想，再输入答案。');
+    setFeedbackKind('idle');
+    setReported(false);
+    setStartedAt(Date.now());
+  }
+
+  const visualCount = question.op === '+' ? question.a + question.b : question.a;
+
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-3 bg-[#f5f7fb] p-4 text-[#172033]">
+      <div className="flex items-center justify-between gap-3 rounded-md border border-[#d9e2f2] bg-white px-4 py-3 shadow-sm">
+        <h2 className="m-0 text-lg font-extrabold leading-tight">十以内加减法乐园</h2>
+        <div className="shrink-0 text-sm font-extrabold text-[#2563eb]">
+          {isDone ? `完成 ${correct}/${TEN_WITHIN_MATH_QUESTIONS.length}` : `第 ${index + 1} / ${TEN_WITHIN_MATH_QUESTIONS.length} 题`}
+        </div>
+      </div>
+
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(260px,1fr)_210px] gap-3 max-[700px]:grid-cols-1">
+        <div className="flex min-h-[310px] flex-col items-center justify-center gap-4 rounded-md border border-[#d9e2f2] bg-white p-4 shadow-sm">
+          <div className="text-4xl font-black leading-none text-[#111827]">
+            {isDone ? '全部完成啦' : `${question.question} = ?`}
+          </div>
+          <div className="flex min-h-[92px] w-full max-w-[430px] flex-wrap items-center justify-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3">
+            {Array.from({ length: visualCount }).map((_, itemIndex) => {
+              const removed = question.op === '-' && itemIndex >= question.answer;
+              return (
+                <span
+                  key={itemIndex}
+                  className={[
+                    'grid h-10 w-10 place-items-center rounded-full border-2 text-xl',
+                    removed
+                      ? 'border-sky-400 bg-sky-100 opacity-45'
+                      : 'border-rose-400 bg-rose-100',
+                  ].join(' ')}
+                >
+                  {removed ? '☆' : '🍎'}
+                </span>
+              );
+            })}
+          </div>
+          <div className="flex w-full flex-wrap items-center justify-center gap-2">
+            <input
+              value={answer}
+              onChange={(event) => setAnswer(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') submit();
+              }}
+              disabled={isDone}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={10}
+              aria-label="输入答案"
+              className="h-14 w-28 rounded-md border-2 border-blue-200 bg-white text-center text-2xl font-extrabold outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 disabled:opacity-50"
+            />
+            <button
+              type="button"
+              disabled={isDone}
+              onClick={submit}
+              className="h-14 rounded-md bg-blue-600 px-5 text-base font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              提交答案
+            </button>
+          </div>
+          <div
+            className={[
+              'min-h-7 text-center text-base font-extrabold',
+              feedbackKind === 'ok'
+                ? 'text-emerald-700'
+                : feedbackKind === 'no'
+                  ? 'text-rose-700'
+                  : 'text-slate-600',
+            ].join(' ')}
+          >
+            {isDone ? '成绩已上报到学习档案。' : feedback}
+          </div>
+        </div>
+
+        <aside className="min-h-0 overflow-auto rounded-md border border-[#d9e2f2] bg-white p-3 shadow-sm">
+          <h3 className="mb-2 mt-0 text-sm font-bold text-slate-600">答题记录</h3>
+          {results.length === 0 ? (
+            <div className="flex justify-between border-b border-slate-100 py-2 text-sm text-slate-500">
+              <span>还没有作答</span>
+              <span>-</span>
+            </div>
+          ) : (
+            results.map((item, itemIndex) => (
+              <div
+                key={`${item.question}-${itemIndex}`}
+                className="flex justify-between gap-2 border-b border-slate-100 py-2 text-sm"
+              >
+                <span className="font-semibold text-slate-900">{itemIndex + 1}. {item.question}</span>
+                <span>{item.isCorrect ? '答对' : `答错：${item.correctAnswer}`}</span>
+              </div>
+            ))
+          )}
+        </aside>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 rounded-md border border-[#d9e2f2] bg-white px-4 py-3 shadow-sm">
+        <button
+          type="button"
+          onClick={restart}
+          className="h-11 rounded-md bg-slate-200 px-4 text-sm font-extrabold text-slate-900"
+        >
+          重新开始
+        </button>
+        <button
+          type="button"
+          disabled={results.length === 0 || reported}
+          onClick={() => finish()}
+          className="h-11 rounded-md bg-blue-600 px-4 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {reported ? '已保存成绩' : '完成并保存成绩'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ShapeView({
   shape,
   selected,
   onSelect,
+  onQuizResult,
   onMoveStart,
   onResizeStart,
 }: {
   shape: BoardShape;
   selected: boolean;
   onSelect: () => void;
+  onQuizResult: (quiz: QuizResultPayload) => void;
   onMoveStart: (event: React.PointerEvent) => void;
   onResizeStart: (event: React.PointerEvent) => void;
 }) {
@@ -1816,6 +3128,9 @@ function ShapeView({
         zIndex: selected ? 20 : 10,
       }}
       onPointerDown={(event) => {
+        if ((event.target as HTMLElement).closest('[data-shape-interactive="true"]')) {
+          return;
+        }
         event.stopPropagation();
         onSelect();
       }}
@@ -1832,12 +3147,17 @@ function ShapeView({
       </div>
 
       <div className="h-[calc(100%-36px)] overflow-hidden rounded-b-md">
-        {shape.type === 'preview_html' ? (
+        {shape.type === 'math_quiz' ? (
+          <div data-shape-interactive="true" className="h-full">
+            <MathQuizShape onQuizResult={onQuizResult} />
+          </div>
+        ) : shape.type === 'preview_html' ? (
           <iframe
+            data-shape-interactive="true"
             title={shape.id}
             srcDoc={shape.props.html || ''}
             className="h-full w-full border-0 bg-white"
-            sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
           />
         ) : (
           <div
