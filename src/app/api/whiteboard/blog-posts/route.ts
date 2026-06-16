@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { blogSource } from '@/lib/source';
+import { listCoursewareMdxPosts } from '@/lib/courseware-mdx';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,6 +16,9 @@ export async function GET(request: NextRequest) {
           new Date(a.data.date).getTime()
       );
 
+    const fsPosts = listCoursewareMdxPosts(locale);
+    const fsPostBySlug = new Map(fsPosts.map((post) => [post.slug, post]));
+
     const posts = publishedPosts.map((post) => {
       const whiteboardPrompt =
         typeof (post.data as any).whiteboard_prompt === 'string'
@@ -24,6 +28,8 @@ export async function GET(request: NextRequest) {
         typeof (post.data as any).whiteboard_category === 'string'
           ? (post.data as any).whiteboard_category.trim()
           : '';
+      const slug = Array.isArray(post.slugs) ? post.slugs.join('/') : String(post.slugs || '');
+      const fsPost = fsPostBySlug.get(slug);
 
       return {
         title: post.data.title,
@@ -32,11 +38,31 @@ export async function GET(request: NextRequest) {
         date: post.data.date,
         url: post.url,
         slugs: post.slugs,
+        slug,
         whiteboardPrompt: whiteboardPrompt || undefined,
         hasWhiteboardPrompt: Boolean(whiteboardPrompt),
         whiteboardCategory: whiteboardCategory || undefined,
+        hasSavedCourseware: Boolean(fsPost?.hasSavedCourseware),
       };
     });
+
+    const knownSlugs = new Set(posts.map((post) => post.slug));
+    for (const post of fsPosts) {
+      if (knownSlugs.has(post.slug)) continue;
+      posts.push({
+        title: post.title,
+        description: post.description || '',
+        image: '/images/blog/interactive-math-game.png',
+        date: post.date,
+        url: `/blog/${post.slug}`,
+        slugs: [post.slug],
+        slug: post.slug,
+        whiteboardPrompt: post.whiteboardPrompt || undefined,
+        hasWhiteboardPrompt: Boolean(post.whiteboardPrompt),
+        whiteboardCategory: post.whiteboardCategory || undefined,
+        hasSavedCourseware: post.hasSavedCourseware,
+      });
+    }
 
     return NextResponse.json({ success: true, posts });
   } catch (error) {

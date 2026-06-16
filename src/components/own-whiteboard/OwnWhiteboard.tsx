@@ -45,10 +45,12 @@ type LessonPromptPost = {
   image?: string;
   date?: string;
   url: string;
+  slug?: string;
   slugs?: string[];
   whiteboardPrompt?: string;
   hasWhiteboardPrompt?: boolean;
   whiteboardCategory?: string;
+  hasSavedCourseware?: boolean;
 };
 
 type EduAnswerPayload = {
@@ -1686,10 +1688,12 @@ export default function OwnWhiteboard() {
   const [ready, setReady] = useState(false);
   const dragRef = useRef<DragState | null>(null);
   const autoPromptStartedRef = useRef(false);
+  const coursewareImportStartedRef = useRef(false);
   const studentId = useMemo(() => readSearchParam('studentId', ''), []);
   const lessonId = useMemo(() => readSearchParam('lessonId', 'own-whiteboard-demo'), []);
   const initialPrompt = useMemo(() => readSearchParam('prompt', ''), []);
   const initialPromptTitle = useMemo(() => readSearchParam('title', ''), []);
+  const initialCoursewareImportKey = useMemo(() => readSearchParam('coursewareImportKey', ''), []);
   const [bindPanelOpen, setBindPanelOpen] = useState(false);
   const [bindStudentId, setBindStudentId] = useState(studentId);
   const [bindStudentName, setBindStudentName] = useState('');
@@ -2209,7 +2213,53 @@ export default function OwnWhiteboard() {
     });
   }
 
+  function getLessonPostSlug(post: LessonPromptPost) {
+    if (post.slug) return post.slug;
+    if (Array.isArray(post.slugs) && post.slugs.length > 0) return post.slugs.join('/');
+    return post.url.split('/').filter(Boolean).pop() || '';
+  }
+
+  async function runSavedCoursewarePost(post: LessonPromptPost) {
+    const slug = getLessonPostSlug(post);
+    if (!slug) {
+      throw new Error('课件缺少 slug');
+    }
+
+    const params = new URLSearchParams({
+      slug,
+      locale: 'zh',
+      studentId,
+    });
+    const response = await fetch(`/api/whiteboard/courseware-mdx?${params.toString()}`);
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.success || !Array.isArray(data.operations)) {
+      throw new Error(data?.error || `HTTP ${response.status}`);
+    }
+
+    executeOperations(data.operations);
+    setMessages((current) => [
+      ...current,
+      { role: 'user', text: `课件库：${post.title}` },
+      { role: 'assistant', text: '已打开保存到博客的互动课件。' },
+    ]);
+  }
+
   function runLessonPrompt(post: LessonPromptPost) {
+    if (post.hasSavedCourseware) {
+      setLessonLibraryOpen(false);
+      setAiOpen(false);
+      void runSavedCoursewarePost(post).catch((error) => {
+        setMessages((current) => [
+          ...current,
+          {
+            role: 'assistant',
+            text: error instanceof Error ? `读取已保存课件失败：${error.message}` : '读取已保存课件失败。',
+          },
+        ]);
+      });
+      return;
+    }
+
     const isCircleAreaLesson =
       post.url.includes('circle-area-touch-courseware') ||
       post.slugs?.includes('circle-area-touch-courseware') ||
@@ -2465,6 +2515,48 @@ export default function OwnWhiteboard() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!ready || !initialCoursewareImportKey || coursewareImportStartedRef.current) return;
+    coursewareImportStartedRef.current = true;
+
+    const storageKey = initialCoursewareImportKey.startsWith('dlgzz-courseware-import:')
+      ? initialCoursewareImportKey
+      : `dlgzz-courseware-import:${initialCoursewareImportKey}`;
+
+    try {
+      const raw = window.sessionStorage.getItem(storageKey);
+      if (!raw) {
+        throw new Error('没有找到后台生成的课件数据');
+      }
+
+      const imported = JSON.parse(raw);
+      const operations = collectBoardOperations(imported, raw);
+      if (operations.length === 0) {
+        throw new Error('后台生成结果里没有可创建的白板组件');
+      }
+
+      executeOperations(operations);
+      window.sessionStorage.removeItem(storageKey);
+      setAiOpen(false);
+      setLessonLibraryOpen(false);
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'system',
+          text: `已从老师后台导入课件：${readText(imported?.title, initialPromptTitle || 'AI 互动课件')}`,
+        },
+      ]);
+    } catch (error) {
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'system',
+          text: error instanceof Error ? `导入课件失败：${error.message}` : '导入课件失败',
+        },
+      ]);
+    }
+  }, [initialCoursewareImportKey, initialPromptTitle, ready]);
 
   useEffect(() => {
     if (!ready || !initialPrompt || autoPromptStartedRef.current) return;
