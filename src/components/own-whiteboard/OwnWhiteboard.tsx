@@ -2609,11 +2609,12 @@ export default function OwnWhiteboard() {
         <div className="text-sm font-semibold">Edu Board</div>
         <div className="h-4 w-px bg-black/10" />
         <a
-          href="/zh/whiteboard"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-black/5"
-          title="返回教育白板"
+          href="/zh"
+          className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs font-semibold hover:bg-black/5"
+          title="返回首页"
         >
           <Home size={16} />
+          首页
         </a>
       </div>
 
