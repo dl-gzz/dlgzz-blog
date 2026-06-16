@@ -145,6 +145,58 @@ function planFromFallbackMessage(message: string) {
   return null;
 }
 
+function validateInteractivePlan(plan: unknown) {
+  if (!plan || typeof plan !== 'object') {
+    return '模型没有返回课件计划对象';
+  }
+
+  const operations = (plan as { operations?: unknown }).operations;
+  if (!Array.isArray(operations)) {
+    return '模型没有返回 operations 数组';
+  }
+
+  const previewHtml = operations
+    .map((operation) => {
+      if (!operation || typeof operation !== 'object') return '';
+      const props = (operation as { props?: unknown }).props;
+      if (!props || typeof props !== 'object') return '';
+      const html = (props as { html?: unknown }).html;
+      return typeof html === 'string' ? html : '';
+    })
+    .find((html) => html.trim().length > 0);
+
+  if (!previewHtml) {
+    return '模型没有在 preview_html.props.html 中返回完整 HTML';
+  }
+
+  const checks = [
+    {
+      ok: /<!doctype\s+html|<html[\s>]/i.test(previewHtml),
+      message: 'HTML 必须是完整文档，包含 <!doctype html> 或 <html>',
+    },
+    {
+      ok: /<svg[\s>]|<canvas[\s>]/i.test(previewHtml),
+      message: '课件必须包含 SVG 或 Canvas 可视化内容',
+    },
+    {
+      ok: /<script[\s>]/i.test(previewHtml),
+      message: '课件必须包含内联 <script> 交互脚本',
+    },
+    {
+      ok: /addEventListener|onpointerdown|pointerdown|pointermove|pointerup|touchstart|touchmove|drag/i.test(
+        previewHtml
+      ),
+      message: '课件必须包含触屏/拖拽事件逻辑，例如 Pointer Events',
+    },
+    {
+      ok: /quiz_result/.test(previewHtml) && /postMessage/.test(previewHtml),
+      message: '课件必须通过 postMessage 上报 quiz_result',
+    },
+  ];
+
+  return checks.find((check) => !check.ok)?.message || '';
+}
+
 function buildPrompt({
   title,
   description,
@@ -188,6 +240,9 @@ function buildPrompt({
 - 面向 iPad/触屏：按钮足够大，自定义拖拽必须用 Pointer Events，拖拽区域设置 touch-action: none。
 - 可用 SVG、Canvas、原生 JS 做交互；数学图形优先用 SVG。
 - 不要做普通文章页面，要做可以点、拖、选、答题的互动课件。
+- props.html 里必须包含 <script>，并且脚本必须注册 addEventListener("pointerdown"/"pointermove"/"pointerup") 或等价 Pointer Events。
+- 必须至少有 2 个真实互动动作，例如拖动半径/滑块调整/步骤切换/选择答案/提交结果；不能只输出静态说明。
+- 如果 MDX 内容不足，也要根据标题和简介生成一个可触屏操作的最小完整课件，不能退化成文章或纯展示页。
 - 至少包含一个学习结果提交动作。
 - 提交时必须调用：
   window.parent.postMessage({ type: "quiz_result", studentId: "${studentId}", quiz: { topic, total, correct, questions, wrong, durationSeconds, finishedAt } }, "*")
@@ -238,48 +293,70 @@ export async function POST(request: NextRequest) {
 
     const model =
       process.env.WHITEBOARD_COURSEWARE_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
-    const { message, provider } = await chatWithResolvedServerProvider({
-      preferredProvider: process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini',
-      model,
-      responseMimeType: 'application/json',
-      responseSchema: COURSEWARE_ACTION_SCHEMA,
-      messages: [
-        {
-          role: 'system',
-          content:
-            '你只输出可解析 JSON。你是触屏教育课件工程师，擅长把 MDX 教案转成自包含 HTML/SVG/JS 互动课件。',
+    let lastMessage = '';
+    let lastProvider = '';
+    let lastValidationError = '';
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const correction = lastValidationError
+        ? `\n\n上一次生成不合格：${lastValidationError}。请重新输出 JSON，props.html 必须是完整、可触屏互动、包含内联脚本和 quiz_result 上报的 HTML。`
+        : '';
+      const { message, provider } = await chatWithResolvedServerProvider({
+        preferredProvider: process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini',
+        model,
+        responseMimeType: 'application/json',
+        responseSchema: COURSEWARE_ACTION_SCHEMA,
+        messages: [
+          {
+            role: 'system',
+            content:
+              '你只输出可解析 JSON。你是触屏教育课件工程师，必须生成可点击、可拖拽、可提交成绩的自包含 HTML/SVG/JS 互动课件。静态页面是不合格答案。',
+          },
+          { role: 'user', content: `${prompt}${correction}` },
+        ],
+      });
+
+      lastMessage = message;
+      lastProvider = provider;
+
+      const extractedPlan = extractJson(message);
+      const plan = Array.isArray(extractedPlan)
+        ? { operations: extractedPlan }
+        : extractedPlan && typeof extractedPlan === 'object'
+          ? extractedPlan
+          : planFromFallbackMessage(message);
+
+      const validationError = validateInteractivePlan(plan);
+      if (validationError) {
+        lastValidationError = validationError;
+        continue;
+      }
+
+      return NextResponse.json({
+        success: true,
+        provider,
+        model,
+        post: {
+          slug: post.slug,
+          title: post.title,
+          description: post.description,
+          whiteboardPrompt: post.whiteboardPrompt || undefined,
         },
-        { role: 'user', content: prompt },
-      ],
-    });
-
-    const extractedPlan = extractJson(message);
-    const plan = Array.isArray(extractedPlan)
-      ? { operations: extractedPlan }
-      : extractedPlan && typeof extractedPlan === 'object'
-        ? extractedPlan
-        : planFromFallbackMessage(message);
-
-    if (!plan || typeof plan !== 'object') {
-      return NextResponse.json(
-        { success: false, error: '模型没有返回可解析的 JSON', message },
-        { status: 502 }
-      );
+        plan,
+        message,
+      });
     }
 
-    return NextResponse.json({
-      success: true,
-      provider,
-      model,
-      post: {
-        slug: post.slug,
-        title: post.title,
-        description: post.description,
-        whiteboardPrompt: post.whiteboardPrompt || undefined,
+    return NextResponse.json(
+      {
+        success: false,
+        error: lastValidationError || '模型没有返回可解析的互动课件 JSON',
+        provider: lastProvider || undefined,
+        model,
+        message: lastMessage,
       },
-      plan,
-      message,
-    });
+      { status: 502 }
+    );
   } catch (error) {
     return NextResponse.json(
       {
