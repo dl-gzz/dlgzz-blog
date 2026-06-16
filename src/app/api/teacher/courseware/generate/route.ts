@@ -283,6 +283,199 @@ function attachQuizResultBridge(plan: unknown, studentId: string, topic: string)
   return plan;
 }
 
+function buildFallbackInteractiveHtml({
+  title,
+  description,
+  whiteboardPrompt,
+  studentId,
+}: {
+  title: string;
+  description: string;
+  whiteboardPrompt: string;
+  studentId: string;
+}) {
+  const topic = title || '互动课件';
+  const isCircleArea = /圆|circle|面积/.test(`${title} ${description} ${whiteboardPrompt}`);
+  const quizPrompt = isCircleArea ? '圆的面积公式是什么？' : `完成课件「${topic}」后，你学到了什么？`;
+  const correctAnswer = isCircleArea ? 'πr²' : '已完成';
+  const options = isCircleArea
+    ? ['2πr', 'πr²', 'πd', 'r²']
+    : ['已完成', '还没理解', '需要老师讲解', '跳过'];
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>${topic}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f7f8fb; overflow: hidden; touch-action: manipulation; }
+    .app { height: 100vh; display: grid; grid-template-rows: auto 1fr auto; gap: 10px; padding: 12px; }
+    header, footer, .stage, .panel { background: #fff; border: 1px solid #dfe4ef; border-radius: 10px; padding: 12px; }
+    h1 { margin: 0; font-size: 20px; }
+    p { margin: 6px 0 0; color: #566174; line-height: 1.45; }
+    main { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 10px; }
+    .stage { min-height: 0; display: grid; place-items: center; touch-action: none; }
+    svg { width: min(100%, 500px); height: min(100%, 360px); overflow: visible; touch-action: none; }
+    .panel { min-height: 0; display: grid; gap: 12px; align-content: start; overflow: auto; }
+    label { display: grid; gap: 6px; font-weight: 700; }
+    input[type="range"] { width: 100%; accent-color: #2563eb; }
+    button { border: 0; border-radius: 10px; min-height: 44px; padding: 10px 12px; background: #e8eefc; color: #172033; font-weight: 700; touch-action: manipulation; }
+    button.active { background: #2563eb; color: #fff; }
+    .submit { background: #101827; color: #fff; }
+    .answer-grid { display: grid; gap: 8px; }
+    .hint { color: #64748b; font-size: 14px; }
+    @media (max-width: 760px) { main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } .panel { max-height: 280px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>${topic}</h1>
+      <p>${description || whiteboardPrompt || '拖动、切换步骤并完成最后的小测。'}</p>
+    </header>
+    <main>
+      <section class="stage" aria-label="互动演示区域">
+        <svg id="diagram" viewBox="0 0 520 360" role="img" aria-label="互动数学图形">
+          <rect x="0" y="0" width="520" height="360" rx="18" fill="#f8fafc"></rect>
+          <g transform="translate(180 180)">
+            <circle id="mainCircle" cx="0" cy="0" r="90" fill="#dbeafe" stroke="#2563eb" stroke-width="4"></circle>
+            <line id="radiusLine" x1="0" y1="0" x2="90" y2="0" stroke="#ef4444" stroke-width="5" stroke-linecap="round"></line>
+            <circle id="dragHandle" cx="90" cy="0" r="15" fill="#ef4444" stroke="#fff" stroke-width="4"></circle>
+            <text id="radiusLabel" x="34" y="-12" fill="#991b1b" font-size="18" font-weight="700">r=6</text>
+          </g>
+          <g id="rectGroup" transform="translate(300 118)" opacity="0.28">
+            <rect id="areaRect" x="0" y="0" width="150" height="90" rx="10" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"></rect>
+            <text x="20" y="52" fill="#166534" font-size="18" font-weight="700">近似长方形</text>
+          </g>
+        </svg>
+      </section>
+      <aside class="panel">
+        <label>半径 r：<span id="radiusValue">6</span><input id="radiusSlider" type="range" min="3" max="10" value="6"></label>
+        <div class="answer-grid">
+          <button class="step active" data-step="0">1. 观察圆和半径</button>
+          <button class="step" data-step="1">2. 想象切成扇形</button>
+          <button class="step" data-step="2">3. 拼成近似长方形</button>
+        </div>
+        <div>
+          <div class="hint">${quizPrompt}</div>
+          <div id="answers" class="answer-grid">${options
+            .map((option) => `<button data-answer="${option}">${option}</button>`)
+            .join('')}</div>
+        </div>
+        <button id="submit" class="submit">提交学习结果</button>
+        <div id="feedback" class="hint">拖动红点或滑块，观察图形变化。</div>
+      </aside>
+    </main>
+    <footer class="hint">系统兜底课件：当模型输出不稳定时，仍保证可触屏、可上报。</footer>
+  </div>
+  <script>
+    (function () {
+      var studentId = ${JSON.stringify(studentId)};
+      var topic = ${JSON.stringify(topic)};
+      var correctAnswer = ${JSON.stringify(correctAnswer)};
+      var startedAt = Date.now();
+      var radius = 6;
+      var selectedAnswer = "";
+      var step = 0;
+      var dragging = false;
+      var slider = document.getElementById("radiusSlider");
+      var radiusValue = document.getElementById("radiusValue");
+      var circle = document.getElementById("mainCircle");
+      var line = document.getElementById("radiusLine");
+      var handle = document.getElementById("dragHandle");
+      var label = document.getElementById("radiusLabel");
+      var rectGroup = document.getElementById("rectGroup");
+      var rect = document.getElementById("areaRect");
+      var feedback = document.getElementById("feedback");
+      function setRadius(next) {
+        radius = Math.max(3, Math.min(10, Math.round(next)));
+        var px = radius * 15;
+        radiusValue.textContent = String(radius);
+        slider.value = String(radius);
+        circle.setAttribute("r", String(px));
+        line.setAttribute("x2", String(px));
+        handle.setAttribute("cx", String(px));
+        label.setAttribute("x", String(px / 2 - 10));
+        label.textContent = "r=" + radius;
+        rect.setAttribute("width", String(Math.max(90, px * 1.65)));
+        rect.setAttribute("height", String(Math.max(48, px)));
+      }
+      function setStep(next) {
+        step = next;
+        document.querySelectorAll(".step").forEach(function (button) { button.classList.toggle("active", Number(button.dataset.step) === step); });
+        rectGroup.setAttribute("opacity", step >= 2 ? "1" : step === 1 ? "0.55" : "0.28");
+        feedback.textContent = step === 0 ? "拖动红点改变半径，面积会跟着变化。" : step === 1 ? "把圆切成许多小扇形，越多越接近平滑。" : "扇形重排后接近长方形，所以面积和 r 有关。";
+      }
+      slider.addEventListener("input", function (event) { setRadius(Number(event.target.value)); });
+      handle.addEventListener("pointerdown", function (event) { dragging = true; handle.setPointerCapture(event.pointerId); });
+      handle.addEventListener("pointermove", function (event) {
+        if (!dragging) return;
+        var svg = document.getElementById("diagram");
+        var box = svg.getBoundingClientRect();
+        var x = ((event.clientX - box.left) / box.width) * 520 - 180;
+        setRadius(x / 15);
+      });
+      handle.addEventListener("pointerup", function (event) { dragging = false; handle.releasePointerCapture(event.pointerId); });
+      document.querySelectorAll(".step").forEach(function (button) { button.addEventListener("click", function () { setStep(Number(button.dataset.step)); }); });
+      document.querySelectorAll("#answers button").forEach(function (button) {
+        button.addEventListener("click", function () {
+          selectedAnswer = button.dataset.answer || "";
+          document.querySelectorAll("#answers button").forEach(function (item) { item.classList.toggle("active", item === button); });
+        });
+      });
+      document.getElementById("submit").addEventListener("click", function () {
+        var isCorrect = selectedAnswer === correctAnswer;
+        var questions = [{ id: "courseware-question-1", prompt: ${JSON.stringify(
+          quizPrompt
+        )}, answer: selectedAnswer || "未选择", correctAnswer: correctAnswer, isCorrect: isCorrect, skill: "courseware" }];
+        feedback.textContent = isCorrect ? "提交成功：回答正确。" : "提交成功：稍后可以再练一次。";
+        window.parent.postMessage({ type: "quiz_result", studentId: studentId, quiz: { topic: topic, total: 1, correct: isCorrect ? 1 : 0, durationSeconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)), finishedAt: new Date().toISOString(), questions: questions, wrong: isCorrect ? [] : questions } }, "*");
+      });
+      setRadius(radius);
+      setStep(0);
+    })();
+  </script>
+</body>
+</html>`;
+}
+
+function buildFallbackPlan({
+  title,
+  description,
+  whiteboardPrompt,
+  studentId,
+}: {
+  title: string;
+  description: string;
+  whiteboardPrompt: string;
+  studentId: string;
+}) {
+  return {
+    thought: '模型没有稳定返回合格互动 HTML，系统已生成一个可触屏、可上报成绩的兜底课件。',
+    voice_response: '已生成可触屏互动课件，并补齐学习结果上报。',
+    operations: [
+      {
+        action: 'create',
+        type: 'preview_html',
+        x: 16,
+        y: 72,
+        props: {
+          w: 820,
+          h: 620,
+          html: buildFallbackInteractiveHtml({
+            title,
+            description,
+            whiteboardPrompt,
+            studentId,
+          }),
+        },
+      },
+    ],
+  };
+}
+
 function buildPrompt({
   title,
   description,
@@ -383,7 +576,7 @@ export async function POST(request: NextRequest) {
     let lastProvider = '';
     let lastValidationError = '';
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < 1; attempt += 1) {
       const correction = lastValidationError
         ? `\n\n上一次生成不合格：${lastValidationError}。请重新输出 JSON，props.html 必须是完整、可触屏互动、包含内联脚本和 quiz_result 上报的 HTML。`
         : '';
@@ -435,16 +628,30 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: lastValidationError || '模型没有返回可解析的互动课件 JSON',
-        provider: lastProvider || undefined,
-        model,
-        message: lastMessage,
+    const fallbackPlan = buildFallbackPlan({
+      title: post.title,
+      description: post.description,
+      whiteboardPrompt: post.whiteboardPrompt,
+      studentId,
+    });
+
+    return NextResponse.json({
+      success: true,
+      fallback: true,
+      error: lastValidationError || undefined,
+      provider: lastProvider || process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'system',
+      model,
+      post: {
+        slug: post.slug,
+        title: post.title,
+        description: post.description,
+        whiteboardPrompt: post.whiteboardPrompt || undefined,
       },
-      { status: 502 }
-    );
+      plan: fallbackPlan,
+      message:
+        lastMessage ||
+        'AI 生成结果未达到互动课件要求，系统已使用可触屏兜底课件模板。',
+    });
   } catch (error) {
     return NextResponse.json(
       {
