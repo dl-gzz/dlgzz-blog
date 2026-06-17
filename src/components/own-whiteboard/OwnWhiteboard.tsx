@@ -2572,8 +2572,9 @@ export default function OwnWhiteboard() {
       studentId,
     });
 
-    void fetch(`/api/whiteboard/courseware-mdx?${params.toString()}`)
-      .then(async (response) => {
+    async function openCoursewareSlug() {
+      try {
+        const response = await fetch(`/api/whiteboard/courseware-mdx?${params.toString()}`);
         const data = await response.json().catch(() => null);
         if (!response.ok || !data?.success || !Array.isArray(data.operations)) {
           throw new Error(data?.error || `HTTP ${response.status}`);
@@ -2588,16 +2589,55 @@ export default function OwnWhiteboard() {
             text: `已从博客打开课件：${readText(data?.post?.title, initialPromptTitle || initialLoadCoursewareSlug)}`,
           },
         ]);
-      })
-      .catch((error) => {
-        setMessages((current) => [
-          ...current,
-          {
-            role: 'system',
-            text: error instanceof Error ? `打开博客课件失败：${error.message}` : '打开博客课件失败',
-          },
-        ]);
-      });
+      } catch (savedError) {
+        try {
+          const response = await fetch('/api/teacher/courseware/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slug: initialLoadCoursewareSlug,
+              locale: 'zh',
+              studentId,
+              extraPrompt: '从这个 Block 生成一个可触屏互动课件，并放入白板。',
+            }),
+          });
+          const data = await response.json().catch(() => null);
+          if (!response.ok || !data?.success) {
+            throw new Error(data?.error || `HTTP ${response.status}`);
+          }
+          const operations = collectBoardOperations(data?.plan, JSON.stringify(data?.plan || data));
+          if (operations.length === 0) {
+            throw new Error('生成结果里没有可创建的白板组件');
+          }
+          executeOperations(operations);
+          setAiOpen(false);
+          setLessonLibraryOpen(false);
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'system',
+              text: data?.fallback
+                ? `已根据博客 Block 生成兜底互动课件：${readText(data?.post?.title, initialPromptTitle || initialLoadCoursewareSlug)}`
+                : `已根据博客 Block 生成互动课件：${readText(data?.post?.title, initialPromptTitle || initialLoadCoursewareSlug)}`,
+            },
+          ]);
+        } catch (generateError) {
+          const savedMessage =
+            savedError instanceof Error ? savedError.message : '读取已保存课件失败';
+          const generateMessage =
+            generateError instanceof Error ? generateError.message : '生成互动课件失败';
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'system',
+              text: `打开博客课件失败：${savedMessage}；自动生成也失败：${generateMessage}`,
+            },
+          ]);
+        }
+      }
+    }
+
+    void openCoursewareSlug();
   }, [initialLoadCoursewareSlug, initialPromptTitle, ready, studentId]);
 
   useEffect(() => {
