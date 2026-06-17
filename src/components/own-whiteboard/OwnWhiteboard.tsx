@@ -2527,7 +2527,8 @@ export default function OwnWhiteboard() {
       : `dlgzz-courseware-import:${initialCoursewareImportKey}`;
 
     try {
-      const raw = window.sessionStorage.getItem(storageKey);
+      const raw =
+        window.sessionStorage.getItem(storageKey) || window.localStorage.getItem(storageKey);
       if (!raw) {
         throw new Error('没有找到后台生成的课件数据');
       }
@@ -2540,6 +2541,7 @@ export default function OwnWhiteboard() {
 
       executeOperations(operations);
       window.sessionStorage.removeItem(storageKey);
+      window.localStorage.removeItem(storageKey);
       setAiOpen(false);
       setLessonLibraryOpen(false);
       setMessages((current) => [
