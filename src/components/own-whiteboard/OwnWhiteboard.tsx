@@ -2274,6 +2274,50 @@ export default function OwnWhiteboard() {
     ]);
   }
 
+  async function runGeneratedCoursewarePost(post: LessonPromptPost) {
+    const slug = getLessonPostSlug(post);
+    if (!slug) {
+      throw new Error('Block 缺少 slug');
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/teacher/courseware/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug,
+          locale: 'zh',
+          studentId,
+          extraPrompt: '从这个 MDX Block 生成一个可触屏互动课件，并直接放入白板。',
+        }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || `HTTP ${response.status}`);
+      }
+
+      const operations = collectBoardOperations(data?.plan, JSON.stringify(data?.plan || data));
+      if (operations.length === 0) {
+        throw new Error('生成结果里没有可创建的白板组件');
+      }
+
+      executeOperations(operations);
+      setMessages((current) => [
+        ...current,
+        { role: 'user', text: `课件库：${post.title}` },
+        {
+          role: 'assistant',
+          text: data?.fallback
+            ? 'AI 生成超时或不稳定，已使用系统兜底生成互动课件。'
+            : '已根据 MDX Block 生成互动课件。',
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function runLessonPrompt(post: LessonPromptPost) {
     if (post.hasSavedCourseware) {
       setLessonLibraryOpen(false);
@@ -2352,11 +2396,21 @@ export default function OwnWhiteboard() {
       return;
     }
 
-    const prompt =
-      post.whiteboardPrompt?.trim() ||
-      `帮我基于博客《${post.title}》生成一个互动教育课件。博客简介：${post.description}`;
     setLessonLibraryOpen(false);
-    void runAIWithPrompt(prompt, `课件库：${post.title}`);
+    setAiOpen(false);
+    void runGeneratedCoursewarePost(post).catch((error) => {
+      setMessages((current) => [
+        ...current,
+        { role: 'user', text: `课件库：${post.title}` },
+        {
+          role: 'assistant',
+          text:
+            error instanceof Error
+              ? `生成课件失败：${error.message}`
+              : '生成课件失败。',
+        },
+      ]);
+    });
   }
 
   async function createParentBindQr() {
