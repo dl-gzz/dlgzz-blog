@@ -38,6 +38,10 @@ import ReactMarkdown from 'react-markdown';
 import '@/styles/mdx.css';
 import { InlineTOC } from 'fumadocs-ui/components/inline-toc';
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+export const revalidate = 0;
+
 async function getRelatedPosts(post: BlogType) {
   const relatedPosts = blogSource
     .getPages(post.locale)
