@@ -146,6 +146,69 @@ function planFromFallbackMessage(message: string) {
   return null;
 }
 
+function getPreviewHtml(plan: unknown) {
+  if (!plan || typeof plan !== 'object') return '';
+
+  const operations = (plan as { operations?: unknown }).operations;
+  if (!Array.isArray(operations)) return '';
+
+  return (
+    operations
+      .map((operation) => {
+        if (!operation || typeof operation !== 'object') return '';
+        const props = (operation as { props?: unknown }).props;
+        if (!props || typeof props !== 'object') return '';
+        const html = (props as { html?: unknown }).html;
+        return typeof html === 'string' ? html : '';
+      })
+      .find((html) => html.trim().length > 0) || ''
+  );
+}
+
+function collectInlineScripts(html: string) {
+  return Array.from(html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi))
+    .filter((match) => !/\ssrc\s*=/i.test(match[1] || ''))
+    .map((match) => match[2] || '')
+    .filter((script) => script.trim().length > 0);
+}
+
+function validateHtmlScriptRuntime(html: string) {
+  const scripts = collectInlineScripts(html);
+
+  for (const script of scripts) {
+    try {
+      // Parse only. Do not execute model-generated code on the server.
+      // eslint-disable-next-line no-new-func
+      new Function(script);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '未知脚本语法错误';
+      return `HTML 内联脚本语法错误：${message}`;
+    }
+  }
+
+  const allScripts = scripts.join('\n');
+  const handlerCalls = Array.from(
+    html.matchAll(/\son[a-z]+\s*=\s*(["'])([\s\S]*?)\1/gi)
+  )
+    .map((match) => (match[2] || '').trim())
+    .map((handler) => handler.match(/^([A-Za-z_$][\w$]*)\s*\(/)?.[1])
+    .filter((name): name is string => Boolean(name))
+    .filter((name) => !['alert', 'confirm', 'prompt'].includes(name));
+
+  for (const name of handlerCalls) {
+    const declared =
+      new RegExp(`\\bfunction\\s+${name}\\s*\\(`).test(allScripts) ||
+      new RegExp(`\\b(?:var|let|const)\\s+${name}\\s*=`).test(allScripts) ||
+      new RegExp(`\\bwindow\\.${name}\\s*=`).test(allScripts);
+
+    if (!declared) {
+      return `HTML 内联事件引用了未声明函数：${name}`;
+    }
+  }
+
+  return '';
+}
+
 function validateInteractivePlan(plan: unknown) {
   if (!plan || typeof plan !== 'object') {
     return '模型没有返回课件计划对象';
@@ -156,15 +219,7 @@ function validateInteractivePlan(plan: unknown) {
     return '模型没有返回 operations 数组';
   }
 
-  const previewHtml = operations
-    .map((operation) => {
-      if (!operation || typeof operation !== 'object') return '';
-      const props = (operation as { props?: unknown }).props;
-      if (!props || typeof props !== 'object') return '';
-      const html = (props as { html?: unknown }).html;
-      return typeof html === 'string' ? html : '';
-    })
-    .find((html) => html.trim().length > 0);
+  const previewHtml = getPreviewHtml(plan);
 
   if (!previewHtml) {
     return '模型没有在 preview_html.props.html 中返回完整 HTML';
@@ -191,7 +246,7 @@ function validateInteractivePlan(plan: unknown) {
     },
   ];
 
-  return checks.find((check) => !check.ok)?.message || '';
+  return checks.find((check) => !check.ok)?.message || validateHtmlScriptRuntime(previewHtml);
 }
 
 function injectQuizResultBridge(html: string, studentId: string, topic: string) {
