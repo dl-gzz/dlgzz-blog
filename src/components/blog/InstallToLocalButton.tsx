@@ -193,10 +193,15 @@ export function InstallToLocalButton({
       });
       const packageData = await packageResponse.json().catch(() => null);
 
-      const componentPackage =
-        packageData?.component_package || packageData?.shape_package;
+      const installPackage =
+        packageData?.skill_package ||
+        packageData?.component_package ||
+        packageData?.shape_package;
+      const installPayload = packageData?.skill_package
+        ? { skill_package: installPackage }
+        : { component_package: installPackage };
 
-      if (!packageResponse.ok || !componentPackage) {
+      if (!packageResponse.ok || !installPackage) {
         const reason = String(packageData?.error || '安装前校验失败');
         const helper =
           packageData?.code === 'AUTH_REQUIRED'
@@ -215,7 +220,7 @@ export function InstallToLocalButton({
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ component_package: componentPackage }),
+          body: JSON.stringify(installPayload),
         }
       );
       const localInstallData = await localInstallResponse

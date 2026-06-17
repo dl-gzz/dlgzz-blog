@@ -4,11 +4,11 @@
  */
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { MessageCircle, Send, X, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AlertCircle, Loader2, MessageCircle, Send, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -22,7 +22,11 @@ interface ArticleChatProps {
   articleTitle?: string;
 }
 
-export function ArticleChat({ slug, locale = 'zh', articleTitle }: ArticleChatProps) {
+export function ArticleChat({
+  slug,
+  locale = 'zh',
+  articleTitle,
+}: ArticleChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -51,6 +55,20 @@ export function ArticleChat({ slug, locale = 'zh', articleTitle }: ArticleChatPr
     setIsOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    const handleOpenChat = (event: Event) => {
+      const detail = (event as CustomEvent<{ question?: string }>).detail;
+      setIsOpen(true);
+      if (typeof detail?.question === 'string' && detail.question.trim()) {
+        setInputValue(detail.question.trim());
+      }
+    };
+
+    window.addEventListener('article-chat:open', handleOpenChat);
+    return () =>
+      window.removeEventListener('article-chat:open', handleOpenChat);
+  }, []);
+
   // 自动滚动到最新消息
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -75,7 +93,7 @@ export function ArticleChat({ slug, locale = 'zh', articleTitle }: ArticleChatPr
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
     setError(null);
@@ -113,7 +131,7 @@ export function ArticleChat({ slug, locale = 'zh', articleTitle }: ArticleChatPr
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
 
       let accumulatedContent = '';
 
@@ -139,7 +157,7 @@ export function ArticleChat({ slug, locale = 'zh', articleTitle }: ArticleChatPr
                 accumulatedContent += parsed.content;
 
                 // 实时更新最后一条消息
-                setMessages(prev => {
+                setMessages((prev) => {
                   const newMessages = [...prev];
                   const lastMessage = newMessages[newMessages.length - 1];
                   if (lastMessage && lastMessage.role === 'assistant') {
@@ -187,6 +205,7 @@ export function ArticleChat({ slug, locale = 'zh', articleTitle }: ArticleChatPr
       {/* 浮动按钮 */}
       {!isOpen && (
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-110 hover:shadow-xl"
           aria-label="打开 AI 助手"
@@ -197,7 +216,7 @@ export function ArticleChat({ slug, locale = 'zh', articleTitle }: ArticleChatPr
 
       {/* 聊天窗口 */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[600px] w-[400px] flex-col rounded-2xl border bg-background shadow-2xl">
+        <div className="fixed bottom-4 left-4 right-4 z-50 flex h-[min(600px,calc(100vh-2rem))] flex-col rounded-2xl border bg-background shadow-2xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-[400px]">
           {/* 头部 */}
           <div className="flex items-center justify-between border-b p-4">
             <div className="flex items-center gap-2">
@@ -205,7 +224,9 @@ export function ArticleChat({ slug, locale = 'zh', articleTitle }: ArticleChatPr
               <div>
                 <h3 className="font-semibold">AI 文章助手</h3>
                 {articleTitle && (
-                  <p className="text-xs text-muted-foreground">{articleTitle}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {articleTitle}
+                  </p>
                 )}
               </div>
             </div>
@@ -228,6 +249,7 @@ export function ArticleChat({ slug, locale = 'zh', articleTitle }: ArticleChatPr
                 <div className="space-y-2 w-full">
                   {quickQuestions.map((q, i) => (
                     <button
+                      type="button"
                       key={i}
                       onClick={() => handleQuickQuestion(q)}
                       className="block w-full rounded-lg border p-2 text-sm hover:bg-accent transition-colors text-left"

@@ -35,7 +35,12 @@ interface ServiceMarketCardData {
   access: AccessStateSnapshot;
 }
 
-type LocalInstallState = 'checking' | 'not_installed' | 'installed' | 'upgrade_available' | 'local_unreachable';
+type LocalInstallState =
+  | 'checking'
+  | 'not_installed'
+  | 'installed'
+  | 'upgrade_available'
+  | 'local_unreachable';
 type FilterMode = 'all' | 'not_installed' | 'upgrade_available' | 'installed';
 
 interface InstalledShapeItem {
@@ -53,40 +58,48 @@ function getPricingLabel(mode: string) {
 
 function getPricingClassName(mode: string) {
   if (mode === 'premium') {
-    return 'rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700';
+    return 'rounded-md border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700';
   }
   if (mode === 'license') {
-    return 'rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700';
+    return 'rounded-md border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700';
   }
-  return 'rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700';
+  return 'rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700';
 }
 
-function getLocalStateBadge(state: LocalInstallState, localVersion?: string | null) {
+function getLocalStateBadge(
+  state: LocalInstallState,
+  localVersion?: string | null
+) {
   switch (state) {
     case 'installed':
       return {
         label: localVersion ? `线下已安装 v${localVersion}` : '线下已安装',
-        className: 'rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700',
+        className:
+          'rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700',
       };
     case 'upgrade_available':
       return {
         label: localVersion ? `可升级，当前 v${localVersion}` : '可升级',
-        className: 'rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700',
+        className:
+          'rounded-md border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700',
       };
     case 'local_unreachable':
       return {
         label: '未连接线下',
-        className: 'rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700',
+        className:
+          'rounded-md border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700',
       };
     case 'checking':
       return {
         label: '检查线下中',
-        className: 'rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600',
+        className:
+          'rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600',
       };
     default:
       return {
         label: '线下未安装',
-        className: 'rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700',
+        className:
+          'rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700',
       };
   }
 }
@@ -102,19 +115,22 @@ export default function ServicesMarketClient({
 }) {
   const localOrigin = useMemo(() => getLocalClientOrigin(), []);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
-  const [localStates, setLocalStates] = useState<Record<string, { state: LocalInstallState; version?: string | null }>>(
-    {}
-  );
+  const [localStates, setLocalStates] = useState<
+    Record<string, { state: LocalInstallState; version?: string | null }>
+  >({});
 
   useEffect(() => {
     let cancelled = false;
 
     const loadLocalStates = async () => {
       try {
-        const response = await fetch(`${localOrigin}/api/shape-packages/installed`, {
-          method: 'GET',
-          cache: 'no-store',
-        });
+        const response = await fetch(
+          `${localOrigin}/api/shape-packages/installed`,
+          {
+            method: 'GET',
+            cache: 'no-store',
+          }
+        );
         const data = await response.json().catch(() => null);
         if (!response.ok || !Array.isArray(data?.items)) {
           throw new Error('LOCAL_STATUS_FAILED');
@@ -128,18 +144,30 @@ export default function ServicesMarketClient({
           }
         });
 
-        const nextStates: Record<string, { state: LocalInstallState; version?: string | null }> = {};
+        const nextStates: Record<
+          string,
+          { state: LocalInstallState; version?: string | null }
+        > = {};
         items.forEach(({ item }) => {
           const matched = installedMap.get(item.manifest.id);
-          const installedVersion = typeof matched?.manifest?.version === 'string' ? matched.manifest.version : null;
+          const installedVersion =
+            typeof matched?.manifest?.version === 'string'
+              ? matched.manifest.version
+              : null;
 
           if (!installedVersion) {
-            nextStates[item.manifest.id] = { state: 'not_installed', version: null };
+            nextStates[item.manifest.id] = {
+              state: 'not_installed',
+              version: null,
+            };
             return;
           }
 
           nextStates[item.manifest.id] = {
-            state: compareVersions(item.manifest.version, installedVersion) > 0 ? 'upgrade_available' : 'installed',
+            state:
+              compareVersions(item.manifest.version, installedVersion) > 0
+                ? 'upgrade_available'
+                : 'installed',
             version: installedVersion,
           };
         });
@@ -149,9 +177,15 @@ export default function ServicesMarketClient({
         }
       } catch {
         if (cancelled) return;
-        const fallbackStates: Record<string, { state: LocalInstallState; version?: string | null }> = {};
+        const fallbackStates: Record<
+          string,
+          { state: LocalInstallState; version?: string | null }
+        > = {};
         items.forEach(({ item }) => {
-          fallbackStates[item.manifest.id] = { state: 'local_unreachable', version: null };
+          fallbackStates[item.manifest.id] = {
+            state: 'local_unreachable',
+            version: null,
+          };
         });
         setLocalStates(fallbackStates);
       }
@@ -193,7 +227,11 @@ export default function ServicesMarketClient({
   const filterTabs: Array<{ id: FilterMode; label: string; count: number }> = [
     { id: 'all', label: '全部', count: counts.all },
     { id: 'not_installed', label: '未安装', count: counts.not_installed },
-    { id: 'upgrade_available', label: '可升级', count: counts.upgrade_available },
+    {
+      id: 'upgrade_available',
+      label: '可升级',
+      count: counts.upgrade_available,
+    },
     { id: 'installed', label: '已安装', count: counts.installed },
   ];
 
@@ -205,10 +243,13 @@ export default function ServicesMarketClient({
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setFilterMode(tab.id)}
-              className={active
-                ? 'rounded-full border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-semibold text-white'
-                : 'rounded-full border bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-accent'}
+              className={
+                active
+                  ? 'rounded-lg border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-semibold text-white'
+                  : 'rounded-lg border bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-accent'
+              }
             >
               {tab.label} {tab.count}
             </button>
@@ -217,20 +258,21 @@ export default function ServicesMarketClient({
       </div>
 
       {filteredItems.length === 0 ? (
-        <div className="rounded-[28px] border bg-card p-6 text-sm leading-7 text-muted-foreground">
+        <div className="rounded-lg border bg-card p-6 text-sm leading-7 text-muted-foreground">
           这一组里现在没有组件。你可以切换筛选，或者先启动线下客户端让商店读取本地安装状态。
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {filteredItems.map(({ item, access }) => {
-            const localState = localStates[item.manifest.id]?.state || 'checking';
+            const localState =
+              localStates[item.manifest.id]?.state || 'checking';
             const localVersion = localStates[item.manifest.id]?.version || null;
             const localBadge = getLocalStateBadge(localState, localVersion);
 
             return (
               <div
                 key={item.slug}
-                className="group overflow-hidden rounded-[28px] border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                className="group overflow-hidden rounded-lg border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
               >
                 <div className="relative aspect-[16/9] overflow-hidden bg-muted">
                   {item.image ? (
@@ -242,27 +284,35 @@ export default function ServicesMarketClient({
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-5xl">
-                      {item.manifest.entry.icon || item.manifest.icon || '🧩'}
+                      {item.manifest.entry.icon || item.manifest.icon || 'AI'}
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-4 p-5">
                   <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    <span className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                       {item.manifest.category}
                     </span>
-                    <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                    <span className="rounded-md border px-3 py-1 text-xs font-semibold text-muted-foreground">
                       v{item.manifest.version}
                     </span>
-                    <span className={getPricingClassName(item.manifest.pricing.mode)}>
+                    <span
+                      className={getPricingClassName(
+                        item.manifest.pricing.mode
+                      )}
+                    >
                       {getPricingLabel(item.manifest.pricing.mode)}
                     </span>
-                    <span className={localBadge.className}>{localBadge.label}</span>
+                    <span className={localBadge.className}>
+                      {localBadge.label}
+                    </span>
                   </div>
 
                   <div>
-                    <h2 className="text-xl font-bold">{item.manifest.entry.title || item.manifest.name}</h2>
+                    <h2 className="text-xl font-bold">
+                      {item.manifest.entry.title || item.manifest.name}
+                    </h2>
                     <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
                       {item.description || item.manifest.summary}
                     </p>
@@ -274,7 +324,7 @@ export default function ServicesMarketClient({
                     <span>{access.statusLabel}</span>
                   </div>
 
-                  <div className="rounded-2xl border bg-muted/30 px-4 py-3 text-sm leading-6 text-muted-foreground">
+                  <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-6 text-muted-foreground">
                     {access.helperText}
                   </div>
 
@@ -294,8 +344,11 @@ export default function ServicesMarketClient({
                       >
                         查看文章
                       </LocaleLink>
-                      {access.actionLabel && access.actionHref && (
-                        access.code === 'LICENSE_REQUIRED' && userId && item.manifest.pricing.price_id ? (
+                      {access.actionLabel &&
+                        access.actionHref &&
+                        (access.code === 'LICENSE_REQUIRED' &&
+                        userId &&
+                        item.manifest.pricing.price_id ? (
                           <ServiceCheckoutButton
                             userId={userId}
                             slug={item.slug}
@@ -314,8 +367,7 @@ export default function ServicesMarketClient({
                           >
                             {access.actionLabel}
                           </a>
-                        )
-                      )}
+                        ))}
                     </div>
                   </div>
                 </div>

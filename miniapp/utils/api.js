@@ -18,8 +18,39 @@ function getPostDetail({ slug, locale = 'zh' }) {
   });
 }
 
+function loginWithCode(code) {
+  return request({
+    url: '/api/mp/auth/login',
+    method: 'POST',
+    data: { code },
+  });
+}
+
+function getMembershipStatus() {
+  return request({
+    url: '/api/mp/membership/status',
+  });
+}
+
+function createMembershipOrder() {
+  return request({
+    url: '/api/mp/membership/order',
+    method: 'POST',
+  });
+}
+
+function getMembershipOrderStatus(aoid) {
+  return request({
+    url: `/api/mp/membership/order/status?aoid=${encodeURIComponent(aoid)}`,
+  });
+}
+
 module.exports = {
+  createMembershipOrder,
   getConfig,
+  getMembershipOrderStatus,
+  getMembershipStatus,
   getPosts,
   getPostDetail,
+  loginWithCode,
 };

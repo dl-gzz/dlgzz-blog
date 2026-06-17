@@ -6,14 +6,18 @@ export default function PricingSection() {
   const t = useTranslations('HomePage.pricing');
 
   return (
-    <section id="pricing" className="px-4 py-16">
-      <div className="mx-auto max-w-6xl px-6 space-y-16">
+    <section
+      id="pricing"
+      className="border-b border-slate-200 bg-[#f8f7f2] px-4 py-20 dark:border-white/10 dark:bg-neutral-950"
+    >
+      <div className="mx-auto max-w-6xl space-y-12 px-0 sm:px-6">
         <HeaderSection
           subtitle={t('subtitle')}
           subtitleAs="h2"
-          subtitleClassName="text-4xl font-bold"
+          subtitleClassName="max-w-3xl text-3xl font-black tracking-normal text-slate-950 sm:text-4xl dark:text-white"
           description={t('description')}
           descriptionAs="p"
+          descriptionClassName="max-w-3xl text-base leading-8 text-slate-600 dark:text-white/64"
         />
 
         <PricingTable />

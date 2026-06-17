@@ -2,10 +2,13 @@
   "name": "mksaas-template",
   "version": "0.1.0",
   "private": true,
+  "bin": {
+    "one-admin": "./bin/one-admin.mjs"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p ${PORT:-3000}",
     "postinstall": "fumadocs-mdx",
     "lint": "biome check --write .",
     "lint:fix": "biome check --fix --unsafe .",
@@ -15,6 +18,13 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "list-contacts": "tsx scripts/list-contacts.ts",
+    "hermes:bridge": "tsx scripts/hermes-bridge.ts",
+    "knowledge:xhs:import": "tsx scripts/import-xhs-open-shop-knowledge.ts",
+    "knowledge:xhs:search": "tsx scripts/search-xhs-knowledge.ts",
+    "worker:xhs:seed": "tsx scripts/seed-xhs-open-shop-worker.ts",
+    "worker:provision": "tsx scripts/provision-worker-instance.ts",
+    "worker:admin": "tsx scripts/worker-admin-summary.ts",
+    "worker:stability": "tsx scripts/check-worker-platform-stability.ts",
     "upload:xhs-assets": "tsx scripts/upload-obsidian-assets-to-cdn.ts",
     "content": "fumadocs-mdx",
     "email": "email dev --dir src/mail/templates --port 3333",

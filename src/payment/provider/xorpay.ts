@@ -6,6 +6,7 @@ import {
   findPlanByPriceId,
   findPriceInPlan,
 } from '@/lib/price-plan';
+import { markWorkerInstancePayment } from '@/lib/workers';
 import { sendEmail } from '@/mail';
 import { sendNotification } from '@/notification/notification';
 import { desc, eq } from 'drizzle-orm';
@@ -113,7 +114,7 @@ export class XorPayProvider implements PaymentProvider {
    */
   async createCheckout(params: CreateCheckoutParams & { openid?: string }): Promise<CheckoutResult> {
     try {
-      const { priceId, userId, customerEmail, successUrl, openid } = params;
+      const { priceId, userId, customerEmail, successUrl, openid, metadata } = params;
 
       // Get price information
       const plan = findPlanByPriceId(priceId);
@@ -140,7 +141,11 @@ export class XorPayProvider implements PaymentProvider {
       const payType = openid ? 'jsapi' : 'alipay';
 
       const requestParams: Record<string, string> = {
-        name: plan.name || '独立工作者会员',
+        name:
+          metadata?.workerEmployeeName ||
+          metadata?.serviceName ||
+          plan.name ||
+          '独立工作者会员',
         pay_type: payType,
         price: (price.amount / 100).toFixed(2), // Convert cents to yuan, format like "1.80"
         order_id: orderNo,
@@ -369,6 +374,10 @@ export class XorPayProvider implements PaymentProvider {
     if (updatedPayment.length > 0) {
       const payAmount = parseFloat(event.pay_price || '0');
       const paymentRecord = updatedPayment[0];
+      await markWorkerInstancePayment({
+        subscriptionId: aoid,
+        paymentStatus: 'active',
+      });
 
       // Get user email from payment record
       const userRecord = await db
@@ -437,6 +446,11 @@ export class XorPayProvider implements PaymentProvider {
       })
       .where(eq(payment.subscriptionId, orderNo));
 
+    await markWorkerInstancePayment({
+      subscriptionId: orderNo,
+      paymentStatus: 'canceled',
+    });
+
     console.log(`Payment canceled: ${orderNo}`);
   }
 
@@ -454,6 +468,11 @@ export class XorPayProvider implements PaymentProvider {
         updatedAt: new Date(),
       })
       .where(eq(payment.subscriptionId, orderNo));
+
+    await markWorkerInstancePayment({
+      subscriptionId: orderNo,
+      paymentStatus: 'canceled',
+    });
 
     console.log(`Payment refunded: ${orderNo}`);
   }

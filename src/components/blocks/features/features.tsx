@@ -1,19 +1,13 @@
 'use client';
 
 import { HeaderSection } from '@/components/layout/header-section';
-import { BorderBeam } from '@/components/magicui/border-beam';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import {
-  Sparkles,
-  Search,
-  Palette,
-  Zap,
-} from 'lucide-react';
+import { Palette, Search, Sparkles, Zap } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
@@ -51,80 +45,98 @@ export default function FeaturesSection() {
   };
 
   return (
-    <section id="features" className="px-4 py-16">
-      <div className="bg-linear-to-b absolute inset-0 -z-10 sm:inset-6 sm:rounded-b-3xl dark:block dark:to-[color-mix(in_oklab,var(--color-zinc-900)_75%,var(--color-background))]" />
-      <div className="mx-auto max-w-6xl space-y-8 lg:space-y-20 dark:[--color-border:color-mix(in_oklab,var(--color-white)_10%,transparent)]">
+    <section
+      id="features"
+      className="border-b border-slate-200 bg-white px-4 py-20 dark:border-white/10 dark:bg-neutral-950"
+    >
+      <div className="mx-auto max-w-6xl space-y-10 lg:space-y-16">
         <HeaderSection
           title={t('title')}
           subtitle={t('subtitle')}
           subtitleAs="h2"
+          subtitleClassName="max-w-3xl text-3xl font-black tracking-normal text-slate-950 sm:text-4xl dark:text-white"
           description={t('description')}
           descriptionAs="p"
+          descriptionClassName="max-w-3xl text-base leading-8 text-slate-600 dark:text-white/64"
         />
 
-        <div className="grid gap-12 sm:px-12 lg:grid-cols-12 lg:gap-24 lg:px-0">
-          <div className="lg:col-span-5 flex flex-col gap-8">
-            <div className="lg:pr-0 text-left">
-              <h3 className="text-3xl font-semibold lg:text-4xl bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent leading-normal py-1">
+        <div className="grid gap-8 lg:grid-cols-12 lg:gap-12">
+          <div className="flex flex-col gap-6 lg:col-span-5">
+            <div className="border border-slate-200 bg-[#f8f7f2] p-6 text-left dark:border-white/10 dark:bg-white/5">
+              <h3 className="text-2xl font-black leading-tight text-slate-950 sm:text-3xl dark:text-white">
                 {t('title')}
               </h3>
-              <p className="mt-4 text-muted-foreground">{t('description')}</p>
+              <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-white/64">
+                {t('description')}
+              </p>
             </div>
             <Accordion
               type="single"
               value={activeItem}
               onValueChange={(value) => setActiveItem(value as ImageKey)}
-              className="w-full"
+              className="w-full space-y-3"
             >
-              <AccordionItem value="item-1">
-                <AccordionTrigger>
+              <AccordionItem
+                value="item-1"
+                className="rounded-lg border border-slate-200 bg-white px-4 dark:border-white/10 dark:bg-white/5"
+              >
+                <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2 text-base">
-                    <Sparkles className="size-4 text-purple-600" />
+                    <Sparkles className="size-4 text-emerald-700 dark:text-emerald-300" />
                     {t('items.item-1.title')}
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
+                <AccordionContent className="leading-7 text-slate-600 dark:text-white/64">
                   {t('items.item-1.description')}
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-2">
-                <AccordionTrigger>
+              <AccordionItem
+                value="item-2"
+                className="rounded-lg border border-slate-200 bg-white px-4 dark:border-white/10 dark:bg-white/5"
+              >
+                <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2 text-base">
-                    <Search className="size-4 text-blue-600" />
+                    <Search className="size-4 text-sky-700 dark:text-sky-300" />
                     {t('items.item-2.title')}
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
+                <AccordionContent className="leading-7 text-slate-600 dark:text-white/64">
                   {t('items.item-2.description')}
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-3">
-                <AccordionTrigger>
+              <AccordionItem
+                value="item-3"
+                className="rounded-lg border border-slate-200 bg-white px-4 dark:border-white/10 dark:bg-white/5"
+              >
+                <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2 text-base">
-                    <Palette className="size-4 text-purple-600" />
+                    <Palette className="size-4 text-amber-700 dark:text-amber-300" />
                     {t('items.item-3.title')}
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
+                <AccordionContent className="leading-7 text-slate-600 dark:text-white/64">
                   {t('items.item-3.description')}
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-4">
-                <AccordionTrigger>
+              <AccordionItem
+                value="item-4"
+                className="rounded-lg border border-slate-200 bg-white px-4 dark:border-white/10 dark:bg-white/5"
+              >
+                <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2 text-base">
-                    <Zap className="size-4 text-blue-600" />
+                    <Zap className="size-4 text-rose-700 dark:text-rose-300" />
                     {t('items.item-4.title')}
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
+                <AccordionContent className="leading-7 text-slate-600 dark:text-white/64">
                   {t('items.item-4.description')}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
           </div>
 
-          <div className="bg-background w-full relative flex overflow-hidden rounded-2xl border p-2 lg:h-auto lg:col-span-7">
-            <div className="aspect-76/59 bg-background relative w-full rounded-2xl">
+          <div className="relative flex w-full overflow-hidden rounded-lg border border-slate-200 bg-[#f8f7f2] p-2 shadow-sm dark:border-white/10 dark:bg-white/5 lg:col-span-7 lg:h-auto">
+            <div className="aspect-76/59 relative w-full rounded-md bg-white dark:bg-neutral-950">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`${activeItem}-id`}
@@ -132,7 +144,7 @@ export default function FeaturesSection() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.98 }}
                   transition={{ duration: 0.2 }}
-                  className="size-full overflow-hidden rounded-2xl border bg-zinc-900 shadow-md"
+                  className="size-full overflow-hidden rounded-md border border-slate-200 bg-zinc-900 shadow-md shadow-slate-950/10 dark:border-white/10 dark:shadow-black/30"
                 >
                   <Image
                     src={images[activeItem].image}
@@ -151,11 +163,6 @@ export default function FeaturesSection() {
                 </motion.div>
               </AnimatePresence>
             </div>
-            <BorderBeam
-              duration={6}
-              size={200}
-              className="from-transparent via-purple-500 to-transparent dark:via-blue-400"
-            />
           </div>
         </div>
       </div>

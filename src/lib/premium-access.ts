@@ -1,7 +1,5 @@
+import { userHasMembershipAccess } from '@/lib/entitlements';
 import { getSession } from '@/lib/server';
-import { getDb } from '@/db';
-import { payment } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 
 /**
  * 检查指定用户是否拥有有效的付费订阅
@@ -14,34 +12,7 @@ import { eq } from 'drizzle-orm';
  * @returns true 表示用户拥有有效且未过期的订阅
  */
 export async function userHasPremiumAccess(userId: string): Promise<boolean> {
-  try {
-    const db = await getDb();
-
-    const userPayments = await db
-      .select()
-      .from(payment)
-      .where(eq(payment.userId, userId));
-
-    if (userPayments.length === 0) {
-      return false;
-    }
-
-    const now = new Date();
-
-    return userPayments.some((p) => {
-      if (p.type !== 'subscription' || (p.status !== 'active' && p.status !== 'completed')) {
-        return false;
-      }
-
-      if (!p.periodEnd) {
-        return false;
-      }
-
-      return p.periodEnd > now;
-    });
-  } catch {
-    return false;
-  }
+  return userHasMembershipAccess(userId);
 }
 
 /**

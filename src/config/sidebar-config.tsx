@@ -4,6 +4,7 @@ import { Routes } from '@/routes';
 import type { NestedMenuItem } from '@/types';
 import {
   BellIcon,
+  BotIcon,
   CircleUserRoundIcon,
   CreditCardIcon,
   LayoutDashboardIcon,
@@ -42,6 +43,12 @@ export function getSidebarLinks(): NestedMenuItem[] {
       icon: <SettingsIcon className="size-4 shrink-0" />,
       authorizeOnly: isDemo ? ['admin', 'user'] : ['admin'],
       items: [
+        {
+          title: t('bots.title'),
+          icon: <BotIcon className="size-4 shrink-0" />,
+          href: Routes.AdminBots,
+          external: false,
+        },
         {
           title: t('admin.users.title'),
           icon: <UsersRoundIcon className="size-4 shrink-0" />,

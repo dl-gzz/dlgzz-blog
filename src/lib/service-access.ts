@@ -3,7 +3,7 @@ import 'server-only';
 import { getDb } from '@/db';
 import { payment } from '@/db/schema';
 import type { ServiceManifestV1 } from '@/lib/service-manifest';
-import { PaymentTypes, type PaymentStatus } from '@/payment/types';
+import { type PaymentStatus, PaymentTypes } from '@/payment/types';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 
 export type ServiceAccessCode =
@@ -35,8 +35,14 @@ export interface ServiceLicenseOrderState {
   updatedAt?: Date | null;
 }
 
-export const GRANTED_ONE_TIME_PAYMENT_STATUSES = ['active', 'completed'] as const;
-const TRACKED_ONE_TIME_PAYMENT_STATUSES = ['processing', ...GRANTED_ONE_TIME_PAYMENT_STATUSES] as const;
+export const GRANTED_ONE_TIME_PAYMENT_STATUSES = [
+  'active',
+  'completed',
+] as const;
+const TRACKED_ONE_TIME_PAYMENT_STATUSES = [
+  'processing',
+  ...GRANTED_ONE_TIME_PAYMENT_STATUSES,
+] as const;
 
 function getDefaultPurchaseHref(locale: string, manifest: ServiceManifestV1) {
   const customHref = manifest.pricing.purchase_url?.trim();
@@ -47,7 +53,10 @@ function getDefaultPurchaseHref(locale: string, manifest: ServiceManifestV1) {
   return `/${locale}/pricing?service=${encodeURIComponent(manifest.id)}`;
 }
 
-export async function userHasServiceLicense(userId: string, priceId: string): Promise<boolean> {
+export async function userHasServiceLicense(
+  userId: string,
+  priceId: string
+): Promise<boolean> {
   try {
     const db = await getDb();
     const result = await db
@@ -181,6 +190,17 @@ export async function getServiceAccessState({
       code: 'FREE',
       statusLabel: '会员已解锁',
       helperText: '当前账号已解锁会员权限，这个组件可以直接安装到客户端。',
+      purchaseHref,
+    };
+  }
+
+  if (userId && hasPremium) {
+    return {
+      mode,
+      granted: true,
+      code: 'FREE',
+      statusLabel: '会员已解锁',
+      helperText: '当前会员权益已解锁全部组件。单独购买仍可作为永久授权保留。',
       purchaseHref,
     };
   }

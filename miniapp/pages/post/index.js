@@ -1,5 +1,8 @@
 const { getPostDetail } = require('../../utils/api');
-const { toAbsoluteImageUrl, toAbsoluteImageUrls } = require('../../utils/request');
+const {
+  toAbsoluteImageUrl,
+  toAbsoluteImageUrls,
+} = require('../../utils/request');
 
 Page({
   data: {
@@ -47,7 +50,8 @@ Page({
       if (detail) {
         const galleryImages = toAbsoluteImageUrls(detail.images || []);
         const coverImage = detail.image ? [detail.image] : [];
-        detail.galleryImages = galleryImages.length > 0 ? galleryImages : coverImage;
+        detail.galleryImages =
+          galleryImages.length > 0 ? galleryImages : coverImage;
         detail.articleCover = detail.image || galleryImages[0] || '';
         detail.currentImageIndex = 0;
         detail.isGalleryPost =
@@ -75,6 +79,16 @@ Page({
     wx.switchTab({
       url: '/pages/membership/index',
     });
+  },
+
+  onShow() {
+    if (
+      this.data.slug &&
+      this.data.detail?.locked &&
+      wx.getStorageSync('mpToken')
+    ) {
+      this.loadDetail(this.data.slug);
+    }
   },
 
   handleGalleryChange(event) {

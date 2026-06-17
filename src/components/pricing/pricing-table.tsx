@@ -96,14 +96,14 @@ export function PricingTable({
               type="single"
               value={interval}
               onValueChange={(value) => value && handleIntervalChange(value)}
-              className="border rounded-lg p-1"
+              className="rounded-lg border border-slate-200 bg-white p-1 shadow-sm shadow-slate-950/5 dark:border-white/10 dark:bg-white/5"
             >
               {hasMonthlyOption && (
                 <ToggleGroupItem
                   value="month"
                   className={cn(
-                    'px-3 py-0 cursor-pointer text-sm rounded-md',
-                    'data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
+                    'cursor-pointer rounded-md px-3 py-0 text-sm',
+                    'data-[state=on]:bg-slate-950 data-[state=on]:text-white dark:data-[state=on]:bg-white dark:data-[state=on]:text-slate-950'
                   )}
                 >
                   {t('monthly')}
@@ -113,8 +113,8 @@ export function PricingTable({
                 <ToggleGroupItem
                   value="year"
                   className={cn(
-                    'px-3 py-0 cursor-pointer text-sm rounded-md',
-                    'data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
+                    'cursor-pointer rounded-md px-3 py-0 text-sm',
+                    'data-[state=on]:bg-slate-950 data-[state=on]:text-white dark:data-[state=on]:bg-white dark:data-[state=on]:text-slate-950'
                   )}
                 >
                   {t('yearly')}

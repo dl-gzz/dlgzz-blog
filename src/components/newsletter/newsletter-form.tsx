@@ -76,9 +76,9 @@ export function NewsletterForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-4"
+        className="mx-auto flex w-full max-w-md flex-col items-center justify-center space-y-4"
       >
-        <div className="flex items-center w-full">
+        <div className="flex w-full items-center">
           <FormField
             control={form.control}
             name="email"
@@ -89,8 +89,8 @@ export function NewsletterForm() {
                   <Input
                     type="email"
                     className={cn(
-                      'w-full h-12 rounded-r-none',
-                      'focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary focus:border-2 focus:border-r-0'
+                      'h-12 w-full rounded-l-lg rounded-r-none border-slate-300 bg-white',
+                      'focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-slate-950 focus:border-2 focus:border-r-0 dark:border-white/10 dark:bg-white/5'
                     )}
                     placeholder={t('email')}
                     {...field}
@@ -104,7 +104,7 @@ export function NewsletterForm() {
           />
           <Button
             type="submit"
-            className="rounded-l-none size-12 cursor-pointer"
+            className="size-12 cursor-pointer rounded-l-none rounded-r-lg bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90"
             disabled={isPending}
           >
             {isPending ? (

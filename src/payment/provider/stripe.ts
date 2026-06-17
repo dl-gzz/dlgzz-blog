@@ -6,6 +6,7 @@ import {
   findPlanByPriceId,
   findPriceInPlan,
 } from '@/lib/price-plan';
+import { markWorkerInstancePayment } from '@/lib/workers';
 import { sendNotification } from '@/notification/notification';
 import { desc, eq } from 'drizzle-orm';
 import { Stripe } from 'stripe';
@@ -469,6 +470,11 @@ export class StripeProvider implements PaymentProvider {
       .returning({ id: payment.id });
 
     if (result.length > 0) {
+      await markWorkerInstancePayment({
+        workerInstanceId: stripeSubscription.metadata.workerInstanceId,
+        subscriptionId: stripeSubscription.id,
+        paymentStatus: createFields.status,
+      });
       console.log(
         `<< Created new payment record ${result[0].id} for Stripe subscription ${stripeSubscription.id}`
       );
@@ -530,6 +536,10 @@ export class StripeProvider implements PaymentProvider {
       .returning({ id: payment.id });
 
     if (result.length > 0) {
+      await markWorkerInstancePayment({
+        subscriptionId: stripeSubscription.id,
+        paymentStatus: updateFields.status,
+      });
       console.log(
         `<< Updated payment record ${result[0].id} for Stripe subscription ${stripeSubscription.id}`
       );
@@ -563,6 +573,12 @@ export class StripeProvider implements PaymentProvider {
       .returning({ id: payment.id });
 
     if (result.length > 0) {
+      await markWorkerInstancePayment({
+        subscriptionId: stripeSubscription.id,
+        paymentStatus: this.mapSubscriptionStatusToPaymentStatus(
+          stripeSubscription.status
+        ),
+      });
       console.log(
         `<< Marked payment record for subscription ${stripeSubscription.id} as canceled`
       );

@@ -35,6 +35,32 @@
   line-height: 1.8;
 }
 
+.price-line {
+  margin-top: 24rpx;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.hero-button {
+  margin-top: 28rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.active-badge {
+  display: inline-flex;
+  margin-top: 28rpx;
+  padding: 14rpx 22rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 25rpx;
+  font-weight: 800;
+}
+
 .column-list {
   display: flex;
   flex-direction: column;

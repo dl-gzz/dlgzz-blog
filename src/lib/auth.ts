@@ -92,7 +92,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     // https://www.better-auth.com/docs/concepts/email#2-require-email-verification
-    requireEmailVerification: true,
+    requireEmailVerification: isEmailVerificationRequired(),
     // https://www.better-auth.com/docs/authentication/email-password#forget-password
     async sendResetPassword({ user, url }, request) {
       const locale = getLocaleFromRequest(request);
@@ -192,6 +192,17 @@ export const auth = betterAuth({
     },
   },
 });
+
+function isEmailVerificationRequired() {
+  const value = (process.env.AUTH_REQUIRE_EMAIL_VERIFICATION || '')
+    .trim()
+    .toLowerCase();
+
+  if (['1', 'true', 'yes', 'on'].includes(value)) return true;
+  if (['0', 'false', 'no', 'off'].includes(value)) return false;
+
+  return false;
+}
 
 /**
  * Gets the locale from a request by parsing the cookies

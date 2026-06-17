@@ -21,6 +21,11 @@ export function getNavbarLinks(): NestedMenuItem[] {
       external: false,
     },
     {
+      title: t('bots.title'),
+      href: Routes.Bots,
+      external: false,
+    },
+    {
       title: t('blog.title'),
       href: Routes.Blog,
       external: false,
@@ -43,6 +48,11 @@ export function getNavbarLinks(): NestedMenuItem[] {
     {
       title: t('services.title'),
       href: Routes.Services,
+      external: false,
+    },
+    {
+      title: t('bots.title'),
+      href: Routes.Bots,
       external: false,
     },
     {

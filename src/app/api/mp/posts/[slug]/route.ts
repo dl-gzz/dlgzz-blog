@@ -1,3 +1,5 @@
+import { getMembershipEntitlementForUser } from '@/lib/entitlements';
+import { getMiniappSession } from '@/lib/mp-auth';
 import { getMiniappBlogDetail } from '@/lib/mp-blog';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -11,7 +13,17 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
   try {
     const { slug } = await params;
     const locale = request.nextUrl.searchParams.get('locale') || 'zh';
-    const detail = await getMiniappBlogDetail(locale, decodeURIComponent(slug));
+    const session = await getMiniappSession(request);
+    const membership = session
+      ? await getMembershipEntitlementForUser(session.userId)
+      : { active: false };
+    const detail = await getMiniappBlogDetail(
+      locale,
+      decodeURIComponent(slug),
+      {
+        hasMembership: membership.active,
+      }
+    );
 
     if (!detail) {
       return NextResponse.json(

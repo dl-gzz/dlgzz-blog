@@ -320,7 +320,8 @@ export async function getMiniappBlogPosts(locale?: string) {
 
 export async function getMiniappBlogDetail(
   locale: string | undefined,
-  slug: string
+  slug: string,
+  options: { hasMembership?: boolean } = {}
 ) {
   const normalizedLocale = normalizeLocale(locale);
   const normalizedSlug = slug.trim();
@@ -342,6 +343,7 @@ export async function getMiniappBlogDetail(
   const paragraphs = splitParagraphs(parsed.content);
   const blocks = parseMdxToArticleBlocks(parsed.content);
   const premium = Boolean(post.data.premium);
+  const locked = premium && !options.hasMembership;
   const previewParagraphs = paragraphs.slice(0, Math.min(3, paragraphs.length));
   const previewBlocks = getPreviewBlocks(blocks);
   const authorSlug =
@@ -364,10 +366,10 @@ export async function getMiniappBlogDetail(
     authorAvatar: author?.data.avatar,
     excerpt: previewParagraphs[0] || post.data.description || '',
     format: (post.data.images?.length || 0) > 1 ? 'gallery' : 'article',
-    locked: premium,
-    contentParagraphs: premium ? previewParagraphs : paragraphs,
+    locked,
+    contentParagraphs: locked ? previewParagraphs : paragraphs,
     previewParagraphs,
-    contentBlocks: premium ? previewBlocks : blocks,
+    contentBlocks: locked ? previewBlocks : blocks,
     previewBlocks,
   } satisfies MiniappBlogDetail;
 }

@@ -29,6 +29,27 @@
       "when": 1770052186428,
       "tag": "0003_hard_callisto",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779638400000,
+      "tag": "0004_miniapp_account",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780272000000,
+      "tag": "0005_worker_platform",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780358400000,
+      "tag": "0006_worker_skills",
+      "breakpoints": true
     }
   ]
 }

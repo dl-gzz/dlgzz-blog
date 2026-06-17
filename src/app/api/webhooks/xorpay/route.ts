@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import { getDb } from '@/db';
 import { payment, user } from '@/db/schema';
+import { markWorkerInstancePayment } from '@/lib/workers';
 import { eq } from 'drizzle-orm';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -67,6 +68,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     if (updatedPayment.length > 0) {
       console.log(`Payment ${aoid} marked as completed`);
+      await markWorkerInstancePayment({
+        subscriptionId: aoid,
+        paymentStatus: 'completed',
+      });
 
       // Optional: Send notification to user
       // You can implement email notification here

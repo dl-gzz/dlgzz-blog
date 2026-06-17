@@ -112,6 +112,27 @@ export const websiteConfig: WebsiteConfig = {
         isLifetime: false,
         recommended: true,
       },
+      workerEmployeeMonthly: {
+        id: 'workerEmployeeMonthly',
+        name: '数字员工月租',
+        description: '按月雇佣一个微信数字员工实例',
+        prices: [
+          {
+            type: PaymentTypes.SUBSCRIPTION,
+            priceId:
+              process.env.NEXT_PUBLIC_STRIPE_PRICE_WORKER_MONTHLY ||
+              process.env.WORKER_DEFAULT_MONTHLY_PRICE_ID ||
+              'xorpay_worker_employee_monthly',
+            amount: Number(
+              process.env.NEXT_PUBLIC_WORKER_MONTHLY_AMOUNT_CENTS || 2900
+            ),
+            currency: 'CNY',
+            interval: PlanIntervals.MONTH,
+          },
+        ],
+        isFree: false,
+        isLifetime: false,
+      },
       text2imageStudio: {
         id: 'text2imageStudio',
         prices: [

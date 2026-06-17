@@ -29,32 +29,22 @@ export async function generateMetadata({
   });
 }
 
-interface HomePageProps {
-  params: Promise<{ locale: Locale }>;
-}
-
-export default async function HomePage(props: HomePageProps) {
-  const params = await props.params;
-  const { locale } = params;
-  const t = await getTranslations('HomePage');
-
+export default function HomePage() {
   return (
-    <>
-      <div className="flex flex-col">
-        <HeroSection />
+    <div className="flex flex-col bg-[#f8f7f2] text-slate-950 dark:bg-neutral-950 dark:text-white">
+      <HeroSection />
 
-        <LogoCloudSection />
+      <LogoCloudSection />
 
-        <FeaturesSection />
+      <FeaturesSection />
 
-        <PricingSection />
+      <PricingSection />
 
-        <FaqSection />
+      <FaqSection />
 
-        <CallToActionSection />
+      <CallToActionSection />
 
-        <NewsletterCard />
-      </div>
-    </>
+      <NewsletterCard />
+    </div>
   );
 }

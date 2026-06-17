@@ -6,6 +6,22 @@ date: "2026-01-30"
 published: true
 author: admin
 premium: false
+tool_actions:
+  - id: example-pdf
+    type: download
+    label: 下载公开示例 PDF
+    description: 下载这篇文章里使用的公开示例文档。
+    file_key: example.pdf
+    file_name: 公开示例文档.pdf
+    file_type: PDF
+    size: 1.5 MB
+    access: free
+  - id: ask-download-flow
+    type: chat
+    label: 和文章助手聊下载方案
+    description: 让文章助手帮你梳理资料下载、会员资料和工具包的组织方式。
+    prompt: 帮我梳理这篇文章里的下载权限设计，并给我一个适合独立工作者网站的资料包结构。
+    access: free
 ---
 
 # 文章文件下载功能

@@ -2,8 +2,11 @@ import 'server-only';
 
 import { getDb } from '@/db';
 import { payment } from '@/db/schema';
-import { getServiceCatalog, type ServiceCatalogItem } from '@/lib/service-catalog';
 import { GRANTED_ONE_TIME_PAYMENT_STATUSES } from '@/lib/service-access';
+import {
+  type ServiceCatalogItem,
+  getServiceCatalog,
+} from '@/lib/service-catalog';
 import { PaymentTypes } from '@/payment/types';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 
@@ -33,14 +36,20 @@ export async function getGrantedOneTimePayments(userId: string) {
     .orderBy(desc(payment.createdAt));
 }
 
-export async function getOwnedLicenseServices(locale: string, userId: string): Promise<OwnedServiceEntry[]> {
+export async function getOwnedLicenseServices(
+  locale: string,
+  userId: string
+): Promise<OwnedServiceEntry[]> {
   const payments = await getGrantedOneTimePayments(userId);
   if (!payments.length) return [];
 
   const latestByPriceId = new Map<string, Date | null>();
   for (const record of payments) {
     if (!latestByPriceId.has(record.priceId)) {
-      latestByPriceId.set(record.priceId, record.createdAt || record.updatedAt || null);
+      latestByPriceId.set(
+        record.priceId,
+        record.createdAt || record.updatedAt || null
+      );
     }
   }
 
@@ -61,5 +70,15 @@ export async function getOwnedLicenseServices(locale: string, userId: string): P
 }
 
 export function getPremiumServices(locale: string): ServiceCatalogItem[] {
-  return getServiceCatalog(locale).filter((item) => item.manifest.pricing.mode === 'premium');
+  return getServiceCatalog(locale).filter(
+    (item) => item.manifest.pricing.mode === 'premium'
+  );
+}
+
+export function getMembershipUnlockedServices(
+  locale: string
+): ServiceCatalogItem[] {
+  return getServiceCatalog(locale).filter(
+    (item) => item.manifest.pricing.mode !== 'free'
+  );
 }

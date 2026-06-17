@@ -35,11 +35,11 @@
         </view>
 
         <view wx:if="{{detail.locked}}" class="locked-card xhs-locked">
-          <view class="locked-title">内容暂未开放</view>
+          <view class="locked-title">会员内容</view>
           <view class="locked-desc">
-            这篇文章属于后续规划内容，当前先展示公开预览部分。
+            这篇文章属于会员内容，开通会员后可阅读完整版本。
           </view>
-          <button class="button-primary" bindtap="openMembership">查看开放计划</button>
+          <button class="button-primary" bindtap="openMembership">开通会员阅读</button>
         </view>
 
         <view class="xhs-text-list">
@@ -77,11 +77,11 @@
       </view>
 
       <view wx:if="{{detail.locked}}" class="locked-card">
-        <view class="locked-title">内容暂未开放</view>
+        <view class="locked-title">会员内容</view>
         <view class="locked-desc">
-          这篇文章属于后续规划内容，当前先展示公开预览部分。
+          这篇文章属于会员内容，开通会员后可阅读完整版本。
         </view>
-        <button class="button-primary" bindtap="openMembership">查看开放计划</button>
+        <button class="button-primary" bindtap="openMembership">开通会员阅读</button>
       </view>
 
       <view class="article-body">

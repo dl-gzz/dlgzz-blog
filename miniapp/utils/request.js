@@ -2,10 +2,16 @@ const { allowHttpImages, baseUrl } = require('./config');
 
 function request({ url, method = 'GET', data }) {
   return new Promise((resolve, reject) => {
+    const token = wx.getStorageSync('mpToken');
     wx.request({
       url: `${baseUrl}${url}`,
       method,
       data,
+      header: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
       success(res) {
         const { statusCode } = res;
         const payload = res.data;
@@ -46,7 +52,9 @@ function toAbsoluteImageUrl(imageUrl) {
   if (imageUrl.startsWith('/')) {
     const baseOrigin = baseUrl.replace(/\/api(?:\/.*)?$/, '');
     const absoluteUrl = `${baseOrigin}${imageUrl}`;
-    return absoluteUrl.startsWith('http://') && !allowHttpImages ? '' : absoluteUrl;
+    return absoluteUrl.startsWith('http://') && !allowHttpImages
+      ? ''
+      : absoluteUrl;
   }
 
   return imageUrl;

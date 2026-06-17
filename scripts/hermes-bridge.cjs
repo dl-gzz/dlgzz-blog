@@ -1041,6 +1041,12 @@ async function pollWeixinActivation(assistantId) {
         baseUrl,
         weixinUserId
       });
+      if (weixinUserId && activation.serviceId?.startsWith("learning-assistant:")) {
+        writeLearningAssistantWeixinBindingRules(
+          activation.profileName,
+          weixinUserId
+        );
+      }
       const gatewayStart = await ensureProfileGatewayStarted(activation.profileName);
       const confirmed = {
         ...activation,
@@ -1169,6 +1175,48 @@ function persistWeixinCredentials(profileName, {
     WEIXIN_HOME_CHANNEL: weixinUserId,
     WEIXIN_HOME_CHANNEL_NAME: "Weixin Home"
   });
+}
+var LEARNING_PARENT_RULE_START = "<!-- learning-assistant-weixin-parent-binding:start -->";
+var LEARNING_PARENT_RULE_END = "<!-- learning-assistant-weixin-parent-binding:end -->";
+function writeLearningAssistantWeixinBindingRules(profileName, weixinUserId) {
+  const profileHome = getProfileHome(profileName);
+  const scriptPath = (0, import_node_path.join)(
+    profileHome,
+    "skills",
+    "learning-assistant",
+    "scripts",
+    "learning_assistant.py"
+  );
+  const block = [
+    LEARNING_PARENT_RULE_START,
+    "## Learning Assistant Weixin Binding",
+    "",
+    `- This profile is bound to parent Weixin user ID: \`${weixinUserId}\`.`,
+    '- When the parent asks about learning status, scores, weak topics, wrongbook, review advice, or "today", always call the learning-assistant skill before answering.',
+    `- Use this exact command shape: \`python3 ${scriptPath} answer_parent --parent-id '${weixinUserId}' --question '<original parent message>'\`.`,
+    "- Never use `cli` as the parent ID for Weixin parent questions.",
+    "- Do not guess from memory. Do not say there are no whiteboard records unless `answer_parent` returns zero records.",
+    "- This profile is a single-student learning assistant. If the parent does not name a child, call `answer_parent` without inventing a student ID.",
+    LEARNING_PARENT_RULE_END
+  ].join("\n");
+  for (const fileName of ["SOUL.md", "EMPLOYEE_SOUL.md"]) {
+    upsertMarkedMarkdownBlock((0, import_node_path.join)(profileHome, fileName), block);
+  }
+}
+function upsertMarkedMarkdownBlock(path, block) {
+  const existing = (0, import_node_fs.existsSync)(path) ? (0, import_node_fs.readFileSync)(path, "utf8") : "";
+  const pattern = new RegExp(
+    `\\n?${escapeRegExp(LEARNING_PARENT_RULE_START)}[\\s\\S]*?${escapeRegExp(
+      LEARNING_PARENT_RULE_END
+    )}\\n?`,
+    "g"
+  );
+  const withoutOldBlock = existing.replace(pattern, "").trimEnd();
+  const next = withoutOldBlock ? `${withoutOldBlock}\n\n${block}\n` : `${block}\n`;
+  (0, import_node_fs.writeFileSync)(path, next);
+}
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 async function ensureActivatedGateway(activation) {
   const state = getProfileGatewayState(activation.profileName);

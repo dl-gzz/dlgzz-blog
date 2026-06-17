@@ -1,10 +1,20 @@
 <view class="page-shell columns-page">
   <view class="columns-hero">
-    <view class="columns-kicker">独立工作者专栏</view>
-    <view class="columns-title">把独立工作写成可持续的方法</view>
+    <view class="columns-kicker">独立工作者会员</view>
+    <view class="columns-title">{{membershipConfig.planName}}</view>
     <view class="columns-copy">
-      这里整理小红书运营、AI 工具实践和独立思考相关内容，所有内容均为正式公开阅读栏目。
+      {{membership && membership.active ? '会员已生效，可以阅读完整会员文章。' : '开通后解锁会员文章，并获得会员期内全部组件使用权。'}}
     </view>
+    <view class="price-line">{{membershipConfig.priceText}}</view>
+    <button
+      wx:if="{{!(membership && membership.active)}}"
+      class="hero-button"
+      loading="{{paying}}"
+      bindtap="buyMembership"
+    >
+      {{paying ? '正在创建订单' : '开通会员'}}
+    </button>
+    <view wx:else class="active-badge">有效期至 {{membership.periodEnd || '当前周期结束'}}</view>
   </view>
 
   <view class="column-list">
@@ -19,15 +29,15 @@
       <view class="column-body">
         <view class="column-title">{{item.title}}</view>
         <view class="column-desc">{{item.description}}</view>
-        <view class="column-meta">{{item.meta}}</view>
+        <view class="column-meta">会员权益</view>
       </view>
     </view>
   </view>
 
   <view class="notice-card">
-    <view class="notice-title">内容说明</view>
-    <view class="notice-text">
-      当前小程序提供公开博客、图文专栏与文章阅读服务；如后续开放付费内容，将按平台要求补充明确商品信息、价格和服务说明。
+    <view class="notice-title">会员包含</view>
+    <view wx:for="{{membershipConfig.benefits}}" wx:key="index" class="notice-text">
+      {{index + 1}}. {{item}}
     </view>
   </view>
 </view>

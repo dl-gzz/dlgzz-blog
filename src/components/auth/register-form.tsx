@@ -65,7 +65,7 @@ export const RegisterForm = ({
             setIsLoading(false);
           },
           onSuccess: () => {
-            toast.success(t('registerSuccess') || '注册成功！请查收验证邮件。');
+            toast.success(t('registerSuccess') || '注册成功');
             setIsLoading(false);
           },
           onError: (ctx) => {
