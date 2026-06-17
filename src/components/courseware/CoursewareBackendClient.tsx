@@ -462,8 +462,11 @@ export function CoursewareBackendClient() {
           <div className="mt-4 rounded-md border border-dashed border-[#a8b5c9] bg-[#f8fafc] p-3">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <PlusCircle className="size-4 text-[#2563eb]" />
-              新建 MDX 提示词 Block
+              新建 Block
             </div>
+            <p className="mt-1 text-xs leading-5 text-[#64748b]">
+              把一句课件想法保存成可编辑、可复用的教学模块。
+            </p>
             <label className="mt-3 block text-sm font-medium">
               课件想法
               <Textarea
