@@ -2,6 +2,7 @@ import 'server-only';
 
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
+import matter from 'gray-matter';
 import { getDb } from '@/db';
 import { eduBlogPost, eduCourseware, eduWorkspace } from '@/db/schema';
 import {
@@ -94,6 +95,42 @@ ${html.trim()}
 \`\`\`
 
 ${SAVED_HTML_END}
+`;
+}
+
+function buildPromptBlockMdx({
+  title,
+  description,
+  whiteboardPrompt,
+  body,
+  provider,
+  model,
+}: {
+  title: string;
+  description: string;
+  whiteboardPrompt: string;
+  body: string;
+  provider?: string;
+  model?: string;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const cleanBody = body.trim() || `# ${title}\n\n${description}\n\n## 白板生成提示词\n\n${whiteboardPrompt}`;
+
+  return `---
+title: ${yamlString(title)}
+description: ${yamlString(description)}
+date: ${yamlString(today)}
+image: /images/blog/interactive-math-game.png
+published: true
+author: admin
+premium: false
+featured: false
+whiteboard_category: education
+whiteboard_prompt: ${yamlString(whiteboardPrompt)}
+generated_prompt_block: true
+${provider ? `prompt_block_provider: ${yamlString(provider)}\n` : ''}${model ? `prompt_block_model: ${yamlString(model)}\n` : ''}---
+
+${cleanBody}
 `;
 }
 
@@ -344,6 +381,90 @@ export async function saveGeneratedCoursewareToDatabase({
     blogPostId: postId,
     title: safeTitle,
     description: safeDescription,
+    url: `/blog/${uniqueSlug}`,
+  };
+}
+
+export async function savePromptBlockToDatabase({
+  title,
+  slug,
+  description,
+  whiteboardPrompt,
+  mdx,
+  provider,
+  model,
+  locale = 'zh',
+}: {
+  title: string;
+  slug: string;
+  description?: string;
+  whiteboardPrompt?: string;
+  mdx: string;
+  provider?: string;
+  model?: string;
+  locale?: string;
+}) {
+  const parsed = matter(readText(mdx));
+  const frontmatter = parsed.data || {};
+  const body = readText(parsed.content);
+  const safeTitle = readText(title, readText(frontmatter.title, 'AI 课件提示词 Block'));
+  const safeDescription =
+    readText(description, readText(frontmatter.description)) ||
+    `由老师后台生成的「${safeTitle}」可复用课件提示词。`;
+  const prompt =
+    readText(whiteboardPrompt, readText(frontmatter.whiteboard_prompt)) ||
+    `请根据《${safeTitle}》生成一个支持触屏互动、步骤演示和答题上报的白板课件。`;
+  const safeLocale = readText(locale, 'zh');
+  const uniqueSlug = await ensureUniqueSlug(slug || safeTitle, safeLocale);
+  const fileName = `${uniqueSlug}.${safeLocale}.mdx`;
+  const workspaceId = await ensureDefaultWorkspace();
+  const now = new Date();
+  const postId = `ebp_${randomUUID()}`;
+  const mdxSource = buildPromptBlockMdx({
+    title: safeTitle,
+    description: safeDescription,
+    whiteboardPrompt: prompt,
+    body,
+    provider,
+    model,
+  });
+
+  const db = await getDb();
+  await db.insert(eduBlogPost).values({
+    id: postId,
+    workspaceId,
+    coursewareId: null,
+    postType: 'prompt_block',
+    title: safeTitle,
+    slug: uniqueSlug,
+    locale: safeLocale,
+    description: safeDescription,
+    image: '/images/blog/interactive-math-game.png',
+    mdxSource,
+    whiteboardCategory: 'education',
+    whiteboardPrompt: prompt,
+    status: 'published',
+    visibility: 'private',
+    publishedAt: now,
+    metadata: {
+      generatedPromptBlock: true,
+      source: 'teacher-courseware-backend',
+      provider: provider || null,
+      model: model || null,
+    },
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  return {
+    slug: uniqueSlug,
+    fileName,
+    filePath: null,
+    storage: 'database' as const,
+    blogPostId: postId,
+    title: safeTitle,
+    description: safeDescription,
+    whiteboardPrompt: prompt,
     url: `/blog/${uniqueSlug}`,
   };
 }

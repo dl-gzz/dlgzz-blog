@@ -10,7 +10,10 @@ import {
   ExternalLink,
   FileText,
   Loader2,
+  PencilLine,
   Play,
+  PlusCircle,
+  RefreshCw,
   Save,
   WandSparkles,
 } from 'lucide-react';
@@ -61,6 +64,14 @@ type SavedCoursewareInfo = {
   title: string;
 };
 
+type PromptBlockDraft = {
+  title: string;
+  description: string;
+  slug: string;
+  whiteboardPrompt: string;
+  mdx: string;
+};
+
 function findPreviewHtml(result: GenerateResult | null) {
   const operations = result?.plan?.operations || [];
   const htmlOperation = operations.find(
@@ -109,6 +120,13 @@ export function CoursewareBackendClient() {
   const [saveTitle, setSaveTitle] = useState('');
   const [saveSlug, setSaveSlug] = useState('');
   const [savedInfo, setSavedInfo] = useState<SavedCoursewareInfo | null>(null);
+  const [blockIdea, setBlockIdea] = useState('我想生成一个三角形求面积的课件');
+  const [blockDraft, setBlockDraft] = useState<PromptBlockDraft | null>(null);
+  const [blockProvider, setBlockProvider] = useState('');
+  const [blockModel, setBlockModel] = useState('');
+  const [generatingBlock, setGeneratingBlock] = useState(false);
+  const [savingBlock, setSavingBlock] = useState(false);
+  const [savedBlockInfo, setSavedBlockInfo] = useState<SavedCoursewareInfo | null>(null);
 
   useEffect(() => {
     let stopped = false;
@@ -166,6 +184,79 @@ export function CoursewareBackendClient() {
 
   const previewHtml = findPreviewHtml(result);
   const previewSize = getPreviewSize(result);
+
+  async function generatePromptBlock() {
+    if (generatingBlock || !blockIdea.trim()) return;
+
+    setGeneratingBlock(true);
+    setError('');
+    setSavedBlockInfo(null);
+    try {
+      const response = await fetch('/api/teacher/courseware/generate-block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idea: blockIdea,
+          locale,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || `HTTP ${response.status}`);
+      }
+      setBlockDraft(data.block);
+      setBlockProvider(data.provider || '');
+      setBlockModel(data.model || '');
+    } catch (blockError) {
+      setError(blockError instanceof Error ? blockError.message : '生成 MDX Block 失败');
+    } finally {
+      setGeneratingBlock(false);
+    }
+  }
+
+  async function savePromptBlock() {
+    if (!blockDraft || savingBlock) return;
+
+    setSavingBlock(true);
+    setError('');
+    try {
+      const response = await fetch('/api/teacher/courseware/save-block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...blockDraft,
+          provider: blockProvider,
+          model: blockModel,
+          locale,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || `HTTP ${response.status}`);
+      }
+
+      setSavedBlockInfo(data.saved);
+      const nextPost: CoursewarePost = {
+        slug: data.saved.slug,
+        fileName: data.saved.fileName,
+        title: data.saved.title,
+        description: data.saved.description,
+        date: new Date().toISOString(),
+        whiteboardCategory: 'education',
+        whiteboardPrompt: data.saved.whiteboardPrompt || blockDraft.whiteboardPrompt,
+        hasWhiteboardPrompt: true,
+        hasSavedCourseware: false,
+        bodyPreview: blockDraft.mdx.slice(0, 1200),
+      };
+      setPosts((current) => [nextPost, ...current]);
+      setSelectedSlug(data.saved.slug);
+      setResult(null);
+    } catch (saveBlockError) {
+      setError(saveBlockError instanceof Error ? saveBlockError.message : '保存 MDX Block 失败');
+    } finally {
+      setSavingBlock(false);
+    }
+  }
 
   async function generateCourseware() {
     if (!selectedPost || generating) return;
@@ -366,6 +457,126 @@ export function CoursewareBackendClient() {
           <div className="flex items-center gap-2 text-sm font-semibold">
             <FileText className="size-4" />
             生成设置
+          </div>
+
+          <div className="mt-4 rounded-md border border-dashed border-[#a8b5c9] bg-[#f8fafc] p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <PlusCircle className="size-4 text-[#2563eb]" />
+              新建 MDX 提示词 Block
+            </div>
+            <label className="mt-3 block text-sm font-medium">
+              课件想法
+              <Textarea
+                value={blockIdea}
+                onChange={(event) => setBlockIdea(event.target.value)}
+                placeholder="例如：我想生成一个三角形求面积的课件"
+                className="mt-2 min-h-20 resize-none"
+              />
+            </label>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={generatePromptBlock}
+                disabled={generatingBlock || !blockIdea.trim()}
+              >
+                {generatingBlock ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : blockDraft ? (
+                  <RefreshCw className="size-4" />
+                ) : (
+                  <PencilLine className="size-4" />
+                )}
+                {blockDraft ? '重新生成' : '生成 Block'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={savePromptBlock}
+                disabled={!blockDraft || savingBlock}
+              >
+                {savingBlock ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                保存 Block
+              </Button>
+            </div>
+
+            {blockDraft && (
+              <div className="mt-4 space-y-3 border-t border-[#e4e9f2] pt-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block text-sm font-medium">
+                    Block 标题
+                    <Input
+                      value={blockDraft.title}
+                      onChange={(event) =>
+                        setBlockDraft((current) =>
+                          current ? { ...current, title: event.target.value } : current
+                        )
+                      }
+                      className="mt-2"
+                    />
+                  </label>
+                  <label className="block text-sm font-medium">
+                    Block slug
+                    <Input
+                      value={blockDraft.slug}
+                      onChange={(event) =>
+                        setBlockDraft((current) =>
+                          current
+                            ? { ...current, slug: toClientSlug(event.target.value, 'prompt-block') }
+                            : current
+                        )
+                      }
+                      className="mt-2"
+                    />
+                  </label>
+                </div>
+                <label className="block text-sm font-medium">
+                  白板生成提示词
+                  <Textarea
+                    value={blockDraft.whiteboardPrompt}
+                    onChange={(event) =>
+                      setBlockDraft((current) =>
+                        current ? { ...current, whiteboardPrompt: event.target.value } : current
+                      )
+                    }
+                    className="mt-2 min-h-24 resize-none"
+                  />
+                </label>
+                <label className="block text-sm font-medium">
+                  MDX Block 源码
+                  <Textarea
+                    value={blockDraft.mdx}
+                    onChange={(event) =>
+                      setBlockDraft((current) =>
+                        current ? { ...current, mdx: event.target.value } : current
+                      )
+                    }
+                    className="mt-2 min-h-48 resize-y font-mono text-xs leading-5"
+                  />
+                </label>
+                {blockProvider && (
+                  <div className="text-xs text-[#64748b]">
+                    Provider: {blockProvider} · Model: {blockModel || '-'}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {savedBlockInfo && (
+              <div className="mt-3 rounded-md border border-[#bbf7d0] bg-[#f0fdf4] p-3 text-sm leading-6 text-[#166534]">
+                <div className="flex items-center gap-2 font-semibold">
+                  <CheckCircle2 className="size-4" />
+                  Block 已保存，已加入左侧列表
+                </div>
+                <button
+                  type="button"
+                  onClick={() => window.open(`/${locale}${savedBlockInfo.url}`, '_blank')}
+                  className="mt-1 text-xs font-medium text-[#2563eb] hover:underline"
+                >
+                  打开博客 Block
+                </button>
+              </div>
+            )}
           </div>
 
           {selectedPost && (
