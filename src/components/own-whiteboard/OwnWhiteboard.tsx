@@ -1168,6 +1168,15 @@ function normalizeBoardOperation(value: unknown): BoardOperation | null {
   const typeText = readText(value.type, readText(value.shapeType));
   const html = readText(props.html, readText(value.html));
   const text = readText(props.text, readText(props.content, readText(value.text)));
+  const width = readNumber(props.w) ?? readNumber(value.w) ?? readNumber(value.width);
+  const height = readNumber(props.h) ?? readNumber(value.h) ?? readNumber(value.height);
+  const createProps = {
+    ...props,
+    ...(width ? { w: width } : {}),
+    ...(height ? { h: height } : {}),
+    ...(html ? { html } : {}),
+    ...(text ? { text } : {}),
+  };
 
   if (['create', 'add', 'insert'].includes(action)) {
     const type = typeText || (html ? 'preview_html' : 'ai_result');
@@ -1176,11 +1185,7 @@ function normalizeBoardOperation(value: unknown): BoardOperation | null {
       type,
       x: readNumber(value.x),
       y: readNumber(value.y),
-      props: {
-        ...props,
-        ...(html ? { html } : {}),
-        ...(text ? { text } : {}),
-      },
+      props: createProps,
     };
   }
 
@@ -1190,11 +1195,17 @@ function normalizeBoardOperation(value: unknown): BoardOperation | null {
       type: html ? 'preview_html' : 'ai_result',
       x: readNumber(value.x),
       y: readNumber(value.y),
-      props: {
-        ...props,
-        ...(html ? { html } : {}),
-        ...(text ? { text } : {}),
-      },
+      props: createProps,
+    };
+  }
+
+  if (!action && (typeText || html || text)) {
+    return {
+      action: 'create',
+      type: typeText || (html ? 'preview_html' : 'ai_result'),
+      x: readNumber(value.x),
+      y: readNumber(value.y),
+      props: createProps,
     };
   }
 
@@ -1320,6 +1331,13 @@ function extractHtmlDocument(value: unknown): string {
 }
 
 function collectBoardOperations(plan: unknown, responseText: string): BoardOperation[] {
+  if (Array.isArray(plan)) {
+    const operations = plan
+      .map((operation: unknown) => normalizeBoardOperation(operation))
+      .filter((operation: BoardOperation | null): operation is BoardOperation => Boolean(operation));
+    if (operations.length > 0) return operations;
+  }
+
   const normalizedOperations = isObjectRecord(plan) && Array.isArray(plan.operations)
     ? plan.operations
         .map((operation: unknown) => normalizeBoardOperation(operation))
