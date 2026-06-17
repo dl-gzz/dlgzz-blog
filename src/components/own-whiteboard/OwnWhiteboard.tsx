@@ -172,7 +172,7 @@ type DragState =
       startY: number;
     };
 
-const STORAGE_KEY = 'dlgzz-own-whiteboard-v1';
+const STORAGE_KEY_PREFIX = 'dlgzz-own-whiteboard-v1';
 const AI_PANEL_WIDTH = 390;
 const AI_PANEL_HEIGHT = 520;
 const AI_PANEL_MARGIN = 12;
@@ -1714,6 +1714,12 @@ export default function OwnWhiteboard() {
   const coursewareSlugLoadStartedRef = useRef(false);
   const studentId = useMemo(() => readSearchParam('studentId', ''), []);
   const lessonId = useMemo(() => readSearchParam('lessonId', 'own-whiteboard-demo'), []);
+  const storageKey = useMemo(() => {
+    const identity = [studentId || 'anonymous', lessonId || 'default']
+      .map((part) => encodeURIComponent(part))
+      .join(':');
+    return `${STORAGE_KEY_PREFIX}:${identity}`;
+  }, [lessonId, studentId]);
   const initialPrompt = useMemo(() => readSearchParam('prompt', ''), []);
   const initialPromptTitle = useMemo(() => readSearchParam('title', ''), []);
   const initialCoursewareImportKey = useMemo(() => readSearchParam('coursewareImportKey', ''), []);
@@ -1753,7 +1759,7 @@ export default function OwnWhiteboard() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) setShapes(parsed);
@@ -1763,12 +1769,12 @@ export default function OwnWhiteboard() {
     } finally {
       setReady(true);
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(shapes));
-  }, [ready, shapes]);
+    localStorage.setItem(storageKey, JSON.stringify(shapes));
+  }, [ready, shapes, storageKey]);
 
   useEffect(() => {
     if (studentId && !bindStudentId) setBindStudentId(studentId);
