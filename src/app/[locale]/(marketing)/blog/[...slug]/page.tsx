@@ -12,6 +12,10 @@ import { NewsletterCard } from '@/components/newsletter/newsletter-card';
 import { websiteConfig } from '@/config/website';
 import { LocaleLink } from '@/i18n/navigation';
 import { formatDate } from '@/lib/formatter';
+import {
+  type DatabaseCoursewarePost,
+  getDatabaseCoursewarePost,
+} from '@/lib/edu-content';
 import { constructMetadata } from '@/lib/metadata';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { getServiceAccessState } from '@/lib/service-access';
@@ -29,9 +33,14 @@ import type { Locale } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
 
 import '@/styles/mdx.css';
 import { InlineTOC } from 'fumadocs-ui/components/inline-toc';
+
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+export const revalidate = 0;
 
 async function getRelatedPosts(post: BlogType) {
   const relatedPosts = blogSource
@@ -44,25 +53,44 @@ async function getRelatedPosts(post: BlogType) {
   return relatedPosts;
 }
 
-export function generateStaticParams() {
-  return blogSource
-    .getPages()
-    .filter((post) => post.data.published)
-    .flatMap((post) => {
-      return {
-        locale: post.locale,
-        slug: post.slugs,
-      };
-    });
+function toSlugSegments(slug: string | string[]) {
+  return Array.isArray(slug) ? slug : [slug];
+}
+
+async function getDatabasePostFromSlug(slug: string | string[], locale: Locale) {
+  const segments = toSlugSegments(slug);
+  if (segments.length !== 1) return null;
+  return getDatabaseCoursewarePost(segments[0], locale);
+}
+
+function stripSavedHtmlFromMdxBody(body: string) {
+  return body
+    .replace(
+      /\{\/\*\s*dlgzz-courseware-html:start\s*\*\/\}[\s\S]*?\{\/\*\s*dlgzz-courseware-html:end\s*\*\/\}/g,
+      ''
+    )
+    .trim();
 }
 
 export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata | undefined> {
   const { locale, slug } = await params;
-  const post = blogSource.getPage(slug, locale);
+  const slugSegments = toSlugSegments(slug);
+  const post = blogSource.getPage(slugSegments, locale);
   if (!post) {
-    notFound();
+    const dbPost = await getDatabasePostFromSlug(slugSegments, locale);
+    if (!dbPost) {
+      notFound();
+    }
+
+    const t = await getTranslations({ locale, namespace: 'Metadata' });
+    return constructMetadata({
+      title: `${dbPost.title} | ${t('title')}`,
+      description: dbPost.description,
+      canonicalUrl: getUrlWithLocale(`/blog/${slugSegments.join('/')}`, locale),
+      image: '/images/blog/interactive-math-game.png',
+    });
   }
 
   const t = await getTranslations({ locale, namespace: 'Metadata' });
@@ -70,7 +98,7 @@ export async function generateMetadata({
   return constructMetadata({
     title: `${post.data.title} | ${t('title')}`,
     description: post.data.description,
-    canonicalUrl: getUrlWithLocale(`/blog/${slug}`, locale),
+    canonicalUrl: getUrlWithLocale(`/blog/${slugSegments.join('/')}`, locale),
     image: post.data.image,
   });
 }
@@ -78,15 +106,21 @@ export async function generateMetadata({
 interface BlogPostPageProps {
   params: Promise<{
     locale: Locale;
-    slug: string[];
+    slug: string[] | string;
   }>;
 }
 
 export default async function BlogPostPage(props: BlogPostPageProps) {
   const { locale, slug } = await props.params;
-  const post = blogSource.getPage(slug, locale);
+  const slugSegments = toSlugSegments(slug);
+  const post = blogSource.getPage(slugSegments, locale);
   if (!post) {
-    notFound();
+    const dbPost = await getDatabasePostFromSlug(slugSegments, locale);
+    if (!dbPost) {
+      notFound();
+    }
+
+    return <DatabaseCoursewareBlogPage post={dbPost} locale={locale} />;
   }
 
   const {
@@ -176,7 +210,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
                   <InstallToLocalButton
                     title={title}
                     description={description ?? ''}
-                    slug={slug.join('/')}
+                    slug={slugSegments.join('/')}
                     locale={locale}
                     whiteboardPrompt={whiteboard_prompt}
                     serviceManifest={serviceManifest}
@@ -185,7 +219,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
                     access.code === 'LICENSE_REQUIRED' && userId && serviceManifest?.pricing.price_id ? (
                       <ServiceCheckoutButton
                         userId={userId}
-                        slug={slug.join('/')}
+                        slug={slugSegments.join('/')}
                         serviceId={serviceManifest.id}
                         serviceName={serviceManifest.name}
                         priceId={serviceManifest.pricing.price_id}
@@ -278,7 +312,89 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
         <NewsletterCard />
       </div>
 
-      <ArticleChat slug={slug.join('/')} locale={locale} articleTitle={title} />
+      <ArticleChat slug={slugSegments.join('/')} locale={locale} articleTitle={title} />
+    </div>
+  );
+}
+
+function DatabaseCoursewareBlogPage({
+  post,
+  locale,
+}: {
+  post: DatabaseCoursewarePost;
+  locale: Locale;
+}) {
+  const publishDate = formatDate(new Date(post.date));
+  const body = stripSavedHtmlFromMdxBody(post.body);
+  const whiteboardHref = `/own-whiteboard?loadCoursewareSlug=${encodeURIComponent(
+    post.slug
+  )}`;
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2 flex flex-col">
+          <div className="space-y-8">
+            <BlogImageCarousel
+              images={['/images/blog/interactive-math-game.png']}
+              title={post.title}
+            />
+
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="size-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground leading-none my-auto">
+                {publishDate}
+              </span>
+            </div>
+
+            <h1 className="text-4xl font-bold">{post.title}</h1>
+            <p className="text-lg text-muted-foreground">{post.description}</p>
+
+            <div className="rounded-2xl border bg-card p-5 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  数据库课件
+                </span>
+                <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                  可复用互动课件
+                </span>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                这篇文章保存在数据库里，白板可以直接读取保存好的互动课件，不需要重新调用大模型。
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <LocaleLink
+                  href={whiteboardHref}
+                  className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  在白板打开课件
+                </LocaleLink>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 max-w-none prose prose-neutral dark:prose-invert prose-img:rounded-lg">
+            <ReactMarkdown>{body}</ReactMarkdown>
+          </div>
+
+          <div className="flex items-center justify-start my-16">
+            <AllPostsButton />
+          </div>
+        </div>
+
+        <div>
+          <div className="space-y-4 lg:sticky lg:top-24">
+            <div className="bg-card rounded-xl border p-6">
+              <h2 className="text-lg font-semibold mb-2">课件来源</h2>
+              <p className="text-sm text-muted-foreground">
+                由教师后台生成并保存到数据库。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ArticleChat slug={post.slug} locale={locale} articleTitle={post.title} />
     </div>
   );
 }

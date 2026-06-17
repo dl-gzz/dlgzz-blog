@@ -1689,11 +1689,13 @@ export default function OwnWhiteboard() {
   const dragRef = useRef<DragState | null>(null);
   const autoPromptStartedRef = useRef(false);
   const coursewareImportStartedRef = useRef(false);
+  const coursewareSlugLoadStartedRef = useRef(false);
   const studentId = useMemo(() => readSearchParam('studentId', ''), []);
   const lessonId = useMemo(() => readSearchParam('lessonId', 'own-whiteboard-demo'), []);
   const initialPrompt = useMemo(() => readSearchParam('prompt', ''), []);
   const initialPromptTitle = useMemo(() => readSearchParam('title', ''), []);
   const initialCoursewareImportKey = useMemo(() => readSearchParam('coursewareImportKey', ''), []);
+  const initialLoadCoursewareSlug = useMemo(() => readSearchParam('loadCoursewareSlug', ''), []);
   const [bindPanelOpen, setBindPanelOpen] = useState(false);
   const [bindStudentId, setBindStudentId] = useState(studentId);
   const [bindStudentName, setBindStudentName] = useState('');
@@ -2525,7 +2527,8 @@ export default function OwnWhiteboard() {
       : `dlgzz-courseware-import:${initialCoursewareImportKey}`;
 
     try {
-      const raw = window.sessionStorage.getItem(storageKey);
+      const raw =
+        window.sessionStorage.getItem(storageKey) || window.localStorage.getItem(storageKey);
       if (!raw) {
         throw new Error('没有找到后台生成的课件数据');
       }
@@ -2538,6 +2541,7 @@ export default function OwnWhiteboard() {
 
       executeOperations(operations);
       window.sessionStorage.removeItem(storageKey);
+      window.localStorage.removeItem(storageKey);
       setAiOpen(false);
       setLessonLibraryOpen(false);
       setMessages((current) => [
@@ -2557,6 +2561,44 @@ export default function OwnWhiteboard() {
       ]);
     }
   }, [initialCoursewareImportKey, initialPromptTitle, ready]);
+
+  useEffect(() => {
+    if (!ready || !initialLoadCoursewareSlug || coursewareSlugLoadStartedRef.current) return;
+    coursewareSlugLoadStartedRef.current = true;
+
+    const params = new URLSearchParams({
+      slug: initialLoadCoursewareSlug,
+      locale: 'zh',
+      studentId,
+    });
+
+    void fetch(`/api/whiteboard/courseware-mdx?${params.toString()}`)
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data?.success || !Array.isArray(data.operations)) {
+          throw new Error(data?.error || `HTTP ${response.status}`);
+        }
+        executeOperations(data.operations);
+        setAiOpen(false);
+        setLessonLibraryOpen(false);
+        setMessages((current) => [
+          ...current,
+          {
+            role: 'system',
+            text: `已从博客打开课件：${readText(data?.post?.title, initialPromptTitle || initialLoadCoursewareSlug)}`,
+          },
+        ]);
+      })
+      .catch((error) => {
+        setMessages((current) => [
+          ...current,
+          {
+            role: 'system',
+            text: error instanceof Error ? `打开博客课件失败：${error.message}` : '打开博客课件失败',
+          },
+        ]);
+      });
+  }, [initialLoadCoursewareSlug, initialPromptTitle, ready, studentId]);
 
   useEffect(() => {
     if (!ready || !initialPrompt || autoPromptStartedRef.current) return;

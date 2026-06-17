@@ -1,4 +1,5 @@
 import { extractSavedCoursewareHtml, getCoursewareMdxPost } from '@/lib/courseware-mdx';
+import { getDatabaseCoursewarePost } from '@/lib/edu-content';
 import { type NextRequest, NextResponse } from 'next/server';
 
 function injectStudentIdGuard(html: string, studentId: string) {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const post = getCoursewareMdxPost(slug, locale);
+    const post = getCoursewareMdxPost(slug, locale) || (await getDatabaseCoursewarePost(slug, locale));
     if (!post) {
       return NextResponse.json(
         { success: false, error: '没有找到对应的 MDX 课件' },
@@ -47,7 +48,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const html = extractSavedCoursewareHtml(post.body);
+    const html =
+      'htmlContent' in post && typeof post.htmlContent === 'string'
+        ? post.htmlContent
+        : extractSavedCoursewareHtml(post.body);
     if (!html) {
       return NextResponse.json(
         { success: false, error: '这篇 MDX 里没有已保存的课件 HTML' },

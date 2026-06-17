@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { blogSource } from '@/lib/source';
 import { listCoursewareMdxPosts } from '@/lib/courseware-mdx';
+import { listDatabaseCoursewarePosts } from '@/lib/edu-content';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
       );
 
     const fsPosts = listCoursewareMdxPosts(locale);
+    const dbPosts = await listDatabaseCoursewarePosts(locale);
     const fsPostBySlug = new Map(fsPosts.map((post) => [post.slug, post]));
 
     const posts = publishedPosts.map((post) => {
@@ -47,7 +49,7 @@ export async function GET(request: NextRequest) {
     });
 
     const knownSlugs = new Set(posts.map((post) => post.slug));
-    for (const post of fsPosts) {
+    for (const post of [...fsPosts, ...dbPosts]) {
       if (knownSlugs.has(post.slug)) continue;
       posts.push({
         title: post.title,

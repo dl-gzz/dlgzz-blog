@@ -262,15 +262,14 @@ export function CoursewareBackendClient() {
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const key = `dlgzz-courseware-import:${importId}`;
-    window.sessionStorage.setItem(
-      key,
-      JSON.stringify({
-        title: selectedPost?.title || 'AI 互动课件',
-        sourceSlug: selectedPost?.slug,
-        operations: result.plan.operations,
-        createdAt: new Date().toISOString(),
-      })
-    );
+    const payload = JSON.stringify({
+      title: selectedPost?.title || 'AI 互动课件',
+      sourceSlug: selectedPost?.slug,
+      operations: result.plan.operations,
+      createdAt: new Date().toISOString(),
+    });
+    window.sessionStorage.setItem(key, payload);
+    window.localStorage.setItem(key, payload);
 
     const query = new URLSearchParams({
       coursewareImportKey: importId,

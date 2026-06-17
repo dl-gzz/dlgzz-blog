@@ -1,4 +1,4 @@
-import { saveGeneratedCoursewareMdx } from '@/lib/courseware-mdx';
+import { saveGeneratedCoursewareToDatabase } from '@/lib/edu-content';
 import { type NextRequest, NextResponse } from 'next/server';
 
 function readText(value: unknown, fallback = '') {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const plan = body.plan;
     const html = readText(body.html) || findHtmlFromPlan(plan);
 
-    const saved = saveGeneratedCoursewareMdx({
+    const saved = await saveGeneratedCoursewareToDatabase({
       title: readText(body.title, 'AI 互动课件'),
       slug: readText(body.slug),
       description: readText(body.description),

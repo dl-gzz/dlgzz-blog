@@ -450,3 +450,106 @@ export const workerPushDelivery = pgTable("worker_push_delivery", {
 	index('worker_push_delivery_user_id_idx').on(table.userId),
 	index('worker_push_delivery_status_idx').on(table.status),
 ]);
+
+export const eduWorkspace = pgTable("edu_workspace", {
+	id: text("id").primaryKey(),
+	ownerUserId: text('owner_user_id').references(() => user.id, { onDelete: 'set null' }),
+	name: text('name').notNull(),
+	slug: text('slug').notNull(),
+	status: text('status').notNull().default('active'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('edu_workspace_slug_unique_idx').on(table.slug),
+	index('edu_workspace_owner_user_id_idx').on(table.ownerUserId),
+	index('edu_workspace_status_idx').on(table.status),
+]);
+
+export const eduCourseware = pgTable("edu_courseware", {
+	id: text("id").primaryKey(),
+	workspaceId: text('workspace_id').notNull().references(() => eduWorkspace.id, { onDelete: 'cascade' }),
+	createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
+	title: text('title').notNull(),
+	slug: text('slug').notNull(),
+	locale: text('locale').notNull().default('zh'),
+	description: text('description').notNull().default(''),
+	sourceSlug: text('source_slug'),
+	whiteboardPrompt: text('whiteboard_prompt').notNull().default(''),
+	htmlContent: text('html_content').notNull(),
+	mdxSource: text('mdx_source').notNull(),
+	provider: text('provider'),
+	model: text('model'),
+	status: text('status').notNull().default('published'),
+	visibility: text('visibility').notNull().default('private'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('edu_courseware_workspace_slug_locale_unique_idx').on(table.workspaceId, table.slug, table.locale),
+	index('edu_courseware_workspace_id_idx').on(table.workspaceId),
+	index('edu_courseware_created_by_idx').on(table.createdBy),
+	index('edu_courseware_status_idx').on(table.status),
+]);
+
+export const eduBlogPost = pgTable("edu_blog_post", {
+	id: text("id").primaryKey(),
+	workspaceId: text('workspace_id').notNull().references(() => eduWorkspace.id, { onDelete: 'cascade' }),
+	coursewareId: text('courseware_id').references(() => eduCourseware.id, { onDelete: 'set null' }),
+	createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
+	postType: text('post_type').notNull().default('courseware'),
+	title: text('title').notNull(),
+	slug: text('slug').notNull(),
+	locale: text('locale').notNull().default('zh'),
+	description: text('description').notNull().default(''),
+	image: text('image').notNull().default('/images/blog/interactive-math-game.png'),
+	mdxSource: text('mdx_source').notNull(),
+	whiteboardCategory: text('whiteboard_category').notNull().default('education'),
+	whiteboardPrompt: text('whiteboard_prompt').notNull().default(''),
+	status: text('status').notNull().default('published'),
+	visibility: text('visibility').notNull().default('private'),
+	publishedAt: timestamp('published_at'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('edu_blog_post_workspace_slug_locale_unique_idx').on(table.workspaceId, table.slug, table.locale),
+	index('edu_blog_post_workspace_id_idx').on(table.workspaceId),
+	index('edu_blog_post_courseware_id_idx').on(table.coursewareId),
+	index('edu_blog_post_created_by_idx').on(table.createdBy),
+	index('edu_blog_post_status_idx').on(table.status),
+]);
+
+export const eduBoard = pgTable("edu_board", {
+	id: text("id").primaryKey(),
+	workspaceId: text('workspace_id').notNull().references(() => eduWorkspace.id, { onDelete: 'cascade' }),
+	createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
+	title: text('title').notNull(),
+	slug: text('slug').notNull(),
+	studentId: text('student_id'),
+	lessonId: text('lesson_id'),
+	status: text('status').notNull().default('active'),
+	visibility: text('visibility').notNull().default('private'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('edu_board_workspace_slug_unique_idx').on(table.workspaceId, table.slug),
+	index('edu_board_workspace_id_idx').on(table.workspaceId),
+	index('edu_board_created_by_idx').on(table.createdBy),
+	index('edu_board_student_id_idx').on(table.studentId),
+]);
+
+export const eduBoardShape = pgTable("edu_board_shape", {
+	id: text("id").primaryKey(),
+	boardId: text('board_id').notNull().references(() => eduBoard.id, { onDelete: 'cascade' }),
+	shapeType: text('shape_type').notNull(),
+	shapeData: jsonb('shape_data').$type<Record<string, unknown>>().notNull(),
+	orderIndex: integer('order_index').notNull().default(0),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	index('edu_board_shape_board_id_idx').on(table.boardId),
+	index('edu_board_shape_shape_type_idx').on(table.shapeType),
+]);

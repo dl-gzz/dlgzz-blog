@@ -1,4 +1,5 @@
 import { getCoursewareMdxPost } from '@/lib/courseware-mdx';
+import { getDatabaseCoursewarePost } from '@/lib/edu-content';
 import { chatWithResolvedServerProvider } from '@/lib/ai/provider';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -553,7 +554,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const post = getCoursewareMdxPost(slug, locale);
+    const post = getCoursewareMdxPost(slug, locale) || (await getDatabaseCoursewarePost(slug, locale));
     if (!post) {
       return NextResponse.json(
         { success: false, error: '没有找到对应的 MDX 课件' },
