@@ -67,18 +67,6 @@ function stripSavedHtmlFromMdxBody(body: string) {
     .trim();
 }
 
-export function generateStaticParams() {
-  return blogSource
-    .getPages()
-    .filter((post) => post.data.published)
-    .flatMap((post) => {
-      return {
-        locale: post.locale,
-        slug: post.slugs,
-      };
-    });
-}
-
 export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata | undefined> {
