@@ -1308,8 +1308,12 @@ function extractHtmlDocument(value: unknown): string {
   const props = pickOperationProps(value);
   return (
     extractHtmlDocument(props.html) ||
+    extractHtmlDocument(props.preview_html) ||
+    extractHtmlDocument(props.previewHtml) ||
     extractHtmlDocument(props.content) ||
     extractHtmlDocument(value.html) ||
+    extractHtmlDocument(value.preview_html) ||
+    extractHtmlDocument(value.previewHtml) ||
     extractHtmlDocument(value.content) ||
     extractHtmlDocument(value.message)
   );
