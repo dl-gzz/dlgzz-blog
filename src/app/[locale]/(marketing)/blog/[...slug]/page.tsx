@@ -53,9 +53,14 @@ async function getRelatedPosts(post: BlogType) {
   return relatedPosts;
 }
 
-async function getDatabasePostFromSlug(slug: string[], locale: Locale) {
-  if (slug.length !== 1) return null;
-  return getDatabaseCoursewarePost(slug[0], locale);
+function toSlugSegments(slug: string | string[]) {
+  return Array.isArray(slug) ? slug : [slug];
+}
+
+async function getDatabasePostFromSlug(slug: string | string[], locale: Locale) {
+  const segments = toSlugSegments(slug);
+  if (segments.length !== 1) return null;
+  return getDatabaseCoursewarePost(segments[0], locale);
 }
 
 function stripSavedHtmlFromMdxBody(body: string) {
@@ -71,9 +76,10 @@ export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata | undefined> {
   const { locale, slug } = await params;
-  const post = blogSource.getPage(slug, locale);
+  const slugSegments = toSlugSegments(slug);
+  const post = blogSource.getPage(slugSegments, locale);
   if (!post) {
-    const dbPost = await getDatabasePostFromSlug(slug, locale);
+    const dbPost = await getDatabasePostFromSlug(slugSegments, locale);
     if (!dbPost) {
       notFound();
     }
@@ -82,7 +88,7 @@ export async function generateMetadata({
     return constructMetadata({
       title: `${dbPost.title} | ${t('title')}`,
       description: dbPost.description,
-      canonicalUrl: getUrlWithLocale(`/blog/${slug.join('/')}`, locale),
+      canonicalUrl: getUrlWithLocale(`/blog/${slugSegments.join('/')}`, locale),
       image: '/images/blog/interactive-math-game.png',
     });
   }
@@ -92,7 +98,7 @@ export async function generateMetadata({
   return constructMetadata({
     title: `${post.data.title} | ${t('title')}`,
     description: post.data.description,
-    canonicalUrl: getUrlWithLocale(`/blog/${slug}`, locale),
+    canonicalUrl: getUrlWithLocale(`/blog/${slugSegments.join('/')}`, locale),
     image: post.data.image,
   });
 }
@@ -100,15 +106,16 @@ export async function generateMetadata({
 interface BlogPostPageProps {
   params: Promise<{
     locale: Locale;
-    slug: string[];
+    slug: string[] | string;
   }>;
 }
 
 export default async function BlogPostPage(props: BlogPostPageProps) {
   const { locale, slug } = await props.params;
-  const post = blogSource.getPage(slug, locale);
+  const slugSegments = toSlugSegments(slug);
+  const post = blogSource.getPage(slugSegments, locale);
   if (!post) {
-    const dbPost = await getDatabasePostFromSlug(slug, locale);
+    const dbPost = await getDatabasePostFromSlug(slugSegments, locale);
     if (!dbPost) {
       notFound();
     }
@@ -192,7 +199,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
               actions={toolActionViews}
               title={title}
               description={description ?? ''}
-              slug={slug.join('/')}
+              slug={slugSegments.join('/')}
               locale={locale}
               userId={userId}
             />
@@ -268,7 +275,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
         <NewsletterCard />
       </div>
 
-      <ArticleChat slug={slug.join('/')} locale={locale} articleTitle={title} />
+      <ArticleChat slug={slugSegments.join('/')} locale={locale} articleTitle={title} />
     </div>
   );
 }
