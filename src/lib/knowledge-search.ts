@@ -1,6 +1,8 @@
 import postgres from "postgres";
 
-const DEFAULT_KNOWLEDGE_PACK_ID = "xhs-open-shop-v1";
+// 未显式传 packId 时的兜底知识包。可用 env 覆盖，避免把默认值写死在代码里。
+const DEFAULT_KNOWLEDGE_PACK_ID =
+	process.env.DEFAULT_KNOWLEDGE_PACK_ID || "xhs-operations-v1";
 const EMBEDDING_MODEL = "embedding-3";
 
 export interface KnowledgeSearchResult {
@@ -14,18 +16,29 @@ export interface KnowledgeSearchResult {
 	filePath: string;
 	score: number;
 	metadata: Record<string, unknown>;
+	/** 官方原文链接（采集时的 source_url），用于答案溯源 */
+	sourceUrl: string | null;
 }
 
+// 模块级单例：每次调用都新建 postgres() 意味着一次完整的 TCP+TLS 握手
+// （到云端库 1-2 秒），一次检索会握手两次，是首字延迟的主要来源之一。
+// idle_timeout 让空闲连接自动收回，客户端仍可复用（会自动重连）。
+let sqlSingleton: ReturnType<typeof postgres> | null = null;
+
 function getSql() {
+	if (sqlSingleton) return sqlSingleton;
+
 	const explicit = (process.env.DATABASE_SSL || "").toLowerCase();
 	const ssl = explicit === "false" || explicit === "disable" || explicit === "off" ? false : "require";
 
-	return postgres(process.env.DATABASE_URL!, {
+	sqlSingleton = postgres(process.env.DATABASE_URL!, {
 		ssl,
-		max: 1,
+		max: 3,
 		prepare: false,
 		connect_timeout: 10,
+		idle_timeout: 30,
 	});
+	return sqlSingleton;
 }
 
 async function getZhipuEmbedding(text: string): Promise<number[]> {
@@ -87,6 +100,7 @@ async function keywordSearch(query: string, packIds: string[], limit: number): P
 			heading: string | null;
 			content: string;
 			file_path: string;
+			source_url: string | null;
 			metadata: Record<string, unknown>;
 			keyword_score: number;
 		}>>`
@@ -99,6 +113,7 @@ async function keywordSearch(query: string, packIds: string[], limit: number): P
 				kc.heading,
 				kc.content,
 				kd.file_path,
+				kd.metadata->>'source_url' as source_url,
 				kc.metadata,
 				(${sql.unsafe(rankExpression)})::int as keyword_score
 			from knowledge_chunks kc
@@ -124,11 +139,12 @@ async function keywordSearch(query: string, packIds: string[], limit: number): P
 			heading: row.heading,
 			content: row.content,
 			filePath: row.file_path,
+			sourceUrl: row.source_url ?? null,
 			score: 0.55 + Math.min(row.keyword_score, 6) * 0.04,
 			metadata: row.metadata,
 		}));
 	} finally {
-		await sql.end().catch(() => {});
+		// 连接为模块级单例，这里不再销毁（销毁会让下次调用重新 TLS 握手）
 	}
 }
 
@@ -210,38 +226,62 @@ export async function searchKnowledgeChunks(
 				heading: string | null;
 				content: string;
 				file_path: string;
+				source_url: string | null;
 				metadata: Record<string, unknown>;
 				similarity: number;
 				rank_score: number;
 			}>>`
-				select * from (
+				with nearest as materialized (
+					-- 第一阶段：纯向量近邻，不带任何过滤 → 规划器必走 HNSW 索引
+					-- （knowledge_chunks_embedding_hnsw_idx）。order by 表达式与索引
+					-- 表达式完全一致（halfvec + cosine）。
+					-- materialized 必不可少：否则规划器会把外层的包过滤内联推回
+					-- 这里，放弃索引退化成全表扫描（实测 11s vs 0.4s）。
 					select
 						kc.id,
 						kc.document_id,
-						kd.title,
-						kd.source,
-						kd.category,
 						kc.heading,
 						kc.content,
-						kd.file_path,
 						kc.metadata,
-						1 - (kc.embedding <=> ${vector}::vector) as similarity,
-						1 - (kc.embedding <=> ${vector}::vector)
-							+ case
-								when kd.source = 'xhs_official' then 0.04
-								when kd.source = 'xhs_28_questions' then -0.02
-								else 0
-							end as rank_score
+						kc.embedding::halfvec(2048) <=> ${vector}::halfvec(2048) as distance
 					from knowledge_chunks kc
-					join knowledge_documents kd on kd.id = kc.document_id
+					order by kc.embedding::halfvec(2048) <=> ${vector}::halfvec(2048)
+					limit 150
+				),
+				candidates as (
+					-- 第二阶段：在 150 个近邻里做包过滤（超采样弥补过滤损耗；
+					-- 当前包覆盖率 >90%，召回几乎无损）
+					select n.*
+					from nearest n
 					where exists (
 						select 1 from knowledge_pack_documents kpd
-						where kpd.document_id = kd.id
+						where kpd.document_id = n.document_id
 							and kpd.knowledge_pack_id in ${sql(packIds)}
 					)
-						and kc.embedding is not null
-				) ranked
-				where similarity >= ${minScore}
+					limit ${Math.max(limit * 6, 30)}
+				)
+				-- 第二阶段：在候选池里按来源加权重排（候选池很小，代价可忽略）
+				select
+					c.id,
+					c.document_id,
+					kd.title,
+					kd.source,
+					kd.category,
+					c.heading,
+					c.content,
+					kd.metadata->>'source_url' as source_url,
+					kd.file_path,
+					c.metadata,
+					1 - c.distance as similarity,
+					1 - c.distance
+						+ case
+							when kd.source = 'xhs_official' then 0.04
+							when kd.source = 'xhs_28_questions' then -0.02
+							else 0
+						end as rank_score
+				from candidates c
+				join knowledge_documents kd on kd.id = c.document_id
+				where 1 - c.distance >= ${minScore}
 				order by rank_score desc
 				limit ${limit}
 			`;
@@ -255,16 +295,23 @@ export async function searchKnowledgeChunks(
 				heading: row.heading,
 				content: row.content,
 				filePath: row.file_path,
+				sourceUrl: row.source_url ?? null,
 				score: row.rank_score,
 				metadata: row.metadata,
 			}));
+			// 向量已足量命中时跳过关键词兜底：36 个 ilike 全表扫要花数秒，
+			// 只在向量召回不足（<limit 一半）时才值得补充。
+			if (vectorResults.length >= Math.max(2, Math.ceil(limit / 2))) {
+				return vectorResults;
+			}
+
 			const keywordResults = await keywordSearch(query, packIds, limit);
 
 			if (vectorResults.length === 0) return keywordResults.slice(0, limit);
 
 			return mergeSearchResults(vectorResults, keywordResults, limit);
 		} finally {
-			await sql.end().catch(() => {});
+			// 连接为模块级单例，这里不再销毁
 		}
 	} catch (error) {
 		console.error("Knowledge vector search failed, falling back to keyword search:", error);

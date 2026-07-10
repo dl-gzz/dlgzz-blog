@@ -4,6 +4,7 @@ import {
 	index,
 	integer,
 	jsonb,
+	numeric,
 	pgTable,
 	text,
 	timestamp,
@@ -93,38 +94,6 @@ export const payment = pgTable("payment", {
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const customModel = pgTable("custom_model", {
-	id: text("id").primaryKey(),
-	name: text('name').notNull(),
-	height: text('height').notNull(),
-	weight: text('weight').notNull(),
-	bodyType: text('body_type').notNull(),
-	style: text('style').notNull(),
-	imageUrl: text('image_url').notNull(),
-	ossKey: text('oss_key').notNull(),
-	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-	isActive: boolean('is_active').notNull().default(true),
-	createdAt: timestamp('created_at').notNull().defaultNow(),
-	updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
-export const tryOnHistory = pgTable("try_on_history", {
-	id: text("id").primaryKey(),
-	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-	modelName: text('model_name').notNull(),
-	modelImageUrl: text('model_image_url').notNull(),
-	clothingType: text('clothing_type').notNull(),
-	topGarmentUrl: text('top_garment_url'),
-	bottomGarmentUrl: text('bottom_garment_url'),
-	resultImageUrl: text('result_image_url').notNull(),
-	resultOssKey: text('result_oss_key').notNull(),
-	originalResultUrl: text('original_result_url'),
-	taskId: text('task_id'),
-	outfitId: text('outfit_id'),
-	createdAt: timestamp('created_at').notNull().defaultNow(),
-	updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
 export const miniappAccount = pgTable("miniapp_account", {
 	id: text("id").primaryKey(),
 	openid: text('openid').notNull().unique(),
@@ -133,6 +102,54 @@ export const miniappAccount = pgTable("miniapp_account", {
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+export const healthUserProfile = pgTable("health_user_profile", {
+	id: text("id").primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	displayName: text('display_name').notNull().default(''),
+	sex: text('sex').notNull().default('unknown'),
+	birthYear: integer('birth_year'),
+	heightCm: integer('height_cm'),
+	targets: jsonb('targets').$type<Record<string, unknown>>().notNull(),
+	medicationNotes: text('medication_notes').notNull().default(''),
+	riskNotes: text('risk_notes').notNull().default(''),
+	hermesAssistantId: text('hermes_assistant_id'),
+	hermesActivationId: text('hermes_activation_id'),
+	hermesProfileName: text('hermes_profile_name'),
+	hermesConnectionMode: text('hermes_connection_mode'),
+	hermesStatus: text('hermes_status').notNull().default('not_connected'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('health_user_profile_user_id_unique_idx').on(table.userId),
+	index('health_user_profile_hermes_assistant_id_idx').on(table.hermesAssistantId),
+]);
+
+export const healthMeasurement = pgTable("health_measurement", {
+	id: text("id").primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	profileId: text('profile_id').notNull().references(() => healthUserProfile.id, { onDelete: 'cascade' }),
+	measuredAt: timestamp('measured_at').notNull(),
+	entryType: text('entry_type').notNull().default('daily'),
+	systolic: integer('systolic'),
+	diastolic: integer('diastolic'),
+	heartRate: integer('heart_rate'),
+	fastingGlucoseMmol: numeric('fasting_glucose_mmol', { precision: 5, scale: 2 }),
+	postprandialGlucoseMmol: numeric('postprandial_glucose_mmol', { precision: 5, scale: 2 }),
+	totalCholesterolMmol: numeric('total_cholesterol_mmol', { precision: 5, scale: 2 }),
+	triglyceridesMmol: numeric('triglycerides_mmol', { precision: 5, scale: 2 }),
+	hdlMmol: numeric('hdl_mmol', { precision: 5, scale: 2 }),
+	ldlMmol: numeric('ldl_mmol', { precision: 5, scale: 2 }),
+	weightKg: numeric('weight_kg', { precision: 5, scale: 2 }),
+	waistCm: numeric('waist_cm', { precision: 5, scale: 2 }),
+	notes: text('notes').notNull().default(''),
+	source: text('source').notNull().default('manual'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	index('health_measurement_user_measured_at_idx').on(table.userId, table.measuredAt),
+	index('health_measurement_profile_measured_at_idx').on(table.profileId, table.measuredAt),
+]);
 
 // 文件下载统计表
 export const fileDownload = pgTable("file_download", {
@@ -552,4 +569,62 @@ export const eduBoardShape = pgTable("edu_board_shape", {
 }, (table) => [
 	index('edu_board_shape_board_id_idx').on(table.boardId),
 	index('edu_board_shape_shape_type_idx').on(table.shapeType),
+]);
+
+// ─────────────────────────────────────────────────────────
+// API Key 层：付费 Skill 安装 + 知识包检索的鉴权与计量
+// ─────────────────────────────────────────────────────────
+
+/** 用户的 API Key。明文只在签发时返回一次，库里只存 sha256。 */
+export const apiKey = pgTable("api_key", {
+	id: text("id").primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	name: text('name').notNull().default(''),
+	keyHash: text('key_hash').notNull(),
+	keyPrefix: text('key_prefix').notNull(), // 展示用，如 dk_live_a1b2…
+	status: text('status').notNull().default('active'), // active | revoked
+	monthlyQuota: integer('monthly_quota').notNull().default(1000),
+	lastUsedAt: timestamp('last_used_at'),
+	revokedAt: timestamp('revoked_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('api_key_key_hash_unique_idx').on(table.keyHash),
+	index('api_key_user_id_idx').on(table.userId),
+]);
+
+/** Key ↔ 知识包授权：买了哪个包，Key 就只能查哪个包。 */
+export const apiKeyPackGrant = pgTable("api_key_pack_grant", {
+	id: text("id").primaryKey(),
+	apiKeyId: text('api_key_id').notNull().references(() => apiKey.id, { onDelete: 'cascade' }),
+	knowledgePackId: text('knowledge_pack_id').notNull(),
+	source: text('source').notNull().default('purchase'), // purchase | membership | admin
+	expiresAt: timestamp('expires_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('api_key_pack_grant_unique_idx').on(table.apiKeyId, table.knowledgePackId),
+	index('api_key_pack_grant_pack_idx').on(table.knowledgePackId),
+]);
+
+/** 用量计量：每次检索/安装记一条。这是"能不能算账"的地基。 */
+export const apiUsageEvent = pgTable("api_usage_event", {
+	id: text("id").primaryKey(),
+	apiKeyId: text('api_key_id').references(() => apiKey.id, { onDelete: 'set null' }),
+	userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+	// 未登录访客的稳定标识（IP 哈希），用于免费试用额度计数
+	visitorId: text('visitor_id'),
+	kind: text('kind').notNull(), // knowledge_query | skill_install | web_chat
+	knowledgePackId: text('knowledge_pack_id'),
+	serviceId: text('service_id'),
+	query: text('query').notNull().default(''),
+	resultCount: integer('result_count').notNull().default(0),
+	embeddingTokens: integer('embedding_tokens').notNull().default(0),
+	latencyMs: integer('latency_ms').notNull().default(0),
+	status: text('status').notNull().default('ok'), // ok | denied | error
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+	index('api_usage_event_key_created_idx').on(table.apiKeyId, table.createdAt),
+	index('api_usage_event_user_created_idx').on(table.userId, table.createdAt),
+	index('api_usage_event_visitor_created_idx').on(table.visitorId, table.createdAt),
+	index('api_usage_event_pack_idx').on(table.knowledgePackId),
 ]);

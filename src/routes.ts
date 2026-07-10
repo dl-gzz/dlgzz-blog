@@ -32,6 +32,7 @@ export enum Routes {
 
   // dashboard routes
   Dashboard = '/dashboard',
+  Health = '/health',
   AIChat = '/ai-chat',
   Whiteboard = '/whiteboard',
   AdminBots = '/admin/bots',
@@ -41,31 +42,6 @@ export enum Routes {
   SettingsSecurity = '/settings/security',
   SettingsNotifications = '/settings/notifications',
 
-  // AI routes
-  AIText = '/ai/text',
-  AIImage = '/ai/image',
-  AIVideo = '/ai/video',
-  AIAudio = '/ai/audio',
-
-  // block routes
-  MagicuiBlocks = '/magicui',
-  HeroBlocks = '/blocks/hero-section',
-  LogoCloudBlocks = '/blocks/logo-cloud',
-  FeaturesBlocks = '/blocks/features',
-  IntegrationsBlocks = '/blocks/integrations',
-  ContentBlocks = '/blocks/content',
-  StatsBlocks = '/blocks/stats',
-  TeamBlocks = '/blocks/team',
-  TestimonialsBlocks = '/blocks/testimonials',
-  CallToActionBlocks = '/blocks/call-to-action',
-  FooterBlocks = '/blocks/footer',
-  PricingBlocks = '/blocks/pricing',
-  ComparatorBlocks = '/blocks/comparator',
-  FAQBlocks = '/blocks/faqs',
-  LoginBlocks = '/blocks/login',
-  SignupBlocks = '/blocks/sign-up',
-  ForgotPasswordBlocks = '/blocks/forgot-password',
-  ContactBlocks = '/blocks/contact',
 }
 
 /**
@@ -78,7 +54,9 @@ export const routesNotAllowedByLoggedInUsers = [Routes.Login, Routes.Register];
  */
 export const protectedRoutes = [
   Routes.Dashboard,
-  Routes.AIChat,
+  Routes.Health,
+  // Routes.AIChat 不再受保护：它是知识库「试吃」入口，游客必须能直接体验
+  // （额度由 src/lib/free-trial-quota.ts 按 IP 哈希限制，会员无限）
   Routes.AdminBots,
   Routes.AdminUsers,
   Routes.SettingsProfile,

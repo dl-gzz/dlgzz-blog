@@ -1,10 +1,25 @@
 import { streamText, createDataStreamResponse } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
+import { createOpenAICompatibleSdk } from '@/lib/ai/openai-compatible';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { searchBlogContent } from '@/lib/blog-search-vector';
+import { searchKnowledgeChunks } from '@/lib/knowledge-search';
+import {
+  FREE_DAILY_LIMIT,
+  checkTrialQuota,
+  recordTrialUsage,
+  visitorIdFromRequest,
+} from '@/lib/free-trial-quota';
 import fs from 'fs';
 import path from 'path';
+
+// 网页问答检索的知识包（试吃）。与会员 API Key 检索共用同一份知识库。
+const WEB_CHAT_KNOWLEDGE_PACK_IDS = (
+  process.env.AI_CHAT_KNOWLEDGE_PACK_IDS || 'xhs-operations-v1'
+)
+  .split(',')
+  .map((id) => id.trim())
+  .filter(Boolean);
 
 /**
  * 从 MDX 原文中提取外部链接（http/https）
@@ -38,12 +53,6 @@ function extractLinksFromMdx(slug: string): Array<{ text: string; url: string }>
   return [];
 }
 
-// 配置 DeepSeek API（使用 OpenAI 兼容接口）
-const deepseek = createOpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || '',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
-
 export const maxDuration = 60; // 设置最大执行时间 60 秒
 
 /**
@@ -57,24 +66,28 @@ export const maxDuration = 60; // 设置最大执行时间 60 秒
  */
 export async function POST(req: Request) {
   try {
-    // 1. 验证用户登录状态
-    const session = await getSession();
-    if (!session?.user) {
-      return new Response('Unauthorized - Please login', { status: 401 });
-    }
+    const { sdk, config: aiConfig } = createOpenAICompatibleSdk({
+      defaultOpenAIModel: 'gpt-4o-mini',
+    });
 
-    // 2. 检查付费订阅权限
-    const hasPremiumAccess = await hasAccessToPremiumContent();
-    if (!hasPremiumAccess) {
+    // 1. 身份识别：会员无限，其余（登录/游客）走试吃日额度
+    const session = await getSession();
+    const userId = session?.user?.id ?? null;
+    const isMember = userId ? await hasAccessToPremiumContent() : false;
+    const visitorId = userId ? null : visitorIdFromRequest(req);
+
+    // 2. 试吃额度检查：免费用户当日超额 → 引导开通会员
+    const quota = await checkTrialQuota({ userId, visitorId, isMember });
+    if (!quota.allowed) {
       return new Response(
         JSON.stringify({
-          error: 'Premium feature',
-          message: 'AI 问答功能仅限付费用户使用，请升级您的订阅。',
+          error: 'Trial limit reached',
+          code: 'TRIAL_LIMIT',
+          message: `今天的免费体验次数已用完（每天 ${FREE_DAILY_LIMIT} 次）。开通会员即可无限畅查，并获得 API Key 装进你自己的 AI。`,
+          upgradeUrl: '/pricing',
+          limit: quota.limit,
         }),
-        {
-          status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -89,8 +102,10 @@ export async function POST(req: Request) {
     const lastMessage = messages[messages.length - 1];
     const userQuery = lastMessage.content;
 
-    // 5. 搜索相关博客内容
-    let relevantContext = '';
+    // 5. 检索：知识包（主）+ 博客文章（辅），合并成上下文
+    const searchStartedAt = Date.now();
+    const contextBlocks: string[] = [];
+    let knowledgeHitCount = 0;
     let sources: Array<{
       title: string;
       url: string;
@@ -98,90 +113,132 @@ export async function POST(req: Request) {
       links: Array<{ text: string; url: string }>;
     }> = [];
 
+    // 5a. 知识包检索（这是要"试吃"给用户的核心资产）
     try {
-      const searchResults = await searchBlogContent(userQuery);
+      const knowledgeResults = await searchKnowledgeChunks(userQuery, {
+        packIds: WEB_CHAT_KNOWLEDGE_PACK_IDS,
+        limit: 5,
+      });
+      knowledgeHitCount = knowledgeResults.length;
+      if (knowledgeResults.length > 0) {
+        contextBlocks.push(
+          knowledgeResults
+            .map(
+              (r, i) =>
+                `[知识库 ${i + 1}] ${r.title || r.heading || '知识片段'}\n${r.content}\n`
+            )
+            .join('\n---\n\n')
+        );
 
-      if (searchResults && searchResults.length > 0) {
-        // 提取前 3-5 篇最相关的文章
-        const topResults = searchResults.slice(0, 5);
-
-        // 构建上下文
-        relevantContext = topResults
-          .map((result, index) => {
-            return `[文章 ${index + 1}] ${result.title}\n${result.content}\n`;
-          })
-          .join('\n---\n\n');
-
-        // 保存来源信息（含文章内部链接）
-        sources = topResults.map((result) => {
-          const excerpt = (result.description || result.content)
-            .substring(0, 150)
-            .trim();
-
-          // 从 URL /blog/slug 解析 slug，再读原始 MDX 文件提取链接
-          const slug = result.url.replace(/^\/blog\//, '');
-          const links = extractLinksFromMdx(slug);
-
-          return {
-            title: result.title,
-            url: result.url,
-            excerpt: excerpt,
-            links,
-          };
-        });
+        // 答案溯源：按文档去重，链接到采集时的官方原文（source_url）。
+        // 这是"官方知识库"可信度的关键——用户可点开验证答案出处。
+        const seenDocs = new Set<string>();
+        for (const r of knowledgeResults) {
+          if (seenDocs.has(r.documentId)) continue;
+          seenDocs.add(r.documentId);
+          if (!r.sourceUrl) continue;
+          sources.push({
+            title: r.title || r.heading || '官方文档',
+            url: r.sourceUrl,
+            excerpt: `${r.category ? `[${r.category}] ` : ''}${r.content.slice(0, 120).trim()}`,
+            links: [],
+          });
+        }
       }
-    } catch (searchError) {
-      console.error('Blog search error:', searchError);
-      // 搜索失败不阻塞，继续使用空上下文
+    } catch (knowledgeError) {
+      console.error('Knowledge search error:', knowledgeError);
     }
+
+    // 5b. 博客文章检索：仅当知识包没命中时才用作兜底补充，避免博客内容稀释知识库答案
+    if (knowledgeHitCount === 0) {
+      try {
+        const searchResults = await searchBlogContent(userQuery);
+        if (searchResults && searchResults.length > 0) {
+          const topResults = searchResults.slice(0, 3);
+          contextBlocks.push(
+            topResults
+              .map((result, index) => `[文章 ${index + 1}] ${result.title}\n${result.content}\n`)
+              .join('\n---\n\n')
+          );
+          sources = topResults.map((result) => {
+            const excerpt = (result.description || result.content).substring(0, 150).trim();
+            const slug = result.url.replace(/^\/blog\//, '');
+            return { title: result.title, url: result.url, excerpt, links: extractLinksFromMdx(slug) };
+          });
+        }
+      } catch (searchError) {
+        console.error('Blog search error:', searchError);
+      }
+    }
+
+    const relevantContext = contextBlocks.join('\n\n===\n\n');
 
     // 6. 构建系统提示词
     const systemPrompt = relevantContext
-      ? `你是一个智能博客助手，基于提供的博客文章内容来回答用户问题。
+      ? `你是「独立工作者」知识库的问答助手。下方是针对用户问题检索到的知识库内容，请充分利用它来回答。
 
-## 重要规则：
-1. **仅基于提供的文章内容回答**，不要编造信息
-2. 如果文章中没有相关信息，请明确告知用户
-3. 回答要准确、简洁、友好
-4. 可以引用文章中的具体内容
-5. 使用中文回答
+## 回答规则：
+1. **默认下方内容就是相关的**——检索已按语义匹配，请把它当作对这个问题有用的材料，整合成有条理的答案，不要说"没有直接针对性内容"这类话
+2. 如实转述其中的步骤、方法、参数、条件，尽量具体、可操作、分点清晰
+3. 只有当下方内容**完全**与问题无关时，才说"知识库暂未收录"；否则一律基于它作答
+4. 不要编造下方没有的内容；用中文，语气专业友好
 
-## 可用的博客文章内容：
+## 检索到的知识库内容：
 
 ${relevantContext}
 
-请基于以上文章内容回答用户的问题。如果文章中没有相关信息，请诚实地告知用户。`
-      : `你是一个智能博客助手。目前没有找到相关的博客文章内容来回答这个问题。
+现在请综合以上内容，正面回答用户的问题。`
+      : `你是「独立工作者」知识库的问答助手。这次没有检索到相关的知识库内容。
 
-请告诉用户：暂时没有找到相关的博客文章内容，建议：
-1. 尝试用不同的关键词重新提问
-2. 查看博客文章列表浏览相关内容
-3. 或者直接询问具体的技术问题
+请诚实告诉用户：知识库里暂时没有匹配到相关内容，可以换个说法再问，或浏览博客了解已收录的主题。语气友好专业，用中文。`;
 
-请使用友好、专业的语气回复。`;
+    // 7. 返回流式响应（来源 + 试吃额度 + 转化提示）
+    const remainingAfter = quota.isMember
+      ? null
+      : Math.max(0, quota.remaining - 1);
 
-    // 7. 返回流式响应（包含来源数据）
     return createDataStreamResponse({
       execute: async (dataStream) => {
-        // 先把来源数据写入流，前端可通过 useChat 的 data 字段读取
         if (sources.length > 0) {
           dataStream.writeData({ sources });
         }
+        // 把试吃状态写进流，前端据此显示"今日剩余 N 次 / 开通会员畅查"
+        dataStream.writeData({
+          trial: {
+            isMember: quota.isMember,
+            fromKnowledgeBase: knowledgeHitCount > 0,
+            knowledgeHits: knowledgeHitCount,
+            remaining: remainingAfter,
+            limit: quota.isMember ? null : quota.limit,
+            upgradeUrl: '/pricing',
+          },
+        });
 
         const result = streamText({
-          model: deepseek(process.env.DEEPSEEK_MODEL || 'deepseek-chat'),
+          model: sdk(aiConfig.model),
           system: systemPrompt,
           messages,
           maxTokens: 2000,
           temperature: 0.7,
           onFinish: ({ finishReason, usage }) => {
             console.log('AI Chat completed:', {
-              userId: session?.user?.id || 'anonymous',
-              query: userQuery.substring(0, 100),
+              identity: userId || `visitor:${visitorId?.slice(0, 8)}`,
+              isMember: quota.isMember,
+              knowledgeHits: knowledgeHitCount,
               finishReason,
               usage,
-              sourcesCount: sources.length,
             });
+            // 非会员才计入日额度（会员无限，不记 web_chat）
+            if (!quota.isMember) {
+              void recordTrialUsage({
+                userId,
+                visitorId,
+                knowledgePackId: WEB_CHAT_KNOWLEDGE_PACK_IDS[0] ?? null,
+                query: userQuery,
+                resultCount: knowledgeHitCount + sources.length,
+                latencyMs: Date.now() - searchStartedAt,
+              });
+            }
           },
         });
 
