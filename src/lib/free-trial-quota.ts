@@ -15,8 +15,10 @@ import { nanoid } from 'nanoid';
  * 会员不受限；免费用户按 用户ID / 访客IP哈希 计当日次数。
  */
 
+// ⚠️ 测试期临时放开为 100。正式上线前改回 3（或在 Zeabur 设
+//    AI_CHAT_FREE_DAILY_LIMIT=3）——每天 3 次才是"试吃→开会员"的转化钩子。
 export const FREE_DAILY_LIMIT = Number(
-  process.env.AI_CHAT_FREE_DAILY_LIMIT || 3
+  process.env.AI_CHAT_FREE_DAILY_LIMIT || 100
 );
 
 export interface TrialQuotaState {
