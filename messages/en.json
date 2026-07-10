@@ -65,34 +65,32 @@
   },
   "PricePlans": {
     "free": {
-      "name": "Free Trial",
-      "description": "Perfect for trying out AI virtual try-on",
+      "name": "Free",
+      "description": "Read the content, see if it fits",
       "features": {
-        "feature-1": "Up to 10 virtual try-ons per month",
-        "feature-2": "Basic AI fitting technology",
-        "feature-3": "Standard resolution images",
-        "feature-4": "Community support"
+        "feature-1": "Full access to public blog posts",
+        "feature-2": "First 30% preview of premium posts",
+        "feature-3": "Free component downloads",
+        "feature-4": "Docs and changelog"
       },
       "limits": {
-        "limit-1": "Advanced AI features",
-        "limit-2": "High-resolution outputs",
-        "limit-3": "Priority support"
+        "limit-1": "Knowledge base retrieval (Skill access)",
+        "limit-2": "Member-only components",
+        "limit-3": "Full premium articles"
       }
     },
     "pro": {
-      "name": "Pro",
-      "description": "Advanced AI features for fashion enthusiasts",
+      "name": "Independent Worker Membership",
+      "description": "Get an API key — let your own AI query my knowledge base",
       "features": {
-        "feature-1": "Unlimited virtual try-ons",
-        "feature-2": "Advanced AI fitting with body analysis",
-        "feature-3": "High-resolution 4K outputs",
-        "feature-4": "Style recommendations",
-        "feature-5": "Multiple outfit combinations"
+        "feature-1": "Unlimited access to all knowledge packs (724 official Xiaohongshu docs included)",
+        "feature-2": "Personal API key — install into your own Hermes with one command",
+        "feature-3": "Knowledge base updated daily, members always get the latest",
+        "feature-4": "Unlimited access to all premium articles",
+        "feature-5": "All member components unlocked",
+        "feature-6": "Future knowledge packs included automatically"
       },
-      "limits": {
-        "limit-1": "API access",
-        "limit-2": "White-label solutions"
-      }
+      "limits": {}
     },
     "lifetime": {
       "name": "Lifetime",
@@ -322,6 +320,9 @@
       },
       "blog": {
         "title": "Blog"
+      },
+      "pricing": {
+        "title": "Pricing"
       },
       "docs": {
         "title": "Docs"
@@ -623,9 +624,9 @@
       "records": "records",
       "refresh": "Refresh"
     },
-  "admin": {
-    "title": "Admin",
-    "users": {
+    "admin": {
+      "title": "Admin",
+      "users": {
         "title": "Users",
         "fakeData": "Note: Demo data for Independent Worker platform features",
         "error": "Failed to get users",
@@ -864,13 +865,13 @@
   },
   "HomePage": {
     "title": "Independent Worker",
-    "description": "Maintain one long-term companion with switchable skill modules, available through web login and WeChat activation.",
+    "description": "Put a curated knowledge base inside your AI: become a member, get an API key, install with one command.",
     "hero": {
-      "title": "One companion connected to your digital worker capabilities",
-      "description": "The site handles login, isolated instances, WeChat activation, and skill switches. You focus on maintaining the worker and knowledge base.",
-      "introduction": "View Companion",
-      "primary": "Start Companion",
-      "secondary": "Read Blog"
+      "title": "Put my knowledge base inside your AI",
+      "description": "724 official Xiaohongshu operations docs, updated daily. Become a member, get an API key, and install it into your own AI with a single command.",
+      "introduction": "Browse knowledge packs",
+      "primary": "Become a member",
+      "secondary": "Read the blog"
     },
     "logocloud": {
       "title": "Trusted by leading fashion brands worldwide"
@@ -1102,10 +1103,10 @@
       }
     },
     "calltoaction": {
-      "title": "Start with one companion",
-      "description": "First make WeChat activation, isolated memory, skill switches, and knowledge-base answers stable, then add capabilities step by step.",
-      "primaryButton": "Start Companion",
-      "secondaryButton": "Read Blog"
+      "title": "Give your AI my knowledge base",
+      "description": "724 official Xiaohongshu operations docs, updated daily. Become a member, get an API key, install with a single command.",
+      "primaryButton": "Become a member",
+      "secondaryButton": "Read the blog"
     }
   },
   "AITextPage": {

@@ -65,34 +65,32 @@
   },
   "PricePlans": {
     "free": {
-      "name": "免费版",
-      "description": "基础体验，适合初次了解",
+      "name": "免费",
+      "description": "先读内容，看看是否合胃口",
       "features": {
-        "feature-1": "免费频道文章阅读",
-        "feature-2": "付费文章前30%试读",
-        "feature-3": "每日3次AI问答（基础模型）",
-        "feature-4": "社区支持"
+        "feature-1": "公开博客文章全文阅读",
+        "feature-2": "付费文章前 30% 试读",
+        "feature-3": "免费组件下载安装",
+        "feature-4": "使用文档与更新日志"
       },
       "limits": {
-        "limit-1": "全文阅读权限",
-        "limit-2": "文件下载功能",
-        "limit-3": "高级AI问答"
+        "limit-1": "知识库检索（Skill 调用）",
+        "limit-2": "会员专享组件",
+        "limit-3": "付费文章全文"
       }
     },
     "pro": {
       "name": "独立工作者会员",
-      "description": "适合长期使用的个人会员",
+      "description": "开通即得 API Key，你的 AI 直接调用我的知识库",
       "features": {
-        "feature-1": "全站文章无限制阅读",
-        "feature-2": "每月500次AI问答配额",
-        "feature-3": "高性能AI模型优先响应",
-        "feature-4": "每月50次文件下载",
-        "feature-5": "会员专属标识"
+        "feature-1": "全部知识包畅查（含 724 篇小红书官方经营知识库）",
+        "feature-2": "专属 API Key，装进你自己的 Hermes 一条命令搞定",
+        "feature-3": "知识库每日更新，会员自动同步最新内容",
+        "feature-4": "全部付费文章无限制阅读",
+        "feature-5": "全部会员组件解锁安装",
+        "feature-6": "后续新增知识包，会员自动包含"
       },
-      "limits": {
-        "limit-1": "离线保存功能",
-        "limit-2": "无限AI问答"
-      }
+      "limits": {}
     },
     "lifetime": {
       "name": "年付会员",
@@ -322,6 +320,9 @@
       },
       "blog": {
         "title": "博客"
+      },
+      "pricing": {
+        "title": "会员"
       },
       "docs": {
         "title": "文档"
@@ -621,9 +622,9 @@
       "tryOnFailedMsg": "生成失败，请重试",
       "retryAttempt": "重试"
     },
-  "admin": {
-    "title": "系统管理",
-    "users": {
+    "admin": {
+      "title": "系统管理",
+      "users": {
         "title": "用户管理",
         "fakeData": "注：独立工作者平台功能演示数据",
         "error": "获取用户失败",
@@ -862,12 +863,12 @@
   },
   "HomePage": {
     "title": "独立工作者",
-    "description": "维护一个长期陪伴者和可开关技能模块，让用户通过网站登录、微信扫码使用。",
+    "description": "把策展好的知识库装进你的 AI：开通会员即得 API Key，一条命令接入，随时检索。",
     "hero": {
-      "title": "一个独立陪伴者，连接你的数字员工能力",
-      "description": "网站负责登录、独立实例、微信激活和技能开关；你只需要维护数字员工和知识库。",
-      "introduction": "查看独立陪伴者",
-      "primary": "启用陪伴者",
+      "title": "把我的知识库，装进你的 AI",
+      "description": "724 篇小红书官方经营知识库，每日更新。开通会员即得 API Key，一条命令装进你自己的 AI，随时提问随时查。",
+      "introduction": "查看知识包",
+      "primary": "开通会员",
       "secondary": "阅读博客"
     },
     "logocloud": {
@@ -1100,9 +1101,9 @@
       }
     },
     "calltoaction": {
-      "title": "从一个陪伴者开始",
-      "description": "先把微信接入、独立记忆、技能开关和知识库问答跑稳定，再逐步增加能力。",
-      "primaryButton": "启用独立陪伴者",
+      "title": "让你的 AI 拥有我的知识库",
+      "description": "724 篇小红书官方经营知识，每日更新。开通会员拿到 API Key，一条命令装进你自己的 AI。",
+      "primaryButton": "开通会员",
       "secondaryButton": "阅读博客"
     }
   },

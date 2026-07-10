@@ -16,7 +16,7 @@ export default function CallToActionSection() {
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">
             <Button asChild size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-              <LocaleLink href="/bots">
+              <LocaleLink href="/pricing">
                 <span>{t('primaryButton')}</span>
               </LocaleLink>
             </Button>
