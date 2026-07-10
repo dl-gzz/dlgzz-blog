@@ -10,7 +10,7 @@ function WorkerLogoIcon() {
     <Image
       className="size-8 object-contain"
       src="/images/marketing/one-worker-logo.png"
-      alt="独立工作者"
+      alt="独立沉思录"
       width={32}
       height={32}
       sizes="32px"

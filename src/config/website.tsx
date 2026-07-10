@@ -69,8 +69,8 @@ export const websiteConfig: WebsiteConfig = {
   },
   mail: {
     provider: 'smtp',
-    fromEmail: '独立工作者 <395887347@qq.com>',
-    supportEmail: '独立工作者 <395887347@qq.com>',
+    fromEmail: '独立沉思录 <395887347@qq.com>',
+    supportEmail: '独立沉思录 <395887347@qq.com>',
   },
   newsletter: {
     provider: 'resend',

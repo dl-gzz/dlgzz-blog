@@ -29,10 +29,11 @@ const transitionVariants = {
 
 export default function HeroSection() {
   const t = useTranslations('HomePage.hero');
-  // 主线：了解商品（组件商店）→ 开通会员 → 读博客。/bots 已冻结，不再作为入口。
-  const linkIntroduction = '/services';
-  const linkPrimary = '/pricing';
-  const linkSecondary = '/blog';
+  // 主线：先免费试用知识库（最强转化钩子）→ 开通会员 → 读博客。
+  // /bots 已冻结，不再作为入口。
+  const linkIntroduction = '/ai-chat';
+  const linkPrimary = '/ai-chat';
+  const linkSecondary = '/pricing';
 
   return (
     <>

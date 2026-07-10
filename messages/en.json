@@ -1,8 +1,8 @@
 {
   "Metadata": {
-    "name": "Independent Worker",
-    "title": "Independent Worker - A Person Who Loves Life",
-    "description": "Love life"
+    "name": "Independent Meditations",
+    "title": "Independent Meditations · Articles as a Service",
+    "description": "Articles as a Service: essays written for humans, callable by your AI."
   },
   "Common": {
     "login": "Log in",
@@ -80,7 +80,7 @@
       }
     },
     "pro": {
-      "name": "Independent Worker Membership",
+      "name": "Independent Meditations Membership",
       "description": "Get an API key — let your own AI query my knowledge base",
       "features": {
         "feature-1": "Unlimited access to all knowledge packs (724 official Xiaohongshu docs included)",
@@ -118,10 +118,10 @@
   },
   "AboutPage": {
     "title": "About",
-    "description": "Independent Worker is revolutionizing the fashion industry with cutting-edge AI technology that allows you to virtually try on clothes before purchasing.",
-    "authorName": "Independent Worker",
+    "description": "Independent Meditations is revolutionizing the fashion industry with cutting-edge AI technology that allows you to virtually try on clothes before purchasing.",
+    "authorName": "Independent Meditations",
     "authorBio": "AI Virtual Try-On Platform",
-    "introduction": "👋 Welcome to Independent Worker! We're revolutionizing online shopping with AI-powered virtual try-on technology. See how any outfit looks on you before you buy. Have questions? We'd love to help!",
+    "introduction": "👋 Welcome to Independent Meditations! We're revolutionizing online shopping with AI-powered virtual try-on technology. See how any outfit looks on you before you buy. Have questions? We'd love to help!",
     "talkWithMe": "Contact Us",
     "followMe": "Follow us on X"
   },
@@ -148,15 +148,15 @@
   },
   "ChangelogPage": {
     "title": "Changelog",
-    "description": "Stay up to date with the latest Independent Worker features and improvements",
-    "subtitle": "Stay up to date with the latest Independent Worker features and improvements"
+    "description": "Stay up to date with the latest Independent Meditations features and improvements",
+    "subtitle": "Stay up to date with the latest Independent Meditations features and improvements"
   },
   "ContactPage": {
     "title": "Contact",
     "description": "Get in touch with our AI fashion experts",
     "subtitle": "Get in touch with our AI fashion experts",
     "form": {
-      "title": "Contact Independent Worker",
+      "title": "Contact Independent Meditations",
       "description": "Have questions about our AI virtual try-on technology? Our team is here to help",
       "name": "Name",
       "email": "Email",
@@ -174,10 +174,10 @@
   },
   "WaitlistPage": {
     "title": "Waitlist",
-    "description": "Join our waitlist for early access to Independent Worker",
-    "subtitle": "Join our waitlist for early access to Independent Worker",
+    "description": "Join our waitlist for early access to Independent Meditations",
+    "subtitle": "Join our waitlist for early access to Independent Meditations",
     "form": {
-      "title": "Join Independent Worker Waitlist",
+      "title": "Join Independent Meditations Waitlist",
       "description": "Be the first to experience our revolutionary AI virtual try-on technology",
       "email": "Email",
       "subscribe": "Join Waitlist",
@@ -189,7 +189,7 @@
   },
   "Newsletter": {
     "title": "Newsletter",
-    "subtitle": "Stay updated with Independent Worker",
+    "subtitle": "Stay updated with Independent Meditations",
     "description": "Subscribe to get the latest updates on AI fashion technology and new features",
     "form": {
       "email": "Email",
@@ -203,8 +203,8 @@
   "AuthPage": {
     "login": {
       "title": "Login",
-      "welcomeBack": "Welcome back to Independent Worker",
-      "signUpHint": "New to Independent Worker? Sign up",
+      "welcomeBack": "Welcome back to Independent Meditations",
+      "signUpHint": "New to Independent Meditations? Sign up",
       "signInWithGoogle": "Sign In with Google",
       "loginWithGoogle": "Sign in with Google to start your AI fashion journey",
       "or": "Or continue with",
@@ -220,9 +220,9 @@
     },
     "register": {
       "title": "Sign Up",
-      "createAccount": "Create your Independent Worker account",
+      "createAccount": "Create your Independent Meditations account",
       "signInHint": "Already have an account? Sign in",
-      "registerWithGoogle": "Create your Independent Worker account with Google to get started",
+      "registerWithGoogle": "Create your Independent Meditations account with Google to get started",
       "orContinueWith": "Or",
       "name": "Name",
       "namePlaceholder": "Enter your name",
@@ -269,7 +269,7 @@
     }
   },
   "BlogPage": {
-    "title": "Independent Worker Blog",
+    "title": "Independent Meditations Blog",
     "description": "Sharing life insights, work experience and personal growth",
     "subtitle": "Sharing life insights, work experience and personal growth",
     "author": "Author",
@@ -300,7 +300,7 @@
     "previousPage": "Previous",
     "nextPage": "Next",
     "chooseLanguage": "Select language",
-    "title": "Independent Worker Documentation",
+    "title": "Independent Meditations Documentation",
     "homepage": "Homepage",
     "blog": "Blog"
   },
@@ -328,7 +328,7 @@
         "title": "Docs"
       },
       "aiChat": {
-        "title": "AI Chat"
+        "title": "Try the knowledge base"
       },
       "whiteboard": {
         "title": "Whiteboard"
@@ -370,11 +370,11 @@
           },
           "waitlist": {
             "title": "Waitlist",
-            "description": "Join early access to Independent Worker's latest features"
+            "description": "Join early access to Independent Meditations's latest features"
           },
           "changelog": {
             "title": "Changelog",
-            "description": "See the latest Independent Worker updates and new AI features"
+            "description": "See the latest Independent Meditations updates and new AI features"
           },
           "roadmap": {
             "title": "Roadmap",
@@ -382,7 +382,7 @@
           },
           "cookiePolicy": {
             "title": "Cookie Policy",
-            "description": "How we use cookies to enhance your Independent Worker experience"
+            "description": "How we use cookies to enhance your Independent Meditations experience"
           },
           "privacyPolicy": {
             "title": "Privacy Policy",
@@ -390,7 +390,7 @@
           },
           "termsOfService": {
             "title": "Terms of Service",
-            "description": "Legal agreement for using Independent Worker services"
+            "description": "Legal agreement for using Independent Meditations services"
           }
         }
       },
@@ -476,7 +476,7 @@
       "company": {
         "title": "Company",
         "items": {
-          "about": "About Independent Worker",
+          "about": "About Independent Meditations",
           "contact": "Contact Us",
           "waitlist": "Early Access"
         }
@@ -628,7 +628,7 @@
       "title": "Admin",
       "users": {
         "title": "Users",
-        "fakeData": "Note: Demo data for Independent Worker platform features",
+        "fakeData": "Note: Demo data for Independent Meditations platform features",
         "error": "Failed to get users",
         "search": "Search users...",
         "columns": {
@@ -684,7 +684,7 @@
       "title": "Settings",
       "profile": {
         "title": "Profile",
-        "description": "Manage your Independent Worker account information",
+        "description": "Manage your Independent Meditations account information",
         "avatar": {
           "title": "Avatar",
           "description": "Upload your photo for better AI fitting accuracy",
@@ -709,7 +709,7 @@
       },
       "billing": {
         "title": "Billing",
-        "description": "Manage your Independent Worker subscription and billing",
+        "description": "Manage your Independent Meditations subscription and billing",
         "status": {
           "active": "Active",
           "trial": "Trial",
@@ -723,7 +723,7 @@
         },
         "currentPlan": {
           "title": "Current Plan",
-          "description": "Your current Independent Worker subscription details",
+          "description": "Your current Independent Meditations subscription details",
           "noPlan": "You have no active plan"
         },
         "CustomerPortalButton": {
@@ -734,7 +734,7 @@
         "nextBillingDate": "Next billing date:",
         "trialEnds": "Trial ends:",
         "freePlanMessage": "You're on the free plan with limited AI try-ons",
-        "lifetimeMessage": "You have lifetime access to all Independent Worker features",
+        "lifetimeMessage": "You have lifetime access to all Independent Meditations features",
         "manageSubscription": "Manage Subscription",
         "manageBilling": "Manage Billing",
         "upgradePlan": "Upgrade Plan",
@@ -743,7 +743,7 @@
       },
       "notification": {
         "title": "Notifications",
-        "description": "Manage your Independent Worker notification preferences",
+        "description": "Manage your Independent Meditations notification preferences",
         "newsletter": {
           "title": "Newsletter Subscription",
           "description": "Get updates on new AI features and fashion trends",
@@ -759,7 +759,7 @@
       },
       "security": {
         "title": "Security",
-        "description": "Manage your Independent Worker account security",
+        "description": "Manage your Independent Meditations account security",
         "updatePassword": {
           "title": "Change Password",
           "description": "Update your password to keep your account secure",
@@ -783,11 +783,11 @@
         },
         "deleteAccount": {
           "title": "Delete Account",
-          "description": "Permanently remove your Independent Worker account and all data",
+          "description": "Permanently remove your Independent Meditations account and all data",
           "warning": "This action cannot be undone and will delete all your AI-generated content",
           "button": "Delete Account",
           "confirmTitle": "Delete Account",
-          "confirmDescription": "Are you sure you want to delete your Independent Worker account? This action cannot be undone.",
+          "confirmDescription": "Are you sure you want to delete your Independent Meditations account? This action cannot be undone.",
           "confirm": "Delete",
           "cancel": "Cancel",
           "deleting": "Deleting...",
@@ -804,35 +804,35 @@
   },
   "Mail": {
     "common": {
-      "team": "Independent Worker Team",
-      "copyright": "©️ {year} Independent Worker. All Rights Reserved."
+      "team": "Independent Meditations Team",
+      "copyright": "©️ {year} Independent Meditations. All Rights Reserved."
     },
     "verifyEmail": {
-      "title": "Welcome to Independent Worker, {name}!",
+      "title": "Welcome to Independent Meditations, {name}!",
       "body": "Please click the link below to verify your email and start your AI fashion journey.",
       "confirmEmail": "Verify Email",
-      "subject": "Verify your Independent Worker account"
+      "subject": "Verify your Independent Meditations account"
     },
     "forgotPassword": {
       "title": "Hi {name},",
-      "body": "Please click the link below to reset your Independent Worker password.",
+      "body": "Please click the link below to reset your Independent Meditations password.",
       "resetPassword": "Reset Password",
-      "subject": "Reset your Independent Worker password"
+      "subject": "Reset your Independent Meditations password"
     },
     "subscribeNewsletter": {
-      "body": "Thank you for subscribing to Independent Worker updates! We'll keep you informed about the latest AI fashion technology and new features.",
-      "subject": "Welcome to Independent Worker Newsletter"
+      "body": "Thank you for subscribing to Independent Meditations updates! We'll keep you informed about the latest AI fashion technology and new features.",
+      "subject": "Welcome to Independent Meditations Newsletter"
     },
     "contactMessage": {
       "name": "Name: {name}",
       "email": "Email: {email}",
       "message": "Message: {message}",
-      "subject": "New Contact Message - Independent Worker"
+      "subject": "New Contact Message - Independent Meditations"
     },
     "paymentSuccess": {
       "subject": "🎉 Subscription Successful!",
       "greeting": "Hello!",
-      "thankYou": "Thank you for subscribing to Independent Worker! Your subscription is now active and you can enjoy all premium content.",
+      "thankYou": "Thank you for subscribing to Independent Meditations! Your subscription is now active and you can enjoy all premium content.",
       "subscriptionDetails": "Subscription Details",
       "plan": "Plan",
       "amount": "Amount",
@@ -864,14 +864,14 @@
     }
   },
   "HomePage": {
-    "title": "Independent Worker",
+    "title": "Independent Meditations",
     "description": "Put a curated knowledge base inside your AI: become a member, get an API key, install with one command.",
     "hero": {
       "title": "Put my knowledge base inside your AI",
       "description": "724 official Xiaohongshu operations docs, updated daily. Become a member, get an API key, and install it into your own AI with a single command.",
-      "introduction": "Browse knowledge packs",
-      "primary": "Become a member",
-      "secondary": "Read the blog"
+      "introduction": "Try the knowledge base free",
+      "primary": "Try free (3/day)",
+      "secondary": "See membership"
     },
     "logocloud": {
       "title": "Trusted by leading fashion brands worldwide"
@@ -879,7 +879,7 @@
     "integration": {
       "title": "AI Integrations",
       "subtitle": "Powered by advanced AI technology",
-      "description": "Independent Worker integrates with cutting-edge AI models and fashion platforms to provide the most accurate virtual try-on experience.",
+      "description": "Independent Meditations integrates with cutting-edge AI models and fashion platforms to provide the most accurate virtual try-on experience.",
       "learnMore": "Learn More",
       "items": {
         "item-1": {
@@ -940,7 +940,7 @@
     "features2": {
       "title": "Advanced AI Capabilities",
       "subtitle": "Next-generation fashion technology",
-      "description": "Discover the powerful AI features that make Independent Worker the most advanced virtual try-on platform",
+      "description": "Discover the powerful AI features that make Independent Meditations the most advanced virtual try-on platform",
       "feature-1": "AI Body Analysis & Measurement",
       "feature-2": "Smart Fabric Simulation",
       "feature-3": "Personalized Style AI",
@@ -949,7 +949,7 @@
     "features3": {
       "title": "Core AI Features",
       "subtitle": "Cutting-edge technology at your fingertips",
-      "description": "Explore the advanced AI capabilities that power Independent Worker's virtual try-on experience",
+      "description": "Explore the advanced AI capabilities that power Independent Meditations's virtual try-on experience",
       "items": {
         "item-1": {
           "title": "Lightning-Fast AI Processing",
@@ -984,7 +984,7 @@
     },
     "faqs": {
       "title": "Frequently Asked Questions",
-      "subtitle": "Everything you need to know about Independent Worker",
+      "subtitle": "Everything you need to know about Independent Meditations",
       "items": {
         "item-1": {
           "question": "How accurate is the AI virtual try-on?",
@@ -999,8 +999,8 @@
           "answer": "Yes, we use enterprise-grade encryption and never store your photos longer than necessary for processing."
         },
         "item-4": {
-          "question": "Can I use Independent Worker on mobile devices?",
-          "answer": "Absolutely! Independent Worker works seamlessly on all devices including smartphones, tablets, and desktops."
+          "question": "Can I use Independent Meditations on mobile devices?",
+          "answer": "Absolutely! Independent Meditations works seamlessly on all devices including smartphones, tablets, and desktops."
         },
         "item-5": {
           "question": "Need more help?",
@@ -1009,14 +1009,14 @@
       }
     },
     "testimonials": {
-      "title": "What Users Say About Independent Worker",
+      "title": "What Users Say About Independent Meditations",
       "subtitle": "Real experiences from fashion enthusiasts",
       "items": {
         "item-1": {
           "name": "Sarah Johnson",
           "role": "Fashion Blogger",
           "image": "https://randomuser.me/api/portraits/women/1.jpg",
-          "quote": "Independent Worker completely changed how I shop online. The AI try-on is so accurate, I haven't returned a single item!"
+          "quote": "Independent Meditations completely changed how I shop online. The AI try-on is so accurate, I haven't returned a single item!"
         },
         "item-2": {
           "name": "Michael Chen",
@@ -1028,19 +1028,19 @@
           "name": "Emma Rodriguez",
           "role": "Fashion Designer",
           "image": "https://randomuser.me/api/portraits/women/7.jpg",
-          "quote": "As a designer, I'm amazed by the accuracy of the fabric simulation. Independent Worker is the future of fashion tech."
+          "quote": "As a designer, I'm amazed by the accuracy of the fabric simulation. Independent Meditations is the future of fashion tech."
         },
         "item-4": {
           "name": "David Kim",
           "role": "E-commerce Manager",
           "image": "https://randomuser.me/api/portraits/men/8.jpg",
-          "quote": "Our return rates dropped by 60% after integrating Independent Worker. Customers love seeing how clothes actually look on them."
+          "quote": "Our return rates dropped by 60% after integrating Independent Meditations. Customers love seeing how clothes actually look on them."
         },
         "item-5": {
           "name": "Lisa Wang",
           "role": "Personal Shopper",
           "image": "https://randomuser.me/api/portraits/women/4.jpg",
-          "quote": "Independent Worker helps me serve more clients by quickly showing them how different outfits will look. It's incredibly efficient."
+          "quote": "Independent Meditations helps me serve more clients by quickly showing them how different outfits will look. It's incredibly efficient."
         },
         "item-6": {
           "name": "James Thompson",
@@ -1052,19 +1052,19 @@
           "name": "Sofia Martinez",
           "role": "Style Consultant",
           "image": "https://randomuser.me/api/portraits/women/5.jpg",
-          "quote": "The virtual try-on is so realistic, it feels like magic. Independent Worker has revolutionized how I help clients choose outfits."
+          "quote": "The virtual try-on is so realistic, it feels like magic. Independent Meditations has revolutionized how I help clients choose outfits."
         },
         "item-8": {
           "name": "Alex Turner",
           "role": "Fashion Photographer",
           "image": "https://randomuser.me/api/portraits/men/9.jpg",
-          "quote": "The 3D rendering quality is exceptional. Independent Worker captures how fabric moves and fits better than anything I've seen."
+          "quote": "The 3D rendering quality is exceptional. Independent Meditations captures how fabric moves and fits better than anything I've seen."
         },
         "item-9": {
           "name": "Rachel Green",
           "role": "Boutique Owner",
           "image": "https://randomuser.me/api/portraits/women/10.jpg",
-          "quote": "Since using Independent Worker, my online sales have tripled. Customers love being able to try before they buy."
+          "quote": "Since using Independent Meditations, my online sales have tripled. Customers love being able to try before they buy."
         },
         "item-10": {
           "name": "Mark Davis",
@@ -1076,20 +1076,20 @@
           "name": "Anna Kowalski",
           "role": "Fashion Student",
           "image": "https://randomuser.me/api/portraits/women/12.jpg",
-          "quote": "Independent Worker helped me understand fit and proportion better than any textbook. It's an invaluable learning tool."
+          "quote": "Independent Meditations helped me understand fit and proportion better than any textbook. It's an invaluable learning tool."
         },
         "item-12": {
           "name": "Tony Stark",
           "role": "Retail Innovation Director",
           "image": "https://randomuser.me/api/portraits/men/13.jpg",
-          "quote": "Independent Worker is setting the standard for virtual try-on technology. The AI accuracy and speed are unmatched in the industry."
+          "quote": "Independent Meditations is setting the standard for virtual try-on technology. The AI accuracy and speed are unmatched in the industry."
         }
       }
     },
     "stats": {
-      "title": "Independent Worker Impact",
+      "title": "Independent Meditations Impact",
       "subtitle": "Revolutionizing fashion with AI",
-      "description": "See how Independent Worker is transforming the fashion industry with cutting-edge AI technology",
+      "description": "See how Independent Meditations is transforming the fashion industry with cutting-edge AI technology",
       "items": {
         "item-1": {
           "title": "AI Try-Ons Completed"
