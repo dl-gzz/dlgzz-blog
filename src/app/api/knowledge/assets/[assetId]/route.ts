@@ -12,6 +12,9 @@ interface RouteContext {
 type AssetRow = {
   public_url: string | null;
   mime_type: string | null;
+  storage_provider: string | null;
+  storage_bucket: string | null;
+  object_key: string | null;
   status: string;
   visibility: string;
 };
@@ -54,6 +57,30 @@ function isBrowserSensitiveCdn(value: string) {
   }
 }
 
+function getCosObjectUrl(asset: AssetRow) {
+  if (
+    asset.storage_provider !== 'cos' ||
+    !asset.storage_bucket ||
+    !asset.object_key
+  ) {
+    return asset.public_url;
+  }
+
+  const endpoint = process.env.KNOWLEDGE_ASSET_ENDPOINT?.trim();
+  if (endpoint) {
+    return `${endpoint.replace(/\/$/, '')}/${asset.object_key
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/')}`;
+  }
+
+  const region = process.env.KNOWLEDGE_ASSET_REGION || 'ap-chengdu';
+  return `https://${asset.storage_bucket}.cos.${region}.myqcloud.com/${asset.object_key
+    .split('/')
+    .map(encodeURIComponent)
+    .join('/')}`;
+}
+
 export async function GET(_request: NextRequest, context: RouteContext) {
   const { assetId } = await context.params;
   if (!assetId) {
@@ -62,7 +89,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
   try {
     const rows = await getSql()<AssetRow[]>`
-      select public_url, mime_type, status, visibility
+      select public_url, mime_type, storage_provider, storage_bucket, object_key, status, visibility
       from knowledge_assets
       where id = ${assetId}
       limit 1
@@ -79,7 +106,11 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       return new NextResponse('Not found', { status: 404 });
     }
 
-    const target = new URL(asset.public_url);
+    const fetchUrl = getCosObjectUrl(asset);
+    if (!fetchUrl || !isHttpsUrl(fetchUrl)) {
+      return new NextResponse('Image unavailable', { status: 502 });
+    }
+    const target = new URL(fetchUrl);
 
     // 统一由同源代理读取图片并返回二进制。部分宿主（包括 WorkBuddy）
     // 不会跟随图片 URL 的跨域 307；直接返回 200 才能让 Markdown/原生图片渲染稳定工作。
