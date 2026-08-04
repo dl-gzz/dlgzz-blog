@@ -81,17 +81,18 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     const target = new URL(asset.public_url);
 
-    // COS 等自有公开存储直接重定向即可；只有官方 CDN 需要补浏览器标识。
-    if (!isBrowserSensitiveCdn(asset.public_url)) {
-      return NextResponse.redirect(target, 307);
-    }
-
+    // 统一由同源代理读取图片并返回二进制。部分宿主（包括 WorkBuddy）
+    // 不会跟随图片 URL 的跨域 307；直接返回 200 才能让 Markdown/原生图片渲染稳定工作。
     const upstream = await fetch(target, {
       headers: {
         Accept:
           'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/131 Safari/537.36',
+        ...(isBrowserSensitiveCdn(asset.public_url)
+          ? {
+              'User-Agent':
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/131 Safari/537.36',
+            }
+          : {}),
       },
       cache: 'force-cache',
       redirect: 'follow',
