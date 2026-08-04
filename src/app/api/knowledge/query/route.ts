@@ -68,6 +68,43 @@ function serializeSourceUrl(value: string | null) {
   }
 }
 
+function isInternalOrigin(value: string) {
+  try {
+    const hostname = new URL(value).hostname.toLowerCase();
+    return (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0' ||
+      hostname === '::1' ||
+      hostname === 'host.docker.internal'
+    );
+  } catch {
+    return true;
+  }
+}
+
+function getAssetProxyBaseUrl(request: NextRequest) {
+  const configuredOrigin =
+    process.env.KNOWLEDGE_PUBLIC_ORIGIN || process.env.NEXT_PUBLIC_BASE_URL;
+  if (configuredOrigin && !isInternalOrigin(configuredOrigin)) {
+    return new URL('/api/knowledge/assets', configuredOrigin).toString().replace(/\/$/, '');
+  }
+
+  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+  if (forwardedHost && !isInternalOrigin(`${forwardedProto}://${forwardedHost}`)) {
+    return `${forwardedProto}://${forwardedHost}/api/knowledge/assets`;
+  }
+
+  const requestOrigin = new URL(request.url).origin;
+  if (!isInternalOrigin(requestOrigin)) {
+    return new URL('/api/knowledge/assets', request.url).toString().replace(/\/$/, '');
+  }
+
+  // Zeabur/容器内请求可能只有 0.0.0.0:8080；对外 Skill 必须拿到可渲染的公开域名。
+  return 'https://www.dlgzz.com/api/knowledge/assets';
+}
+
 /**
  * 知识包检索 API —— 卖数据库模式的收银机。
  *
@@ -171,9 +208,7 @@ export async function POST(request: NextRequest) {
     // 部分官方文档 CDN 对没有浏览器 User-Agent 的抓取器返回 404。
     // 统一把知识图片交给同源代理，Skill、Markdown 渲染器和普通浏览器
     // 都能拿到同一张图；原图地址仍通过 originalUrl 保留，便于溯源。
-    const assetProxyBaseUrl = new URL('/api/knowledge/assets', request.url)
-      .toString()
-      .replace(/\/$/, '');
+    const assetProxyBaseUrl = getAssetProxyBaseUrl(request);
 
     return NextResponse.json({
       success: true,
