@@ -44,9 +44,12 @@ export class AIResultShapeUtil extends BaseBoxShapeUtil<any> {
             }}>
                 {isHtml ? (
                     <iframe
+                        title={`AI result ${shape.id}`}
                         srcDoc={text}
                         style={{ width: '100%', height: '100%', border: 'none' }}
-                        sandbox="allow-scripts allow-forms allow-popups"
+                        sandbox="allow-scripts"
+                        referrerPolicy="no-referrer"
+                        allow="camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'"
                     />
                 ) : isImageUrl ? (
                     <>
@@ -98,4 +101,3 @@ export class AIResultShapeUtil extends BaseBoxShapeUtil<any> {
         return <rect width={shape.props.w} height={shape.props.h} />;
     }
 }
-

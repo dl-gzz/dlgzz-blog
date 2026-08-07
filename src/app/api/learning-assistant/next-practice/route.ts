@@ -1,4 +1,5 @@
 import { runLearningAssistant } from '@/lib/hermes-learning-assistant';
+import { requireStudentAccess } from '@/lib/student-access';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -8,15 +9,18 @@ function readText(value: string | null, fallback = '') {
 }
 
 export async function GET(request: NextRequest) {
-  try {
-    const studentId = readText(request.nextUrl.searchParams.get('studentId'));
-    if (!studentId) {
-      return NextResponse.json(
-        { success: false, error: '缺少 studentId' },
-        { status: 400 }
-      );
-    }
+  const studentId = readText(request.nextUrl.searchParams.get('studentId'));
+  if (!studentId) {
+    return NextResponse.json(
+      { success: false, error: '缺少 studentId' },
+      { status: 400 }
+    );
+  }
 
+  const auth = await requireStudentAccess(request, studentId);
+  if ('response' in auth) return auth.response;
+
+  try {
     const args = ['--student-id', studentId];
     const dueBefore = readText(request.nextUrl.searchParams.get('dueBefore'));
     const limit = readText(request.nextUrl.searchParams.get('limit'), '8');

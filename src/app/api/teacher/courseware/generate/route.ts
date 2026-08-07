@@ -1,6 +1,7 @@
+import { chatWithResolvedServerProvider } from '@/lib/ai/provider';
+import { requireHermesAdmin } from '@/lib/api-security';
 import { getCoursewareMdxPost } from '@/lib/courseware-mdx';
 import { getDatabaseCoursewarePost } from '@/lib/edu-content';
-import { chatWithResolvedServerProvider } from '@/lib/ai/provider';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export const maxDuration = 60;
@@ -48,7 +49,11 @@ function extractJson(raw: string) {
     // Try balanced-object extraction below.
   }
 
-  for (let start = source.indexOf('{'); start >= 0; start = source.indexOf('{', start + 1)) {
+  for (
+    let start = source.indexOf('{');
+    start >= 0;
+    start = source.indexOf('{', start + 1)
+  ) {
     let depth = 0;
     let inString = false;
     let escaped = false;
@@ -105,7 +110,8 @@ function extractHtmlDocument(raw: string) {
   const fencedHtml = source.match(/```html\s*([\s\S]*?)```/i);
   const htmlSource = decodeJsonishText(fencedHtml?.[1] || source).trim();
   const startsAtDocument = htmlSource.search(/<!doctype\s+html|<html[\s>]/i);
-  const rawDocumentSource = startsAtDocument >= 0 ? htmlSource.slice(startsAtDocument) : htmlSource;
+  const rawDocumentSource =
+    startsAtDocument >= 0 ? htmlSource.slice(startsAtDocument) : htmlSource;
   const endMatch = rawDocumentSource.match(/<\/html>/i);
   const documentSource = endMatch
     ? rawDocumentSource.slice(0, (endMatch.index || 0) + endMatch[0].length)
@@ -146,6 +152,70 @@ function planFromFallbackMessage(message: string) {
   return null;
 }
 
+function getPreviewHtml(plan: unknown) {
+  if (!plan || typeof plan !== 'object') return '';
+
+  const operations = (plan as { operations?: unknown }).operations;
+  if (!Array.isArray(operations)) return '';
+
+  return (
+    operations
+      .map((operation) => {
+        if (!operation || typeof operation !== 'object') return '';
+        const props = (operation as { props?: unknown }).props;
+        if (!props || typeof props !== 'object') return '';
+        const html = (props as { html?: unknown }).html;
+        return typeof html === 'string' ? html : '';
+      })
+      .find((html) => html.trim().length > 0) || ''
+  );
+}
+
+function collectInlineScripts(html: string) {
+  return Array.from(html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi))
+    .filter((match) => !/\ssrc\s*=/i.test(match[1] || ''))
+    .map((match) => match[2] || '')
+    .filter((script) => script.trim().length > 0);
+}
+
+function validateHtmlScriptRuntime(html: string) {
+  const scripts = collectInlineScripts(html);
+
+  for (const script of scripts) {
+    try {
+      // Parse only. Do not execute model-generated code on the server.
+      // eslint-disable-next-line no-new-func
+      new Function(script);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : '未知脚本语法错误';
+      return `HTML 内联脚本语法错误：${message}`;
+    }
+  }
+
+  const allScripts = scripts.join('\n');
+  const handlerCalls = Array.from(
+    html.matchAll(/\son[a-z]+\s*=\s*(["'])([\s\S]*?)\1/gi)
+  )
+    .map((match) => (match[2] || '').trim())
+    .map((handler) => handler.match(/^([A-Za-z_$][\w$]*)\s*\(/)?.[1])
+    .filter((name): name is string => Boolean(name))
+    .filter((name) => !['alert', 'confirm', 'prompt'].includes(name));
+
+  for (const name of handlerCalls) {
+    const declared =
+      new RegExp(`\\bfunction\\s+${name}\\s*\\(`).test(allScripts) ||
+      new RegExp(`\\b(?:var|let|const)\\s+${name}\\s*=`).test(allScripts) ||
+      new RegExp(`\\bwindow\\.${name}\\s*=`).test(allScripts);
+
+    if (!declared) {
+      return `HTML 内联事件引用了未声明函数：${name}`;
+    }
+  }
+
+  return '';
+}
+
 function validateInteractivePlan(plan: unknown) {
   if (!plan || typeof plan !== 'object') {
     return '模型没有返回课件计划对象';
@@ -156,15 +226,7 @@ function validateInteractivePlan(plan: unknown) {
     return '模型没有返回 operations 数组';
   }
 
-  const previewHtml = operations
-    .map((operation) => {
-      if (!operation || typeof operation !== 'object') return '';
-      const props = (operation as { props?: unknown }).props;
-      if (!props || typeof props !== 'object') return '';
-      const html = (props as { html?: unknown }).html;
-      return typeof html === 'string' ? html : '';
-    })
-    .find((html) => html.trim().length > 0);
+  const previewHtml = getPreviewHtml(plan);
 
   if (!previewHtml) {
     return '模型没有在 preview_html.props.html 中返回完整 HTML';
@@ -191,10 +253,17 @@ function validateInteractivePlan(plan: unknown) {
     },
   ];
 
-  return checks.find((check) => !check.ok)?.message || '';
+  return (
+    checks.find((check) => !check.ok)?.message ||
+    validateHtmlScriptRuntime(previewHtml)
+  );
 }
 
-function injectQuizResultBridge(html: string, studentId: string, topic: string) {
+function injectQuizResultBridge(
+  html: string,
+  studentId: string,
+  topic: string
+) {
   if (/quiz_result/.test(html) && /postMessage/.test(html)) {
     return html;
   }
@@ -262,7 +331,11 @@ function injectQuizResultBridge(html: string, studentId: string, topic: string) 
   return `${html}\n${bridgeScript}`;
 }
 
-function attachQuizResultBridge(plan: unknown, studentId: string, topic: string) {
+function attachQuizResultBridge(
+  plan: unknown,
+  studentId: string,
+  topic: string
+) {
   if (!plan || typeof plan !== 'object') {
     return plan;
   }
@@ -278,10 +351,185 @@ function attachQuizResultBridge(plan: unknown, studentId: string, topic: string)
     if (!props || typeof props !== 'object') return;
     const propsRecord = props as { html?: unknown };
     if (typeof propsRecord.html !== 'string') return;
-    propsRecord.html = injectQuizResultBridge(propsRecord.html, studentId, topic);
+    propsRecord.html = injectQuizResultBridge(
+      propsRecord.html,
+      studentId,
+      topic
+    );
   });
 
   return plan;
+}
+
+function buildTriangleAreaFallbackHtml({
+  title,
+  description,
+  studentId,
+}: {
+  title: string;
+  description: string;
+  studentId: string;
+}) {
+  const topic = title || '三角形面积互动课件';
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>${topic}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; overflow: hidden; touch-action: manipulation; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f6f8fb; color: #172033; }
+    .app { height: 100vh; display: grid; grid-template-rows: auto 1fr; gap: 10px; padding: 12px; }
+    header, .stage, .panel { background: #fff; border: 1px solid #dbe3ef; border-radius: 10px; padding: 12px; }
+    h1 { margin: 0; font-size: 20px; }
+    p { margin: 6px 0 0; color: #5b6678; line-height: 1.45; }
+    main { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 286px; gap: 10px; }
+    .stage { min-height: 0; display: grid; place-items: center; touch-action: none; }
+    svg { width: min(100%, 560px); height: min(100%, 390px); touch-action: none; overflow: visible; }
+    .panel { min-height: 0; display: grid; align-content: start; gap: 12px; overflow: auto; }
+    label { display: grid; gap: 6px; font-weight: 700; }
+    input[type="range"] { width: 100%; accent-color: #2563eb; }
+    button { border: 0; border-radius: 10px; min-height: 44px; padding: 10px 12px; background: #e8eefc; color: #172033; font-weight: 700; touch-action: manipulation; }
+    button.active { background: #2563eb; color: #fff; }
+    .submit { background: #111827; color: #fff; }
+    .answer-grid { display: grid; gap: 8px; }
+    .formula { border-radius: 10px; background: #eef6ff; color: #1d4ed8; padding: 10px; font-weight: 800; line-height: 1.5; }
+    .hint { color: #64748b; font-size: 14px; line-height: 1.45; }
+    @media (max-width: 760px) { main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } .panel { max-height: 290px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>${topic}</h1>
+      <p>${description || '拖动三角形顶点或调节底和高，观察面积公式 S = 底 × 高 ÷ 2。'}</p>
+    </header>
+    <main>
+      <section class="stage" aria-label="三角形面积互动演示">
+        <svg id="diagram" viewBox="0 0 560 390" role="img" aria-label="三角形面积图形">
+          <defs>
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="560" height="390" rx="18" fill="#f8fafc"></rect>
+          <rect x="20" y="20" width="520" height="350" rx="14" fill="url(#grid)"></rect>
+          <polygon id="triangle" points="120,300 360,300 260,120" fill="#bfdbfe" stroke="#2563eb" stroke-width="4"></polygon>
+          <line id="heightLine" x1="260" y1="120" x2="260" y2="300" stroke="#ef4444" stroke-width="4" stroke-dasharray="8 6"></line>
+          <path id="rightAngle" d="M260 282 L278 282 L278 300" fill="none" stroke="#ef4444" stroke-width="3"></path>
+          <line id="baseLine" x1="120" y1="315" x2="360" y2="315" stroke="#16a34a" stroke-width="5" stroke-linecap="round"></line>
+          <text id="baseText" x="210" y="340" fill="#166534" font-size="18" font-weight="800">底 b = 8</text>
+          <text id="heightText" x="288" y="210" fill="#b91c1c" font-size="18" font-weight="800">高 h = 6</text>
+          <circle id="topHandle" class="handle" cx="260" cy="120" r="16" fill="#ef4444" stroke="#fff" stroke-width="4"></circle>
+          <text x="44" y="52" fill="#475569" font-size="15">拖动红点改变高，或用右侧滑块调节底和高</text>
+        </svg>
+      </section>
+      <aside class="panel">
+        <label>底 b：<span id="baseValue">8</span><input id="baseSlider" type="range" min="3" max="12" value="8"></label>
+        <label>高 h：<span id="heightValue">6</span><input id="heightSlider" type="range" min="2" max="9" value="6"></label>
+        <div class="formula" id="formula">面积 S = 8 × 6 ÷ 2 = 24</div>
+        <div class="answer-grid">
+          <button class="step active" data-step="0">1. 看底和高</button>
+          <button class="step" data-step="1">2. 拼成平行四边形</button>
+          <button class="step" data-step="2">3. 总结公式</button>
+        </div>
+        <div>
+          <div class="hint">如果底是 8，高是 6，面积是多少？</div>
+          <div id="answers" class="answer-grid">
+            <button data-answer="48">48</button>
+            <button data-answer="24">24</button>
+            <button data-answer="14">14</button>
+            <button data-answer="28">28</button>
+          </div>
+        </div>
+        <button id="submit" class="submit">提交学习结果</button>
+        <div id="feedback" class="hint">先拖动图形，再完成小测。</div>
+      </aside>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var studentId = ${JSON.stringify(studentId)};
+      var topic = ${JSON.stringify(topic)};
+      var startedAt = Date.now();
+      var base = 8;
+      var height = 6;
+      var selectedAnswer = "";
+      var dragging = false;
+      var topHandle = document.getElementById("topHandle");
+      var triangle = document.getElementById("triangle");
+      var heightLine = document.getElementById("heightLine");
+      var baseLine = document.getElementById("baseLine");
+      var baseText = document.getElementById("baseText");
+      var heightText = document.getElementById("heightText");
+      var baseSlider = document.getElementById("baseSlider");
+      var heightSlider = document.getElementById("heightSlider");
+      var baseValue = document.getElementById("baseValue");
+      var heightValue = document.getElementById("heightValue");
+      var formula = document.getElementById("formula");
+      var feedback = document.getElementById("feedback");
+      function render() {
+        var left = 120;
+        var bottom = 300;
+        var width = base * 30;
+        var topX = left + width * 0.58;
+        var topY = bottom - height * 28;
+        triangle.setAttribute("points", left + "," + bottom + " " + (left + width) + "," + bottom + " " + topX + "," + topY);
+        topHandle.setAttribute("cx", String(topX));
+        topHandle.setAttribute("cy", String(topY));
+        heightLine.setAttribute("x1", String(topX));
+        heightLine.setAttribute("y1", String(topY));
+        heightLine.setAttribute("x2", String(topX));
+        heightLine.setAttribute("y2", String(bottom));
+        baseLine.setAttribute("x1", String(left));
+        baseLine.setAttribute("x2", String(left + width));
+        baseText.setAttribute("x", String(left + width / 2 - 36));
+        baseText.textContent = "底 b = " + base;
+        heightText.setAttribute("x", String(topX + 24));
+        heightText.setAttribute("y", String((topY + bottom) / 2));
+        heightText.textContent = "高 h = " + height;
+        baseValue.textContent = String(base);
+        heightValue.textContent = String(height);
+        baseSlider.value = String(base);
+        heightSlider.value = String(height);
+        formula.textContent = "面积 S = " + base + " × " + height + " ÷ 2 = " + (base * height / 2);
+      }
+      baseSlider.addEventListener("input", function (event) { base = Number(event.target.value); render(); });
+      heightSlider.addEventListener("input", function (event) { height = Number(event.target.value); render(); });
+      topHandle.addEventListener("pointerdown", function (event) { dragging = true; topHandle.setPointerCapture(event.pointerId); });
+      topHandle.addEventListener("pointermove", function (event) {
+        if (!dragging) return;
+        var box = document.getElementById("diagram").getBoundingClientRect();
+        var y = ((event.clientY - box.top) / box.height) * 390;
+        height = Math.max(2, Math.min(9, Math.round((300 - y) / 28)));
+        render();
+      });
+      topHandle.addEventListener("pointerup", function (event) { dragging = false; topHandle.releasePointerCapture(event.pointerId); });
+      document.querySelectorAll(".step").forEach(function (button) {
+        button.addEventListener("click", function () {
+          document.querySelectorAll(".step").forEach(function (item) { item.classList.toggle("active", item === button); });
+          feedback.textContent = button.dataset.step === "0" ? "底和高必须互相对应。" : button.dataset.step === "1" ? "两个一样的三角形可以拼成一个平行四边形。" : "所以三角形面积是底乘高的一半。";
+        });
+      });
+      document.querySelectorAll("#answers button").forEach(function (button) {
+        button.addEventListener("click", function () {
+          selectedAnswer = button.dataset.answer || "";
+          document.querySelectorAll("#answers button").forEach(function (item) { item.classList.toggle("active", item === button); });
+        });
+      });
+      document.getElementById("submit").addEventListener("click", function () {
+        var isCorrect = selectedAnswer === "24";
+        var question = { id: "triangle-area-q1", prompt: "如果底是 8，高是 6，面积是多少？", answer: selectedAnswer || "未选择", correctAnswer: "24", isCorrect: isCorrect, skill: "triangle-area" };
+        feedback.textContent = isCorrect ? "回答正确：8 × 6 ÷ 2 = 24。" : "还差一点：三角形面积要记得除以 2。";
+        window.parent.postMessage({ type: "quiz_result", studentId: studentId, quiz: { topic: topic, total: 1, correct: isCorrect ? 1 : 0, durationSeconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)), finishedAt: new Date().toISOString(), questions: [question], wrong: isCorrect ? [] : [question] } }, "*");
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>`;
 }
 
 function buildFallbackInteractiveHtml({
@@ -296,8 +544,16 @@ function buildFallbackInteractiveHtml({
   studentId: string;
 }) {
   const topic = title || '互动课件';
-  const isCircleArea = /圆|circle|面积/.test(`${title} ${description} ${whiteboardPrompt}`);
-  const quizPrompt = isCircleArea ? '圆的面积公式是什么？' : `完成课件「${topic}」后，你学到了什么？`;
+  const sourceText = `${title} ${description} ${whiteboardPrompt}`;
+  const isTriangleArea = /三角形|triangle/.test(sourceText);
+  if (isTriangleArea) {
+    return buildTriangleAreaFallbackHtml({ title, description, studentId });
+  }
+
+  const isCircleArea = /圆|circle|圆面积|圆的面积|扇形/.test(sourceText);
+  const quizPrompt = isCircleArea
+    ? '圆的面积公式是什么？'
+    : `完成课件「${topic}」后，你学到了什么？`;
   const correctAnswer = isCircleArea ? 'πr²' : '已完成';
   const options = isCircleArea
     ? ['2πr', 'πr²', 'πd', 'r²']
@@ -362,7 +618,9 @@ function buildFallbackInteractiveHtml({
         <div>
           <div class="hint">${quizPrompt}</div>
           <div id="answers" class="answer-grid">${options
-            .map((option) => `<button data-answer="${option}">${option}</button>`)
+            .map(
+              (option) => `<button data-answer="${option}">${option}</button>`
+            )
             .join('')}</div>
         </div>
         <button id="submit" class="submit">提交学习结果</button>
@@ -454,7 +712,8 @@ function buildFallbackPlan({
   studentId: string;
 }) {
   return {
-    thought: '模型没有稳定返回合格互动 HTML，系统已生成一个可触屏、可上报成绩的兜底课件。',
+    thought:
+      '模型没有稳定返回合格互动 HTML，系统已生成一个可触屏、可上报成绩的兜底课件。',
     voice_response: '已生成可触屏互动课件，并补齐学习结果上报。',
     operations: [
       {
@@ -540,12 +799,17 @@ ${body.slice(0, 12000)}`;
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireHermesAdmin('课件后台仅限管理员访问');
+  if ('response' in auth) return auth.response;
+
   try {
     const body = await request.json();
     const slug = typeof body.slug === 'string' ? body.slug : '';
     const locale = typeof body.locale === 'string' ? body.locale : 'zh';
-    const studentId = typeof body.studentId === 'string' ? body.studentId.trim() : '';
-    const extraPrompt = typeof body.extraPrompt === 'string' ? body.extraPrompt.trim() : '';
+    const studentId =
+      typeof body.studentId === 'string' ? body.studentId.trim() : '';
+    const extraPrompt =
+      typeof body.extraPrompt === 'string' ? body.extraPrompt.trim() : '';
 
     if (!slug.trim()) {
       return NextResponse.json(
@@ -554,7 +818,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const post = getCoursewareMdxPost(slug, locale) || (await getDatabaseCoursewarePost(slug, locale));
+    const post =
+      getCoursewareMdxPost(slug, locale) ||
+      (await getDatabaseCoursewarePost(slug, locale));
     if (!post) {
       return NextResponse.json(
         { success: false, error: '没有找到对应的 MDX 课件' },
@@ -572,7 +838,9 @@ export async function POST(request: NextRequest) {
     });
 
     const model =
-      process.env.WHITEBOARD_COURSEWARE_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+      process.env.WHITEBOARD_COURSEWARE_MODEL ||
+      process.env.GEMINI_MODEL ||
+      'gemini-3.5-flash';
     let lastMessage = '';
     let lastProvider = '';
     let lastValidationError = '';
@@ -583,7 +851,8 @@ export async function POST(request: NextRequest) {
           ? `\n\n上一次生成不合格：${lastValidationError}。请重新输出 JSON，props.html 必须是完整、可触屏互动、包含内联脚本和 quiz_result 上报的 HTML。`
           : '';
         const { message, provider } = await chatWithResolvedServerProvider({
-          preferredProvider: process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini',
+          preferredProvider:
+            process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini',
           model,
           responseMimeType: 'application/json',
           responseSchema: COURSEWARE_ACTION_SCHEMA,
@@ -613,7 +882,11 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const normalizedPlan = attachQuizResultBridge(plan, studentId, post.title);
+        const normalizedPlan = attachQuizResultBridge(
+          plan,
+          studentId,
+          post.title
+        );
 
         return NextResponse.json({
           success: true,
@@ -631,7 +904,9 @@ export async function POST(request: NextRequest) {
       }
     } catch (generationError) {
       lastValidationError =
-        generationError instanceof Error ? generationError.message : 'AI 生成接口异常';
+        generationError instanceof Error
+          ? generationError.message
+          : 'AI 生成接口异常';
       lastMessage = lastValidationError;
     }
 
@@ -646,7 +921,8 @@ export async function POST(request: NextRequest) {
       success: true,
       fallback: true,
       error: lastValidationError || undefined,
-      provider: lastProvider || process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'system',
+      provider:
+        lastProvider || process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'system',
       model,
       post: {
         slug: post.slug,

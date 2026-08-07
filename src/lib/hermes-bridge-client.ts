@@ -12,6 +12,7 @@ export interface BridgeProvisionPayload {
   servicePrompt: string;
   serviceCapabilities: string[];
   serviceDeliverables: string[];
+  connectionMode?: string;
   source: string;
   locale: string;
   workerInstanceId?: string;
@@ -50,13 +51,16 @@ export interface BridgeProvisionResponse {
 }
 
 export function isHermesBridgeConfigured() {
-  return Boolean(getBridgeUrl());
+  return Boolean(getBridgeUrl() && getBridgeToken());
 }
 
-export async function provisionHermesAssistant(payload: BridgeProvisionPayload) {
+export async function provisionHermesAssistant(
+  payload: BridgeProvisionPayload
+) {
   const bridgeUrl = getBridgeUrl();
-  if (!bridgeUrl) {
-    throw new Error('Hermes Bridge 尚未配置');
+  const token = getBridgeToken();
+  if (!bridgeUrl || !token) {
+    throw new Error('Hermes Bridge 尚未配置 URL 或 Token');
   }
 
   const response = await fetch(new URL('/assistants/provision', bridgeUrl), {
@@ -69,9 +73,9 @@ export async function provisionHermesAssistant(payload: BridgeProvisionPayload) 
     },
     body: JSON.stringify(payload),
   });
-  const data = (await response.json().catch(() => null)) as
-    | BridgeProvisionResponse
-    | null;
+  const data = (await response
+    .json()
+    .catch(() => null)) as BridgeProvisionResponse | null;
 
   if (!response.ok || !data?.success) {
     throw new Error(data?.error || 'Hermes Bridge 创建助手失败');
@@ -82,8 +86,9 @@ export async function provisionHermesAssistant(payload: BridgeProvisionPayload) 
 
 export async function getHermesActivationStatus(assistantId: string) {
   const bridgeUrl = getBridgeUrl();
-  if (!bridgeUrl) {
-    throw new Error('Hermes Bridge 尚未配置');
+  const token = getBridgeToken();
+  if (!bridgeUrl || !token) {
+    throw new Error('Hermes Bridge 尚未配置 URL 或 Token');
   }
 
   const url = new URL('/activations/status', bridgeUrl);
@@ -95,9 +100,9 @@ export async function getHermesActivationStatus(assistantId: string) {
     signal: AbortSignal.timeout(getBridgeTimeoutMs()),
     headers: getBridgeHeaders(),
   });
-  const data = (await response.json().catch(() => null)) as
-    | BridgeProvisionResponse
-    | null;
+  const data = (await response
+    .json()
+    .catch(() => null)) as BridgeProvisionResponse | null;
 
   if (!response.ok || !data?.success) {
     throw new Error(data?.error || 'Hermes Bridge 查询激活状态失败');
@@ -118,13 +123,19 @@ function getBridgeUrl() {
 }
 
 function getBridgeHeaders(): Record<string, string> {
-  const token = process.env.HERMES_BRIDGE_TOKEN?.trim();
-  if (!token) return {};
+  const token = getBridgeToken();
+  if (!token) {
+    throw new Error('Hermes Bridge Token 尚未配置');
+  }
 
   return {
     Authorization: `Bearer ${token}`,
     'X-Hermes-Bridge-Token': token,
   };
+}
+
+function getBridgeToken() {
+  return process.env.HERMES_BRIDGE_TOKEN?.trim() || '';
 }
 
 function getBridgeTimeoutMs() {

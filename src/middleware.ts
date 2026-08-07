@@ -1,8 +1,7 @@
-import { betterFetch } from '@better-fetch/fetch';
+import { getSessionCookie } from 'better-auth/cookies';
 import createMiddleware from 'next-intl/middleware';
 import { type NextRequest, NextResponse } from 'next/server';
 import { LOCALES, routing } from './i18n/routing';
-import type { Session } from './lib/auth-types';
 import {
   DEFAULT_LOGIN_REDIRECT,
   protectedRoutes,
@@ -22,31 +21,13 @@ const intlMiddleware = createMiddleware(routing);
  * to handle redirection. To avoid blocking requests by making API or database calls.
  */
 export default async function middleware(req: NextRequest) {
-  const { nextUrl, headers } = req;
+  const { nextUrl } = req;
 
-  // do not use getSession() here, it will cause error related to edge runtime
-  // const session = await getSession();
-  // Always resolve the current request origin dynamically.
-  // Hard-coded localhost breaks on hosted platforms.
-  const forwardedProto = headers.get('x-forwarded-proto');
-  const forwardedHost = headers.get('x-forwarded-host') || headers.get('host');
-  const protocol = forwardedProto || nextUrl.protocol.replace(':', '');
-  const baseURL = forwardedHost ? `${protocol}://${forwardedHost}` : nextUrl.origin;
-
-  let session: Session | null = null;
-  try {
-    const result = await betterFetch<Session>('/api/auth/get-session', {
-      baseURL,
-      headers: {
-        cookie: req.headers.get('cookie') || '', // Forward the cookies from the request
-      },
-    });
-    session = result?.data ?? null;
-  } catch {
-    // If session lookup fails in middleware, continue as guest instead of throwing.
-    session = null;
-  }
-  const isLoggedIn = !!session;
+  // Middleware only performs an optimistic cookie check for redirects. API routes
+  // and server components must still validate the full session and permissions.
+  // Avoid making a server-side request here: deriving its destination from
+  // forwarded host headers can turn an untrusted request into SSRF/cookie leakage.
+  const isLoggedIn = Boolean(getSessionCookie(req));
 
   // Get the pathname of the request (e.g. /zh/dashboard to /dashboard)
   const pathnameWithoutLocale = getPathnameWithoutLocale(

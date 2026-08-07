@@ -46,6 +46,7 @@ export class PreviewHTMLShapeUtil extends BaseBoxShapeUtil<any> {
                 </div>
                 {/* Iframe Content */}
                 <iframe
+                    title={`HTML preview ${shape.id}`}
                     srcDoc={shape.props.html}
                     style={{
                         width: '100%',
@@ -53,7 +54,9 @@ export class PreviewHTMLShapeUtil extends BaseBoxShapeUtil<any> {
                         border: 'none',
                         background: '#fff'
                     }}
-                    sandbox="allow-scripts allow-top-navigation-by-user-activation allow-forms allow-same-origin allow-popups allow-modals allow-downloads"
+                    sandbox="allow-scripts"
+                    referrerPolicy="no-referrer"
+                    allow="camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'"
                     onPointerDown={(e) => e.stopPropagation()}
                 />
             </HTMLContainer>

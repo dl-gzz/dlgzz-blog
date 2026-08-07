@@ -1,0 +1,1126 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "defaults": {
+    "visibility": "public",
+    "safeToPublish": true,
+    "role": "ui_step",
+    "official": true,
+    "publisher": "WorkBuddy 官方文档",
+    "sourceType": "official_product_screenshot"
+  },
+  "assets": [
+    {
+      "id": "workbuddy-official-automation-templates",
+      "contentHash": "fd356b22513d2397b8668c099cae79d7d098739054964d06c0f89573ac81fbee",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/auto-4.DKEfeUXo.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/auto-4.DKEfeUXo.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1269,
+      "height": 693,
+      "title": "从自动化任务模板开始",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 自动化页面展示每日 AI 新闻推送、每周工作周报、每日英语单词和会议前准备等任务模板",
+      "caption": "不想从零配置时，可在自动化页面选择现成模板并按需修改。",
+      "ocrText": "自动化\n管理自动化任务并查看近期运行记录。\n从模版入手\n回\n每日AI新闻推送\n关注当天 AI领域的重要动态，侧•\n每周工作周报\n每周五汇总仓库 PR 与Issue进.\n每日一个为什么\n每天抛出一个有趣问题，先提问…\n面试准备提醒\n工作日每 2小时提醒你复习大模..\n亥\n睏\n每日5个英语单词\n每天推荐5 个高频实用英语单词…\n经典电影推荐\n推荐一部高分经典电影，简要介⋯\n父母联系提醒\n每周日 10:00 提醒你给家人打电.\n会议前准备\n在会议开始前提醒你整理议题、…\n＋添加\nG\n每日儿童睡前故事\n生成3-5 分钟可读的温和睡前故..\n曲历史上的今天\n从科技、电影、音乐等领域挑选⋯\n四\n体检预约提醒\n在2026/04/08 07:00 提醒你确认⋯\n囚\n可爱萌宠手机壁纸\n随机从 7 种不同风格中挑选一种.",
+      "visualFacts": {
+        "page": "自动化",
+        "section": "从模板入手",
+        "action": "选择自动化任务模板",
+        "successSignal": "模板被选中并进入任务配置"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide.md",
+          "heading": "1. 创建自动化任务",
+          "role": "ui_step",
+          "context": "从模板入手创建自动化任务，选择模板后再修改提示词和执行规则。",
+          "sortOrder": 55,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 55
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/07_日报周报别再手动催了，给AI排个班.md",
+          "heading": "不想从零写，可以先用模板",
+          "role": "ui_step",
+          "context": "课程介绍从官方自动化模板开始配置任务。",
+          "sortOrder": 145,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 145
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-automation-miniapp-toggle",
+      "contentHash": "0ae68122a71c0b79029200afe3375bbb6093dafb62c57c89f8b8e652ce40a374",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/auto-5.BjoWFBsl.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/auto-5.BjoWFBsl.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 995,
+      "height": 1304,
+      "title": "开启自动化结果的小程序推送",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 添加自动化任务表单底部已开启推送到 WorkBuddy 微信小程序开关",
+      "caption": "创建自动化任务时开启小程序推送，任务完成后即可在手机端查收结果。",
+      "ocrText": "添加自动化任务\n名称\nAl早报\n工作空间（可选）\nWorkspace x\n提示词\n关注当天AI领域的动态，侧重 Al coding 方向。筛选3-5条有价值的信息，简要说明事件内容\n及值得关注的原因。》腾讯文档\n© Auto v 入技能\n仓召唤专家丷\n连接器（勾选即授权该连接器在任务中免确认使用）\n选择连接器\n执行频率\n周期\n按间隔\n单次\nA 完全访问权限\n每天\n09:00\n生效日期区间（可选，留空表示始终生效。）\n选择生效日期\n推送到 WorkBuddy 微信小程序 ①\n取消\n添加",
+      "visualFacts": {
+        "page": "添加自动化任务",
+        "control": "推送到 WorkBuddy 微信小程序",
+        "state": "开启",
+        "successSignal": "推送开关显示为开启状态"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide.md",
+          "heading": "推送到WorkBuddy小程序",
+          "role": "ui_step",
+          "context": "在自动化任务表单中开启推送到 WorkBuddy 微信小程序。",
+          "sortOrder": 61,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 61
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/07_日报周报别再手动催了，给AI排个班.md",
+          "heading": "推送到小程序：让结果主动找你",
+          "role": "ui_step",
+          "context": "课程说明如何开启小程序推送，让自动化结果主动送达。",
+          "sortOrder": 158,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 158
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-automation-miniapp-result",
+      "contentHash": "e9e3a3bb025355b287934942d0a063042a587a4b58b8164a2cb5a0b2155acfca",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/auto-6.SNHi44Op.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/auto-6.SNHi44Op.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2681,
+      "height": 1897,
+      "title": "在小程序查看自动化执行结果",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 小程序自动化任务列表与任务详情页面，显示每日 AI 新闻推送执行成功及生成内容",
+      "caption": "自动化任务完成后，可在 WorkBuddy 小程序中查看执行状态和生成结果。",
+      "ocrText": "×\n©\nLocal\n电脑\n自动化\n任务\n<\n、Claw\nWorkBuddy v1.4.0\n自动化 本地\n=介\nVisual\nCode.1\nCodeBu\nnk\nWorkBu\nSode Bu\n微信开发\n剪映专业\nPixPin\n每日AI新闻推送\n用户用户要求关注当天 Al领域的重要动态，侧重Al coding\n与具身智能方向，筛选3-5条有价值的信息。这是一个需…\n1分钟前\n2次执行\n没有更多了\n1 注意\n动、重合\n哪些文件\n件，请告\n输入消\n+\n任务详情\n每日 AI新闻推送\n自动化 今天 11:08\n• 执行成功\n生成内容\n用户用户要求关注当天 AI领域的重要动\n态，侧重 Al coding 与具身智能方向，筛选\n3-5 条有价值的信息。这是一个需要网络搜\n索的任务，让我使用 WebSearch 工具来获\n取最新的信息。\n今天是 2026年4月24日（Friday, April 24，\n2026），我需要搜索最新的 AI 领域新闻，\n特别是 Al coding 和具身智能（embodied\nintelligence）方向的内容。我来帮你搜索\n今天 AI 领域的最新动态，重点关注 A\ncoding 和具身智能方向。搜索结果非常丰\n富！让我整理一下今天和最近几天 AI领域\n的重要动态，特别是 Al coding 和具身智能\n方向的信息。让我再获取一些更详细的内\n容：\n关键信息：\n1. SpaceX 600亿美元收购Cursor-这是AI\ncoding领域的重磅消息\n2. 它石智航4.55亿美金融资— 具身智能领域",
+      "visualFacts": {
+        "page": "WorkBuddy 小程序自动化任务详情",
+        "status": "执行成功",
+        "visibleResult": "每日 AI 新闻推送生成内容",
+        "successSignal": "任务详情显示执行成功和生成内容"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide.md",
+          "heading": "推送到WorkBuddy小程序",
+          "role": "ui_step",
+          "context": "在 WorkBuddy 小程序中查看自动化任务的执行状态与推送结果。",
+          "sortOrder": 66,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 66
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/07_日报周报别再手动催了，给AI排个班.md",
+          "heading": "推送到小程序：让结果主动找你",
+          "role": "ui_step",
+          "context": "课程说明自动化完成后可在小程序查看执行结果。",
+          "sortOrder": 159,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 159
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-permission-menu",
+      "contentHash": "b3bdf6c6b81538a9f95b2c712b0e02025223fefcb1fba7641f56e5ccbe451f5d",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/permission-menu.D2eTfMb0.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/permission-menu.D2eTfMb0.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1288,
+      "height": 446,
+      "title": "切换默认权限与完全访问权限",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 新建任务输入框下方展开默认权限菜单，菜单中可选择允许完全访问",
+      "caption": "在新建任务输入框下方点击权限菜单，可在默认权限和完全访问权限之间切换。",
+      "ocrText": "G文档处理\n金融服务\ne% 高考我帮你\n更多\n今天帮你做些什么？（ 当前为默认权限，所有操作都\n令\n会在安全沙箱约束内进行，超\n出范围会请求你的允许。\n+\n允许完全访问\nC 选择工作空间～\n②默讣权限^\nZ GLM-5.2<",
+      "visualFacts": {
+        "page": "新建任务",
+        "control": "默认权限菜单",
+        "visibleOption": "允许完全访问",
+        "successSignal": "权限下拉菜单已展开"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes.md",
+          "heading": "一、在哪里切换权限模式",
+          "role": "ui_step",
+          "context": "打开输入框下方的默认权限菜单并选择需要的权限模式。",
+          "sortOrder": 22,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 22
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/02_WorkBuddy会乱改文件吗，先看懂这两个旋钮.md",
+          "heading": "默认权限：在关键位置加一道护栏",
+          "role": "ui_step",
+          "context": "课程展示默认权限菜单及完全访问入口。",
+          "sortOrder": 97,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 97
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-full-access-confirm",
+      "contentHash": "11bd7976d2917057b41213d83b55694f9871a925c1a1955ca7fbac035028c0f1",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/full-access-confirm.DnGyusfa.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/full-access-confirm.DnGyusfa.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1100,
+      "height": 620,
+      "title": "确认开启完全访问权限",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 确认开启完全放开弹窗，要求勾选已了解风险后才能确认开启",
+      "caption": "开启完全访问权限前，WorkBuddy 会展示风险说明并要求再次确认。",
+      "ocrText": "A 确认开启完全放开？\n开启后，AI将减少确认步骤，并可直接执行更多操作，包\n括敏感操作、文件修改或外部执行。\n仅建议在你信任当前任务时使用。\n口 我已了解风险，并愿意继续\n取消\n确认开启\n陇帮你\n常办公",
+      "visualFacts": {
+        "dialog": "确认开启完全放开",
+        "requiredControl": "我已了解风险，并愿意继续",
+        "actions": ["取消", "确认开启"],
+        "warning": "会减少确认步骤并允许敏感操作"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes.md",
+          "heading": "六、什么是 Full Access（完全放开）",
+          "role": "ui_step",
+          "context": "阅读完全访问风险说明，勾选风险确认后再决定是否开启。",
+          "sortOrder": 98,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 98
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/02_WorkBuddy会乱改文件吗，先看懂这两个旋钮.md",
+          "heading": "完全访问：把二次确认关掉",
+          "role": "ui_step",
+          "context": "课程说明开启完全访问前需要阅读并确认风险。",
+          "sortOrder": 100,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 100
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-overview",
+      "contentHash": "7e6512da04850288d7d0859e2bd91926756978c984bb159da9e931e94d225b2d",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/skill-1.BLRwED0h.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/skill-1.BLRwED0h.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2200,
+      "height": 1641,
+      "title": "打开 WorkBuddy 技能市场",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 技能页面显示技能市场、已安装技能、分类筛选、搜索技能和添加技能入口",
+      "caption": "从左侧更多区域进入技能页面，可浏览技能市场和本机已安装技能。",
+      "ocrText": "WorkBuddy编辑（E）\n窗口（W） 帮助（H）\nWorkBuddy\nv5.1.5\n⑦ 新建任务\n茵 助理\n6 项目\n司 专家\n包 自动化\n2更多\n任务（1）>\n空间 （2）＞\n口\n技能-连接器\n资料库•灵感\n⑤\n专家\n》 技能\n◎ 连接器\n技能市场\n已安装43\n推荐\nSkillHub\n套件\n为你推荐\n腾讯微云\n管理腾讯微云网盘文件（列表、\n上传、下载、删除、分享）\n+\n全部\nOPC-一人公司\n生活服务\n知识与学习\nNeoData金融搜索服务\n自然语言查询股票、基金、宏\n观、外汇、大宗商品等金融数据\n技\n技能创建指南\n创建和维护自定义技能的指南\nWord 文档生成\nWord 文档生成与编辑\n创业可以学\n服务创业者和管理者，解答创\n业/商业/管理问题，引发深度.\n金山文档（WPS云文档\n二 金山文档官方SR。 对语邮操作+\n——知识一键存入、碎片内容..\n网\n网页自动化\n基于 aqent-browser CLI 的AI友 十\n好型网页自动化\nP\nPlaywright Browser Auto..\n直接调用 Plavwriaht API 实现浏\n开发工具\n股\nS\n腾讯问卷\n腾讯问卷操作（创建、修改、逻＋\n辑设置、统计）\n网站部署\n教育学习\n投资理财\nA股全栈数据\nA股行情、研报、资金流、公告＋\n与财报查询工具包。\nIMAP/SMTP邮件\n通过 IMAP/SMTP 收发邮件，支＋\n持多账户和附件\nQQ邮箱\nQQ邮箱收发邮件\n（IMAP/SMTP），支持发信、.\n股票综合分析器\n基于东方财富的全球股票三维分\n析（基本面、新闻面、资金面）\n＋\n浏览器自动化\n浏览器自动化（导航、点击、截＋\n图、数据提取、多会话、云浏.\n微信读书助手\n搜索微信读书书籍、管理书架、\n查看笔记划线、浏览书评、阅..\nStock Analysis\n股票与加密货币分析（8维评\nQ 搜索技能\n-\n×\n④ 添加技能\n◎ 旅游规划\n腾讯地图•地图助手\n腾讯位置服务出品的地图助手\nSkill。一句自然语言即可调用..\n内容创作\n信息资讯\n效率工具\nC换一换\n腾讯新闻\n7x24新闻搜索工具，聚焦国内\n外热点，支持热榜、早晚报、•\n办公协同\n商业运营\n数据分析\nw\n足\nWeStock Data\nA股/港股/美股行情数据查询（K ＋\n线、财报、资金流、技术指标.\nWeb Access（浏览器自动..\nCDP 直连本地 Chrome，智能调\n度联网工具，支持登录态、并.\n飞书套件\n飞书/Lark 全能套件（消息、文＋\n档、表格、日历、任务、Wiki...\nobsidian\nObsidian 知识库管理与自动化\n钉钉套件\n钉钉 CLI 套件，覆盖消息、日\n历、待办、审批、考勤、日志⋯\nWechat Publisher\n一键发布 Markdown 到微信公\n众号草稿箱（多主题、代码高.\n足球贝叶斯分析\n足球竞彩贝叶斯分析：基于公开 十\nM\nG\n多\nMarkltDown\n文档转\nMarkdown（PDF/Word/PPT/图..\nfbs-bookwriter\n福帮手出品|高质量长文档手稿 ＋\n工具链：书籍、手册、白皮书.\n7x24 新闻搜索工具，聚焦国内 ＋\n外热点，支持热榜、早晚报、.\n腾讯文档 PDFKit\nPDF全能工具箱，覆盖阅读分\n析、自然语言编辑、格式转换.\ngrill-me\n深度追问式方案审查：逐层拆解＋\n设计决策，直到达成共识\n腾讯云通用文字识别 OCR\n调用腾讯云OCR通用文字识别\n（高精度版）接口，对图片中.\n多引擎搜索\n集成 17 个搜索引擎（8国内＋",
+      "visualFacts": {
+        "page": "技能",
+        "tabs": ["技能市场", "已安装"],
+        "controls": ["搜索技能", "添加技能"],
+        "successSignal": "页面显示技能市场和已安装列表"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "页面概览",
+          "role": "ui_step",
+          "context": "打开技能页面，查看技能市场、已安装技能、搜索和添加入口。",
+          "sortOrder": 31,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 31
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "技能市场和“已安装”，别混在一起",
+          "role": "ui_step",
+          "context": "课程区分技能市场与已安装技能页面。",
+          "sortOrder": 88,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 88
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-add-menu",
+      "contentHash": "11071ad5b8adee611e51c758bc2c290bfe3899b86f74e56a0a15e44f0925167c",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/skill-2.DIhokP9-.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/skill-2.DIhokP9-.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 644,
+      "height": 284,
+      "title": "选择添加技能的方式",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 添加技能菜单提供查找技能、上传技能和创建技能三个选项",
+      "caption": "点击添加技能后，可选择查找、上传或创建技能。",
+      "ocrText": "Q搜索技能\n（\n+添加技能\n查找技能\n上传技能\n创建技能\n腾讯文档\n腾讯文档（docs.qq.com）-在线云文档平台，是创建、",
+      "visualFacts": {
+        "menu": "添加技能",
+        "options": ["查找技能", "上传技能", "创建技能"],
+        "successSignal": "添加技能菜单已展开"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "安装技能",
+          "role": "ui_step",
+          "context": "点击添加技能并选择查找技能、上传技能或创建技能。",
+          "sortOrder": 39,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 39
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "添加技能，有三种办法",
+          "role": "ui_step",
+          "context": "课程展示查找、上传和创建技能三个入口。",
+          "sortOrder": 133,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 133
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-upload",
+      "contentHash": "4125077f5381f9115d3fd0ad512e049c730cb5053bbdc5dfff8db82146424fd3",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/image-17-1.CL2d5GKX.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/image-17-1.CL2d5GKX.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 785,
+      "height": 610,
+      "title": "上传本地技能包",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 导入技能弹窗，支持拖拽或点击上传包含 SKILL.md 的文件夹、压缩包或 Markdown 文件",
+      "caption": "上传技能时，选择包含 SKILL.md 的文件夹或压缩包，也可上传带 YAML 名称和描述的 Markdown 文件。",
+      "ocrText": "导入技能\n拖拽文件或点击上传\n非高风险自动安装\n文件要求\n• 文件夹或者.zip需要包含SKILL.md文件\n•.md 文件需包含 YAML格式的技能名称和描述\n×",
+      "visualFacts": {
+        "dialog": "导入技能",
+        "acceptedInputs": [
+          "包含 SKILL.md 的文件夹",
+          "ZIP 压缩包",
+          "带 YAML 元数据的 Markdown"
+        ],
+        "successSignal": "文件进入导入流程"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "安装技能",
+          "role": "ui_step",
+          "context": "选择上传技能，在导入弹窗中拖入符合要求的技能文件。",
+          "sortOrder": 43,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 43
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "第二种：上传技能",
+          "role": "ui_step",
+          "context": "课程说明通过上传本地技能包安装 Skill。",
+          "sortOrder": 121,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 121
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-find",
+      "contentHash": "e3c7557449d542c0b11302fcbcf5f12e9ec628b9ab27570b7d61e07df5dad3b8",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/skill-3.PTyavE2s.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/skill-3.PTyavE2s.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1249,
+      "height": 438,
+      "title": "用自然语言查找并安装技能",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 对话输入框预填请帮我查找并自动安装能够完成某项任务的 Skill",
+      "caption": "选择查找技能后，用自然语言描述需求，WorkBuddy 会寻找匹配的技能。",
+      "ocrText": "G文档处理\nC金融服务\n22 高考我帮你\n更多\n请帮我查找并自动安装能「..」的skill\n口 选择工作空间〉\n仁",
+      "visualFacts": {
+        "mode": "查找技能",
+        "promptPattern": "请帮我查找并自动安装能完成某项任务的 Skill",
+        "successSignal": "WorkBuddy 返回匹配技能"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "安装技能",
+          "role": "ui_step",
+          "context": "在查找技能模式中描述希望 Skill 完成的任务。",
+          "sortOrder": 49,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 49
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "第一种：查找技能",
+          "role": "ui_step",
+          "context": "课程说明用自然语言描述需求并查找匹配 Skill。",
+          "sortOrder": 111,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 111
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-create",
+      "contentHash": "04756fce38db0bb4b6bbc2926e32c7e6cee2fe6910b213e3f6d070893c899a72",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/skill-4.Ce9uwHkT.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/skill-4.Ce9uwHkT.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1264,
+      "height": 570,
+      "title": "用 Skill Creator 创建技能",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 对话输入框调用 skill-creator，并提示用户描述希望新技能实现的任务",
+      "caption": "选择创建技能后，描述目标能力，WorkBuddy 会调用 Skill Creator 生成技能。",
+      "ocrText": "日常办公\n④ 代码开发\nG文档处理\n金融服务\n高考我帮你\n更多\n》 skill-creator 请帮我创建一个可以实现「....」的skill\n13 Craft v ZGLM-5.2v 》技能 连应用v⑦默认权限\n口 选择工作空间＞",
+      "visualFacts": {
+        "mode": "创建技能",
+        "invokedSkill": "skill-creator",
+        "promptPattern": "请帮我创建一个可以实现某项任务的 Skill",
+        "successSignal": "Skill Creator 开始生成技能"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "安装技能",
+          "role": "ui_step",
+          "context": "在创建技能模式中描述希望新 Skill 实现的能力。",
+          "sortOrder": 53,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 53
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "第三种：创建技能",
+          "role": "ui_step",
+          "context": "课程说明调用 Skill Creator 创建自己的 Skill。",
+          "sortOrder": 136,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 136
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-toggle",
+      "contentHash": "74ff56407b4e04466cf32fb37515852c5d109de25c2d856c5423ca37066637ab",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/skill-5.DXH8Vvpw.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/skill-5.DXH8Vvpw.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 593,
+      "height": 310,
+      "title": "关闭或重新启用已安装技能",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 已安装技能卡片菜单显示关闭、编辑和卸载操作",
+      "caption": "已安装技能可以随时关闭或重新启用，不必立即卸载。",
+      "ocrText": "F\n女\nfind-skills\n场景驱动+关键词双模式技能发\n户用自然语言描述场景/需求\n女娲\nskill 2053082488497897472\n关闭\n之编辑\n0 卸载",
+      "visualFacts": {
+        "page": "已安装技能",
+        "actions": ["关闭", "编辑", "卸载"],
+        "successSignal": "技能启用状态发生变化"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "启用 / 关闭技能",
+          "role": "ui_step",
+          "context": "打开已安装技能的操作菜单，选择关闭或重新启用。",
+          "sortOrder": 59,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 59
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-search",
+      "contentHash": "314074df5be9ddc2eedbc63267a54d0cf8979fe9532408f94c2cd2e1d537c560",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/skill-6.DUKl69US.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/skill-6.DUKl69US.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2165,
+      "height": 743,
+      "title": "搜索已安装技能",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 已安装技能页面顶部显示搜索技能输入框和添加技能按钮，下方展示匹配的技能卡片",
+      "caption": "技能较多时，在搜索框输入关键词即可快速定位目标技能。",
+      "ocrText": "∞ 专家\n》 技能\n© 连接器\n技能市场\n已安装 11\ntencent-meeting-skill\n腾讯会议：会议管理与音视频协作助手。预|\n约/创建/修改/取消会议、查询会议详情与会…\n腾讯会议\n腾讯会议：会议管理与音视频协作助手。预\n约/创建/修改/取消会议、查询会议详情与会⋯\ntencent-meeting-mcp\n在用户提及腾讯会议、视频会议、线上会议相\n关内容与操作时使用此技能。触发关键词包.\nima-skills\n统一的IMA OpenAPI 技能，支持笔记管理和\n知识库操作。当用户提到知识库、资料库、.\n腾讯文档\n腾讯文档（docs.qq.com）-在线云文档平台，\n是创建、编辑、管理文档的首选 skill。涉.\nP\npdf\n套件\n全面的PDF 处理工具包，支持提取文本和表\n格、创建新 PDF、合并/拆分文档、表单填.\n一\nD\nQ 文档\n添加技能\n企业微信套件\n企业微信 CLI 全能套件，覆盖通讯录、消息、\n文档、日程、会议、待办6大业务域。支持..\nPDF 文档生成\nUse this skill when visual quality and design\nidentity matter for a PDF. CREATE （generate..\nima-skill\n知识库操作。当用户提到知识库、资料库、•\ntencent-docs\n是创建、编辑、管理文档的首选 skill。涉…\ndocx\n全面的Word 文档创建、编辑和分析工具，支\n持修订跟踪、评论、格式保留和文本提取。..",
+      "visualFacts": {
+        "page": "已安装技能",
+        "control": "搜索技能",
+        "successSignal": "列表显示与关键词匹配的技能"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "搜索技能",
+          "role": "ui_step",
+          "context": "在技能页面的搜索框输入关键词并定位已安装技能。",
+          "sortOrder": 68,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 68
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-uninstall-one",
+      "contentHash": "91a331c50cf2176b977acdd333a9d37affb6af9516f9fdb94eee1ca7ea3fe1f8",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/skilluninstall-20.Decy0AWJ.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/skilluninstall-20.Decy0AWJ.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 595,
+      "height": 304,
+      "title": "卸载单个技能",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 已安装技能卡片的操作菜单中显示卸载选项",
+      "caption": "需要完全移除技能时，打开技能卡片菜单并选择卸载。",
+      "ocrText": "F\n女\nfind-skills\n场景驱动+关键词双模式技能发™一\n⋯～\n户用自然语言描述场景/需求（\nC 关闭\n2编辑\n女娲\nsail 2052082488497897472\n凸 卸载",
+      "visualFacts": {
+        "page": "已安装技能",
+        "action": "卸载",
+        "successSignal": "技能从已安装列表移除"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "卸载技能",
+          "role": "ui_step",
+          "context": "从单个已安装技能的操作菜单选择卸载。",
+          "sortOrder": 74,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 74
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-batch-select",
+      "contentHash": "f0bb068008342f0eef02eb34404ce903b16ca19b780fddf920bbbb769c492feb",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/skilluninstall-21.BwJOjhUv.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/skilluninstall-21.BwJOjhUv.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2177,
+      "height": 722,
+      "title": "进入技能批量操作",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 已安装技能列表右上角显示批量操作入口，页面中展示多张技能卡片",
+      "caption": "需要处理多个技能时，可先进入批量操作模式。",
+      "ocrText": "司专家\n》 技能\n®连接器\n技能市场\n已安装 44\nAI HOT\nAI HOT （aihot.virxact.com） 中文AI资讯查询\nSkill。当用户想知道\"今天 AI 圈有什么”、\"A.\n企业微信套件\n企业微信 CLI 全能套件，覆盖通讯录、消\n息、文档、日程、会议、待办6大业务域。…\n视\n视频截帧\nExtract frames or short clips from videos\nusing ffmpeg.\nF\n女\n去\nfind-skills\n场景驱动+关键词双模式技能发现工具。当用\n户用自然语言描述场景/需求（如\"我想做一.\n女娲\nskil_2053082488497897472\n去AI味\nRemove signs of Al-generated writing from\ntext. Use when editing or reviewing text to..\n^\n美\n诚\ntencent-meeting-skill\n腾讯会议：会议管理与音视频协作助手。预\n约/创建/修改/取消会议、查询会议详情与.\n美团生活助手\n【美团官方】美团生活助手，支持外卖、餐\n饮团购、酒店住宿、门票度假、休闲娱乐、.\n诚实模式\nEnforces epistemic honesty in Al responses.\nTriggers for ANY conversation where factua..\nQ 搜索技能\n+ 添加技能\n批量操作\nima-skills\n统一的IMA OpenAPI 技能，支持笔记管理和\n知识库操作。当用户提到知识库、资料库.\n小\n小红书助手\n小红书（RED/XHS）自动化助手。提供完整\n的小红书操作能力：登录、发布图文/视频.\n微信小程序开发框架\nWeChat Mini Program （微信小程序）\ndevelopment framework. Use when buildin..",
+      "visualFacts": {
+        "page": "已安装技能",
+        "control": "批量操作",
+        "successSignal": "页面进入多选模式"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "卸载技能",
+          "role": "ui_step",
+          "context": "在已安装技能页面点击批量操作，准备选择多个技能。",
+          "sortOrder": 78,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 78
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-skills-batch-uninstall",
+      "contentHash": "840b603b82f3ea4310b12884851c48892a673b1752bddbb341155f36a8a2851c",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/skilluninstall-22.CqbPcSmz.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/skilluninstall-22.CqbPcSmz.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2167,
+      "height": 753,
+      "title": "批量关闭、开启或卸载技能",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 技能批量操作模式显示已选三项，并提供卸载、关闭和开启按钮",
+      "caption": "选择多个技能后，可以批量卸载、关闭或开启。",
+      "ocrText": "问 专家\n》 技能\n©连接器\n技能市场\n已选3项 全选 清空\n匕\n已安装44\nAI HOT\nAI HOT （aihot.virxact.com） 中文AI资讯\n查询 Skill。当用户想知道\"今天AI 圈有..\n企业微信套件\n企业微信CLI 全能套件，覆盖通讯录、消\n息、文档、日程、会议、待办6大业务.\n视\n视频截帧\nExtract frames or short clips from videos\nusing ffmpeg.\nF\n女\n去\nfind-skills\n场景驱动+关键词双模式技能发现工具。\n当用户用自然语言描述场景/需求（如”.\n女娲\nskill_2053082488497897472\n…\n去AI味\nRemove signs of Al-generated writing\nfrom text. Use when editing or reviewin..\n美\n诚\nQ 搜索技能\n④ 添加技能\ntencent-meeting-skill\n腾讯会议：会议管理与音视频协作助手。\n预约/创建/修改/取消会议、查询会议详..\n小\n卸载\n关闭\n开启\nima-skills\n统一的IMA OpenAPI 技能，支持笔记管\n理和知识库操作。当用户提到知识库、.\n小红书助手\n小红书（RED/XHS）自动化助手。提供完\n整的小红书操作能力：登录、发布图文⋯\n取消\n美团生活助手\n【美团官方】美团生活助手，支持外卖、\n餐饮团购、酒店住宿、门票度假、休闲..\n诚实模式\nEnforces epistemic honesty in AI\nresponses. Triggers for ANY conversati..\n微信小程序开发框架\nWeChat Mini Program（微信小程序）\ndevelopment framework. Use when.",
+      "visualFacts": {
+        "page": "技能批量操作",
+        "selectedCount": 3,
+        "actions": ["卸载", "关闭", "开启"],
+        "successSignal": "批量操作完成并更新技能状态"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+          "heading": "卸载技能",
+          "role": "ui_step",
+          "context": "在批量操作模式选择多个技能，再执行卸载、关闭或开启。",
+          "sortOrder": 79,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 79
+          }
+        }
+      ]
+    }
+  ]
+}

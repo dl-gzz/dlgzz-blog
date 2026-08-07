@@ -1,4 +1,5 @@
-import { handleWebhookEvent } from '@/payment';
+import { websiteConfig } from '@/config/website';
+import { StripeProvider } from '@/payment/provider/stripe';
 import { type NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -9,6 +10,13 @@ import { type NextRequest, NextResponse } from 'next/server';
  * @returns NextResponse
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  if (websiteConfig.payment.provider !== 'stripe') {
+    return NextResponse.json(
+      { error: 'Stripe payments are not enabled' },
+      { status: 404 }
+    );
+  }
+
   // Get the request body as text
   const payload = await req.text();
 
@@ -31,8 +39,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Process the webhook event
-    await handleWebhookEvent(payload, signature);
+    // This route must only ever dispatch to Stripe. Using the globally selected
+    // provider here could pass Stripe headers and JSON to another provider.
+    const stripeProvider = new StripeProvider();
+    await stripeProvider.handleWebhookEvent(payload, signature);
 
     // Return success
     return NextResponse.json({ received: true }, { status: 200 });

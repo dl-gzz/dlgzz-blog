@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/server';
+import { requireHermesAdmin } from '@/lib/api-security';
 import { type NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_BRIDGE_TIMEOUT_MS = 30_000;
@@ -19,19 +19,8 @@ interface BridgePairingApproveResponse {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    return NextResponse.json(
-      {
-        success: false,
-        code: 'UNAUTHORIZED',
-        error: '请先登录后再绑定微信 AI 助手',
-      },
-      { status: 401 }
-    );
-  }
+  const auth = await requireHermesAdmin('Hermes 配对授权暂只允许管理员操作');
+  if ('response' in auth) return auth.response;
 
   let body: PairingApproveRequestBody;
   try {
@@ -54,7 +43,11 @@ export async function POST(request: NextRequest) {
 
   if (!assistantId || !code) {
     return NextResponse.json(
-      { success: false, code: 'BAD_REQUEST', error: '缺少 assistantId 或 code' },
+      {
+        success: false,
+        code: 'BAD_REQUEST',
+        error: '缺少 assistantId 或 code',
+      },
       { status: 400 }
     );
   }
@@ -83,9 +76,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ assistantId, code }),
     });
 
-    const data = (await response.json().catch(() => null)) as
-      | BridgePairingApproveResponse
-      | null;
+    const data = (await response
+      .json()
+      .catch(() => null)) as BridgePairingApproveResponse | null;
 
     if (!response.ok || !data?.success) {
       return NextResponse.json(

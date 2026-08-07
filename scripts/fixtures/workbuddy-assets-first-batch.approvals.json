@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "approvals": [
+    {
+      "contentHash": "39566530e84c29bd258ade6a54c24f58346322bbf89fa840756166c339d15110",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-02T15:37:38Z",
+      "title": "从聊天框到数字员工",
+      "altText": "佩戴‘首领’胸牌的蓝猫关闭聊天框，把 WorkBuddy 带到新员工工位",
+      "caption": "把 WorkBuddy 当成需要明确任务和验收标准的新员工，而不是只会回答问题的聊天框。",
+      "role": "cover",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "concept_illustration",
+        "topic": "WorkBuddy 工作定位",
+        "contrast": ["聊天框", "新员工"],
+        "guidance": "用任务、交付物和验收标准带 WorkBuddy 入职",
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "cf48cdda4dd24e26768a1a947812b7cd8df473d7173af34460064e212fb37cc6",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-02T15:37:38Z",
+      "title": "数字员工的四件入职工具",
+      "altText": "佩戴‘首领’胸牌的蓝猫展示权限、记忆、技能和助理四件 WorkBuddy 入职工具",
+      "caption": "独立工作者为 WorkBuddy 配置权限、记忆、技能和助理四类入职工具。",
+      "role": "concept_diagram",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "concept_diagram",
+        "topic": "WorkBuddy 基础能力",
+        "components": ["权限", "记忆", "技能", "助理"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "48057775a016abd4c3e554fd6a4de2e310d63e65b13e9bde2d427da343339b95",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-02T15:37:38Z",
+      "title": "把模糊愿望拆成任务",
+      "altText": "佩戴‘首领’胸牌的蓝猫把零散想法拆成素材、结构和成稿",
+      "caption": "先把模糊愿望拆成素材、结构和成稿三个可验收步骤，再交给 WorkBuddy。",
+      "role": "concept_diagram",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "process_diagram",
+        "topic": "任务拆解",
+        "steps": ["素材", "结构", "成稿"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "fb6cda92c7904fd7c65a4996e3afac937060e334a3e73d3fc9180f188b7664a1",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-02T15:37:38Z",
+      "title": "先带再放手",
+      "altText": "佩戴‘首领’胸牌的蓝猫用理解任务、确认计划、开始执行三块踏板搭成工作路径",
+      "caption": "按理解任务、确认计划、开始执行的顺序带 WorkBuddy 完成第一次交付。",
+      "role": "concept_diagram",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "process_diagram",
+        "topic": "任务交付顺序",
+        "steps": ["理解任务", "确认计划", "开始执行"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "dc4ecd022eb86c750224e8f26fc3600fc97f450211a40a2f2ec99d57de4c433b",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-02T15:37:38Z",
+      "title": "执行模式和权限模式是两个旋钮",
+      "altText": "佩戴‘首领’胸牌的蓝猫分别调节执行模式与权限模式两个旋钮",
+      "caption": "执行模式决定 WorkBuddy 怎么思考和行动，权限模式决定它能把操作推进到哪里。",
+      "role": "cover",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "concept_illustration",
+        "topic": "WorkBuddy 双模式",
+        "controls": ["执行模式", "权限模式"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "08e5d15c535edb2cf995477aa5acde6e8240ef8da276e243dfcaa4102b67c7ab",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-02T15:37:38Z",
+      "title": "Ask、Plan、Craft 三种执行模式",
+      "altText": "佩戴‘首领’胸牌的蓝猫在 Ask、Plan、Craft 三档执行模式之间选择",
+      "caption": "Ask 用于问答，Plan 用于先规划，Craft 用于进入执行；按任务阶段选择，不必一直使用同一档。",
+      "role": "concept_diagram",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "mode_diagram",
+        "topic": "WorkBuddy 执行模式",
+        "modes": ["Ask", "Plan", "Craft"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "eb8399250f69ddfae6c4a8e249f479891c30e94702c4b69087222179ca0019a4",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-02T15:37:38Z",
+      "title": "默认权限保留确认关口",
+      "altText": "佩戴‘首领’胸牌的蓝猫在默认权限关口前检查文件、命令和联网操作",
+      "caption": "默认权限让安全范围内的操作继续执行，在删除、命令和联网等高风险步骤前要求确认。",
+      "role": "concept_diagram",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "safety_diagram",
+        "topic": "默认权限",
+        "protectedActions": ["删除", "执行命令", "联网"],
+        "successSignal": "高风险操作前出现确认步骤",
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "48671fc0b140c36b764ac1462622caab27366af6814aa875a0abe796ea75d6b1",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-02T15:37:38Z",
+      "title": "默认权限的三层安全护栏",
+      "altText": "佩戴‘首领’胸牌的蓝猫用独立目录、先备份和默认权限搭建三层安全护栏",
+      "caption": "把文件放进独立目录、先备份，再使用默认权限，为第一次执行建立三层可恢复的安全护栏。",
+      "role": "concept_diagram",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "safety_diagram",
+        "topic": "新手默认配置",
+        "layers": ["独立目录", "先备份", "默认权限"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    }
+  ]
+}

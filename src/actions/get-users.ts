@@ -2,6 +2,8 @@
 
 import { getDb } from '@/db';
 import { user } from '@/db/schema';
+import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { getSession } from '@/lib/server';
 import { asc, desc, ilike, or, sql } from 'drizzle-orm';
 import { createSafeActionClient } from 'next-safe-action';
 import { z } from 'zod';
@@ -42,6 +44,14 @@ export const getUsersAction = actionClient
   .schema(getUsersSchema)
   .action(async ({ parsedInput }) => {
     try {
+      const session = await getSession();
+      if (!canAccessHermesAdmin(session?.user)) {
+        return {
+          success: false,
+          error: 'You do not have permission to view users',
+        };
+      }
+
       const { pageIndex, pageSize, search, sorting } = parsedInput;
 
       const where = search

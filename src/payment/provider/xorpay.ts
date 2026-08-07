@@ -50,7 +50,9 @@ export class XorPayProvider implements PaymentProvider {
 
     const webhookSecret = process.env.XORPAY_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      console.warn('XORPAY_WEBHOOK_SECRET is not set. Webhook validation will be disabled.');
+      console.warn(
+        'XORPAY_WEBHOOK_SECRET is not set. The XorPay provider webhook handler will reject all events.'
+      );
     }
 
     this.appId = appId;
@@ -145,7 +147,7 @@ export class XorPayProvider implements PaymentProvider {
           metadata?.workerEmployeeName ||
           metadata?.serviceName ||
           plan.name ||
-          '独立工作者会员',
+          '独立沉思录会员',
         pay_type: payType,
         price: (price.amount / 100).toFixed(2), // Convert cents to yuan, format like "1.80"
         order_id: orderNo,
@@ -318,14 +320,21 @@ export class XorPayProvider implements PaymentProvider {
    */
   async handleWebhookEvent(payload: string, signature: string): Promise<void> {
     try {
+      if (!this.webhookSecret) {
+        throw new Error(
+          'XORPAY_WEBHOOK_SECRET is not configured; refusing webhook event'
+        );
+      }
+
+      if (!signature) {
+        throw new Error('Missing XorPay webhook signature');
+      }
+
       const event = JSON.parse(payload);
 
-      // Verify signature if webhook secret is set
-      if (this.webhookSecret) {
-        const expectedSignature = this.generateSignature(event);
-        if (signature !== expectedSignature) {
-          throw new Error('Invalid webhook signature');
-        }
+      const expectedSignature = this.generateSignature(event);
+      if (signature !== expectedSignature) {
+        throw new Error('Invalid webhook signature');
       }
 
       // Handle different event types
@@ -407,7 +416,7 @@ export class XorPayProvider implements PaymentProvider {
             to: customerEmail,
             template: 'paymentSuccess',
             context: {
-              planName: plan.name || '独立工作者会员',
+              planName: plan.name || '独立沉思录会员',
               interval: paymentRecord.interval || 'month',
               amount: payAmount * 100, // Convert yuan to cents for email template
               currency: 'CNY',

@@ -1,9 +1,9 @@
-import { provisionHermesAssistant } from '@/lib/hermes-bridge-client';
 import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { provisionHermesAssistant } from '@/lib/hermes-bridge-client';
 import { getSession } from '@/lib/server';
 import {
+  authorizeWorkerInstanceAccess,
   getWorkerInstanceForUser,
-  isPaidWorkerInstance,
   listWorkerInstanceKnowledgePacksForUser,
   listWorkerInstanceSkillsForUser,
   updateWorkerInstanceActivation,
@@ -32,8 +32,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const { instanceId } = await context.params;
+  const allowAdmin = canAccessHermesAdmin(session.user);
   const target = await getWorkerInstanceForUser(instanceId, userId, {
-    allowAdmin: canAccessHermesAdmin(session.user),
+    allowAdmin,
   });
 
   if (!target) {
@@ -47,14 +48,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  if (!isPaidWorkerInstance(target.instance)) {
+  const access = await authorizeWorkerInstanceAccess(target.instance, {
+    allowAdmin,
+  });
+  if (!access.allowed) {
     return NextResponse.json(
       {
         success: false,
-        code: 'PAYMENT_REQUIRED',
-        error: '请先完成员工月租付款，再生成微信激活二维码',
+        code: access.code,
+        error: access.error,
       },
-      { status: 402 }
+      { status: access.status }
     );
   }
 
@@ -62,7 +66,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const locale = typeof body?.locale === 'string' ? body.locale : 'zh';
   const instanceSkills =
     (await listWorkerInstanceSkillsForUser(instanceId, userId, {
-      allowAdmin: canAccessHermesAdmin(session.user),
+      allowAdmin,
     })) || [];
   const enabledSkills = instanceSkills.filter((skill) => skill.enabled);
   const enabledSkillLines = enabledSkills.map(
@@ -73,7 +77,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   );
   const knowledgePacks =
     (await listWorkerInstanceKnowledgePacksForUser(instanceId, userId, {
-      allowAdmin: canAccessHermesAdmin(session.user),
+      allowAdmin,
     })) || [];
   const knowledgePackLines = knowledgePacks.map(
     (pack) => `- ${pack.id}：${pack.name}（${pack.scope}）`
@@ -120,8 +124,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       serviceCapabilities: serviceCapabilityLines.length
         ? serviceCapabilityLines
         : target.version.skillsSummary.length
-        ? target.version.skillsSummary
-        : [target.employee.suitableTasks].filter(Boolean),
+          ? target.version.skillsSummary
+          : [target.employee.suitableTasks].filter(Boolean),
       serviceDeliverables: [
         '独立 Hermes Profile',
         '员工灵魂快照',
@@ -129,7 +133,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       ],
       source: 'workers-platform',
       locale,
-      activationTtlSeconds: 120,
+      activationTtlSeconds: 600,
     });
 
     const updated = await updateWorkerInstanceActivation({
@@ -171,7 +175,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       {
         success: false,
         code: 'HERMES_PROVISION_FAILED',
-        error: error instanceof Error ? error.message : 'Hermes Bridge 激活失败',
+        error:
+          error instanceof Error ? error.message : 'Hermes Bridge 激活失败',
       },
       { status: 503 }
     );

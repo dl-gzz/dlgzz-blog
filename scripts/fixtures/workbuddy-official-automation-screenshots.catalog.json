@@ -1,0 +1,301 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "defaults": {
+    "visibility": "public",
+    "safeToPublish": true,
+    "role": "ui_step",
+    "official": true,
+    "publisher": "WorkBuddy 官方文档",
+    "sourceType": "official_product_screenshot"
+  },
+  "assets": [
+    {
+      "id": "workbuddy-official-automation-entry",
+      "contentHash": "32a2c6a26561951348a908c33f1924216c003e90aeb0156a684db2ef1d1c1ca2",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/auto-1.BDJyWpyk.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/auto-1.BDJyWpyk.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2200,
+      "height": 1641,
+      "title": "进入 WorkBuddy 自动化页面",
+      "platform": "workbuddy_desktop",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 桌面端自动化页面，左侧“自动化”入口与右上角“+ 添加”按钮被红框标出，中央显示自动化任务模板",
+      "caption": "进入左侧“自动化”，再点击右上角“+ 添加”开始创建自动化任务。",
+      "ocrText": "自动化；管理自动化任务并查看近期运行记录；+ 添加；从模板入手；每日 AI 新闻推送；每日 5 个英语单词；每日儿童睡前故事；每周工作周报；经典电影推荐；历史上的今天；每日一个为什么；父母联系提醒；体检预约提醒；面试准备提醒；会议前准备；可爱萌宠手机壁纸",
+      "visualFacts": {
+        "type": "product_ui_screenshot",
+        "app": "WorkBuddy",
+        "appVersionShown": "v5.1.5",
+        "page": "自动化",
+        "highlightedControls": ["左侧导航中的自动化入口", "右上角的+ 添加按钮"],
+        "visibleSection": "从模板入手",
+        "visibleTemplates": [
+          "每日 AI 新闻推送",
+          "每日 5 个英语单词",
+          "每日儿童睡前故事",
+          "每周工作周报",
+          "经典电影推荐",
+          "历史上的今天",
+          "每日一个为什么",
+          "父母联系提醒",
+          "体检预约提醒",
+          "面试准备提醒",
+          "会议前准备",
+          "可爱萌宠手机壁纸"
+        ],
+        "instruction": "从左侧导航进入自动化页面，然后点击右上角的+ 添加",
+        "successSignal": "页面标题显示自动化，并能看到+ 添加按钮"
+      },
+      "analysis": {
+        "provider": "codex",
+        "model": "host-multimodal",
+        "version": "official-doc-review-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide",
+        "sourcePageTitle": "自动化 | 腾讯云代码助手 CodeBuddy – AI 代码编辑器",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "图片由 WorkBuddy 官方产品文档公开发布；目录仅保存官方 CDN 直链并保留官方出处，不复制、不修改、不重新托管，版权归官方权利人所有。",
+        "originalAltText": "Image",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide.md",
+          "heading": "1. 创建自动化任务",
+          "chunkIndex": 2,
+          "role": "ui_step",
+          "context": "打开自动化页面，从左侧导航进入自动化并找到右上角的添加按钮。",
+          "stepNumber": 1,
+          "sortOrder": 1,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceSection": "打开自动化页面",
+            "sourceImageOrder": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-automation-add-button",
+      "contentHash": "b86094afbec93d76165d9d2f498d956dd73c81ea1303bf988ee11ddba4f31af0",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/auto-2.c1QqfK6l.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/auto-2.c1QqfK6l.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2200,
+      "height": 1641,
+      "title": "点击添加自动化任务",
+      "platform": "workbuddy_desktop",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 桌面端自动化页面，左侧导航已选中“自动化”，右上角“+ 添加”按钮被红框突出，中央显示任务模板",
+      "caption": "在自动化页面点击右上角“+ 添加”，打开新建自动化任务表单。",
+      "ocrText": "自动化；管理自动化任务并查看近期运行记录；+ 添加；从模板入手；每日 AI 新闻推送；每日 5 个英语单词；每日儿童睡前故事；每周工作周报；经典电影推荐；历史上的今天；每日一个为什么；父母联系提醒；体检预约提醒；面试准备提醒；会议前准备；可爱萌宠手机壁纸",
+      "visualFacts": {
+        "type": "product_ui_screenshot",
+        "app": "WorkBuddy",
+        "appVersionShown": "v5.1.5",
+        "page": "自动化",
+        "selectedNavigation": "自动化",
+        "highlightedControl": "+ 添加按钮",
+        "controlLocation": "页面右上角",
+        "visibleSection": "从模板入手",
+        "instruction": "点击右上角的+ 添加按钮",
+        "successSignal": "打开添加自动化任务表单"
+      },
+      "analysis": {
+        "provider": "codex",
+        "model": "host-multimodal",
+        "version": "official-doc-review-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide",
+        "sourcePageTitle": "自动化 | 腾讯云代码助手 CodeBuddy – AI 代码编辑器",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "图片由 WorkBuddy 官方产品文档公开发布；目录仅保存官方 CDN 直链并保留官方出处，不复制、不修改、不重新托管，版权归官方权利人所有。",
+        "originalAltText": "Image",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide.md",
+          "heading": "1. 创建自动化任务",
+          "chunkIndex": 2,
+          "role": "ui_step",
+          "context": "点击自动化页面右上角的添加按钮，进入新建自动化任务表单。",
+          "stepNumber": 2,
+          "sortOrder": 2,
+          "occurrenceIndex": 1,
+          "metadata": {
+            "sourceSection": "添加任务",
+            "sourceImageOrder": 2
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/07_日报周报别再手动催了，给AI排个班.md",
+          "heading": "怎么新建一个自动化任务",
+          "role": "ui_step",
+          "context": "课程展示从自动化页面点击右上角添加按钮的官方界面。",
+          "stepNumber": 2,
+          "sortOrder": 112,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceSection": "怎么新建一个自动化任务",
+            "sourceImageOrder": 112
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-automation-ai-news-form",
+      "contentHash": "67d00cf1ff6011ab6429809383a6b102dd9d76b91eac7e181f29c6e9b60d6331",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/auto-3.Bdgzy283.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/auto-3.Bdgzy283.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 997,
+      "height": 1300,
+      "title": "配置每日 AI 新闻推送任务",
+      "platform": "workbuddy_desktop",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy“添加自动化任务”表单，名称填写“AI早报”，工作空间为 Workspace，提示词要求关注 AI 动态，执行频率设为每天 09:00，并开启推送到微信小程序",
+      "caption": "在“添加自动化任务”表单中填写名称、工作空间、提示词、模型和技能及执行频率；官方示例为每天 09:00 生成 AI 早报。",
+      "ocrText": "添加自动化任务；名称；AI早报；工作空间（可选）；Workspace；提示词；关注当天AI领域的动态，侧重 AI coding 方向。筛选3-5条有价值的信息，简要说明事件内容及值得关注的原因；腾讯文档；Auto；技能；召唤专家；完全访问权限；连接器；选择连接器；执行频率；周期；按间隔；单次；每天；09:00；生效日期区间；推送到 WorkBuddy 微信小程序；取消；添加",
+      "visualFacts": {
+        "type": "product_ui_screenshot",
+        "app": "WorkBuddy",
+        "page": "添加自动化任务",
+        "exampleTask": "AI早报",
+        "visibleFields": [
+          "名称",
+          "工作空间",
+          "提示词",
+          "模型",
+          "技能",
+          "专家",
+          "权限",
+          "连接器",
+          "执行频率",
+          "生效日期区间",
+          "推送到 WorkBuddy 微信小程序"
+        ],
+        "exampleValues": {
+          "名称": "AI早报",
+          "工作空间": "Workspace",
+          "执行频率": "周期",
+          "执行时间": "每天 09:00",
+          "推送到WorkBuddy微信小程序": "开启"
+        },
+        "visibleActions": ["取消", "添加"],
+        "instruction": "填写任务目标、执行环境和定时规则后点击添加",
+        "successSignal": "表单底部显示可提交的添加按钮"
+      },
+      "analysis": {
+        "provider": "codex",
+        "model": "host-multimodal",
+        "version": "official-doc-review-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide",
+        "sourcePageTitle": "自动化 | 腾讯云代码助手 CodeBuddy – AI 代码编辑器",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "图片由 WorkBuddy 官方产品文档公开发布；目录仅保存官方 CDN 直链并保留官方出处，不复制、不修改、不重新托管，版权归官方权利人所有。",
+        "originalAltText": "Image",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide.md",
+          "heading": "1. 创建自动化任务",
+          "chunkIndex": 2,
+          "role": "ui_step",
+          "context": "在添加自动化任务表单中配置名称、工作空间、提示词、模型和技能、每天 09:00 的执行规则及小程序推送。",
+          "stepNumber": 3,
+          "sortOrder": 3,
+          "occurrenceIndex": 2,
+          "metadata": {
+            "sourceSection": "每日 AI 新闻推送示例",
+            "sourceImageOrder": 3
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/07_日报周报别再手动催了，给AI排个班.md",
+          "heading": "怎么新建一个自动化任务",
+          "chunkIndex": 3,
+          "role": "ui_step",
+          "context": "日报自动化需要在“添加自动化任务”表单中填写任务名称、工作空间、提示词、模型和技能及执行频率。",
+          "stepNumber": 3,
+          "sortOrder": 3,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceSection": "怎么新建一个自动化任务",
+            "sourceImageOrder": 3
+          }
+        }
+      ]
+    }
+  ]
+}

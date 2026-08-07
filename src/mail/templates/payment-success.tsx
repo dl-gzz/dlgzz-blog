@@ -128,7 +128,7 @@ export default function PaymentSuccess({
 PaymentSuccess.PreviewProps = {
   locale: routing.defaultLocale,
   messages: defaultMessages,
-  planName: '独立工作者会员',
+  planName: '独立沉思录会员',
   interval: 'month',
   amount: 180,
   currency: 'CNY',

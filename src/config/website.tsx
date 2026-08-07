@@ -69,8 +69,8 @@ export const websiteConfig: WebsiteConfig = {
   },
   mail: {
     provider: 'smtp',
-    fromEmail: '独立工作者 <395887347@qq.com>',
-    supportEmail: '独立工作者 <395887347@qq.com>',
+    fromEmail: '独立沉思录 <395887347@qq.com>',
+    supportEmail: '独立沉思录 <395887347@qq.com>',
   },
   newsletter: {
     provider: 'resend',
@@ -90,20 +90,15 @@ export const websiteConfig: WebsiteConfig = {
         isFree: true,
         isLifetime: false,
       },
+      // 会员只做年费：XorPay 是单次扣款、无自动续费，月费会导致用户每月手动重买。
+      // 早鸟 ¥99/年，正价 ¥199/年。金额单位为「分」，可用 env 覆盖，不必改代码。
       pro: {
         id: 'pro',
         prices: [
           {
             type: PaymentTypes.SUBSCRIPTION,
-            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'xorpay_pro_monthly',
-            amount: 180, // 180 分 = 1.80 元 (XorPay test amount)
-            currency: 'CNY',
-            interval: PlanIntervals.MONTH,
-          },
-          {
-            type: PaymentTypes.SUBSCRIPTION,
             priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'xorpay_pro_yearly',
-            amount: 180, // 180 分 = 1.80 元 (XorPay test amount)
+            amount: Number(process.env.NEXT_PUBLIC_PRO_YEARLY_AMOUNT_CENTS || 9900),
             currency: 'CNY',
             interval: PlanIntervals.YEAR,
           },

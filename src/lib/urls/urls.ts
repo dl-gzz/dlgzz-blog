@@ -17,23 +17,6 @@ export function getBaseUrl(): string {
   return baseUrl;
 }
 
-export function getOriginFromRequest(request?: Request): string | null {
-  const host =
-    request?.headers.get('x-forwarded-host') ?? request?.headers.get('host');
-
-  if (!host) {
-    return null;
-  }
-
-  const protocol =
-    request?.headers.get('x-forwarded-proto') ??
-    (host.startsWith('localhost') || host.startsWith('127.0.0.1')
-      ? 'http'
-      : 'https');
-
-  return `${protocol}://${host}`;
-}
-
 /**
  * Check if the locale should be appended to the URL
  */

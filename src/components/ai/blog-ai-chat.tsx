@@ -13,17 +13,46 @@ interface BlogSource {
   links?: Array<{ text: string; url: string }>;
 }
 
+/** 后端每次问答回传的试吃状态（见 src/app/api/ai/chat/route.ts） */
+interface TrialState {
+  isMember: boolean;
+  fromKnowledgeBase: boolean;
+  knowledgeHits: number;
+  remaining: number | null;
+  limit: number | null;
+  upgradeUrl: string;
+}
+
+/** 超额时后端返回 429，body 是这个结构 */
+interface TrialLimitError {
+  code?: string;
+  message?: string;
+  upgradeUrl?: string;
+}
+
 const QUICK_QUESTIONS = [
-  '这个博客主要写什么内容？',
-  '有哪些关于 AI 工具的文章？',
-  '独立工作者应该关注哪些方法论？',
+  '直播间没人看怎么冷启动？',
+  '小红书违规了会被怎么处罚？',
+  '新店铺怎么做冷启动？',
 ];
+
+/** 从 useChat 的 error 里解析出 429 TRIAL_LIMIT 的结构化信息 */
+function parseTrialLimit(error?: Error): TrialLimitError | null {
+  if (!error?.message) return null;
+  try {
+    const parsed = JSON.parse(error.message) as TrialLimitError;
+    return parsed?.code === 'TRIAL_LIMIT' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * 博客 AI 问答组件 - 现代全高度聊天界面
  */
 export function BlogAIChat() {
   const [sources, setSources] = useState<BlogSource[]>([]);
+  const [trial, setTrial] = useState<TrialState | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, input, setInput, handleInputChange, handleSubmit, isLoading, error, setMessages, data } =
@@ -31,16 +60,28 @@ export function BlogAIChat() {
       api: '/api/ai/chat',
     });
 
-  // 从流式数据中提取来源（取最新一条，而非第一条）
+  const trialLimit = parseTrialLimit(error);
+
+  // 流式输出是否已开始：最后一条消息是 assistant 且已有内容。
+  // 用来区分「还在检索/等首个 token」与「正在逐字输出」。
+  const lastMessage = messages[messages.length - 1];
+  const isStreaming =
+    isLoading &&
+    lastMessage?.role === 'assistant' &&
+    lastMessage.content.length > 0;
+
+  // 从流式数据中提取来源与试吃状态（各取最新一条）
   useEffect(() => {
     if (!data || data.length === 0) return;
-    let latest: BlogSource[] | null = null;
+    let latestSources: BlogSource[] | null = null;
+    let latestTrial: TrialState | null = null;
     for (const item of data) {
-      if (item && typeof item === 'object' && 'sources' in item) {
-        latest = item.sources as unknown as BlogSource[];
-      }
+      if (!item || typeof item !== 'object') continue;
+      if ('sources' in item) latestSources = item.sources as unknown as BlogSource[];
+      if ('trial' in item) latestTrial = item.trial as unknown as TrialState;
     }
-    if (latest !== null) setSources(latest);
+    if (latestSources !== null) setSources(latestSources);
+    if (latestTrial !== null) setTrial(latestTrial);
   }, [data]);
 
   // 提交新问题时立即清空旧来源
@@ -75,8 +116,10 @@ export function BlogAIChat() {
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h2 className="font-semibold leading-none">AI 博客助手</h2>
-            <p className="mt-1 text-xs text-muted-foreground">基于博客内容语义搜索回答</p>
+            <h2 className="font-semibold leading-none">知识库问答</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              724 篇小红书官方经营知识库 · 每日更新
+            </p>
           </div>
         </div>
         {messages.length > 0 && (
@@ -101,9 +144,9 @@ export function BlogAIChat() {
               <BookOpen className="h-8 w-8 text-muted-foreground" />
             </div>
             <div className="space-y-1.5">
-              <h3 className="text-base font-semibold">向我提问博客相关问题</h3>
+              <h3 className="text-base font-semibold">问我小红书经营的任何问题</h3>
               <p className="text-sm text-muted-foreground max-w-xs">
-                我会根据博客文章内容为你提供准确的回答，并注明来源
+                答案来自 724 篇小红书官方经营文档，只依据知识库作答、不编造
               </p>
             </div>
             <div className="flex flex-col gap-2 w-full max-w-sm">
@@ -153,23 +196,39 @@ export function BlogAIChat() {
               </div>
             ))}
 
-            {isLoading && (
+            {/* 仅在"已提交、但一个字都还没吐出来"时显示等待气泡。
+                流式输出开始后不再显示，否则用户会误以为一直卡在思考。 */}
+            {isLoading && !isStreaming && (
               <div className="flex justify-start">
                 <div className="mr-2 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-muted px-4 py-3">
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">正在思考...</span>
+                  <span className="text-sm text-muted-foreground">
+                    正在检索知识库…
+                  </span>
                 </div>
               </div>
             )}
 
-            {error && (
+            {/* 试吃额度用完：这是转化意愿最高的时刻，给引导而不是报错 */}
+            {trialLimit && (
+              <div className="rounded-xl border border-primary/30 bg-primary/5 px-5 py-4">
+                <p className="text-sm font-medium">今天的免费体验次数已用完</p>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  {trialLimit.message ||
+                    '开通会员即可无限畅查，并获得专属 API Key，把这个知识库装进你自己的 AI。'}
+                </p>
+                <Button asChild size="sm" className="mt-3">
+                  <a href={trialLimit.upgradeUrl || '/pricing'}>开通会员，无限畅查</a>
+                </Button>
+              </div>
+            )}
+
+            {error && !trialLimit && (
               <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                {error.message === 'Premium feature'
-                  ? 'AI 问答功能仅限付费用户使用，请升级订阅。'
-                  : `出错了：${error.message}`}
+                出错了：{error.message}
               </div>
             )}
 
@@ -178,12 +237,36 @@ export function BlogAIChat() {
         )}
       </div>
 
+      {/* 试吃状态条：让用户看见知识库来源与剩余次数，制造付费理由 */}
+      {trial && !trial.isMember && trial.remaining !== null && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t bg-muted/30 px-6 py-2.5 text-xs">
+          <span className="text-muted-foreground">
+            {trial.fromKnowledgeBase && (
+              <span className="mr-1.5 font-medium text-foreground">
+                答案来自知识库（命中 {trial.knowledgeHits} 条）·
+              </span>
+            )}
+            今日免费体验剩余{' '}
+            <span className="font-semibold text-foreground">{trial.remaining}</span> /{' '}
+            {trial.limit} 次
+          </span>
+          <a
+            href={trial.upgradeUrl || '/pricing'}
+            className="font-medium text-primary hover:underline"
+          >
+            开通会员无限畅查 →
+          </a>
+        </div>
+      )}
+
       {/* Sources */}
       {sources.length > 0 && (
         <div className="border-t px-6 py-3 space-y-3">
           {/* 参考文章 */}
           <div>
-            <p className="mb-2 text-xs font-medium text-muted-foreground">参考文章</p>
+            <p className="mb-2 text-xs font-medium text-muted-foreground">
+              来源（点击查看官方原文）
+            </p>
             <div className="flex flex-wrap gap-2">
               {sources.map((source, i) => (
                 <a
@@ -259,7 +342,7 @@ export function BlogAIChat() {
           </Button>
         </form>
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          基于博客语义搜索 · Powered by DeepSeek
+          知识库向量检索 · Powered by DeepSeek
         </p>
       </div>
     </div>

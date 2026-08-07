@@ -2,6 +2,11 @@ import { createHash } from 'crypto';
 import { getDb } from '@/db';
 import { payment, user } from '@/db/schema';
 import { markWorkerInstancePayment } from '@/lib/workers';
+import {
+  getOneWorkPaymentPacks,
+  grantOneWorkEntitlements,
+  shouldGrantOneWorkForPrice,
+} from '@/lib/onework-access';
 import { eq } from 'drizzle-orm';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -57,6 +62,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Update payment status in database
     const db = await getDb();
+    const [paymentBeforeUpdate] = await db
+      .select({ id: payment.id, userId: payment.userId, priceId: payment.priceId, status: payment.status })
+      .from(payment)
+      .where(eq(payment.subscriptionId, aoid))
+      .limit(1);
+
     const updatedPayment = await db
       .update(payment)
       .set({
@@ -75,6 +86,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       // Optional: Send notification to user
       // You can implement email notification here
+
+      // 网站内购的 OneWorkOS 价格需要显式配置 ONEWORK_PRICE_IDS，避免误把普通会员赠送成知识包。
+      // XorPay 可能重复回调，只有第一次从 processing -> completed 时才授予权益。
+      if (
+        paymentBeforeUpdate &&
+        paymentBeforeUpdate.status !== 'completed' &&
+        shouldGrantOneWorkForPrice(paymentBeforeUpdate.priceId)
+      ) {
+        await grantOneWorkEntitlements({
+          userId: paymentBeforeUpdate.userId,
+          packIds: getOneWorkPaymentPacks(),
+          source: 'xorpay',
+          externalOrderId: aoid,
+        });
+      }
 
     } else {
       console.warn(`Payment record not found for aoid: ${aoid}`);

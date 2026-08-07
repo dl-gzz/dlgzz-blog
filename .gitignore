@@ -64,3 +64,6 @@ next-env.d.ts
 !/private-files/.gitkeep
 /dlgzz-blog/
 /dlgzz-blog.zip
+
+# Obsidian→blog deploy worktree (isolated main checkout)
+.blog-deploy-worktree/

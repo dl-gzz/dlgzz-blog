@@ -1,5 +1,8 @@
 # Cloud Hermes Learning Assistant
 
+Note: this is the legacy learning-assistant deployment on `1.15.141.88`. The
+三高健康管家 uses the separate server documented in `docs/cloud-hermes-bridge.md`.
+
 ## Goal
 
 The website must not call a local `~/.hermes` script in production. In production,

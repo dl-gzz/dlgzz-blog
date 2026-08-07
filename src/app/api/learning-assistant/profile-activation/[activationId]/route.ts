@@ -1,3 +1,4 @@
+import { requireHermesAdmin } from '@/lib/api-security';
 import { getHermesActivationStatus } from '@/lib/hermes-bridge-client';
 import { runLearningAssistant } from '@/lib/hermes-learning-assistant';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -61,6 +62,9 @@ async function bindActivatedParent({
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
+  const auth = await requireHermesAdmin('学习助手接口暂只允许管理员访问');
+  if ('response' in auth) return auth.response;
+
   try {
     const { activationId } = await context.params;
     const studentId = readText(request.nextUrl.searchParams.get('studentId'));
@@ -75,7 +79,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const profileName = readText(status.profileName);
     const weixinUserId = readText(status.weixinUserId);
     const activated = status.status === 'activated';
-    let finalized: Awaited<ReturnType<typeof bindActivatedParent>> | null = null;
+    let finalized: Awaited<ReturnType<typeof bindActivatedParent>> | null =
+      null;
 
     if (activated && profileName && weixinUserId) {
       finalized = await bindActivatedParent({

@@ -1,0 +1,9 @@
+{
+  "id": "dlgzz-blog-sync",
+  "name": "Dlgzz Blog Sync",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "把标记 publish: blog 的笔记安全同步到 dlgzz-blog：MDX 转义、双链/图片转换、frontmatter 补全，可选 git push 自动部署。",
+  "author": "baiyang",
+  "isDesktopOnly": true
+}

@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     const orderId = `MP_${Date.now()}_${randomUUID().slice(0, 8)}`;
     const notifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL || getBaseUrl()}/api/webhooks/xorpay`;
     const requestParams: Record<string, string> = {
-      name: '独立工作者会员',
+      name: '独立沉思录会员',
       pay_type: 'jsapi',
       price: (price.amount / 100).toFixed(2),
       order_id: orderId,

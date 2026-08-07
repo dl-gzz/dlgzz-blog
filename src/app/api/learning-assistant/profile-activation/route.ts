@@ -1,6 +1,7 @@
+import { createHash } from 'node:crypto';
+import { requireHermesAdmin } from '@/lib/api-security';
 import { provisionHermesAssistant } from '@/lib/hermes-bridge-client';
 import { runLearningAssistant } from '@/lib/hermes-learning-assistant';
-import { createHash } from 'node:crypto';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -14,7 +15,10 @@ function readText(value: unknown, fallback = '') {
 }
 
 function buildAssistantId(studentId: string) {
-  const hash = createHash('sha256').update(studentId).digest('hex').slice(0, 16);
+  const hash = createHash('sha256')
+    .update(studentId)
+    .digest('hex')
+    .slice(0, 16);
   return `edu_${hash}`;
 }
 
@@ -106,6 +110,9 @@ async function rememberActivation({
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireHermesAdmin('学习助手激活接口暂只允许管理员访问');
+  if ('response' in auth) return auth.response;
+
   try {
     const body = (await request.json().catch(() => null)) as unknown;
     if (!isObjectRecord(body)) {
@@ -167,7 +174,8 @@ export async function POST(request: NextRequest) {
     await rememberActivation({
       studentId,
       profileName: provision.profileName || '',
-      activationId: provision.activationId || provision.assistantId || assistantId,
+      activationId:
+        provision.activationId || provision.assistantId || assistantId,
       status: provision.status || 'qr_ready',
     }).catch(() => null);
 
@@ -178,7 +186,8 @@ export async function POST(request: NextRequest) {
       studentGrade: grade,
       profile,
       assistantId,
-      activationId: provision.activationId || provision.assistantId || assistantId,
+      activationId:
+        provision.activationId || provision.assistantId || assistantId,
       status: provision.status || 'qr_ready',
       connectionMode: provision.connectionMode || 'qr_activation',
       profileName: provision.profileName || null,

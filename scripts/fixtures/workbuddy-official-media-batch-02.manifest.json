@@ -1,0 +1,395 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "approvedAt": "2026-08-03T00:00:00+08:00",
+  "reviewerType": "codex_host_multimodal_curator",
+  "assets": [
+    {
+      "id": "workbuddy-official-automation-templates",
+      "localBasename": "11fdeff23026c08f87c9582a4dc9aa70a92f4262.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/auto-4.DKEfeUXo.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide",
+      "title": "从自动化任务模板开始",
+      "altText": "WorkBuddy 自动化页面展示每日 AI 新闻推送、每周工作周报、每日英语单词和会议前准备等任务模板",
+      "caption": "不想从零配置时，可在自动化页面选择现成模板并按需修改。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide.md",
+      "heading": "1. 创建自动化任务",
+      "role": "ui_step",
+      "context": "从模板入手创建自动化任务，选择模板后再修改提示词和执行规则。",
+      "sortOrder": 55,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/07_日报周报别再手动催了，给AI排个班.md",
+          "heading": "不想从零写，可以先用模板",
+          "role": "ui_step",
+          "context": "课程介绍从官方自动化模板开始配置任务。",
+          "sortOrder": 145
+        }
+      ],
+      "visualFacts": {
+        "page": "自动化",
+        "section": "从模板入手",
+        "action": "选择自动化任务模板",
+        "successSignal": "模板被选中并进入任务配置"
+      }
+    },
+    {
+      "id": "workbuddy-official-automation-miniapp-toggle",
+      "localBasename": "387884fa2933c85465f647d03cb7f6f3c4f7804e.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/auto-5.BjoWFBsl.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide",
+      "title": "开启自动化结果的小程序推送",
+      "altText": "WorkBuddy 添加自动化任务表单底部已开启推送到 WorkBuddy 微信小程序开关",
+      "caption": "创建自动化任务时开启小程序推送，任务完成后即可在手机端查收结果。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide.md",
+      "heading": "推送到WorkBuddy小程序",
+      "role": "ui_step",
+      "context": "在自动化任务表单中开启推送到 WorkBuddy 微信小程序。",
+      "sortOrder": 61,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/07_日报周报别再手动催了，给AI排个班.md",
+          "heading": "推送到小程序：让结果主动找你",
+          "role": "ui_step",
+          "context": "课程说明如何开启小程序推送，让自动化结果主动送达。",
+          "sortOrder": 158
+        }
+      ],
+      "visualFacts": {
+        "page": "添加自动化任务",
+        "control": "推送到 WorkBuddy 微信小程序",
+        "state": "开启",
+        "successSignal": "推送开关显示为开启状态"
+      }
+    },
+    {
+      "id": "workbuddy-official-automation-miniapp-result",
+      "localBasename": "877f882acd5f0903fbe388b6a8acbf0a25af1d05.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/auto-6.SNHi44Op.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide",
+      "title": "在小程序查看自动化执行结果",
+      "altText": "WorkBuddy 小程序自动化任务列表与任务详情页面，显示每日 AI 新闻推送执行成功及生成内容",
+      "caption": "自动化任务完成后，可在 WorkBuddy 小程序中查看执行状态和生成结果。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Automation-Guide.md",
+      "heading": "推送到WorkBuddy小程序",
+      "role": "ui_step",
+      "context": "在 WorkBuddy 小程序中查看自动化任务的执行状态与推送结果。",
+      "sortOrder": 66,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/07_日报周报别再手动催了，给AI排个班.md",
+          "heading": "推送到小程序：让结果主动找你",
+          "role": "ui_step",
+          "context": "课程说明自动化完成后可在小程序查看执行结果。",
+          "sortOrder": 159
+        }
+      ],
+      "visualFacts": {
+        "page": "WorkBuddy 小程序自动化任务详情",
+        "status": "执行成功",
+        "visibleResult": "每日 AI 新闻推送生成内容",
+        "successSignal": "任务详情显示执行成功和生成内容"
+      }
+    },
+    {
+      "id": "workbuddy-official-permission-menu",
+      "localBasename": "6432bfa1b27e676948c48d6ae7d481e3534a504c.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/permission-menu.D2eTfMb0.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes",
+      "title": "切换默认权限与完全访问权限",
+      "altText": "WorkBuddy 新建任务输入框下方展开默认权限菜单，菜单中可选择允许完全访问",
+      "caption": "在新建任务输入框下方点击权限菜单，可在默认权限和完全访问权限之间切换。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes.md",
+      "heading": "一、在哪里切换权限模式",
+      "role": "ui_step",
+      "context": "打开输入框下方的默认权限菜单并选择需要的权限模式。",
+      "sortOrder": 22,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/02_WorkBuddy会乱改文件吗，先看懂这两个旋钮.md",
+          "heading": "默认权限：在关键位置加一道护栏",
+          "role": "ui_step",
+          "context": "课程展示默认权限菜单及完全访问入口。",
+          "sortOrder": 97
+        }
+      ],
+      "visualFacts": {
+        "page": "新建任务",
+        "control": "默认权限菜单",
+        "visibleOption": "允许完全访问",
+        "successSignal": "权限下拉菜单已展开"
+      }
+    },
+    {
+      "id": "workbuddy-official-full-access-confirm",
+      "localBasename": "31793ca3161eb251f138a107129fe688f20b9957.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/full-access-confirm.DnGyusfa.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes",
+      "title": "确认开启完全访问权限",
+      "altText": "WorkBuddy 确认开启完全放开弹窗，要求勾选已了解风险后才能确认开启",
+      "caption": "开启完全访问权限前，WorkBuddy 会展示风险说明并要求再次确认。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes.md",
+      "heading": "六、什么是 Full Access（完全放开）",
+      "role": "ui_step",
+      "context": "阅读完全访问风险说明，勾选风险确认后再决定是否开启。",
+      "sortOrder": 98,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/02_WorkBuddy会乱改文件吗，先看懂这两个旋钮.md",
+          "heading": "完全访问：把二次确认关掉",
+          "role": "ui_step",
+          "context": "课程说明开启完全访问前需要阅读并确认风险。",
+          "sortOrder": 100
+        }
+      ],
+      "visualFacts": {
+        "dialog": "确认开启完全放开",
+        "requiredControl": "我已了解风险，并愿意继续",
+        "actions": ["取消", "确认开启"],
+        "warning": "会减少确认步骤并允许敏感操作"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-overview",
+      "localBasename": "5988f7651d040bf8d3973163d9eeefbcdef65369.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/skill-1.BLRwED0h.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "打开 WorkBuddy 技能市场",
+      "altText": "WorkBuddy 技能页面显示技能市场、已安装技能、分类筛选、搜索技能和添加技能入口",
+      "caption": "从左侧更多区域进入技能页面，可浏览技能市场和本机已安装技能。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "页面概览",
+      "role": "ui_step",
+      "context": "打开技能页面，查看技能市场、已安装技能、搜索和添加入口。",
+      "sortOrder": 31,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "技能市场和“已安装”，别混在一起",
+          "role": "ui_step",
+          "context": "课程区分技能市场与已安装技能页面。",
+          "sortOrder": 88
+        }
+      ],
+      "visualFacts": {
+        "page": "技能",
+        "tabs": ["技能市场", "已安装"],
+        "controls": ["搜索技能", "添加技能"],
+        "successSignal": "页面显示技能市场和已安装列表"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-add-menu",
+      "localBasename": "ab4344571448120eb2aeecaf8f1ef2467d722ca2.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/skill-2.DIhokP9-.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "选择添加技能的方式",
+      "altText": "WorkBuddy 添加技能菜单提供查找技能、上传技能和创建技能三个选项",
+      "caption": "点击添加技能后，可选择查找、上传或创建技能。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "安装技能",
+      "role": "ui_step",
+      "context": "点击添加技能并选择查找技能、上传技能或创建技能。",
+      "sortOrder": 39,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "添加技能，有三种办法",
+          "role": "ui_step",
+          "context": "课程展示查找、上传和创建技能三个入口。",
+          "sortOrder": 133
+        }
+      ],
+      "visualFacts": {
+        "menu": "添加技能",
+        "options": ["查找技能", "上传技能", "创建技能"],
+        "successSignal": "添加技能菜单已展开"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-upload",
+      "localBasename": "e43eeccdcee64e5379530f7ec86d7e463c5daa30.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/image-17-1.CL2d5GKX.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "上传本地技能包",
+      "altText": "WorkBuddy 导入技能弹窗，支持拖拽或点击上传包含 SKILL.md 的文件夹、压缩包或 Markdown 文件",
+      "caption": "上传技能时，选择包含 SKILL.md 的文件夹或压缩包，也可上传带 YAML 名称和描述的 Markdown 文件。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "安装技能",
+      "role": "ui_step",
+      "context": "选择上传技能，在导入弹窗中拖入符合要求的技能文件。",
+      "sortOrder": 43,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "第二种：上传技能",
+          "role": "ui_step",
+          "context": "课程说明通过上传本地技能包安装 Skill。",
+          "sortOrder": 121
+        }
+      ],
+      "visualFacts": {
+        "dialog": "导入技能",
+        "acceptedInputs": [
+          "包含 SKILL.md 的文件夹",
+          "ZIP 压缩包",
+          "带 YAML 元数据的 Markdown"
+        ],
+        "successSignal": "文件进入导入流程"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-find",
+      "localBasename": "34abf09431b96c4af8c85c9ca9a4a3c5926c377f.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/skill-3.PTyavE2s.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "用自然语言查找并安装技能",
+      "altText": "WorkBuddy 对话输入框预填请帮我查找并自动安装能够完成某项任务的 Skill",
+      "caption": "选择查找技能后，用自然语言描述需求，WorkBuddy 会寻找匹配的技能。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "安装技能",
+      "role": "ui_step",
+      "context": "在查找技能模式中描述希望 Skill 完成的任务。",
+      "sortOrder": 49,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "第一种：查找技能",
+          "role": "ui_step",
+          "context": "课程说明用自然语言描述需求并查找匹配 Skill。",
+          "sortOrder": 111
+        }
+      ],
+      "visualFacts": {
+        "mode": "查找技能",
+        "promptPattern": "请帮我查找并自动安装能完成某项任务的 Skill",
+        "successSignal": "WorkBuddy 返回匹配技能"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-create",
+      "localBasename": "9c8199c04e361ea9b1c7f2b92222d63a6a8dd681.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/skill-4.Ce9uwHkT.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "用 Skill Creator 创建技能",
+      "altText": "WorkBuddy 对话输入框调用 skill-creator，并提示用户描述希望新技能实现的任务",
+      "caption": "选择创建技能后，描述目标能力，WorkBuddy 会调用 Skill Creator 生成技能。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "安装技能",
+      "role": "ui_step",
+      "context": "在创建技能模式中描述希望新 Skill 实现的能力。",
+      "sortOrder": 53,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "第三种：创建技能",
+          "role": "ui_step",
+          "context": "课程说明调用 Skill Creator 创建自己的 Skill。",
+          "sortOrder": 136
+        }
+      ],
+      "visualFacts": {
+        "mode": "创建技能",
+        "invokedSkill": "skill-creator",
+        "promptPattern": "请帮我创建一个可以实现某项任务的 Skill",
+        "successSignal": "Skill Creator 开始生成技能"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-toggle",
+      "localBasename": "c8e43de74737ac71383b8a78dec429fd9541075d.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/skill-5.DXH8Vvpw.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "关闭或重新启用已安装技能",
+      "altText": "WorkBuddy 已安装技能卡片菜单显示关闭、编辑和卸载操作",
+      "caption": "已安装技能可以随时关闭或重新启用，不必立即卸载。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "启用 / 关闭技能",
+      "role": "ui_step",
+      "context": "打开已安装技能的操作菜单，选择关闭或重新启用。",
+      "sortOrder": 59,
+      "visualFacts": {
+        "page": "已安装技能",
+        "actions": ["关闭", "编辑", "卸载"],
+        "successSignal": "技能启用状态发生变化"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-search",
+      "localBasename": "ebec2b6c1e0de5e47c3956620cfc691fe8c6eb9c.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/skill-6.DUKl69US.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "搜索已安装技能",
+      "altText": "WorkBuddy 已安装技能页面顶部显示搜索技能输入框和添加技能按钮，下方展示匹配的技能卡片",
+      "caption": "技能较多时，在搜索框输入关键词即可快速定位目标技能。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "搜索技能",
+      "role": "ui_step",
+      "context": "在技能页面的搜索框输入关键词并定位已安装技能。",
+      "sortOrder": 68,
+      "visualFacts": {
+        "page": "已安装技能",
+        "control": "搜索技能",
+        "successSignal": "列表显示与关键词匹配的技能"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-uninstall-one",
+      "localBasename": "3dfbcecb142c4541d1462a67dc88267854b7cc71.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/skilluninstall-20.Decy0AWJ.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "卸载单个技能",
+      "altText": "WorkBuddy 已安装技能卡片的操作菜单中显示卸载选项",
+      "caption": "需要完全移除技能时，打开技能卡片菜单并选择卸载。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "卸载技能",
+      "role": "ui_step",
+      "context": "从单个已安装技能的操作菜单选择卸载。",
+      "sortOrder": 74,
+      "visualFacts": {
+        "page": "已安装技能",
+        "action": "卸载",
+        "successSignal": "技能从已安装列表移除"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-batch-select",
+      "localBasename": "abf544478ce2453aacfae94dacd288c6575331dc.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/skilluninstall-21.BwJOjhUv.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "进入技能批量操作",
+      "altText": "WorkBuddy 已安装技能列表右上角显示批量操作入口，页面中展示多张技能卡片",
+      "caption": "需要处理多个技能时，可先进入批量操作模式。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "卸载技能",
+      "role": "ui_step",
+      "context": "在已安装技能页面点击批量操作，准备选择多个技能。",
+      "sortOrder": 78,
+      "visualFacts": {
+        "page": "已安装技能",
+        "control": "批量操作",
+        "successSignal": "页面进入多选模式"
+      }
+    },
+    {
+      "id": "workbuddy-official-skills-batch-uninstall",
+      "localBasename": "8c16877ebf78ebf37ae62129f9d682b601f76265.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/skilluninstall-22.CqbPcSmz.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market",
+      "title": "批量关闭、开启或卸载技能",
+      "altText": "WorkBuddy 技能批量操作模式显示已选三项，并提供卸载、关闭和开启按钮",
+      "caption": "选择多个技能后，可以批量卸载、关闭或开启。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market.md",
+      "heading": "卸载技能",
+      "role": "ui_step",
+      "context": "在批量操作模式选择多个技能，再执行卸载、关闭或开启。",
+      "sortOrder": 79,
+      "visualFacts": {
+        "page": "技能批量操作",
+        "selectedCount": 3,
+        "actions": ["卸载", "关闭", "开启"],
+        "successSignal": "批量操作完成并更新技能状态"
+      }
+    }
+  ]
+}

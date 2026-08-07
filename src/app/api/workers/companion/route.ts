@@ -1,10 +1,10 @@
+import { getMembershipEntitlementForUser } from '@/lib/entitlements';
+import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { getSession } from '@/lib/server';
 import {
   ensureMembershipCompanionForUser,
   getDefaultCompanionEmployeeId,
 } from '@/lib/workers';
-import { getMembershipEntitlementForUser } from '@/lib/entitlements';
-import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
-import { getSession } from '@/lib/server';
 import { type NextRequest, NextResponse } from 'next/server';
 
 interface CompanionBody {

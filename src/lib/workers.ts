@@ -1,16 +1,13 @@
 import 'server-only';
 
 import { createHash, randomUUID } from 'crypto';
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-} from 'fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { basename, join, relative, resolve } from 'path';
+import { websiteConfig } from '@/config/website';
 import { getDb } from '@/db';
 import {
   knowledgePack,
+  payment,
   workerEmployee,
   workerEmployeeKnowledgePack,
   workerEmployeeSkill,
@@ -25,17 +22,12 @@ import {
   workerToolRun,
   workerUserProfile,
 } from '@/db/schema';
-import { websiteConfig } from '@/config/website';
 import {
-  and,
-  desc,
-  eq,
-  inArray,
-} from 'drizzle-orm';
-import {
-  getMembershipEntitlementForUser,
   type MembershipEntitlement,
+  getMembershipEntitlementForUser,
 } from '@/lib/entitlements';
+import { PaymentTypes } from '@/payment/types';
+import { and, desc, eq, gt, inArray } from 'drizzle-orm';
 
 const DEFAULT_ONE_WORKER_ROOT = '/Users/baiyang/Desktop/one-worker-os';
 const DEFAULT_WORKER_PRICE_ID =
@@ -48,13 +40,20 @@ const DEFAULT_WORKER_AMOUNT = Number(
 const DEFAULT_COMPANION_EMPLOYEE_ID =
   process.env.WORKER_DEFAULT_COMPANION_EMPLOYEE_ID ||
   process.env.NEXT_PUBLIC_WORKER_DEFAULT_COMPANION_EMPLOYEE_ID ||
-  'xhs-open-shop-coach';
+  'independent-companion';
 
 export const WORKER_INSTANCE_PAID_STATUSES = [
   'active',
   'completed',
   'trialing',
 ] as const;
+
+export interface WorkerInstanceAccessDecision {
+  allowed: boolean;
+  code: string;
+  error: string;
+  status: number;
+}
 
 const USER_VISIBLE_SKILL_STATUSES = ['public', 'beta', 'internal'] as const;
 const WORKER_SKILL_STATUSES = [
@@ -145,7 +144,9 @@ export async function syncWorkerEmployees(createdBy?: string | null) {
           !isPathInside(sourceRoot, item.readmePath)
         ) {
           skipped += 1;
-          errors.push(`${item.id}: 员工目录或 README 不在 one-worker-os 根目录内`);
+          errors.push(
+            `${item.id}: 员工目录或 README 不在 one-worker-os 根目录内`
+          );
           continue;
         }
 
@@ -511,9 +512,7 @@ export async function setEmployeeWorkerSkillAdmin({
   const mappingId = buildScopedId('wes', employeeId, skillId);
   const normalizedStatus = status === 'paused' ? 'paused' : 'allowed';
   const nextDefaultEnabled =
-    typeof defaultEnabled === 'boolean'
-      ? defaultEnabled
-      : skill.defaultEnabled;
+    typeof defaultEnabled === 'boolean' ? defaultEnabled : skill.defaultEnabled;
 
   const [assignment] = await db
     .insert(workerEmployeeSkill)
@@ -587,8 +586,11 @@ export async function setWorkerInstanceSkillForUser({
   });
 
   if (!target) return null;
-  if (!isPaidWorkerInstance(target.instance)) {
-    throw new Error('请先完成员工月租付款，再配置技能');
+  const access = await authorizeWorkerInstanceAccess(target.instance, {
+    allowAdmin,
+  });
+  if (!access.allowed) {
+    throw new Error(access.error || '请先完成员工月租付款，再配置技能');
   }
 
   const skills = await listWorkerInstanceSkillsByTarget({
@@ -676,7 +678,10 @@ export async function getWorkerUserProfile({
     .select()
     .from(workerUserProfile)
     .where(
-      and(eq(workerUserProfile.userId, userId), eq(workerUserProfile.scope, scope))
+      and(
+        eq(workerUserProfile.userId, userId),
+        eq(workerUserProfile.scope, scope)
+      )
     )
     .limit(1);
 
@@ -823,7 +828,10 @@ export async function getActiveWorkerEmployee(employeeId: string) {
     .select()
     .from(workerEmployee)
     .where(
-      and(eq(workerEmployee.id, employeeId), eq(workerEmployee.status, 'active'))
+      and(
+        eq(workerEmployee.id, employeeId),
+        eq(workerEmployee.status, 'active')
+      )
     )
     .limit(1);
 
@@ -963,7 +971,9 @@ export async function ensureMembershipCompanionForUser({
             : 'ready_to_activate',
         priceId: entitlement.priceId || existing.priceId,
         accessSource: requireMembership ? 'membership' : 'open_test',
-        membershipPriceId: requireMembership ? entitlement.priceId || null : null,
+        membershipPriceId: requireMembership
+          ? entitlement.priceId || null
+          : null,
         personaId: personaId ?? existing.personaId,
         personaPrompt: personaPrompt ?? existing.personaPrompt,
         error: null,
@@ -1010,7 +1020,7 @@ function isCompanionMembershipRequired() {
   if (['1', 'true', 'yes', 'on'].includes(value)) return true;
   if (['0', 'false', 'no', 'off'].includes(value)) return false;
 
-  return false;
+  return true;
 }
 
 function getOpenCompanionEntitlement(): MembershipEntitlement {
@@ -1096,14 +1106,15 @@ export async function getWorkerInstanceForUser(
   options: { allowAdmin?: boolean } = {}
 ) {
   const db = await getDb();
-  const [instance] = await db
+  const [rawInstance] = await db
     .select()
     .from(workerInstance)
     .where(eq(workerInstance.id, instanceId))
     .limit(1);
 
-  if (!instance) return null;
-  if (!options.allowAdmin && instance.userId !== userId) return null;
+  if (!rawInstance) return null;
+  if (!options.allowAdmin && rawInstance.userId !== userId) return null;
+  const instance = await normalizeConnectedWorkerInstance(db, rawInstance);
 
   const [employee] = await db
     .select()
@@ -1128,7 +1139,11 @@ export async function listWorkerInstancesForUser(userId: string) {
     .where(eq(workerInstance.userId, userId))
     .orderBy(desc(workerInstance.updatedAt));
 
-  return Promise.all(rows.map(serializeWorkerInstance));
+  const normalizedRows = await Promise.all(
+    rows.map((row) => normalizeConnectedWorkerInstance(db, row))
+  );
+
+  return Promise.all(normalizedRows.map(serializeWorkerInstance));
 }
 
 export async function listAdminWorkerInstances() {
@@ -1138,7 +1153,11 @@ export async function listAdminWorkerInstances() {
     .from(workerInstance)
     .orderBy(desc(workerInstance.updatedAt));
 
-  return Promise.all(rows.map(serializeWorkerInstance));
+  const normalizedRows = await Promise.all(
+    rows.map((row) => normalizeConnectedWorkerInstance(db, row))
+  );
+
+  return Promise.all(normalizedRows.map(serializeWorkerInstance));
 }
 
 export async function upgradeWorkerInstanceToLatestVersion(instanceId: string) {
@@ -1203,29 +1222,37 @@ export async function updateWorkerInstanceActivation({
   error?: string | null;
 }) {
   const db = await getDb();
-  const nextStatus =
-    status === 'activated'
-      ? 'active'
-      : status === 'expired'
-        ? 'activation_expired'
-        : status === 'failed'
-          ? 'activation_failed'
-          : status || undefined;
+  const nextStatus = getNextWorkerInstanceStatus({
+    status,
+    weixinUserId,
+    gatewayStatus,
+  });
 
   const [updated] = await db
     .update(workerInstance)
     .set({
       status: nextStatus,
-      profileName: profileName || undefined,
-      activationId: activationId || undefined,
-      qrPayload: qrPayload || undefined,
-      qrImageUrl: qrImageUrl || undefined,
-      activationExpiresAt: expiresAt ? new Date(expiresAt) : undefined,
-      weixinAccountId: weixinAccountId || undefined,
-      weixinUserId: weixinUserId || undefined,
-      gatewayStatus: gatewayStatus || undefined,
-      error: error || null,
-      activatedAt: status === 'activated' ? new Date() : undefined,
+      profileName: profileName === undefined ? undefined : profileName,
+      activationId: activationId === undefined ? undefined : activationId,
+      qrPayload: qrPayload === undefined ? undefined : qrPayload,
+      qrImageUrl: qrImageUrl === undefined ? undefined : qrImageUrl,
+      activationExpiresAt:
+        expiresAt === undefined
+          ? undefined
+          : expiresAt
+            ? new Date(expiresAt)
+            : null,
+      weixinAccountId:
+        weixinAccountId === undefined ? undefined : weixinAccountId,
+      weixinUserId: weixinUserId === undefined ? undefined : weixinUserId,
+      gatewayStatus: gatewayStatus === undefined ? undefined : gatewayStatus,
+      error: error === undefined ? undefined : error,
+      activatedAt:
+        nextStatus === 'active'
+          ? new Date()
+          : status === undefined
+            ? undefined
+            : null,
       updatedAt: new Date(),
     })
     .where(eq(workerInstance.id, instanceId))
@@ -1234,14 +1261,124 @@ export async function updateWorkerInstanceActivation({
   return updated || null;
 }
 
-export function isPaidWorkerInstance(instance: {
-  paymentStatus: string;
-  status: string;
-}) {
-  return isPaidStatus(instance.paymentStatus) || instance.status === 'active';
+export async function authorizeWorkerInstanceAccess(
+  instance: typeof workerInstance.$inferSelect,
+  options: { allowAdmin?: boolean } = {}
+): Promise<WorkerInstanceAccessDecision> {
+  if (options.allowAdmin) {
+    return {
+      allowed: true,
+      code: 'ADMIN_ALLOWED',
+      error: '',
+      status: 200,
+    };
+  }
+
+  if (instance.accessSource === 'membership') {
+    const entitlement = await getMembershipEntitlementForUser(instance.userId);
+    const priceMatches =
+      !instance.membershipPriceId ||
+      !entitlement.priceId ||
+      entitlement.priceId === instance.membershipPriceId;
+
+    if (entitlement.active && priceMatches) {
+      return {
+        allowed: true,
+        code: 'MEMBERSHIP_ACTIVE',
+        error: '',
+        status: 200,
+      };
+    }
+
+    return {
+      allowed: false,
+      code: 'MEMBERSHIP_REQUIRED',
+      error: '请先开通有效会员，再使用长期陪伴者',
+      status: 402,
+    };
+  }
+
+  if (instance.accessSource === 'open_test') {
+    return {
+      allowed: false,
+      code: 'OPEN_TEST_CLOSED',
+      error: '公开测试通道已关闭，请使用正式会员或管理员账号',
+      status: 403,
+    };
+  }
+
+  const hasPayment = await hasVerifiedWorkerPayment(instance);
+  if (hasPayment) {
+    return {
+      allowed: true,
+      code: 'PAYMENT_VERIFIED',
+      error: '',
+      status: 200,
+    };
+  }
+
+  return {
+    allowed: false,
+    code: 'PAYMENT_REQUIRED',
+    error: '请先完成员工月租付款，再继续操作',
+    status: 402,
+  };
 }
 
-export function serializeEmployeeVersion(version: typeof workerEmployeeVersion.$inferSelect) {
+function getNextWorkerInstanceStatus({
+  status,
+  weixinUserId,
+  gatewayStatus,
+}: {
+  status?: string | null;
+  weixinUserId?: string | null;
+  gatewayStatus?: string | null;
+}) {
+  if (weixinUserId && gatewayStatus === 'running') return 'active';
+  if (status === 'activated') return 'active';
+  if (status === 'expired') return 'activation_expired';
+  if (status === 'failed') return 'activation_failed';
+  return status || undefined;
+}
+
+function isConnectedWorkerInstance(
+  instance: typeof workerInstance.$inferSelect
+) {
+  return Boolean(instance.weixinUserId) && instance.gatewayStatus === 'running';
+}
+
+async function normalizeConnectedWorkerInstance(
+  db: Awaited<ReturnType<typeof getDb>>,
+  instance: typeof workerInstance.$inferSelect
+) {
+  if (!isConnectedWorkerInstance(instance)) return instance;
+  if (instance.status === 'active' && !instance.error) return instance;
+
+  const [updated] = await db
+    .update(workerInstance)
+    .set({
+      status: 'active',
+      error: null,
+      activatedAt: instance.activatedAt || new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(workerInstance.id, instance.id))
+    .returning();
+
+  return (
+    updated || {
+      ...instance,
+      status: 'active',
+      error: null,
+      activatedAt: instance.activatedAt || new Date(),
+      updatedAt: new Date(),
+    }
+  );
+}
+
+export function serializeEmployeeVersion(
+  version: typeof workerEmployeeVersion.$inferSelect
+) {
   return {
     id: version.id,
     employeeId: version.employeeId,
@@ -1417,6 +1554,32 @@ function isPaidStatus(status: string) {
   return WORKER_INSTANCE_PAID_STATUSES.includes(
     status as (typeof WORKER_INSTANCE_PAID_STATUSES)[number]
   );
+}
+
+async function hasVerifiedWorkerPayment(
+  instance: typeof workerInstance.$inferSelect
+) {
+  if (!instance.subscriptionId) return false;
+  if (!isPaidStatus(instance.paymentStatus)) return false;
+
+  const db = await getDb();
+  const now = new Date();
+  const [record] = await db
+    .select({ id: payment.id })
+    .from(payment)
+    .where(
+      and(
+        eq(payment.userId, instance.userId),
+        eq(payment.type, PaymentTypes.SUBSCRIPTION),
+        eq(payment.subscriptionId, instance.subscriptionId),
+        eq(payment.priceId, instance.priceId),
+        inArray(payment.status, [...WORKER_INSTANCE_PAID_STATUSES]),
+        gt(payment.periodEnd, now)
+      )
+    )
+    .limit(1);
+
+  return Boolean(record);
 }
 
 async function findWorkerInstanceForPayment({
@@ -1679,19 +1842,19 @@ async function listWorkerInstanceSkillsByTarget({
   }
 
   return visibleRows.map(({ skill, employeeSkill, instanceSkill }) => ({
-      id: skill.id,
-      name: skill.name,
-      summary: skill.summary,
-      category: skill.category,
-      skillType: skill.skillType,
-      riskLevel: skill.riskLevel,
-      status: skill.status,
-      employeeSkillStatus: employeeSkill.status,
-      employeeDefaultEnabled: employeeSkill.defaultEnabled,
-      enabled: instanceSkill?.enabled ?? employeeSkill.defaultEnabled,
-      requiresUserConfig: skill.requiresUserConfig,
-      knowledgePackIds: packIdsBySkill.get(skill.id) || [],
-    }));
+    id: skill.id,
+    name: skill.name,
+    summary: skill.summary,
+    category: skill.category,
+    skillType: skill.skillType,
+    riskLevel: skill.riskLevel,
+    status: skill.status,
+    employeeSkillStatus: employeeSkill.status,
+    employeeDefaultEnabled: employeeSkill.defaultEnabled,
+    enabled: instanceSkill?.enabled ?? employeeSkill.defaultEnabled,
+    requiresUserConfig: skill.requiresUserConfig,
+    knowledgePackIds: packIdsBySkill.get(skill.id) || [],
+  }));
 }
 
 async function listWorkerInstanceKnowledgePacksByTarget({

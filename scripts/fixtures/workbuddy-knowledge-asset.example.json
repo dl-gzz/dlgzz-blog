@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "defaults": {
+    "objectPrefix": "knowledge/workbuddy",
+    "visibility": "public",
+    "safeToPublish": true,
+    "role": "ui_step"
+  },
+  "assets": [
+    {
+      "contentHash": "b3bdf6c6b81538a9f95b2c712b0e02025223fefcb1fba7641f56e5ccbe451f5d",
+      "sourceRef": "6432bfa1b27e676948c48d6ae7d481e3534a504c.png",
+      "objectKey": "knowledge/workbuddy/WorkBuddy-教程图-默认权限.png",
+      "publicUrl": "https://img.dlgzz.com/knowledge/workbuddy/WorkBuddy-教程图-默认权限.png",
+      "mimeType": "image/png",
+      "width": 1288,
+      "height": 446,
+      "altText": "WorkBuddy 默认权限下拉菜单",
+      "caption": "在新建任务输入框下方打开“默认权限”菜单，可查看“允许完全访问”开关。",
+      "ocrText": "当前为默认权限，所有操作都会在安全沙箱约束内进行，超出范围会请求你的允许。允许完全访问。默认权限。选择工作空间。",
+      "visualFacts": {
+        "app": "WorkBuddy",
+        "page": "新建任务",
+        "control": "权限模式下拉菜单",
+        "currentState": "默认权限",
+        "visibleOptions": ["允许完全访问"],
+        "instruction": "点击输入框下方的默认权限打开菜单",
+        "successSignal": "菜单显示当前为默认权限",
+        "riskNote": "日常任务建议保持默认权限"
+      },
+      "analysis": {
+        "provider": "codex",
+        "model": "host-multimodal",
+        "version": "v1",
+        "analyzedAt": "2026-08-02T17:10:00+08:00"
+      },
+      "safeToPublish": true,
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes.md",
+          "heading": "一、在哪里切换权限模式",
+          "role": "ui_step",
+          "stepNumber": 1,
+          "sortOrder": 0,
+          "occurrenceIndex": 0
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/02_WorkBuddy会乱改文件吗，先看懂这两个旋钮.md",
+          "heading": "默认权限：在关键位置加一道护栏",
+          "role": "ui_step",
+          "stepNumber": 1,
+          "sortOrder": 0,
+          "occurrenceIndex": 0
+        }
+      ]
+    }
+  ]
+}

@@ -10,7 +10,10 @@ import {
   ExternalLink,
   FileText,
   Loader2,
+  PencilLine,
   Play,
+  PlusCircle,
+  RefreshCw,
   Save,
   WandSparkles,
 } from 'lucide-react';
@@ -61,12 +64,22 @@ type SavedCoursewareInfo = {
   title: string;
 };
 
+type PromptBlockDraft = {
+  title: string;
+  description: string;
+  slug: string;
+  whiteboardPrompt: string;
+  mdx: string;
+};
+
 function findPreviewHtml(result: GenerateResult | null) {
   const operations = result?.plan?.operations || [];
   const htmlOperation = operations.find(
     (operation) =>
       operation.action === 'create' &&
-      (operation.type === 'preview_html' || operation.type === 'html' || operation.type === 'app') &&
+      (operation.type === 'preview_html' ||
+        operation.type === 'html' ||
+        operation.type === 'app') &&
       operation.props?.html
   );
   return htmlOperation?.props?.html || '';
@@ -109,6 +122,14 @@ export function CoursewareBackendClient() {
   const [saveTitle, setSaveTitle] = useState('');
   const [saveSlug, setSaveSlug] = useState('');
   const [savedInfo, setSavedInfo] = useState<SavedCoursewareInfo | null>(null);
+  const [blockIdea, setBlockIdea] = useState('我想生成一个三角形求面积的课件');
+  const [blockDraft, setBlockDraft] = useState<PromptBlockDraft | null>(null);
+  const [blockProvider, setBlockProvider] = useState('');
+  const [blockModel, setBlockModel] = useState('');
+  const [generatingBlock, setGeneratingBlock] = useState(false);
+  const [savingBlock, setSavingBlock] = useState(false);
+  const [savedBlockInfo, setSavedBlockInfo] =
+    useState<SavedCoursewareInfo | null>(null);
 
   useEffect(() => {
     let stopped = false;
@@ -116,7 +137,9 @@ export function CoursewareBackendClient() {
       setLoadingPosts(true);
       setError('');
       try {
-        const response = await fetch(`/api/teacher/courseware/mdx-posts?locale=${locale}`);
+        const response = await fetch(
+          `/api/teacher/courseware/mdx-posts?locale=${locale}`
+        );
         const data = await response.json();
         if (!response.ok || !data?.success) {
           throw new Error(data?.error || `HTTP ${response.status}`);
@@ -125,12 +148,15 @@ export function CoursewareBackendClient() {
         const nextPosts = Array.isArray(data.posts) ? data.posts : [];
         setPosts(nextPosts);
         const firstEducation =
-          nextPosts.find((post: CoursewarePost) => post.whiteboardCategory === 'education') ||
-          nextPosts[0];
+          nextPosts.find(
+            (post: CoursewarePost) => post.whiteboardCategory === 'education'
+          ) || nextPosts[0];
         if (firstEducation) setSelectedSlug(firstEducation.slug);
       } catch (loadError) {
         if (!stopped) {
-          setError(loadError instanceof Error ? loadError.message : '读取 MDX 失败');
+          setError(
+            loadError instanceof Error ? loadError.message : '读取 MDX 失败'
+          );
         }
       } finally {
         if (!stopped) setLoadingPosts(false);
@@ -167,6 +193,86 @@ export function CoursewareBackendClient() {
   const previewHtml = findPreviewHtml(result);
   const previewSize = getPreviewSize(result);
 
+  async function generatePromptBlock() {
+    if (generatingBlock || !blockIdea.trim()) return;
+
+    setGeneratingBlock(true);
+    setError('');
+    setSavedBlockInfo(null);
+    try {
+      const response = await fetch('/api/teacher/courseware/generate-block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idea: blockIdea,
+          locale,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || `HTTP ${response.status}`);
+      }
+      setBlockDraft(data.block);
+      setBlockProvider(data.provider || '');
+      setBlockModel(data.model || '');
+    } catch (blockError) {
+      setError(
+        blockError instanceof Error ? blockError.message : '生成 MDX Block 失败'
+      );
+    } finally {
+      setGeneratingBlock(false);
+    }
+  }
+
+  async function savePromptBlock() {
+    if (!blockDraft || savingBlock) return;
+
+    setSavingBlock(true);
+    setError('');
+    try {
+      const response = await fetch('/api/teacher/courseware/save-block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...blockDraft,
+          provider: blockProvider,
+          model: blockModel,
+          locale,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || `HTTP ${response.status}`);
+      }
+
+      setSavedBlockInfo(data.saved);
+      const nextPost: CoursewarePost = {
+        slug: data.saved.slug,
+        fileName: data.saved.fileName,
+        title: data.saved.title,
+        description: data.saved.description,
+        date: new Date().toISOString(),
+        whiteboardCategory: 'education',
+        whiteboardPrompt:
+          data.saved.whiteboardPrompt || blockDraft.whiteboardPrompt,
+        hasWhiteboardPrompt: true,
+        hasSavedCourseware: false,
+        bodyPreview: blockDraft.mdx.slice(0, 1200),
+      };
+      setPosts((current) => [nextPost, ...current]);
+      setSelectedSlug(data.saved.slug);
+      setResult(null);
+    } catch (saveBlockError) {
+      setError(
+        saveBlockError instanceof Error
+          ? saveBlockError.message
+          : '保存 MDX Block 失败'
+      );
+    } finally {
+      setSavingBlock(false);
+    }
+  }
+
   async function generateCourseware() {
     if (!selectedPost || generating) return;
 
@@ -195,14 +301,17 @@ export function CoursewareBackendClient() {
         plan: data.plan,
       });
     } catch (generateError) {
-      setError(generateError instanceof Error ? generateError.message : '生成失败');
+      setError(
+        generateError instanceof Error ? generateError.message : '生成失败'
+      );
     } finally {
       setGenerating(false);
     }
   }
 
   async function saveToBlog() {
-    if (!selectedPost || !result?.plan?.operations?.length || savingBlog) return;
+    if (!selectedPost || !result?.plan?.operations?.length || savingBlog)
+      return;
 
     setSavingBlog(true);
     setError('');
@@ -248,14 +357,17 @@ export function CoursewareBackendClient() {
         ...current,
       ]);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : '保存到博客失败');
+      setError(
+        saveError instanceof Error ? saveError.message : '保存到博客失败'
+      );
     } finally {
       setSavingBlog(false);
     }
   }
 
   function openInWhiteboard() {
-    if (!result?.plan?.operations?.length || typeof window === 'undefined') return;
+    if (!result?.plan?.operations?.length || typeof window === 'undefined')
+      return;
 
     const importId =
       typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -289,7 +401,9 @@ export function CoursewareBackendClient() {
               <BookOpen className="size-4" />
               老师课件后台
             </div>
-            <h1 className="mt-1 text-2xl font-semibold tracking-normal">MDX 生成触屏互动课件</h1>
+            <h1 className="mt-1 text-2xl font-semibold tracking-normal">
+              MDX 生成触屏互动课件
+            </h1>
           </div>
           <Button
             type="button"
@@ -320,7 +434,9 @@ export function CoursewareBackendClient() {
                 正在读取 MDX
               </div>
             ) : filteredPosts.length === 0 ? (
-              <div className="px-2 py-3 text-sm text-[#64748b]">暂无可用 MDX</div>
+              <div className="px-2 py-3 text-sm text-[#64748b]">
+                暂无可用 MDX
+              </div>
             ) : (
               <div className="space-y-2">
                 {filteredPosts.map((post) => (
@@ -338,7 +454,9 @@ export function CoursewareBackendClient() {
                         : 'border-[#e4e9f2] bg-white hover:border-[#a8b5c9]'
                     )}
                   >
-                    <div className="line-clamp-2 text-sm font-semibold">{post.title}</div>
+                    <div className="line-clamp-2 text-sm font-semibold">
+                      {post.title}
+                    </div>
                     <div className="mt-1 line-clamp-2 text-xs leading-5 text-[#64748b]">
                       {post.description || post.slug}
                     </div>
@@ -368,10 +486,155 @@ export function CoursewareBackendClient() {
             生成设置
           </div>
 
+          <div className="mt-4 rounded-md border border-dashed border-[#a8b5c9] bg-[#f8fafc] p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <PlusCircle className="size-4 text-[#2563eb]" />
+              新建 Block
+            </div>
+            <p className="mt-1 text-xs leading-5 text-[#64748b]">
+              把一句课件想法保存成可编辑、可复用的教学模块。
+            </p>
+            <label className="mt-3 block text-sm font-medium">
+              课件想法
+              <Textarea
+                value={blockIdea}
+                onChange={(event) => setBlockIdea(event.target.value)}
+                placeholder="例如：我想生成一个三角形求面积的课件"
+                className="mt-2 min-h-20 resize-none"
+              />
+            </label>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={generatePromptBlock}
+                disabled={generatingBlock || !blockIdea.trim()}
+              >
+                {generatingBlock ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : blockDraft ? (
+                  <RefreshCw className="size-4" />
+                ) : (
+                  <PencilLine className="size-4" />
+                )}
+                {blockDraft ? '重新生成' : '生成 Block'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={savePromptBlock}
+                disabled={!blockDraft || savingBlock}
+              >
+                {savingBlock ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                保存 Block
+              </Button>
+            </div>
+
+            {blockDraft && (
+              <div className="mt-4 space-y-3 border-t border-[#e4e9f2] pt-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block text-sm font-medium">
+                    Block 标题
+                    <Input
+                      value={blockDraft.title}
+                      onChange={(event) =>
+                        setBlockDraft((current) =>
+                          current
+                            ? { ...current, title: event.target.value }
+                            : current
+                        )
+                      }
+                      className="mt-2"
+                    />
+                  </label>
+                  <label className="block text-sm font-medium">
+                    Block slug
+                    <Input
+                      value={blockDraft.slug}
+                      onChange={(event) =>
+                        setBlockDraft((current) =>
+                          current
+                            ? {
+                                ...current,
+                                slug: toClientSlug(
+                                  event.target.value,
+                                  'prompt-block'
+                                ),
+                              }
+                            : current
+                        )
+                      }
+                      className="mt-2"
+                    />
+                  </label>
+                </div>
+                <label className="block text-sm font-medium">
+                  白板生成提示词
+                  <Textarea
+                    value={blockDraft.whiteboardPrompt}
+                    onChange={(event) =>
+                      setBlockDraft((current) =>
+                        current
+                          ? { ...current, whiteboardPrompt: event.target.value }
+                          : current
+                      )
+                    }
+                    className="mt-2 min-h-24 resize-none"
+                  />
+                </label>
+                <label className="block text-sm font-medium">
+                  MDX Block 源码
+                  <Textarea
+                    value={blockDraft.mdx}
+                    onChange={(event) =>
+                      setBlockDraft((current) =>
+                        current
+                          ? { ...current, mdx: event.target.value }
+                          : current
+                      )
+                    }
+                    className="mt-2 min-h-48 resize-y font-mono text-xs leading-5"
+                  />
+                </label>
+                {blockProvider && (
+                  <div className="text-xs text-[#64748b]">
+                    Provider: {blockProvider} · Model: {blockModel || '-'}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {savedBlockInfo && (
+              <div className="mt-3 rounded-md border border-[#bbf7d0] bg-[#f0fdf4] p-3 text-sm leading-6 text-[#166534]">
+                <div className="flex items-center gap-2 font-semibold">
+                  <CheckCircle2 className="size-4" />
+                  Block 已保存，已加入左侧列表
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.open(`/${locale}${savedBlockInfo.url}`, '_blank')
+                  }
+                  className="mt-1 text-xs font-medium text-[#2563eb] hover:underline"
+                >
+                  打开博客 Block
+                </button>
+              </div>
+            )}
+          </div>
+
           {selectedPost && (
             <div className="mt-4 rounded-md border border-[#e4e9f2] bg-[#f8fafc] p-3">
-              <div className="text-base font-semibold">{selectedPost.title}</div>
-              <p className="mt-1 text-sm leading-6 text-[#475569]">{selectedPost.description}</p>
+              <div className="text-base font-semibold">
+                {selectedPost.title}
+              </div>
+              <p className="mt-1 text-sm leading-6 text-[#475569]">
+                {selectedPost.description}
+              </p>
               {selectedPost.whiteboardPrompt && (
                 <p className="mt-3 border-l-2 border-[#2563eb] pl-3 text-xs leading-5 text-[#334155]">
                   {selectedPost.whiteboardPrompt}
@@ -423,7 +686,9 @@ export function CoursewareBackendClient() {
               博客 slug
               <Input
                 value={saveSlug}
-                onChange={(event) => setSaveSlug(toClientSlug(event.target.value))}
+                onChange={(event) =>
+                  setSaveSlug(toClientSlug(event.target.value))
+                }
                 placeholder="courseware-slug"
                 className="mt-2"
               />
@@ -437,8 +702,16 @@ export function CoursewareBackendClient() {
           )}
 
           <div className="mt-5 grid grid-cols-3 gap-3">
-            <Button type="button" onClick={generateCourseware} disabled={!selectedPost || generating}>
-              {generating ? <Loader2 className="size-4 animate-spin" /> : <WandSparkles className="size-4" />}
+            <Button
+              type="button"
+              onClick={generateCourseware}
+              disabled={!selectedPost || generating}
+            >
+              {generating ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <WandSparkles className="size-4" />
+              )}
               生成课件
             </Button>
             <Button
@@ -447,7 +720,11 @@ export function CoursewareBackendClient() {
               onClick={saveToBlog}
               disabled={!result?.plan?.operations?.length || savingBlog}
             >
-              {savingBlog ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+              {savingBlog ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Save className="size-4" />
+              )}
               保存到博客
             </Button>
             <Button
@@ -464,9 +741,14 @@ export function CoursewareBackendClient() {
           {result && (
             <div className="mt-5 rounded-md border border-[#d8e0ee] bg-[#f8fafc] p-3 text-sm leading-6 text-[#334155]">
               <div className="font-semibold">生成完成</div>
-              <div>{result.plan?.voice_response || result.plan?.thought || '已生成互动课件。'}</div>
+              <div>
+                {result.plan?.voice_response ||
+                  result.plan?.thought ||
+                  '已生成互动课件。'}
+              </div>
               <div className="mt-2 text-xs text-[#64748b]">
-                Provider: {result.provider || '-'} · Model: {result.model || '-'}
+                Provider: {result.provider || '-'} · Model:{' '}
+                {result.model || '-'}
               </div>
             </div>
           )}
@@ -480,7 +762,9 @@ export function CoursewareBackendClient() {
               <div className="mt-1">{savedInfo.fileName}</div>
               <button
                 type="button"
-                onClick={() => window.open(`/${locale}${savedInfo.url}`, '_blank')}
+                onClick={() =>
+                  window.open(`/${locale}${savedInfo.url}`, '_blank')
+                }
                 className="mt-2 text-xs font-medium text-[#2563eb] hover:underline"
               >
                 打开博客文章
@@ -493,7 +777,9 @@ export function CoursewareBackendClient() {
           <div className="flex items-center justify-between border-b border-[#e4e9f2] px-4 py-3">
             <div className="text-sm font-semibold">课件预览</div>
             <div className="text-xs text-[#64748b]">
-              {previewHtml ? `${previewSize.width} × ${previewSize.height}` : '等待生成'}
+              {previewHtml
+                ? `${previewSize.width} × ${previewSize.height}`
+                : '等待生成'}
             </div>
           </div>
           <div className="flex min-h-[calc(100vh-170px)] items-start justify-center overflow-auto bg-[#eef2f7] p-4">
@@ -501,7 +787,9 @@ export function CoursewareBackendClient() {
               <iframe
                 title="courseware-preview"
                 srcDoc={previewHtml}
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts"
+                referrerPolicy="no-referrer"
+                allow="camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'"
                 className="border border-[#cbd5e1] bg-white shadow-sm"
                 style={{
                   width: previewSize.width,

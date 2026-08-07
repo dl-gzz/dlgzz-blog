@@ -19,14 +19,14 @@ export default function Integration2Section() {
                   <img
                     className="size-8 object-contain"
                     src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
+                    alt="独立沉思录"
                   />
                 </IntegrationCard>
                 <IntegrationCard>
                   <img
                     className="size-8 object-contain"
                     src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
+                    alt="独立沉思录"
                   />
                 </IntegrationCard>
               </div>
@@ -35,7 +35,7 @@ export default function Integration2Section() {
                   <img
                     className="size-8 object-contain"
                     src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
+                    alt="独立沉思录"
                   />
                 </IntegrationCard>
                 <IntegrationCard
@@ -48,7 +48,7 @@ export default function Integration2Section() {
                   <img
                     className="size-8 object-contain"
                     src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
+                    alt="独立沉思录"
                   />
                 </IntegrationCard>
               </div>
@@ -58,14 +58,14 @@ export default function Integration2Section() {
                   <img
                     className="size-8 object-contain"
                     src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
+                    alt="独立沉思录"
                   />
                 </IntegrationCard>
                 <IntegrationCard>
                   <img
                     className="size-8 object-contain"
                     src="/images/marketing/one-worker-logo.png"
-                    alt="独立工作者"
+                    alt="独立沉思录"
                   />
                 </IntegrationCard>
               </div>

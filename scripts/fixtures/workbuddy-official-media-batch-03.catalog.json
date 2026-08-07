@@ -1,0 +1,1028 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "defaults": {
+    "visibility": "public",
+    "safeToPublish": true,
+    "role": "ui_step",
+    "official": true,
+    "publisher": "WorkBuddy 官方文档",
+    "sourceType": "official_product_screenshot"
+  },
+  "assets": [
+    {
+      "id": "workbuddy-official-assistant-entry",
+      "contentHash": "77304a14e4fc99dd33e2f43de3cc950ae07b29a44c4afa6bf4d5453055c24f0a",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/assistant-3.Btuye0hY.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/assistant-3.Btuye0hY.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2199,
+      "height": 1641,
+      "title": "从左侧进入 WorkBuddy 助理",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 桌面端左侧导航中的助理入口被红框标出",
+      "caption": "在左侧导航点击助理，可查看和处理从手机端发起的远程任务。",
+      "ocrText": "WorkBuddy编辑（E）窗口（W）\n帮助（H）\nWorkBuddy\nv5.1.5\n⑦ 新建任务\n卤 助理\nC 项目\n5o 专家\n包 自动化\n806 更多\n任务（6）>\n空间 （2）＞\n口\nQ了\n技能，连接器\n资料库•灵感\n你的职场超能力\n@ 代码开发\nG 文档处理\n二金融服务\n2 高考我帮你\n怜天帮你做些什么？@ 引用对话文件，/调用技能与指令\n更多\n73 Craft v & Deepseek-V4-Pro ~ 》技能> 连应用~口默认权限、\nC 选择工作空间＞\n⑤\n×\n106\n+ eS",
+      "visualFacts": {
+        "page": "WorkBuddy 新建任务",
+        "control": "左侧助理入口",
+        "action": "点击助理",
+        "successSignal": "左侧助理入口进入选中状态"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Assistant",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Assistant.md",
+          "heading": "一、什么是助理",
+          "role": "ui_step",
+          "context": "从 WorkBuddy 左侧导航进入助理页面，查看远程任务会话。",
+          "sortOrder": 26,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 26
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/05_人不在电脑前，也能让WorkBuddy替你干活.md",
+          "heading": "助理不是手机里的另一个聊天机器人",
+          "role": "ui_step",
+          "context": "课程说明助理是手机发指令、电脑端实际执行的远程任务入口。",
+          "sortOrder": 91,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 91
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-assistant-weixin-settings",
+      "contentHash": "a3f6bfeaa45465045286f369c3284f1b0f3244867d8b9da17c6c51a5dc942851",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/1.m1V5GY4g.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/1.m1V5GY4g.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 393,
+      "height": 472,
+      "title": "打开微信助理设置",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 左侧助理栏右侧的齿轮设置按钮被红框标出",
+      "caption": "在助理栏点击齿轮按钮，进入助理设置后配置微信助理。",
+      "ocrText": "WorkBuddy\nV5.1.1|\n④ 新建任务\n② 助理\n69 项目\n0 专家\n自动化\n品o更多\n编辑（E\n窗口（W）\n帮助（H）\n了\n设置\n◎\n技能•连接器\n资料库•灵感\n任务（14）〉",
+      "visualFacts": {
+        "page": "WorkBuddy 左侧导航",
+        "section": "助理",
+        "control": "齿轮设置按钮",
+        "successSignal": "进入助理设置页面"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/WeixinBot-Guide",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/WeixinBot-Guide.md",
+          "heading": "第一步：打开助理设置",
+          "role": "ui_step",
+          "context": "点击助理栏右侧齿轮图标，进入微信助理的集成设置。",
+          "sortOrder": 49,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 49
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/05_人不在电脑前，也能让WorkBuddy替你干活.md",
+          "heading": "微信助理怎么接入",
+          "role": "ui_step",
+          "context": "课程展示微信助理接入流程的设置入口。",
+          "sortOrder": 109,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 109
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-project-config",
+      "contentHash": "0653a3aedb58d209e16a4fee3449b4b33945d16c0a40a73f490cbac6d33520e6",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/project-1.F71YBzZ9.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/project-1.F71YBzZ9.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2186,
+      "height": 1208,
+      "title": "配置并新建 WorkBuddy 项目",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 新建项目弹窗包含项目名称、指令、连接器、专家和技能配置项",
+      "caption": "新建项目时可统一设置项目指令，并按需添加连接器、专家和技能。",
+      "ocrText": "田 新建任务\n卤 助理\nc8 项目\n∞0 专家\n◎自动化\n206 更多\n任务（11）＞\n空间（6）>\n技能；连接器\n资料库-灵感\n项目\n多人协同，打造超级团队\n＋新建项目\n我的项目\ntest\n添加于 4 天前\n从模版创建\n6\n产品需求全\n从需求规划、\n团队知识库\n持续沉淀 SOP\n新建项目\n项目名称\n情输入项目名称\n指令\n选择模板v\n提供当前项目的背景信息和规范，让 Workbuddy 的回复更精准、更符合要求。比如：项目目标、\n团队习惯、风格偏好、输出约束等\n连接器（可选）\n+ 添加\n专家（可选）\n技能（可选）\n切换模版会覆盖当前编辑内容\n取消\n确定\nQ 搜索项目\n内容运营工作台\n从选题、写稿、审核到发布复盘\nBug 跟踪/测试验收\n持续跟踪Bug，统一测试用例和验收结论",
+      "visualFacts": {
+        "dialog": "新建项目",
+        "fields": ["项目名称", "指令", "连接器", "专家", "技能"],
+        "optionalTemplate": true,
+        "successSignal": "确认按钮可用并创建项目"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project.md",
+          "heading": "项目配置",
+          "role": "ui_step",
+          "context": "填写项目名称和共享指令，并配置项目可用的连接器、专家与技能。",
+          "sortOrder": 36,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 36
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/08_别再重复交代背景，用项目给团队开一个共享工作区.md",
+          "heading": "项目不是文件夹，而是标准化工位",
+          "role": "ui_step",
+          "context": "课程展示如何把背景、规则与能力统一写入项目配置。",
+          "sortOrder": 82,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 82
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-project-assets",
+      "contentHash": "2acc83471fa6bcf297e14c4b603a6520a1dce60bed43328d8fe22b03503f3c65",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/project-2.CO1Yhu7U.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/project-2.CO1Yhu7U.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1357,
+      "height": 484,
+      "title": "管理项目资产资料库",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 项目资产页提供新建文件夹、上传文件、类型筛选和搜索功能",
+      "caption": "项目资产页集中保存团队资料，并在项目任务中作为共享上下文使用。",
+      "ocrText": "口 项目 / test\n动态\n计划\n任务\n资产\n新建文件夹\n上传文件\n存储空间已用 25.4 MB / 5.00 GB ①\n名称s\n系统文件\n资产库使用指南.pdf\n类型\n文件夹\nPDF\n更新人\n全部类型\n更新时间\n4天前\n搜索文件或文件夹…\n大小\n-\n877.3 KB\n$",
+      "visualFacts": {
+        "page": "项目资产",
+        "controls": ["新建文件夹", "上传文件", "类型筛选", "搜索"],
+        "storageQuotaVisible": true,
+        "successSignal": "文件或文件夹出现在资产列表"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project.md",
+          "heading": "项目资产",
+          "role": "ui_step",
+          "context": "在项目顶部打开资产页，新建文件夹或上传团队共享资料。",
+          "sortOrder": 71,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 71
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/08_别再重复交代背景，用项目给团队开一个共享工作区.md",
+          "heading": "最值钱的是项目资料库",
+          "role": "ui_step",
+          "context": "课程说明项目资料库用于持续沉淀可复用的团队上下文。",
+          "sortOrder": 102,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 102
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-project-task-handoff",
+      "contentHash": "b5b5dcaf6d51a1bc4065302bafddc046723d116cb80b22d9600166ab5f641b9a",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/project-9.CVPHyLwD.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/project-9.CVPHyLwD.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1645,
+      "height": 1152,
+      "title": "把项目任务连同上下文流转",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 任务流转弹窗包含标题、描述、任务进度摘要和任务产物列表",
+      "caption": "任务流转会把进度摘要和交付产物一并交给下一位处理者，减少重复说明。",
+      "ocrText": "日 项目 / test /请生成一个AI Agent 2026年发展趋势的ppt\n任务流转\n內内容结构\n板块\n封面＋议程\n市场全景与数\n六大技术趋势\n企业应用落地\n核心挑战与工\n未来展望 +丝\n标题\n简要描述这件事是什么\n描述\n补充说明...\n转交进度 AI生成\n正在生成任务进展摘要…\n设计亮点\n• 深色科技风酉\n• 数据可视化医\n•统一图标系乡\n•中英文双语材\n查看所有变更（1\n⑦\n今天帮你做些亻\n13 Craftv\n转交产物 21AI生成\nC AL Agent 2026_ Trend...\nL slide-01.jpg\nC slide-04.jpg\nL slide-07 jpg\nC slide-10jpg\nC slide-13jpg\nC slide-16jpg\nC AL Agent 2026_ Trend..\nslide-02.jpg\nslide-05.jpg\nslide-08.jpg\nslide-11,jpg\nC\nslide-14.jpg\nslide-17jpg\ncreate-pptds\nJXNG\nslide-03.jpg\nslide-06.jpg\nslide-09.jpg\nslide-12.Jpg\nC slide-15.jpg\nslide-18jpg\nQ\n2+ 口\n、智能体商业协议、监控工具\n+〇\nA",
+      "visualFacts": {
+        "dialog": "任务流转",
+        "fields": ["标题", "描述"],
+        "includedContext": ["任务进度摘要", "任务产物"],
+        "successSignal": "接收方获得任务上下文与交付文件"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project.md",
+          "heading": "发起任务",
+          "role": "ui_step",
+          "context": "在任务页点击流转图标，补充标题与描述，并确认随任务交接的摘要和产物。",
+          "sortOrder": 175,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 175
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/08_别再重复交代背景，用项目给团队开一个共享工作区.md",
+          "heading": "任务流转：别让接手的人从零听故事",
+          "role": "ui_step",
+          "context": "课程展示任务流转如何把上下文、进度和产物一起交接。",
+          "sortOrder": 121,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 121
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-connectors-overview",
+      "contentHash": "a1dc34cd2533b6bf20d4c96a6c88532e152dc93dcf213b5684a878e625ae1c17",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/connector-1.b14OI7ZU.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/connector-1.b14OI7ZU.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2200,
+      "height": 1641,
+      "title": "浏览 WorkBuddy 连接器管理页",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 连接器管理页展示 QQ 邮箱、腾讯文档、企业微信、飞书和其他可连接服务",
+      "caption": "在连接器管理页浏览外部服务，点击卡片右侧加号开始授权。",
+      "ocrText": "6 WorkBuddy 编辑（E）\n帮助（H）\nWorkBuddy\nv5.1.5\n田 新建任务\n茵 助理\n68 项目\n司 专家\n包 自动化\n806更多\n任务（2）>\n空间（2）＞\n窗口（W）\n口\n技能-连接器\n资料库•灵感\n0 专家 》技能\n® 连接器\n通达信\n通过通达信 MCP 查询全球股票行情数据、条件选股、研究报告、公告\n资讯和宏观信息。支持个股基本面分析、同行业对比和智能选股筛..\n乐享知识库\n搜索、创建和管理乐享知识库中的文档。支持导入 Markdown、按标\n签整理内容、追踪团队文档的更新动态。\n腾讯会议\n通过命令行创建、查询和管理腾讯会议。支持快速发起会议、查看日\n程安排、管理参会人员。\n飞书\n+\n翻\n天眼查\n通过天眼查 MCP 查询多维度企业数据。支持工商登记、股东结\n构、司法风险、知识产权、董监高、经营数据等 160+项企业.\n×\n+ 自定义连接器\nQQ邮箱\n收发、搜索和整理QQ邮件。用自然语言读取邮件内容、汇总邮件线\n程、管理文件夹。\nの\n腾讯文档\n创建、编辑和协作腾讯文档。用自然语言管理在线表格、文档和幻灯\n片，轻松完成内容查询、数据整理和团队协同。\n企业微信\n通过企业微信发送消息、查询通讯录、管理日程、会议、文档和待办\n事项。\n钉钉\n通过命令行管理钉钉全产品能力：AI表格、考勤、日历、群聊与机器\n人、通讯录、开放平台文档、DING消息、钉钉文档、钉钉云盘、AI⋯\nTAPD\n管理需求、缺陷、任务和迭代。查询项目进度、拆分需求、流转状\n态、填写工时，覆盖需求到发布的研发全生命周期。\n微云\n查看、下载、删除微云文件，并且提供上传文件到微云、生成分享链\n接能力，帮你管理微云文件\n金山文档\n创建、搜索和管理金山文档（WPS 云文档）。支持新建多种文档类型\n（Word/Excel/PDF/PPT/智能表格/多维表格/智能文档）、读取与搜索..\n企查查\n③ 查询和核实企业工商登记信息。支持股东结构、实际控制人、受益所\n有人、高管团队、对外投资、财务数据、年报及上市信息查询，用自..\nC\n携程问道\n通过携程问道 API 获取旅行规划与攻略。支持酒店查询、机票搜索、\n景点推荐、行程规划、美食住宿攻略。",
+      "visualFacts": {
+        "page": "连接器管理",
+        "examples": ["QQ邮箱", "腾讯文档", "企业微信", "飞书", "腾讯会议"],
+        "control": "连接器卡片右侧加号",
+        "successSignal": "选中的连接器进入授权流程"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector.md",
+          "heading": "连接器管理",
+          "role": "ui_step",
+          "context": "进入连接器管理页，选择需要授权给 WorkBuddy 的外部服务。",
+          "sortOrder": 42,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 42
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/09_AI够不着你的数据，先给它发张工牌.md",
+          "heading": "能连什么？",
+          "role": "ui_step",
+          "context": "课程展示 WorkBuddy 当前可接入的连接器类型。",
+          "sortOrder": 76,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 76
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-connectors-quick-menu",
+      "contentHash": "8dabc1d74be4d820c808038ff58bed98e93f206c65d11b3ec23dc2d76c95b159",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/connector-2.DkTASe3Z.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/connector-2.DkTASe3Z.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1265,
+      "height": 830,
+      "title": "从消息框快捷连接外部应用",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 新建任务输入框展开连接应用菜单，可选择钉钉、飞书、企业微信、腾讯文档和 QQ 邮箱等连接器",
+      "caption": "在任务输入框点击连接应用，可直接选择常用连接器或进入更多连接器。",
+      "ocrText": "電s TAPD\n＜ 腾讯问卷\n钉钉\nWorkBuddy\n你的职场超能\n日常办公\n④ 代码开发\nG 文档处理\n金融服务\n今天帮你做些什么？@ 引用对话文件，\n73 Craft v\n口 选择工作空间〉\n自动v入技能v\n腾讯会议\n腾讯文档\n乐享知识库\nQQ邮箱\n通达信\n更多连接器\n© 连应用～\n默认权限\n连接\n＋父\n仁",
+      "visualFacts": {
+        "page": "新建任务",
+        "control": "连接应用菜单",
+        "actions": ["连接常用应用", "打开更多连接器"],
+        "successSignal": "连接器授权入口已打开"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector.md",
+          "heading": "连接器管理",
+          "role": "ui_step",
+          "context": "从任务输入框的连接应用菜单快速发起连接器授权。",
+          "sortOrder": 46,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 46
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/09_AI够不着你的数据，先给它发张工牌.md",
+          "heading": "怎么连接？",
+          "role": "ui_step",
+          "context": "课程展示在对话输入框中快速选择和连接外部应用。",
+          "sortOrder": 93,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 93
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-connectors-qqmail-add",
+      "contentHash": "0ef175c147e13db57e3b43e47984b87c3acf752c98c7f5c64f2c192d3ce509bd",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/qq-mail-add-button.T1d9y0w3.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/qq-mail-add-button.T1d9y0w3.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1111,
+      "height": 254,
+      "title": "添加 QQ 邮箱连接器",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy QQ 邮箱连接器卡片右侧的加号按钮被红框标出",
+      "caption": "在连接器管理页找到 QQ 邮箱，点击右侧加号开始授权。",
+      "ocrText": "QQ邮箱\n收发、搜索和整理QQ邮件。用自然语言读取邮件内容、汇总邮件线程、管理文件夹。\n＋",
+      "visualFacts": {
+        "connector": "QQ邮箱",
+        "control": "加号按钮",
+        "action": "点击添加",
+        "successSignal": "进入 QQ 邮箱授权流程"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector.md",
+          "heading": "示例：连接 QQ 邮箱",
+          "role": "ui_step",
+          "context": "点击 QQ 邮箱连接器卡片右侧的加号，发起邮箱授权。",
+          "sortOrder": 56,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 56
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/09_AI够不着你的数据，先给它发张工牌.md",
+          "heading": "怎么连接？",
+          "role": "ui_step",
+          "context": "课程以 QQ 邮箱为例说明点击加号开始连接器授权。",
+          "sortOrder": 94,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 94
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-connectors-qqmail-connected",
+      "contentHash": "24f71202ece770e8a1b5755b4fdd0deb9d7f4c0341048ce873d87bc0bd6b95cc",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/qq-mail-connected.BaJxHxs7.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/qq-mail-connected.BaJxHxs7.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1114,
+      "height": 257,
+      "title": "确认 QQ 邮箱已连接",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy QQ 邮箱连接器名称旁显示绿色状态点，右侧出现进入详情按钮",
+      "caption": "授权完成后，QQ 邮箱卡片会显示绿色状态点，表示连接器可用。",
+      "ocrText": "囗\nQQ邮箱\n收发、搜索和整理 QQ 邮件。用自然语言读取邮件内容、汇总邮件线程、管理文件夹。",
+      "visualFacts": {
+        "connector": "QQ邮箱",
+        "statusIndicator": "绿色圆点",
+        "state": "已连接",
+        "successSignal": "QQ 邮箱连接器可被任务调用"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector.md",
+          "heading": "示例：连接 QQ 邮箱",
+          "role": "ui_step",
+          "context": "返回连接器管理页，通过绿色状态点确认 QQ 邮箱已连接。",
+          "sortOrder": 87,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 87
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/09_AI够不着你的数据，先给它发张工牌.md",
+          "heading": "怎么连接？",
+          "role": "ui_step",
+          "context": "课程展示连接器授权完成后的可用状态。",
+          "sortOrder": 95,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 95
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-experts-overview",
+      "contentHash": "2dd8f5d987f921992a23b635b1f461d7731e0c60c00227efd943f07f9e07c926",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/expert-1.BA6k1jXp.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/expert-1.BA6k1jXp.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2197,
+      "height": 1606,
+      "title": "浏览 WorkBuddy 专家中心",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 专家中心按精选场景和行业分类展示专家与专家团卡片",
+      "caption": "从左侧进入专家中心，可按场景或行业浏览单个专家和专家团。",
+      "ocrText": "• WorkBuddy\n编辑（E）\n窗口（W）\n帮助（H）\nWorkBuddy\nv5.1.4\n新建任务\n助理\nC 项目\n司 专家\n自动化\n206更多\n任务（16）>\n空间 （1）\n口\nc3 项目交付、\nQT\n技能-连接器\n资料库•灵感\n◎ 专家\n2 技能\n◎ 连接器\n精选场景\n内容创作\n内容创作专家团\n82• 内容创作专家\n小红书运营专家\n专家 专家团\n全部\nOPC.一人公司\n腾讯专区\n产品设计\n美团生活助手\n领券下单找我\n帮您一键领取美团优惠券，搜索附近团购美食并下单，探索今日\n活动，覆盖餐饮饮品等生活服务，省钱省心。\n美团优惠 团购下单\n生活服务\n内容创作专家\n文博凯\n擅长创作引人入胜的多平台内容，让品牌故事触达目标受众\n内容策略\n多平台创作\n品牌叙事\n微信小程序开发者\n小程达\n精通微信小程序开发框架和生态，打造流畅微信原生体验应用\n小程序开发\n微信生态\nWXML开发\n投资分析\n交易分析团队\n股票研究专家\n腾讯自选股股票投研专家团\n法律咨询\n82 法律合规审查员\n中文法律咨询团\n财税合规专家团\n技术工程 金融投资\n游戏空间\n数据智能\n营销增长\n高考我帮你 U Beta\n专业高考顾问\n考前刷真题作文，考后一分一段换算，报志愿查院校专业，一站\n式搞定高考全周期\n高考真题 一分一段 志愿填报\n行业场景研究员\n福帮手\n围绕一个行业场景定位关键工作流缺口，并交付补位卡、3天行\n动计划、项目动作执行包和下一步建议。\n行业调研 流程补位\n行动包\n创业伙伴\n林正刚\n创业庄园的24小时灯塔，基于林正刚老师50年企业管理经验框\n架，帮助OPC创业者把选择做对、顺序做对、行为做对。擅长..\nGTM策略\nOPC一人公司\n⑤\nQ 搜索专家职称或描述\n回 我的专家\n小微企业\n销售教练\n微信公众号运营专家\nOY\n电店\n最热 最新\n内容创作 销售商务\n运营人力\n项目质量\n高级开发工程师\n吴八哥\n10年以上全栈经验，精通多种语言和框架，是团队的技术中坚\n高级开发 架构设计 代码质量\n资讯速递专家 四特邀专家\n数字生命卡兹克\n一句话查到每天精选的AI模型/产品/行业/论文动态，自动整理\n成中文简报，免配置免登录。\nAl 资讯\n每日简报 AI 行业动态\n数据分析报告师\n舒明析\n将复杂数据转化为战略洞察，提供指标诊断、KPI框架设计、数\n据质量评估与决策报告\n数据分析\n指标诊断\nKPI报告",
+      "visualFacts": {
+        "page": "专家中心",
+        "tabs": ["专家", "专家团"],
+        "controls": ["行业分类", "搜索专家", "我的专家"],
+        "successSignal": "专家与专家团卡片可浏览"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center.md",
+          "heading": "1. 打开专家中心",
+          "role": "ui_step",
+          "context": "在左侧导航打开专家中心，按任务领域选择合适的专家或专家团。",
+          "sortOrder": 40,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 40
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/06_别再让一个AI硬扛，学会召唤专家团.md",
+          "heading": "专家：不是改个称呼，而是换一套工作方式",
+          "role": "ui_step",
+          "context": "课程展示专家中心中不同专业角色和方法的入口。",
+          "sortOrder": 86,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 86
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-experts-summon",
+      "contentHash": "9c8e251bc2cd28f29a21cc2fad5841b455e7c95bd9ed931e5984c91399b46583",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/expert-4.QgFUYxUQ.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/expert-4.QgFUYxUQ.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1245,
+      "height": 425,
+      "title": "召唤专家团处理任务",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 任务输入框已选择软件开发团队，并输入开发贪吃蛇游戏的需求",
+      "caption": "召唤专家或专家团后，在任务输入框描述目标并发送即可开始执行。",
+      "ocrText": "G 文档处理\nc金融服务\n28 高考我帮你\n更多\n帮我开发一个贪吃蛇游戏\n软件开发团队v自动~ 入技能> O 连应用v◎默认权限\nC 选择工作空间＞",
+      "visualFacts": {
+        "page": "新建任务",
+        "selectedExpertTeam": "软件开发团队",
+        "exampleTask": "开发贪吃蛇游戏",
+        "successSignal": "专家团标识出现在任务输入框"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center.md",
+          "heading": "2. 召唤专家/专家团",
+          "role": "ui_step",
+          "context": "选中专家团，在输入框写清任务目标后发送。",
+          "sortOrder": 54,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 54
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/06_别再让一个AI硬扛，学会召唤专家团.md",
+          "heading": "专家团：复杂任务不要再交给一个人硬做",
+          "role": "ui_step",
+          "context": "课程展示如何召唤专家团承接需要多角色协作的任务。",
+          "sortOrder": 106,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 106
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-expert-single-output",
+      "contentHash": "b9d5792ea5416fb56a9811c84a2f16806e63dac3b377f8fe7ebfc429e158b79d",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/expert-6.CK34ordK.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/expert-6.CK34ordK.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 1805,
+      "height": 1596,
+      "title": "查看单个专家的专业交付",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 游戏设计师专家根据任务生成核心循环图和设计文档产物",
+      "caption": "单个专家会用其专业视角完成任务，并返回分析内容与可下载产物。",
+      "ocrText": "我们需要设计好玩的游戏机制和系统，请游戏设计师帮我们设计游戏玩法和平衡性。\n核心循环• Core Loop\n跨平台 ARPG•\n• VO.1\nMoment-to-Moment\n0-30 秒•即时爽快\n核心趣味假设\n看见敌人\n切角色\n放技能\nSession Loop\n5-30分钟•单元目标\n可碎片化中断\n选目标\n副本/Boss\n编队伍\n4 角色\n战斗解谜\n元素联动\nLong-Term Loop\n小时-周．留存钩子\n世界状态演进\n非日历打卡\n周循环\nBoss 突破材料\n月循环\n新角色+传说任务\n趣味假设 •The Fun Hypothesis\n切4角色一编排元素反应链 一3-5 秒清场 =必须最先验证的爽点\n此假设失败 = 项目重评；此假设成立 =后续所有系统服务于此\nM\nGDD_VO.1_设计支柱与核心循环.md\n12.7 KB\n查看所有产物（1）＞ 查看所有变更 （1）＞\na… 共消耗夕 56.53\n今天帮你做些什么？@ 引用对话文件，/ 调用技能与指令\nC游戏设计师～\nZ GLM-5.2~ 》技能> 连应用~⑦默认权限～\n内容由 AI生成，请核实重要信息\n触发反应\n链式爆发\n获奖励\n材料/装备\n季循环\n新区域+版本活动\nC\nG\nU\n即时反馈\n升级\n解锁新内容\n年循环\n章节完结",
+      "visualFacts": {
+        "expert": "游戏设计师",
+        "output": "核心循环图",
+        "artifact": "设计文档 Markdown",
+        "successSignal": "专业分析与文件产物已生成"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center.md",
+          "heading": "3. 描述任务",
+          "role": "ui_step",
+          "context": "向单个专家描述明确问题，查看其专业分析和生成的任务产物。",
+          "sortOrder": 60,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 60
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/06_别再让一个AI硬扛，学会召唤专家团.md",
+          "heading": "专家：不是改个称呼，而是换一套工作方式",
+          "role": "ui_step",
+          "context": "课程展示单个专家按特定方法完成专业任务的结果。",
+          "sortOrder": 87,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 87
+          }
+        }
+      ]
+    },
+    {
+      "id": "workbuddy-official-expert-team-output",
+      "contentHash": "6157f9c74293a5af40869c508bd08513a29e8f59e986994336cc52f70952022d",
+      "sourceRef": "https://www.codebuddy.cn/docs/static/expert-5.B92oXCrK.png",
+      "publicUrl": "https://www.codebuddy.cn/docs/static/expert-5.B92oXCrK.png",
+      "assetType": "image",
+      "mimeType": "image/png",
+      "width": 2193,
+      "height": 1588,
+      "title": "查看专家团协作交付结果",
+      "platform": "workbuddy_official_documentation",
+      "official": true,
+      "publisher": "WorkBuddy 官方文档",
+      "sourceType": "official_product_screenshot",
+      "altText": "WorkBuddy 软件开发团队完成贪吃蛇应用，多个专家状态为完成并在右侧预览生成页面",
+      "caption": "专家团会拆解任务、分工协作，并把整合后的可运行结果交付给用户。",
+      "ocrText": "帮我开发一个贪吃蛇游戏\n= ④ index.html ×\n个—\n^口\n4. 最终交付\n用户下一步建议\n1. 立即开玩：双击 G index.html 即可在默认浏览器中运行\n2. 本地预览：如需在 WorkBuddy 内预览，已自动打开（见上方预览面板）\n3.分享：单文件可直接发给朋友，无需安装任何依赖\n4.二次开发：如想调整网格大小、配色、速度曲线，直接编辑\nG index. html 顶部的常量区即可\n5.后续迭代：可考虑增加音效、关卡机制、排行榜等扩展功能\n祝你玩得开心 网\n深度思考\nQA严过关已关闭，现在关闭工程师寇豆码并清理团队资源。\n已向 @software-engineer 发送关闭请求，等待对方响应。\n已向工程师寇豆码发送关闭请求，等他确认后清理团队资源。\n贪吃蛇游戏已经完全交付，你可以直接打开 G index.html开玩了。后续如有需要（增加音效、关卡、排\n行榜等），随时叫我 C\n• 贪吃蛇\n得分\n0\n最高\n70\nindex.html\n贪吃蛇\n按空格开始游戏\n方向键/WASD 控制移动\n开始游戏\n查看所有产物（1）＞\n4⋯ 共消耗 6.89\n1 模型已从 GLM-5.2 更改为 Deepseek-V4-Pro ①\n交付总监\n齐活林2\n工程师\n寇豆码\nQA 工程师\n严过关（Yan）\n今天帮你做些什么？@引用对话文件，/ 调用技能与指令\n<\n1 -/WASD移动 空格 开始/暂停R重新开始\n软件开发团队> Y Deepseek-V4-Prov》技能vJ回\n内容由 AI生成，请核实重要信息\n〇十父8",
+      "visualFacts": {
+        "expertTeam": "软件开发团队",
+        "rolesCompleted": ["交付总监", "工程师", "QA 工程师"],
+        "output": "可运行的贪吃蛇网页应用",
+        "successSignal": "多角色完成任务并交付可预览结果"
+      },
+      "analysis": {
+        "provider": "macos_vision_local+trusted_multimodal_review",
+        "model": "codex_host_multimodal_curator",
+        "version": "onework-public-media-v1",
+        "analyzedAt": "2026-08-03T00:00:00+08:00"
+      },
+      "riskFlags": [],
+      "publishChecks": {
+        "licenseOk": true,
+        "noQr": true,
+        "noContact": true,
+        "noLocalUserPath": true,
+        "noUnmaskedSecret": true,
+        "noSessionQuery": true,
+        "noPersonalMemory": true,
+        "identitySafe": true,
+        "allFramesInspected": true
+      },
+      "visibility": "public",
+      "safeToPublish": true,
+      "storageProvider": "external",
+      "metadata": {
+        "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center",
+        "licenseBasis": "official_documentation_direct_link_with_attribution",
+        "licenseBasisNote": "The catalog stores the official CDN URL with attribution; it does not copy, modify, or re-host the image.",
+        "auditPolicyVersion": "onework-public-media-v1",
+        "externalHotlink": true,
+        "copiedToOwnStorage": false,
+        "verifiedAt": "2026-08-03"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center.md",
+          "heading": "3. 描述任务",
+          "role": "ui_step",
+          "context": "向专家团描述复杂任务，查看各角色协作状态和最终整合交付。",
+          "sortOrder": 64,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 64
+          }
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/06_别再让一个AI硬扛，学会召唤专家团.md",
+          "heading": "专家团：复杂任务不要再交给一个人硬做",
+          "role": "ui_step",
+          "context": "课程展示专家团拆解、并行执行并整合交付的最终效果。",
+          "sortOrder": 107,
+          "occurrenceIndex": 0,
+          "metadata": {
+            "sourceImageOrder": 107
+          }
+        }
+      ]
+    }
+  ]
+}

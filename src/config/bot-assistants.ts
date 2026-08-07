@@ -83,26 +83,46 @@ export const botAssistantRoles: BotAssistantRole[] = [
   },
   {
     id: 'health',
-    serviceId: 'wechat-health-assistant',
-    status: 'planned',
+    serviceId: 'browser-health-assistant',
+    status: 'active',
     icon: 'health',
-    name: '健康管家',
-    audience: '慢病管理 / 家庭健康',
-    headline: '每日记录、趋势提醒、习惯追踪',
+    name: '三高健康管家',
+    audience: '三高记录 / 家庭健康',
+    headline: '血压、血糖、血脂记录和趋势复盘',
     description:
-      '通过微信收集饮食、运动、血糖或体重记录，自动整理趋势，提醒用户补录和调整生活节奏。',
+      '通过浏览器记录血压、血糖、血脂、饮食、运动和用药信息，自动整理趋势，提醒用户补录和复盘。',
     serviceSummary:
-      '面向家庭健康和慢病记录的微信数字员工，用于记录、趋势整理和复盘提醒。',
+      '面向三高人群和家庭健康管理的浏览器健康管家，用于健康数据记录、趋势整理和复盘提醒。',
     accentClassName: 'border-rose-200 bg-rose-50 text-rose-700',
-    capabilities: ['记录健康数据', '识别趋势异常', '生成周报', '提醒复盘'],
+    capabilities: ['记录三高数据', '整理趋势变化', '生成周报', '提醒复盘'],
     memories: ['基础指标', '用药习惯', '饮食偏好', '目标区间'],
-    deliverables: ['健康记录表', '趋势周报', '复盘提醒', '家庭成员档案'],
+    deliverables: ['独立 Hermes Profile', '健康记录表', '趋势周报', '家庭成员档案'],
     sampleMessages: [
-      '记录一下今天空腹血糖 6.2',
-      '帮我看这周体重变化趋势',
+      '记录一下今天空腹血糖 6.2，早上血压 128/82',
+      '帮我看这周血压和血糖变化趋势',
     ],
-    systemPrompt:
-      '你是一个健康记录助手，只做生活记录、趋势整理和复盘提醒，不替代医生诊断。',
+    systemPrompt: [
+      '# 三高健康管家',
+      '',
+      '你是运行在浏览器里的三高健康数据记录助手，服务对象是需要长期记录血压、血糖、血脂、饮食、运动、体重和用药情况的用户及其家人。',
+      '',
+      '你的职责：',
+      '- 帮用户把零散健康数据整理成清晰记录。',
+      '- 主动识别记录缺口、连续变化、明显偏离目标区间的趋势。',
+      '- 按天、周、月生成复盘摘要，帮助用户带着更完整的数据和医生沟通。',
+      '- 记住用户的基础指标、常用药、饮食偏好和医生给出的目标区间。',
+      '',
+      '边界：',
+      '- 你不能替代医生诊断，不能自行开药、停药或调整处方。',
+      '- 对异常数据只能提示复测、记录上下文，并建议用户按医生建议或及时就医。',
+      '- 如果缺少年龄、测量时间、餐前餐后、用药和运动等上下文，先用简短问题补齐。',
+      '',
+      '默认输出结构：',
+      '1. 已记录数据',
+      '2. 趋势或异常提示',
+      '3. 需要补充的信息',
+      '4. 下次复盘提醒',
+    ].join('\n'),
   },
   {
     id: 'coach',
@@ -142,13 +162,13 @@ export const botAssistantPlans = [
     name: '体验',
     price: '免费',
     summary: '每天 10 条消息，用来感受角色是否真的有用。',
-    features: ['1 个默认角色', '微信文字对话', '基础记忆'],
+    features: ['1 个默认角色', '浏览器文字对话', '基础记忆'],
   },
   {
     name: '基础',
     price: '¥29/月',
     summary: '适合轻量使用，文字对话和常规知识库查询为主。',
-    features: ['1 个激活角色', '每月固定额度', '聊天记录保留'],
+    features: ['1 个激活角色', '每月固定额度', '记录长期保留'],
   },
   {
     name: '专业',
@@ -165,10 +185,10 @@ export const botAssistantPlans = [
 ];
 
 export const botAssistantMetrics = [
-  { label: '开通链路', value: '4 步', detail: '选服务 → 创建实例 → 扫码激活 → 微信对话' },
-  { label: '已开放服务', value: '1 个', detail: '先跑报价助手，其他服务排期中' },
+  { label: '开通链路', value: '4 步', detail: '选服务 → 创建实例 → 登录浏览器 → 开始记录' },
+  { label: '已开放服务', value: '2 个', detail: '报价助手和三高健康管家已接入 Hermes' },
   { label: '冷启动目标', value: '10 人', detail: '先跑真实体验和成本数据' },
-  { label: '核心后台', value: '7 项', detail: '用户、消息、Token、工具、产物、通道、活跃' },
+  { label: '核心后台', value: '7 项', detail: '用户、记录、Token、工具、产物、实例、活跃' },
 ];
 
 export const botAssistantFaqs = [
@@ -178,9 +198,9 @@ export const botAssistantFaqs = [
       '它不是换个名字聊天，而是每个服务都会创建独立 Hermes Profile，写入服务 SOUL.md、知识库、Skills 和记忆，用来完成报价、内容、记录、答疑这类具体任务。',
   },
   {
-    question: '微信接入是否安全？',
+    question: '每个用户的数据是否隔离？',
     answer:
-      '用户扫码确认后，系统只把该助手需要的 Weixin/iLink 凭据写入对应 Hermes Profile。助手只能处理进入这个网关的对话，不能访问用户其他微信聊天、朋友圈或联系人数据。',
+      '系统会为每个用户创建独立 Hermes Profile。健康记录、记忆、配置和使用统计都跟随这个 Profile 隔离，不和其他用户混在同一份聊天记录里。',
   },
   {
     question: '为什么先放到博客网站？',
@@ -188,8 +208,8 @@ export const botAssistantFaqs = [
       '博客已经有内容、会员和服务入口，适合承接文章流量。读者看完案例后，可以直接进入角色库申请内测。',
   },
   {
-    question: '真实绑定现在怎么走？',
+    question: '浏览器端现在怎么走？',
     answer:
-      '当前已接到 Hermes Bridge。用户点击开通后，页面生成真实微信激活二维码；扫码确认后，网页自动显示激活成功，后台能看到实例和 Gateway 状态。',
+      '当前已接到云端 Hermes Bridge。用户点击开通后，后台创建独立 Profile，浏览器侧再用这个 Profile 进行健康数据记录、趋势复盘和用量统计。',
   },
 ];

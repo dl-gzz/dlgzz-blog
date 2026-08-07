@@ -390,15 +390,16 @@ var require_cli_options = __commonJS({
 
 // scripts/hermes-bridge.ts
 var import_node_child_process = require("node:child_process");
+var import_node_crypto = require("node:crypto");
 var import_node_fs = require("node:fs");
 var import_node_http = require("node:http");
-var import_node_crypto = require("node:crypto");
 var import_node_os = require("node:os");
 var import_node_path = require("node:path");
 var HOST = process.env.HERMES_BRIDGE_HOST || "127.0.0.1";
 var PORT = Number(process.env.HERMES_BRIDGE_PORT || 7319);
 var TOKEN = process.env.HERMES_BRIDGE_TOKEN?.trim() || "";
 var HERMES_CLI_COMMAND = process.env.HERMES_CLI_COMMAND?.trim() || "";
+var BASE_PROFILE = process.env.HERMES_BRIDGE_BASE_PROFILE?.trim() || "default";
 var WORKDIR = process.env.HERMES_BRIDGE_WORKDIR || "/Users/baiyang/Desktop/one-worker-os";
 var DRY_RUN = process.env.HERMES_BRIDGE_DRY_RUN === "1";
 var AUTO_START_GATEWAY = process.env.HERMES_BRIDGE_AUTO_START_GATEWAY !== "0";
@@ -494,6 +495,8 @@ var server = (0, import_node_http.createServer)(async (request, response) => {
     });
   }
 });
+(0, import_node_fs.mkdirSync)(WORKDIR, { recursive: true });
+(0, import_node_fs.mkdirSync)(DATA_DIR, { recursive: true });
 server.listen(PORT, HOST, () => {
   console.log(`Hermes Bridge listening on http://${HOST}:${PORT}`);
   console.log(`Hermes workspace: ${WORKDIR}`);
@@ -556,6 +559,7 @@ async function handleProvision(request, response) {
   const userId = readRequiredString(body.userId, "userId");
   const roleId = readRequiredString(body.roleId, "roleId");
   const service = readServiceProvision(body, roleId);
+  const connectionMode = readConnectionMode(body.connectionMode);
   const existingActivation = getActivation(assistantId);
   const profileName = existingActivation?.profileName || buildProfileName({ assistantId, roleId, userId });
   const activationTtlMs = readActivationTtlMs(body.activationTtlSeconds);
@@ -576,7 +580,7 @@ async function handleProvision(request, response) {
     return;
   }
   const profile = await ensureProfile(profileName, service);
-  if (existingActivation?.status !== "activated") {
+  if (connectionMode === "browser_profile" || existingActivation?.status !== "activated") {
     clearProfileWeixinCredentials(profileName);
   }
   storeAssistantRecord({
@@ -590,8 +594,30 @@ async function handleProvision(request, response) {
     employeeVersionId: service.employeeVersionId || "",
     profileName,
     source: typeof body.source === "string" ? body.source : "",
-    locale: typeof body.locale === "string" ? body.locale : ""
+    locale: typeof body.locale === "string" ? body.locale : "",
+    connectionMode
   });
+  if (connectionMode === "browser_profile") {
+    sendJson(response, 200, {
+      success: true,
+      assistantId,
+      status: "active",
+      serviceId: service.id,
+      serviceName: service.name,
+      profileName,
+      connectionMode,
+      activationId: assistantId,
+      qrPayload: null,
+      qrImageUrl: null,
+      expiresAt: null,
+      bindingInstructions: [
+        "\u6D4F\u89C8\u5668\u7AEF\u5DF2\u521B\u5EFA\u72EC\u7ACB Hermes Profile\u3002",
+        "\u540E\u7EED\u5065\u5EB7\u8BB0\u5F55\u548C\u8D8B\u52BF\u590D\u76D8\u5E94\u901A\u8FC7\u6D4F\u89C8\u5668\u4F1A\u8BDD\u8FDB\u5165\u8FD9\u4E2A Profile\u3002"
+      ],
+      message: profile.created ? "Hermes Profile \u5DF2\u521B\u5EFA\uFF1B\u6D4F\u89C8\u5668\u5065\u5EB7\u7BA1\u5BB6\u5DF2\u53EF\u4F7F\u7528\u3002" : "Hermes Profile \u5DF2\u5B58\u5728\uFF1B\u6D4F\u89C8\u5668\u5065\u5EB7\u7BA1\u5BB6\u5DF2\u53EF\u4F7F\u7528\u3002"
+    });
+    return;
+  }
   if (existingActivation?.status === "activated") {
     const activated = await ensureActivatedGateway(existingActivation);
     sendJson(response, 200, {
@@ -820,18 +846,39 @@ async function ensureProfile(profileName, service) {
     allowFailure: true
   });
   if (show.code === 0) {
+    ensureMinimalProfile(profileName);
     writeProfileServiceFiles(profileName, service);
     return { created: false };
   }
-  const created = await runHermes(
-    ["profile", "create", "--clone", "--no-alias", profileName],
-    { allowFailure: true }
-  );
-  if (created.code !== 0) {
-    ensureMinimalProfile(profileName);
-  }
+  await createProfileFromBase(profileName);
+  ensureMinimalProfile(profileName);
   writeProfileServiceFiles(profileName, service);
   return { created: true };
+}
+async function createProfileFromBase(profileName) {
+  if (!BASE_PROFILE || BASE_PROFILE === profileName)
+    return false;
+  const result = await runHermes(
+    [
+      "profile",
+      "create",
+      profileName,
+      "--clone",
+      "--clone-from",
+      BASE_PROFILE
+    ],
+    { allowFailure: true }
+  );
+  if (result.code === 0)
+    return true;
+  const output = `${result.stdout}
+${result.stderr}`.trim();
+  if (output && !/already exists|已存在/i.test(output)) {
+    console.warn(
+      `Hermes profile clone from ${BASE_PROFILE} failed, falling back to minimal profile: ${output}`
+    );
+  }
+  return false;
 }
 function ensureMinimalProfile(profileName) {
   const profileHome = getProfileHome(profileName);
@@ -845,14 +892,28 @@ function ensureMinimalProfile(profileName) {
   ]) {
     (0, import_node_fs.mkdirSync)((0, import_node_path.join)(profileHome, directory), { recursive: true });
   }
-  for (const fileName of ["config.yaml", ".env", "SOUL.md"]) {
-    const sourcePath = (0, import_node_path.join)(getHermesHome(), fileName);
-    const targetPath = (0, import_node_path.join)(profileHome, fileName);
-    if (!(0, import_node_fs.existsSync)(targetPath) && (0, import_node_fs.existsSync)(sourcePath)) {
-      (0, import_node_fs.writeFileSync)(targetPath, (0, import_node_fs.readFileSync)(sourcePath, "utf8"));
-      if (fileName === ".env")
-        (0, import_node_fs.chmodSync)(targetPath, 384);
-    }
+  const configPath = (0, import_node_path.join)(profileHome, "config.yaml");
+  if (!(0, import_node_fs.existsSync)(configPath)) {
+    (0, import_node_fs.writeFileSync)(
+      configPath,
+      [
+        "agent:",
+        "  max_turns: 30",
+        "tools:",
+        "  terminal:",
+        "    enabled: false",
+        "  code_execution:",
+        "    enabled: false",
+        "  filesystem:",
+        "    enabled: false",
+        ""
+      ].join("\n")
+    );
+  }
+  const envPath = (0, import_node_path.join)(profileHome, ".env");
+  if (!(0, import_node_fs.existsSync)(envPath)) {
+    (0, import_node_fs.writeFileSync)(envPath, "\n");
+    (0, import_node_fs.chmodSync)(envPath, 384);
   }
   const soulPath = (0, import_node_path.join)(profileHome, "SOUL.md");
   if (!(0, import_node_fs.existsSync)(soulPath)) {
@@ -881,7 +942,9 @@ function writeProfileServiceFiles(profileName, service) {
   (0, import_node_fs.mkdirSync)(profileHome, { recursive: true });
   const capabilityList = service.capabilities.map((item) => formatMarkdownBullet(item)).join("\n");
   const deliverableList = service.deliverables.map((item) => formatMarkdownBullet(item)).join("\n");
-  const enabledSkillList = service.enabledSkills.map((skill) => `- ${skill.name}\uFF08${skill.skillType}/${skill.riskLevel}\uFF09\uFF1A${skill.summary}`).join("\n");
+  const enabledSkillList = service.enabledSkills.map(
+    (skill) => `- ${skill.name}\uFF08${skill.skillType}/${skill.riskLevel}\uFF09\uFF1A${skill.summary}`
+  ).join("\n");
   const serviceDoc = [
     `# ${service.name}`,
     "",
@@ -962,7 +1025,7 @@ async function createWeixinActivation({
 async function requestIlinkQr() {
   const data = await ilinkGet(
     ILINK_BASE_URL,
-    `/ilink/bot/get_bot_qrcode?bot_type=3`
+    "/ilink/bot/get_bot_qrcode?bot_type=3"
   );
   const qrcode = String(data.qrcode || "");
   const qrPayload = String(data.qrcode_img_content || data.qrcode || "");
@@ -975,6 +1038,10 @@ async function pollWeixinActivation(assistantId) {
   const activation = getActivation(assistantId);
   if (!activation)
     return null;
+  const confirmedActivation = recoverConfirmedActivation(activation);
+  if (confirmedActivation) {
+    return ensureActivatedGateway(confirmedActivation);
+  }
   if (activation.status === "activated") {
     return ensureActivatedGateway(activation);
   }
@@ -1030,7 +1097,9 @@ async function pollWeixinActivation(assistantId) {
     if (qrStatus === "confirmed") {
       const accountId = String(status.ilink_bot_id || "");
       const token = String(status.bot_token || "");
-      const baseUrl = String(status.baseurl || activation.baseUrl || ILINK_BASE_URL);
+      const baseUrl = String(
+        status.baseurl || activation.baseUrl || ILINK_BASE_URL
+      );
       const weixinUserId = String(status.ilink_user_id || "");
       if (!accountId || !token) {
         throw new Error("iLink \u5DF2\u786E\u8BA4\u626B\u7801\uFF0C\u4F46\u6CA1\u6709\u8FD4\u56DE\u5B8C\u6574\u8D26\u53F7\u51ED\u636E");
@@ -1047,7 +1116,9 @@ async function pollWeixinActivation(assistantId) {
           weixinUserId
         );
       }
-      const gatewayStart = await ensureProfileGatewayStarted(activation.profileName);
+      const gatewayStart = await ensureProfileGatewayStarted(
+        activation.profileName
+      );
       const confirmed = {
         ...activation,
         status: "activated",
@@ -1106,7 +1177,9 @@ async function ilinkGet(baseUrl, endpoint) {
   });
   const text = await response.text();
   if (!response.ok) {
-    throw new Error(`iLink GET ${endpoint} HTTP ${response.status}: ${text.slice(0, 200)}`);
+    throw new Error(
+      `iLink GET ${endpoint} HTTP ${response.status}: ${text.slice(0, 200)}`
+    );
   }
   return JSON.parse(text);
 }
@@ -1132,6 +1205,36 @@ function getProfileHome(profileName) {
   if (profileName === "default")
     return getHermesHome();
   return (0, import_node_path.join)(getHermesHome(), "profiles", profileName);
+}
+function recoverConfirmedActivation(activation) {
+  if (activation.status === "failed")
+    return null;
+  const credentials = readProfileWeixinCredentials(activation.profileName);
+  const hasConfirmedWeixin = Boolean(activation.accountId || activation.weixinUserId) || Boolean(credentials.accountId && credentials.token);
+  if (!hasConfirmedWeixin)
+    return null;
+  return {
+    ...activation,
+    status: "activated",
+    accountId: activation.accountId || credentials.accountId || void 0,
+    weixinUserId: activation.weixinUserId || credentials.weixinUserId || void 0,
+    baseUrl: credentials.baseUrl || activation.baseUrl,
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+}
+function readProfileWeixinCredentials(profileName) {
+  const profileHome = getProfileHome(profileName);
+  const env = readDotEnv((0, import_node_path.join)(profileHome, ".env"));
+  const accountId = env.WEIXIN_ACCOUNT_ID || "";
+  const account = accountId ? readJsonFile(
+    (0, import_node_path.join)(profileHome, "weixin", "accounts", `${accountId}.json`)
+  ) : null;
+  return {
+    accountId,
+    token: env.WEIXIN_TOKEN || String(account?.token || ""),
+    baseUrl: env.WEIXIN_BASE_URL || String(account?.base_url || ""),
+    weixinUserId: env.WEIXIN_ALLOWED_USERS || env.WEIXIN_HOME_CHANNEL || String(account?.user_id || "")
+  };
 }
 function persistWeixinCredentials(profileName, {
   accountId,
@@ -1212,7 +1315,11 @@ function upsertMarkedMarkdownBlock(path, block) {
     "g"
   );
   const withoutOldBlock = existing.replace(pattern, "").trimEnd();
-  const next = withoutOldBlock ? `${withoutOldBlock}\n\n${block}\n` : `${block}\n`;
+  const next = withoutOldBlock ? `${withoutOldBlock}
+
+${block}
+` : `${block}
+`;
   (0, import_node_fs.writeFileSync)(path, next);
 }
 function escapeRegExp(value) {
@@ -1232,11 +1339,13 @@ async function ensureActivatedGateway(activation) {
     return running;
   }
   const lastUpdate = new Date(activation.updatedAt).getTime();
-  const ageMs = Number.isFinite(lastUpdate) ? Date.now() - lastUpdate : Infinity;
+  const ageMs = Number.isFinite(lastUpdate) ? Date.now() - lastUpdate : Number.POSITIVE_INFINITY;
   if (activation.gatewayStatus === "starting" && ageMs < 15e3 || activation.gatewayStatus === "start_failed" && ageMs < 3e4 && !isGatewayServiceMissing(activation.gatewayError || "")) {
     return activation;
   }
-  const gatewayStart = await ensureProfileGatewayStarted(activation.profileName);
+  const gatewayStart = await ensureProfileGatewayStarted(
+    activation.profileName
+  );
   const updated = {
     ...activation,
     gatewayStatus: gatewayStart.status,
@@ -1255,16 +1364,15 @@ async function ensureProfileGatewayStarted(profileName) {
   if (isWeixinGatewayConnected(getProfileGatewayState(profileName))) {
     return { status: "running" };
   }
-  let result = await runHermes(
-    ["--profile", profileName, "gateway", "start"],
-    { allowFailure: true }
-  );
+  let result = await runHermes(["--profile", profileName, "gateway", "start"], {
+    allowFailure: true
+  });
   let output = `${result.stdout}
 ${result.stderr}`.trim();
   if (result.code !== 0 && isGatewayServiceMissing(output)) {
     const install = await runHermes(
       ["--profile", profileName, "gateway", "install"],
-      { allowFailure: true }
+      { allowFailure: true, input: "Y\n" }
     );
     const installOutput = `${install.stdout}
 ${install.stderr}`.trim();
@@ -1274,10 +1382,9 @@ ${install.stderr}`.trim();
         error: installOutput || `hermes --profile ${profileName} gateway install \u5931\u8D25`
       };
     }
-    result = await runHermes(
-      ["--profile", profileName, "gateway", "start"],
-      { allowFailure: true }
-    );
+    result = await runHermes(["--profile", profileName, "gateway", "start"], {
+      allowFailure: true
+    });
     output = `${result.stdout}
 ${result.stderr}`.trim();
   }
@@ -1438,8 +1545,11 @@ function upsertEnvFile(path, updates) {
       nextLines.push(`${key}=${formatEnvValue(value)}`);
     }
   }
-  (0, import_node_fs.writeFileSync)(path, `${nextLines.filter((line, index) => line || index < nextLines.length - 1).join("\n")}
-`);
+  (0, import_node_fs.writeFileSync)(
+    path,
+    `${nextLines.filter((line, index) => line || index < nextLines.length - 1).join("\n")}
+`
+  );
   (0, import_node_fs.chmodSync)(path, 384);
 }
 function formatEnvValue(value) {
@@ -1460,8 +1570,12 @@ function getGatewayState() {
 }
 function getPairingState() {
   const pairingDir = (0, import_node_path.join)(getHermesHome(), "pairing");
-  const pending = readJsonFile((0, import_node_path.join)(pairingDir, "weixin-pending.json")) || {};
-  const approved = readJsonFile((0, import_node_path.join)(pairingDir, "weixin-approved.json")) || {};
+  const pending = readJsonFile(
+    (0, import_node_path.join)(pairingDir, "weixin-pending.json")
+  ) || {};
+  const approved = readJsonFile(
+    (0, import_node_path.join)(pairingDir, "weixin-approved.json")
+  ) || {};
   return {
     pendingCount: Object.keys(pending).length,
     approvedCount: Object.keys(approved).length
@@ -1505,7 +1619,9 @@ function readHermesEnv() {
   return {
     ...fileEnv,
     ...Object.fromEntries(
-      Object.entries(process.env).filter(([, value]) => typeof value === "string")
+      Object.entries(process.env).filter(
+        ([, value]) => typeof value === "string"
+      )
     )
   };
 }
@@ -1605,7 +1721,7 @@ function readActivations() {
 function isAuthorized(request, pathname = "/") {
   const acceptedTokens = pathname === "/api/learning-assistant/run" ? [TOKEN, LEARNING_ASSISTANT_TOKEN].filter(Boolean) : [TOKEN].filter(Boolean);
   if (!acceptedTokens.length)
-    return true;
+    return pathname === "/health";
   const authorization = request.headers.authorization || "";
   const bridgeToken = request.headers["x-hermes-bridge-token"];
   const rawBridgeToken = Array.isArray(bridgeToken) ? bridgeToken[0] : bridgeToken;
@@ -1621,6 +1737,9 @@ function readRequiredString(value, fieldName) {
 }
 function readOptionalString(value) {
   return typeof value === "string" ? value.trim() : "";
+}
+function readConnectionMode(value) {
+  return value === "browser_profile" ? "browser_profile" : "qr_activation";
 }
 function readStringArray(value) {
   if (!Array.isArray(value))
@@ -1739,18 +1858,17 @@ function spawnHermesCandidate(candidate, args, options) {
     const child = (0, import_node_child_process.spawn)(candidate.command, finalArgs, {
       cwd: WORKDIR,
       env: process.env,
-      stdio: ["ignore", "pipe", "pipe"]
+      stdio: [options.input ? "pipe" : "ignore", "pipe", "pipe"]
     });
+    if (options.input)
+      child.stdin.end(options.input);
     const stdoutChunks = [];
     const stderrChunks = [];
     const timer = setTimeout(() => {
       child.kill("SIGTERM");
       reject(
         new Error(
-          `Hermes command timed out: ${formatHermesInvocation(
-            candidate,
-            args
-          )}`
+          `Hermes command timed out: ${formatHermesInvocation(candidate, args)}`
         )
       );
     }, COMMAND_TIMEOUT_MS);
@@ -1825,8 +1943,10 @@ function parseCommandLine(value) {
   const tokens = [];
   const pattern = /"([^"]*)"|'([^']*)'|[^\s]+/g;
   let match;
-  while (match = pattern.exec(value)) {
+  match = pattern.exec(value);
+  while (match) {
     tokens.push(match[1] ?? match[2] ?? match[0]);
+    match = pattern.exec(value);
   }
   return tokens.filter(Boolean);
 }

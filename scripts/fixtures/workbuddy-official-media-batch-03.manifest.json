@@ -1,0 +1,385 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "approvedAt": "2026-08-03T00:00:00+08:00",
+  "reviewerType": "codex_host_multimodal_curator",
+  "assets": [
+    {
+      "id": "workbuddy-official-assistant-entry",
+      "localBasename": "545b300e64cfe385546e2dd23b5b4f06f1078399.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/assistant-3.Btuye0hY.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Assistant",
+      "title": "从左侧进入 WorkBuddy 助理",
+      "altText": "WorkBuddy 桌面端左侧导航中的助理入口被红框标出",
+      "caption": "在左侧导航点击助理，可查看和处理从手机端发起的远程任务。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Assistant.md",
+      "heading": "一、什么是助理",
+      "role": "ui_step",
+      "context": "从 WorkBuddy 左侧导航进入助理页面，查看远程任务会话。",
+      "sortOrder": 26,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/05_人不在电脑前，也能让WorkBuddy替你干活.md",
+          "heading": "助理不是手机里的另一个聊天机器人",
+          "role": "ui_step",
+          "context": "课程说明助理是手机发指令、电脑端实际执行的远程任务入口。",
+          "sortOrder": 91
+        }
+      ],
+      "visualFacts": {
+        "page": "WorkBuddy 新建任务",
+        "control": "左侧助理入口",
+        "action": "点击助理",
+        "successSignal": "左侧助理入口进入选中状态"
+      }
+    },
+    {
+      "id": "workbuddy-official-assistant-weixin-settings",
+      "localBasename": "d862a70551c29bd69bb35f1d1ad5a6d67e53407b.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/1.m1V5GY4g.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/WeixinBot-Guide",
+      "title": "打开微信助理设置",
+      "altText": "WorkBuddy 左侧助理栏右侧的齿轮设置按钮被红框标出",
+      "caption": "在助理栏点击齿轮按钮，进入助理设置后配置微信助理。",
+      "documentPath": "workbuddy_official/workbuddy/WeixinBot-Guide.md",
+      "heading": "第一步：打开助理设置",
+      "role": "ui_step",
+      "context": "点击助理栏右侧齿轮图标，进入微信助理的集成设置。",
+      "sortOrder": 49,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/05_人不在电脑前，也能让WorkBuddy替你干活.md",
+          "heading": "微信助理怎么接入",
+          "role": "ui_step",
+          "context": "课程展示微信助理接入流程的设置入口。",
+          "sortOrder": 109
+        }
+      ],
+      "visualFacts": {
+        "page": "WorkBuddy 左侧导航",
+        "section": "助理",
+        "control": "齿轮设置按钮",
+        "successSignal": "进入助理设置页面"
+      }
+    },
+    {
+      "id": "workbuddy-official-project-config",
+      "localBasename": "2089457b4894fb2320e24bc495592cb52173a858.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/project-1.F71YBzZ9.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project",
+      "title": "配置并新建 WorkBuddy 项目",
+      "altText": "WorkBuddy 新建项目弹窗包含项目名称、指令、连接器、专家和技能配置项",
+      "caption": "新建项目时可统一设置项目指令，并按需添加连接器、专家和技能。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project.md",
+      "heading": "项目配置",
+      "role": "ui_step",
+      "context": "填写项目名称和共享指令，并配置项目可用的连接器、专家与技能。",
+      "sortOrder": 36,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/08_别再重复交代背景，用项目给团队开一个共享工作区.md",
+          "heading": "项目不是文件夹，而是标准化工位",
+          "role": "ui_step",
+          "context": "课程展示如何把背景、规则与能力统一写入项目配置。",
+          "sortOrder": 82
+        }
+      ],
+      "visualFacts": {
+        "dialog": "新建项目",
+        "fields": ["项目名称", "指令", "连接器", "专家", "技能"],
+        "optionalTemplate": true,
+        "successSignal": "确认按钮可用并创建项目"
+      }
+    },
+    {
+      "id": "workbuddy-official-project-assets",
+      "localBasename": "b913ededed6a30b3b51fe9e0156276e8fe178500.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/project-2.CO1Yhu7U.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project",
+      "title": "管理项目资产资料库",
+      "altText": "WorkBuddy 项目资产页提供新建文件夹、上传文件、类型筛选和搜索功能",
+      "caption": "项目资产页集中保存团队资料，并在项目任务中作为共享上下文使用。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project.md",
+      "heading": "项目资产",
+      "role": "ui_step",
+      "context": "在项目顶部打开资产页，新建文件夹或上传团队共享资料。",
+      "sortOrder": 71,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/08_别再重复交代背景，用项目给团队开一个共享工作区.md",
+          "heading": "最值钱的是项目资料库",
+          "role": "ui_step",
+          "context": "课程说明项目资料库用于持续沉淀可复用的团队上下文。",
+          "sortOrder": 102
+        }
+      ],
+      "visualFacts": {
+        "page": "项目资产",
+        "controls": ["新建文件夹", "上传文件", "类型筛选", "搜索"],
+        "storageQuotaVisible": true,
+        "successSignal": "文件或文件夹出现在资产列表"
+      }
+    },
+    {
+      "id": "workbuddy-official-project-task-handoff",
+      "localBasename": "ae57530350f2086e7128b70fb1cc57daf4ad1d89.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/project-9.CVPHyLwD.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project",
+      "title": "把项目任务连同上下文流转",
+      "altText": "WorkBuddy 任务流转弹窗包含标题、描述、任务进度摘要和任务产物列表",
+      "caption": "任务流转会把进度摘要和交付产物一并交给下一位处理者，减少重复说明。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project.md",
+      "heading": "发起任务",
+      "role": "ui_step",
+      "context": "在任务页点击流转图标，补充标题与描述，并确认随任务交接的摘要和产物。",
+      "sortOrder": 175,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/08_别再重复交代背景，用项目给团队开一个共享工作区.md",
+          "heading": "任务流转：别让接手的人从零听故事",
+          "role": "ui_step",
+          "context": "课程展示任务流转如何把上下文、进度和产物一起交接。",
+          "sortOrder": 121
+        }
+      ],
+      "visualFacts": {
+        "dialog": "任务流转",
+        "fields": ["标题", "描述"],
+        "includedContext": ["任务进度摘要", "任务产物"],
+        "successSignal": "接收方获得任务上下文与交付文件"
+      }
+    },
+    {
+      "id": "workbuddy-official-connectors-overview",
+      "localBasename": "8929d5959a43fc391553c60aaac87df45266af45.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/connector-1.b14OI7ZU.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
+      "title": "浏览 WorkBuddy 连接器管理页",
+      "altText": "WorkBuddy 连接器管理页展示 QQ 邮箱、腾讯文档、企业微信、飞书和其他可连接服务",
+      "caption": "在连接器管理页浏览外部服务，点击卡片右侧加号开始授权。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector.md",
+      "heading": "连接器管理",
+      "role": "ui_step",
+      "context": "进入连接器管理页，选择需要授权给 WorkBuddy 的外部服务。",
+      "sortOrder": 42,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/09_AI够不着你的数据，先给它发张工牌.md",
+          "heading": "能连什么？",
+          "role": "ui_step",
+          "context": "课程展示 WorkBuddy 当前可接入的连接器类型。",
+          "sortOrder": 76
+        }
+      ],
+      "visualFacts": {
+        "page": "连接器管理",
+        "examples": ["QQ邮箱", "腾讯文档", "企业微信", "飞书", "腾讯会议"],
+        "control": "连接器卡片右侧加号",
+        "successSignal": "选中的连接器进入授权流程"
+      }
+    },
+    {
+      "id": "workbuddy-official-connectors-quick-menu",
+      "localBasename": "bfcf1d78106d3f3330d0717116075069dcfd5bf3.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/connector-2.DkTASe3Z.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
+      "title": "从消息框快捷连接外部应用",
+      "altText": "WorkBuddy 新建任务输入框展开连接应用菜单，可选择钉钉、飞书、企业微信、腾讯文档和 QQ 邮箱等连接器",
+      "caption": "在任务输入框点击连接应用，可直接选择常用连接器或进入更多连接器。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector.md",
+      "heading": "连接器管理",
+      "role": "ui_step",
+      "context": "从任务输入框的连接应用菜单快速发起连接器授权。",
+      "sortOrder": 46,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/09_AI够不着你的数据，先给它发张工牌.md",
+          "heading": "怎么连接？",
+          "role": "ui_step",
+          "context": "课程展示在对话输入框中快速选择和连接外部应用。",
+          "sortOrder": 93
+        }
+      ],
+      "visualFacts": {
+        "page": "新建任务",
+        "control": "连接应用菜单",
+        "actions": ["连接常用应用", "打开更多连接器"],
+        "successSignal": "连接器授权入口已打开"
+      }
+    },
+    {
+      "id": "workbuddy-official-connectors-qqmail-add",
+      "localBasename": "7f9bee01c23eae8cb183fa44e3078b9732a1cef9.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/qq-mail-add-button.T1d9y0w3.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
+      "title": "添加 QQ 邮箱连接器",
+      "altText": "WorkBuddy QQ 邮箱连接器卡片右侧的加号按钮被红框标出",
+      "caption": "在连接器管理页找到 QQ 邮箱，点击右侧加号开始授权。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector.md",
+      "heading": "示例：连接 QQ 邮箱",
+      "role": "ui_step",
+      "context": "点击 QQ 邮箱连接器卡片右侧的加号，发起邮箱授权。",
+      "sortOrder": 56,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/09_AI够不着你的数据，先给它发张工牌.md",
+          "heading": "怎么连接？",
+          "role": "ui_step",
+          "context": "课程以 QQ 邮箱为例说明点击加号开始连接器授权。",
+          "sortOrder": 94
+        }
+      ],
+      "visualFacts": {
+        "connector": "QQ邮箱",
+        "control": "加号按钮",
+        "action": "点击添加",
+        "successSignal": "进入 QQ 邮箱授权流程"
+      }
+    },
+    {
+      "id": "workbuddy-official-connectors-qqmail-connected",
+      "localBasename": "4047610ef11eacc5dd198c0a842fa9191387eed1.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/qq-mail-connected.BaJxHxs7.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector",
+      "title": "确认 QQ 邮箱已连接",
+      "altText": "WorkBuddy QQ 邮箱连接器名称旁显示绿色状态点，右侧出现进入详情按钮",
+      "caption": "授权完成后，QQ 邮箱卡片会显示绿色状态点，表示连接器可用。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Connector.md",
+      "heading": "示例：连接 QQ 邮箱",
+      "role": "ui_step",
+      "context": "返回连接器管理页，通过绿色状态点确认 QQ 邮箱已连接。",
+      "sortOrder": 87,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/09_AI够不着你的数据，先给它发张工牌.md",
+          "heading": "怎么连接？",
+          "role": "ui_step",
+          "context": "课程展示连接器授权完成后的可用状态。",
+          "sortOrder": 95
+        }
+      ],
+      "visualFacts": {
+        "connector": "QQ邮箱",
+        "statusIndicator": "绿色圆点",
+        "state": "已连接",
+        "successSignal": "QQ 邮箱连接器可被任务调用"
+      }
+    },
+    {
+      "id": "workbuddy-official-experts-overview",
+      "localBasename": "b013a986026d2d4c0187dec21e498a0fc21453d3.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/expert-1.BA6k1jXp.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center",
+      "title": "浏览 WorkBuddy 专家中心",
+      "altText": "WorkBuddy 专家中心按精选场景和行业分类展示专家与专家团卡片",
+      "caption": "从左侧进入专家中心，可按场景或行业浏览单个专家和专家团。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center.md",
+      "heading": "1. 打开专家中心",
+      "role": "ui_step",
+      "context": "在左侧导航打开专家中心，按任务领域选择合适的专家或专家团。",
+      "sortOrder": 40,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/06_别再让一个AI硬扛，学会召唤专家团.md",
+          "heading": "专家：不是改个称呼，而是换一套工作方式",
+          "role": "ui_step",
+          "context": "课程展示专家中心中不同专业角色和方法的入口。",
+          "sortOrder": 86
+        }
+      ],
+      "visualFacts": {
+        "page": "专家中心",
+        "tabs": ["专家", "专家团"],
+        "controls": ["行业分类", "搜索专家", "我的专家"],
+        "successSignal": "专家与专家团卡片可浏览"
+      }
+    },
+    {
+      "id": "workbuddy-official-experts-summon",
+      "localBasename": "de62973d41c91dbca5fd29d71130a1b53e019d3f.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/expert-4.QgFUYxUQ.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center",
+      "title": "召唤专家团处理任务",
+      "altText": "WorkBuddy 任务输入框已选择软件开发团队，并输入开发贪吃蛇游戏的需求",
+      "caption": "召唤专家或专家团后，在任务输入框描述目标并发送即可开始执行。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center.md",
+      "heading": "2. 召唤专家/专家团",
+      "role": "ui_step",
+      "context": "选中专家团，在输入框写清任务目标后发送。",
+      "sortOrder": 54,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/06_别再让一个AI硬扛，学会召唤专家团.md",
+          "heading": "专家团：复杂任务不要再交给一个人硬做",
+          "role": "ui_step",
+          "context": "课程展示如何召唤专家团承接需要多角色协作的任务。",
+          "sortOrder": 106
+        }
+      ],
+      "visualFacts": {
+        "page": "新建任务",
+        "selectedExpertTeam": "软件开发团队",
+        "exampleTask": "开发贪吃蛇游戏",
+        "successSignal": "专家团标识出现在任务输入框"
+      }
+    },
+    {
+      "id": "workbuddy-official-expert-single-output",
+      "localBasename": "4341212ba518b9d3f717b6db3974c4f510d60240.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/expert-6.CK34ordK.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center",
+      "title": "查看单个专家的专业交付",
+      "altText": "WorkBuddy 游戏设计师专家根据任务生成核心循环图和设计文档产物",
+      "caption": "单个专家会用其专业视角完成任务，并返回分析内容与可下载产物。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center.md",
+      "heading": "3. 描述任务",
+      "role": "ui_step",
+      "context": "向单个专家描述明确问题，查看其专业分析和生成的任务产物。",
+      "sortOrder": 60,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/06_别再让一个AI硬扛，学会召唤专家团.md",
+          "heading": "专家：不是改个称呼，而是换一套工作方式",
+          "role": "ui_step",
+          "context": "课程展示单个专家按特定方法完成专业任务的结果。",
+          "sortOrder": 87
+        }
+      ],
+      "visualFacts": {
+        "expert": "游戏设计师",
+        "output": "核心循环图",
+        "artifact": "设计文档 Markdown",
+        "successSignal": "专业分析与文件产物已生成"
+      }
+    },
+    {
+      "id": "workbuddy-official-expert-team-output",
+      "localBasename": "486f29a872e599ad8458458af3cf99127439066d.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/expert-5.B92oXCrK.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center",
+      "title": "查看专家团协作交付结果",
+      "altText": "WorkBuddy 软件开发团队完成贪吃蛇应用，多个专家状态为完成并在右侧预览生成页面",
+      "caption": "专家团会拆解任务、分工协作，并把整合后的可运行结果交付给用户。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center.md",
+      "heading": "3. 描述任务",
+      "role": "ui_step",
+      "context": "向专家团描述复杂任务，查看各角色协作状态和最终整合交付。",
+      "sortOrder": 64,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/06_别再让一个AI硬扛，学会召唤专家团.md",
+          "heading": "专家团：复杂任务不要再交给一个人硬做",
+          "role": "ui_step",
+          "context": "课程展示专家团拆解、并行执行并整合交付的最终效果。",
+          "sortOrder": 107
+        }
+      ],
+      "visualFacts": {
+        "expertTeam": "软件开发团队",
+        "rolesCompleted": ["交付总监", "工程师", "QA 工程师"],
+        "output": "可运行的贪吃蛇网页应用",
+        "successSignal": "多角色完成任务并交付可预览结果"
+      }
+    }
+  ]
+}

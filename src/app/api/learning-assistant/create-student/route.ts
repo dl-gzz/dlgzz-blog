@@ -1,4 +1,10 @@
+import { requireHermesAdmin } from '@/lib/api-security';
 import { runLearningAssistant } from '@/lib/hermes-learning-assistant';
+import {
+  StudentAccessConfigurationError,
+  issueStudentAccessToken,
+} from '@/lib/student-access';
+import { getBaseUrl } from '@/lib/urls/urls';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -12,6 +18,9 @@ function readText(value: unknown, fallback = '') {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireHermesAdmin('学习助手接口暂只允许管理员访问');
+  if ('response' in auth) return auth.response;
+
   try {
     const body = (await request.json().catch(() => null)) as unknown;
     if (!isObjectRecord(body)) {
@@ -35,18 +44,45 @@ export async function POST(request: NextRequest) {
     if (name) args.push('--name', name);
     if (grade) args.push('--grade', grade);
 
+    // Validate the signing configuration before creating or updating data.
+    const studentAccess = issueStudentAccessToken(studentId);
+
     const result = await runLearningAssistant('create_student', args, {
       timeoutMs: 30000,
     });
 
-    return NextResponse.json(result);
+    if (result.success === false) return NextResponse.json(result);
+
+    const whiteboardUrl = new URL('/whiteboard', getBaseUrl());
+    whiteboardUrl.searchParams.set('studentId', studentId);
+    whiteboardUrl.hash = new URLSearchParams({
+      studentToken: studentAccess.token,
+    }).toString();
+
+    return NextResponse.json({
+      ...result,
+      studentAccessToken: studentAccess.token,
+      studentAccessExpiresAt: studentAccess.expiresAt,
+      whiteboardUrl: whiteboardUrl.toString(),
+    });
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : '创建学生档案失败',
+        code:
+          error instanceof StudentAccessConfigurationError
+            ? 'STUDENT_ACCESS_NOT_CONFIGURED'
+            : undefined,
+        error:
+          error instanceof StudentAccessConfigurationError
+            ? '学生访问令牌服务未配置，请设置独立签名密钥'
+            : error instanceof Error
+              ? error.message
+              : '创建学生档案失败',
       },
-      { status: 400 }
+      {
+        status: error instanceof StudentAccessConfigurationError ? 503 : 400,
+      }
     );
   }
 }

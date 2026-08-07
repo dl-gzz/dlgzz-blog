@@ -47,7 +47,9 @@ async function runRemoteLearningAssistant(
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    const token = process.env.HERMES_LEARNING_ASSISTANT_TOKEN?.trim();
+    const token =
+      process.env.HERMES_LEARNING_ASSISTANT_TOKEN?.trim() ||
+      process.env.HERMES_BRIDGE_TOKEN?.trim();
     if (token) headers.Authorization = `Bearer ${token}`;
 
     const response = await fetch(remoteUrl, {
@@ -76,7 +78,9 @@ async function runRemoteLearningAssistant(
     }
 
     if (!parsed) {
-      throw new Error('Hermes learning-assistant returned empty or invalid JSON');
+      throw new Error(
+        'Hermes learning-assistant returned empty or invalid JSON'
+      );
     }
 
     return parsed;

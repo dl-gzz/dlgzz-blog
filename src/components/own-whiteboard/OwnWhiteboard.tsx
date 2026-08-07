@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen,
   Bot,
@@ -16,6 +15,8 @@ import {
   Send,
   Trash2,
 } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import QrSvg from 'react-qr-code';
 
 type ShapeType = 'preview_html' | 'ai_result' | 'math_quiz';
@@ -172,7 +173,8 @@ type DragState =
       startY: number;
     };
 
-const STORAGE_KEY = 'dlgzz-own-whiteboard-v1';
+const STORAGE_KEY_PREFIX = 'dlgzz-own-whiteboard-v1';
+const STUDENT_TOKEN_STORAGE_KEY_PREFIX = 'dlgzz-student-access-token-v1';
 const AI_PANEL_WIDTH = 390;
 const AI_PANEL_HEIGHT = 520;
 const AI_PANEL_MARGIN = 12;
@@ -1148,8 +1150,10 @@ function buildCircleAreaCoursewareHtml(studentId = '') {
 }
 
 function normalizeShapeType(type: string): ShapeType {
-  if (type === 'math_quiz' || type === 'ten_within_math_quiz') return 'math_quiz';
-  if (type === 'preview_html' || type === 'html' || type === 'app') return 'preview_html';
+  if (type === 'math_quiz' || type === 'ten_within_math_quiz')
+    return 'math_quiz';
+  if (type === 'preview_html' || type === 'html' || type === 'app')
+    return 'preview_html';
   return 'ai_result';
 }
 
@@ -1167,7 +1171,21 @@ function normalizeBoardOperation(value: unknown): BoardOperation | null {
   const props = pickOperationProps(value);
   const typeText = readText(value.type, readText(value.shapeType));
   const html = readText(props.html, readText(value.html));
-  const text = readText(props.text, readText(props.content, readText(value.text)));
+  const text = readText(
+    props.text,
+    readText(props.content, readText(value.text))
+  );
+  const width =
+    readNumber(props.w) ?? readNumber(value.w) ?? readNumber(value.width);
+  const height =
+    readNumber(props.h) ?? readNumber(value.h) ?? readNumber(value.height);
+  const createProps = {
+    ...props,
+    ...(width ? { w: width } : {}),
+    ...(height ? { h: height } : {}),
+    ...(html ? { html } : {}),
+    ...(text ? { text } : {}),
+  };
 
   if (['create', 'add', 'insert'].includes(action)) {
     const type = typeText || (html ? 'preview_html' : 'ai_result');
@@ -1176,11 +1194,7 @@ function normalizeBoardOperation(value: unknown): BoardOperation | null {
       type,
       x: readNumber(value.x),
       y: readNumber(value.y),
-      props: {
-        ...props,
-        ...(html ? { html } : {}),
-        ...(text ? { text } : {}),
-      },
+      props: createProps,
     };
   }
 
@@ -1190,11 +1204,17 @@ function normalizeBoardOperation(value: unknown): BoardOperation | null {
       type: html ? 'preview_html' : 'ai_result',
       x: readNumber(value.x),
       y: readNumber(value.y),
-      props: {
-        ...props,
-        ...(html ? { html } : {}),
-        ...(text ? { text } : {}),
-      },
+      props: createProps,
+    };
+  }
+
+  if (!action && (typeText || html || text)) {
+    return {
+      action: 'create',
+      type: typeText || (html ? 'preview_html' : 'ai_result'),
+      x: readNumber(value.x),
+      y: readNumber(value.y),
+      props: createProps,
     };
   }
 
@@ -1230,7 +1250,11 @@ function extractJson(raw: string) {
     // Continue with balanced-object extraction below.
   }
 
-  for (let start = source.indexOf('{'); start >= 0; start = source.indexOf('{', start + 1)) {
+  for (
+    let start = source.indexOf('{');
+    start >= 0;
+    start = source.indexOf('{', start + 1)
+  ) {
     let depth = 0;
     let inString = false;
     let escaped = false;
@@ -1288,7 +1312,8 @@ function extractHtmlDocument(value: unknown): string {
     const fencedHtml = source.match(/```html\s*([\s\S]*?)```/i);
     const htmlSource = decodeJsonishText(fencedHtml?.[1] || source).trim();
     const startsAtDocument = htmlSource.search(/<!doctype\s+html|<html[\s>]/i);
-    const rawDocumentSource = startsAtDocument >= 0 ? htmlSource.slice(startsAtDocument) : htmlSource;
+    const rawDocumentSource =
+      startsAtDocument >= 0 ? htmlSource.slice(startsAtDocument) : htmlSource;
     const endMatch = rawDocumentSource.match(/<\/html>/i);
     const documentSource = endMatch
       ? rawDocumentSource.slice(0, (endMatch.index || 0) + endMatch[0].length)
@@ -1308,27 +1333,49 @@ function extractHtmlDocument(value: unknown): string {
   const props = pickOperationProps(value);
   return (
     extractHtmlDocument(props.html) ||
+    extractHtmlDocument(props.preview_html) ||
+    extractHtmlDocument(props.previewHtml) ||
     extractHtmlDocument(props.content) ||
     extractHtmlDocument(value.html) ||
+    extractHtmlDocument(value.preview_html) ||
+    extractHtmlDocument(value.previewHtml) ||
     extractHtmlDocument(value.content) ||
     extractHtmlDocument(value.message)
   );
 }
 
-function collectBoardOperations(plan: unknown, responseText: string): BoardOperation[] {
-  const normalizedOperations = isObjectRecord(plan) && Array.isArray(plan.operations)
-    ? plan.operations
-        .map((operation: unknown) => normalizeBoardOperation(operation))
-        .filter((operation: BoardOperation | null): operation is BoardOperation => Boolean(operation))
-    : [];
+function collectBoardOperations(
+  plan: unknown,
+  responseText: string
+): BoardOperation[] {
+  if (Array.isArray(plan)) {
+    const operations = plan
+      .map((operation: unknown) => normalizeBoardOperation(operation))
+      .filter((operation: BoardOperation | null): operation is BoardOperation =>
+        Boolean(operation)
+      );
+    if (operations.length > 0) return operations;
+  }
+
+  const normalizedOperations =
+    isObjectRecord(plan) && Array.isArray(plan.operations)
+      ? plan.operations
+          .map((operation: unknown) => normalizeBoardOperation(operation))
+          .filter(
+            (operation: BoardOperation | null): operation is BoardOperation =>
+              Boolean(operation)
+          )
+      : [];
 
   if (normalizedOperations.length > 0) return normalizedOperations;
 
   if (isObjectRecord(plan)) {
-    const nestedPlan = typeof plan.message === 'string' ? extractJson(plan.message) : null;
-    const nestedOperations = nestedPlan && nestedPlan !== plan
-      ? collectBoardOperations(nestedPlan, plan.message as string)
-      : [];
+    const nestedPlan =
+      typeof plan.message === 'string' ? extractJson(plan.message) : null;
+    const nestedOperations =
+      nestedPlan && nestedPlan !== plan
+        ? collectBoardOperations(nestedPlan, plan.message as string)
+        : [];
     if (nestedOperations.length > 0) return nestedOperations;
 
     const html = extractHtmlDocument(plan);
@@ -1373,8 +1420,16 @@ function clampAiPanelPosition(x: number, y: number) {
   if (typeof window === 'undefined') return { x, y };
 
   return {
-    x: clamp(x, AI_PANEL_MARGIN, window.innerWidth - AI_PANEL_WIDTH - AI_PANEL_MARGIN),
-    y: clamp(y, AI_PANEL_MARGIN, window.innerHeight - AI_PANEL_HEIGHT - AI_PANEL_MARGIN),
+    x: clamp(
+      x,
+      AI_PANEL_MARGIN,
+      window.innerWidth - AI_PANEL_WIDTH - AI_PANEL_MARGIN
+    ),
+    y: clamp(
+      y,
+      AI_PANEL_MARGIN,
+      window.innerHeight - AI_PANEL_HEIGHT - AI_PANEL_MARGIN
+    ),
   };
 }
 
@@ -1418,19 +1473,28 @@ function normalizeWrongItems(value: unknown): QuizWrongItem[] {
     .filter(Boolean) as QuizWrongItem[];
 }
 
-function normalizeQuizResultPayload(payload: unknown): QuizResultPayload | null {
+function normalizeQuizResultPayload(
+  payload: unknown
+): QuizResultPayload | null {
   if (!isObjectRecord(payload)) return null;
 
   const topic = readText(payload.topic, readText(payload.skill, '未分类练习'));
   const questions = normalizeWrongItems(
-    payload.questions || payload.items || payload.answers || payload.questionItems
+    payload.questions ||
+      payload.items ||
+      payload.answers ||
+      payload.questionItems
   );
   const wrong = normalizeWrongItems(payload.wrong);
-  const totalValue = readNumber(payload.total) ?? (questions.length || wrong.length);
+  const totalValue =
+    readNumber(payload.total) ?? (questions.length || wrong.length);
   const total = Math.max(0, Math.round(totalValue));
   const correct = Math.max(
     0,
-    Math.min(total, Math.round(readNumber(payload.correct) ?? total - wrong.length))
+    Math.min(
+      total,
+      Math.round(readNumber(payload.correct) ?? total - wrong.length)
+    )
   );
 
   if (!topic || total <= 0) return null;
@@ -1453,9 +1517,12 @@ function normalizeEduAnswerPayload(payload: unknown): EduAnswerPayload | null {
   const correctAnswer = readText(payload.correctAnswer);
   const studentAnswer = readText(payload.studentAnswer);
   const isCorrect =
-    typeof payload.isCorrect === 'boolean' || typeof payload.isCorrect === 'string'
+    typeof payload.isCorrect === 'boolean' ||
+    typeof payload.isCorrect === 'string'
       ? readBoolean(payload.isCorrect)
-      : Boolean(correctAnswer && studentAnswer && correctAnswer === studentAnswer);
+      : Boolean(
+          correctAnswer && studentAnswer && correctAnswer === studentAnswer
+        );
 
   if (!question && !correctAnswer && !studentAnswer) return null;
 
@@ -1482,6 +1549,28 @@ function readSearchParam(name: string, fallback: string) {
   return value || fallback;
 }
 
+function readStudentAccessToken(studentId: string) {
+  const hashToken =
+    typeof window === 'undefined'
+      ? ''
+      : new URLSearchParams(window.location.hash.slice(1))
+          .get('studentToken')
+          ?.trim() || '';
+  const urlToken = hashToken || readSearchParam('studentToken', '');
+  if (urlToken) return urlToken;
+  if (typeof window === 'undefined' || !studentId) return '';
+
+  try {
+    return (
+      window.sessionStorage.getItem(
+        `${STUDENT_TOKEN_STORAGE_KEY_PREFIX}:${studentId}`
+      ) || ''
+    );
+  } catch {
+    return '';
+  }
+}
+
 function formatLocalDateTime(value: string) {
   const time = new Date(value);
   if (Number.isNaN(time.getTime())) return value;
@@ -1500,9 +1589,14 @@ function buildParentBindQrHtml(bindQr: ParentBindQrResult) {
   const studentGrade = bindQr.studentGrade
     ? `<div class="meta-row"><span>年级</span><strong>${escapeHtml(bindQr.studentGrade)}</strong></div>`
     : '';
-  const expiresAt = escapeHtml(bindQr.expiresAt ? formatLocalDateTime(bindQr.expiresAt) : '未返回');
-  const profileName = bindQr.profileName || bindQr.hermesProfileId || '等待创建';
-  const statusLabel = escapeHtml(getBindStatusLabel(bindQr.status, bindQr.bound));
+  const expiresAt = escapeHtml(
+    bindQr.expiresAt ? formatLocalDateTime(bindQr.expiresAt) : '未返回'
+  );
+  const profileName =
+    bindQr.profileName || bindQr.hermesProfileId || '等待创建';
+  const statusLabel = escapeHtml(
+    getBindStatusLabel(bindQr.status, bindQr.bound)
+  );
   const helperText = bindQr.bound
     ? '家长微信已绑定到这个学生档案。'
     : '请让家长使用微信扫描侧边栏二维码并确认。';
@@ -1627,14 +1721,17 @@ function buildParentBindQrHtml(bindQr: ParentBindQrResult) {
 function getBindStatusLabel(status: string, bound?: boolean) {
   if (bound || status === 'activated' || status === 'active') return '已绑定';
   if (status === 'scanned') return '已扫码，等待确认';
-  if (status === 'expired' || status === 'activation_expired') return '二维码已过期';
+  if (status === 'expired' || status === 'activation_expired')
+    return '二维码已过期';
   if (status === 'failed' || status === 'activation_failed') return '激活失败';
   if (status === 'demo_ready') return '演示二维码';
   return '等待扫码';
 }
 
 function isBindPollingStatus(status: string) {
-  return ['qr_ready', 'scanned', 'ready_to_activate', 'demo_ready'].includes(status);
+  return ['qr_ready', 'scanned', 'ready_to_activate', 'demo_ready'].includes(
+    status
+  );
 }
 
 function resolveStudentIdFromMessage(value: unknown, fallback: string) {
@@ -1678,12 +1775,18 @@ export default function OwnWhiteboard() {
   const [lessonPosts, setLessonPosts] = useState<LessonPromptPost[]>([]);
   const [lessonLoading, setLessonLoading] = useState(false);
   const [lessonSearch, setLessonSearch] = useState('');
-  const [aiPanelPosition, setAiPanelPosition] = useState<{ x: number; y: number } | null>(null);
+  const [aiPanelPosition, setAiPanelPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [eduAttempts, setEduAttempts] = useState<EduAttemptRecord[]>([]);
   const [messages, setMessages] = useState<BoardMessage[]>([
-    { role: 'system', text: '自研白板已启动。AI 会通过 Hermes 返回 JSON action。' },
+    {
+      role: 'system',
+      text: '自研白板已启动。AI 会通过 Hermes 返回 JSON action。',
+    },
   ]);
   const [ready, setReady] = useState(false);
   const dragRef = useRef<DragState | null>(null);
@@ -1691,11 +1794,30 @@ export default function OwnWhiteboard() {
   const coursewareImportStartedRef = useRef(false);
   const coursewareSlugLoadStartedRef = useRef(false);
   const studentId = useMemo(() => readSearchParam('studentId', ''), []);
-  const lessonId = useMemo(() => readSearchParam('lessonId', 'own-whiteboard-demo'), []);
+  const studentAccessToken = useMemo(
+    () => readStudentAccessToken(studentId),
+    [studentId]
+  );
+  const lessonId = useMemo(
+    () => readSearchParam('lessonId', 'own-whiteboard-demo'),
+    []
+  );
+  const storageKey = useMemo(() => {
+    const identity = [studentId || 'anonymous', lessonId || 'default']
+      .map((part) => encodeURIComponent(part))
+      .join(':');
+    return `${STORAGE_KEY_PREFIX}:${identity}`;
+  }, [lessonId, studentId]);
   const initialPrompt = useMemo(() => readSearchParam('prompt', ''), []);
   const initialPromptTitle = useMemo(() => readSearchParam('title', ''), []);
-  const initialCoursewareImportKey = useMemo(() => readSearchParam('coursewareImportKey', ''), []);
-  const initialLoadCoursewareSlug = useMemo(() => readSearchParam('loadCoursewareSlug', ''), []);
+  const initialCoursewareImportKey = useMemo(
+    () => readSearchParam('coursewareImportKey', ''),
+    []
+  );
+  const initialLoadCoursewareSlug = useMemo(
+    () => readSearchParam('loadCoursewareSlug', ''),
+    []
+  );
   const [bindPanelOpen, setBindPanelOpen] = useState(false);
   const [bindStudentId, setBindStudentId] = useState(studentId);
   const [bindStudentName, setBindStudentName] = useState('');
@@ -1712,7 +1834,9 @@ export default function OwnWhiteboard() {
   const lessonPromptPosts = useMemo(
     () =>
       lessonPosts.filter(
-        (post) => post.whiteboardPrompt?.trim() && post.whiteboardCategory === 'education'
+        (post) =>
+          post.whiteboardPrompt?.trim() &&
+          post.whiteboardCategory === 'education'
       ),
     [lessonPosts]
   );
@@ -1731,7 +1855,7 @@ export default function OwnWhiteboard() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) setShapes(parsed);
@@ -1741,19 +1865,53 @@ export default function OwnWhiteboard() {
     } finally {
       setReady(true);
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(shapes));
-  }, [ready, shapes]);
+    localStorage.setItem(storageKey, JSON.stringify(shapes));
+  }, [ready, shapes, storageKey]);
 
   useEffect(() => {
     if (studentId && !bindStudentId) setBindStudentId(studentId);
   }, [bindStudentId, studentId]);
 
   useEffect(() => {
-    if (!bindQr?.activationId || !bindQr.studentId || !isBindPollingStatus(bindQr.status)) {
+    if (!studentId || !studentAccessToken) return;
+
+    try {
+      window.sessionStorage.setItem(
+        `${STUDENT_TOKEN_STORAGE_KEY_PREFIX}:${studentId}`,
+        studentAccessToken
+      );
+    } catch {
+      // Continue with the in-memory token when session storage is unavailable.
+    }
+
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(url.hash.slice(1));
+    const hasQueryToken = url.searchParams.has('studentToken');
+    const hasHashToken = hashParams.has('studentToken');
+    if (!hasQueryToken && !hasHashToken) return;
+
+    url.searchParams.delete('studentToken');
+    if (hasHashToken) {
+      hashParams.delete('studentToken');
+      url.hash = hashParams.toString();
+    }
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${url.pathname}${url.search}${url.hash}`
+    );
+  }, [studentAccessToken, studentId]);
+
+  useEffect(() => {
+    if (
+      !bindQr?.activationId ||
+      !bindQr.studentId ||
+      !isBindPollingStatus(bindQr.status)
+    ) {
       return;
     }
 
@@ -1775,9 +1933,12 @@ export default function OwnWhiteboard() {
             ...bindQr,
             activationId: readText(data.activationId, bindQr.activationId),
             status: nextStatus,
-            expiresAt: readText(data.expiresAt, bindQr.expiresAt || '') || bindQr.expiresAt,
+            expiresAt:
+              readText(data.expiresAt, bindQr.expiresAt || '') ||
+              bindQr.expiresAt,
             profileName: readText(data.profileName) || bindQr.profileName,
-            hermesProfileId: readText(data.hermesProfileId) || bindQr.hermesProfileId,
+            hermesProfileId:
+              readText(data.hermesProfileId) || bindQr.hermesProfileId,
             qrPayload: readText(data.qrPayload) || bindQr.qrPayload,
             qrImageUrl: readText(data.qrImageUrl) || bindQr.qrImageUrl,
             weixinUserId: readText(data.weixinUserId) || bindQr.weixinUserId,
@@ -1821,8 +1982,14 @@ export default function OwnWhiteboard() {
     };
   }, [bindQr]);
 
-  function handleQuizResult(quiz: QuizResultPayload, messageStudentId?: unknown) {
-    const targetStudentId = resolveStudentIdFromMessage(messageStudentId, studentId);
+  function handleQuizResult(
+    quiz: QuizResultPayload,
+    messageStudentId?: unknown
+  ) {
+    const targetStudentId = resolveStudentIdFromMessage(
+      messageStudentId,
+      studentId
+    );
     const record: EduAttemptRecord = {
       id: `quiz:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
       kind: 'quiz',
@@ -1891,7 +2058,7 @@ export default function OwnWhiteboard() {
 
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [lessonId, studentId]);
+  }, [lessonId, studentAccessToken, studentId]);
 
   useEffect(() => {
     setAiPanelPosition((current) => {
@@ -1919,7 +2086,9 @@ export default function OwnWhiteboard() {
       const dy = event.clientY - drag.startClientY;
 
       if (drag.mode === 'ai-panel') {
-        setAiPanelPosition(clampAiPanelPosition(drag.startX + dx, drag.startY + dy));
+        setAiPanelPosition(
+          clampAiPanelPosition(drag.startX + dx, drag.startY + dy)
+        );
         return;
       }
 
@@ -2012,7 +2181,8 @@ export default function OwnWhiteboard() {
         if (op.action === 'create') {
           const type = normalizeShapeType(op.type);
           const props = (op.props || {}) as BoardShape['props'];
-          const isInteractiveHtml = type === 'preview_html' || type === 'math_quiz';
+          const isInteractiveHtml =
+            type === 'preview_html' || type === 'math_quiz';
           const w = Number(props.w || (isInteractiveHtml ? 680 : 340));
           const h = Number(props.h || (isInteractiveHtml ? 500 : 220));
           const shape: BoardShape = {
@@ -2027,9 +2197,15 @@ export default function OwnWhiteboard() {
                 type === 'preview_html'
                   ? String(props.html || getDefaultHtml(studentId))
                   : type === 'math_quiz'
-                    ? String(props.html || buildTenWithinMathCoursewareHtml(studentId))
+                    ? String(
+                        props.html ||
+                          buildTenWithinMathCoursewareHtml(studentId)
+                      )
                     : undefined,
-              text: type === 'ai_result' ? String(props.text || 'AI 结果') : undefined,
+              text:
+                type === 'ai_result'
+                  ? String(props.text || 'AI 结果')
+                  : undefined,
               color: String(props.color || '#ffffff'),
             },
           };
@@ -2079,44 +2255,54 @@ export default function OwnWhiteboard() {
   async function persistEduAttempt(record: EduAttemptRecord) {
     try {
       if (!record.studentId) {
-        throw new Error('缺少 studentId，请通过 URL 参数 ?studentId=学生编号 打开白板');
+        throw new Error(
+          '缺少 studentId，请通过 URL 参数 ?studentId=学生编号 打开白板'
+        );
       }
 
-      const studentResponse = await fetch('/api/learning-assistant/record-quiz', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentId: record.studentId,
-          lessonId: record.lessonId,
-          source: 'whiteboard-single-answer',
-          quiz: {
-            topic: record.skill,
-            total: 1,
-            correct: record.isCorrect ? 1 : 0,
-            questions: [
-              {
-                question: record.question,
-                studentAnswer: record.studentAnswer,
-                correctAnswer: record.correctAnswer,
-              },
-            ],
-            wrong: record.isCorrect
-              ? []
-              : [
-                  {
-                    question: record.question,
-                    studentAnswer: record.studentAnswer,
-                    correctAnswer: record.correctAnswer,
-                  },
-                ],
-            durationSeconds:
-              typeof record.timeSpentMs === 'number'
-                ? Math.round(record.timeSpentMs / 1000)
-                : undefined,
-            finishedAt: record.receivedAt,
+      const studentResponse = await fetch(
+        '/api/learning-assistant/record-quiz',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(studentAccessToken
+              ? { Authorization: `Bearer ${studentAccessToken}` }
+              : {}),
           },
-        }),
-      });
+          body: JSON.stringify({
+            studentId: record.studentId,
+            lessonId: record.lessonId,
+            source: 'whiteboard-single-answer',
+            quiz: {
+              topic: record.skill,
+              total: 1,
+              correct: record.isCorrect ? 1 : 0,
+              questions: [
+                {
+                  question: record.question,
+                  studentAnswer: record.studentAnswer,
+                  correctAnswer: record.correctAnswer,
+                },
+              ],
+              wrong: record.isCorrect
+                ? []
+                : [
+                    {
+                      question: record.question,
+                      studentAnswer: record.studentAnswer,
+                      correctAnswer: record.correctAnswer,
+                    },
+                  ],
+              durationSeconds:
+                typeof record.timeSpentMs === 'number'
+                  ? Math.round(record.timeSpentMs / 1000)
+                  : undefined,
+              finishedAt: record.receivedAt,
+            },
+          }),
+        }
+      );
       const studentData = await studentResponse.json().catch(() => null);
       if (!studentResponse.ok || !studentData?.success) {
         throw new Error(studentData?.error || `HTTP ${studentResponse.status}`);
@@ -2142,15 +2328,25 @@ export default function OwnWhiteboard() {
     }
   }
 
-  async function persistQuizResult(record: EduAttemptRecord, quiz: QuizResultPayload) {
+  async function persistQuizResult(
+    record: EduAttemptRecord,
+    quiz: QuizResultPayload
+  ) {
     try {
       if (!record.studentId) {
-        throw new Error('缺少 studentId，请通过 URL 参数 ?studentId=学生编号 打开白板');
+        throw new Error(
+          '缺少 studentId，请通过 URL 参数 ?studentId=学生编号 打开白板'
+        );
       }
 
       const response = await fetch('/api/learning-assistant/record-quiz', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(studentAccessToken
+            ? { Authorization: `Bearer ${studentAccessToken}` }
+            : {}),
+        },
         body: JSON.stringify({
           studentId: record.studentId,
           lessonId: record.lessonId,
@@ -2217,7 +2413,8 @@ export default function OwnWhiteboard() {
 
   function getLessonPostSlug(post: LessonPromptPost) {
     if (post.slug) return post.slug;
-    if (Array.isArray(post.slugs) && post.slugs.length > 0) return post.slugs.join('/');
+    if (Array.isArray(post.slugs) && post.slugs.length > 0)
+      return post.slugs.join('/');
     return post.url.split('/').filter(Boolean).pop() || '';
   }
 
@@ -2232,7 +2429,9 @@ export default function OwnWhiteboard() {
       locale: 'zh',
       studentId,
     });
-    const response = await fetch(`/api/whiteboard/courseware-mdx?${params.toString()}`);
+    const response = await fetch(
+      `/api/whiteboard/courseware-mdx?${params.toString()}`
+    );
     const data = await response.json().catch(() => null);
     if (!response.ok || !data?.success || !Array.isArray(data.operations)) {
       throw new Error(data?.error || `HTTP ${response.status}`);
@@ -2246,89 +2445,73 @@ export default function OwnWhiteboard() {
     ]);
   }
 
-  function runLessonPrompt(post: LessonPromptPost) {
-    if (post.hasSavedCourseware) {
-      setLessonLibraryOpen(false);
-      setAiOpen(false);
-      void runSavedCoursewarePost(post).catch((error) => {
-        setMessages((current) => [
-          ...current,
-          {
-            role: 'assistant',
-            text: error instanceof Error ? `读取已保存课件失败：${error.message}` : '读取已保存课件失败。',
-          },
-        ]);
+  async function runGeneratedCoursewarePost(post: LessonPromptPost) {
+    const slug = getLessonPostSlug(post);
+    if (!slug) {
+      throw new Error('Block 缺少 slug');
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/teacher/courseware/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug,
+          locale: 'zh',
+          studentId,
+          extraPrompt:
+            '从这个 MDX Block 生成一个可触屏互动课件，并直接放入白板。',
+        }),
       });
-      return;
-    }
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || `HTTP ${response.status}`);
+      }
 
-    const isCircleAreaLesson =
-      post.url.includes('circle-area-touch-courseware') ||
-      post.slugs?.includes('circle-area-touch-courseware') ||
-      /圆面积|圆的面积|扇形|徐老师/.test(`${post.title} ${post.description} ${post.whiteboardPrompt || ''}`);
+      const operations = collectBoardOperations(
+        data?.plan,
+        JSON.stringify(data?.plan || data)
+      );
+      if (operations.length === 0) {
+        throw new Error('生成结果里没有可创建的白板组件');
+      }
 
-    if (isCircleAreaLesson) {
-      setLessonLibraryOpen(false);
-      setAiOpen(false);
-      const shapeWidth = Math.min(820, Math.max(360, window.innerWidth - 32));
-      const shapeHeight = Math.min(620, Math.max(480, window.innerHeight - 128));
-      executeOperations([
-        {
-          action: 'create',
-          type: 'preview_html',
-          x: 16,
-          y: 72,
-          props: {
-            w: shapeWidth,
-            h: shapeHeight,
-            html: buildCircleAreaCoursewareHtml(studentId),
-          },
-        },
-      ]);
+      executeOperations(operations);
       setMessages((current) => [
         ...current,
         { role: 'user', text: `课件库：${post.title}` },
-        { role: 'assistant', text: '已生成圆面积推导触屏课件，支持拖动半径、切分扇形和公式检查。' },
-      ]);
-      return;
-    }
-
-    const isTenWithinMathLesson =
-      post.url.includes('interactive-math-game') ||
-      post.slugs?.includes('interactive-math-game') ||
-      /十以内加减法|数学游戏/.test(`${post.title} ${post.description} ${post.whiteboardPrompt || ''}`);
-
-    if (isTenWithinMathLesson) {
-      setLessonLibraryOpen(false);
-      setAiOpen(false);
-      const shapeWidth = Math.min(760, Math.max(360, window.innerWidth - 32));
-      const shapeHeight = Math.min(560, Math.max(430, window.innerHeight - 128));
-      executeOperations([
         {
-          action: 'create',
-          type: 'math_quiz',
-          x: 16,
-          y: 72,
-          props: {
-            w: shapeWidth,
-            h: shapeHeight,
-            html: buildTenWithinMathCoursewareHtml(studentId),
-          },
+          role: 'assistant',
+          text: data?.fallback
+            ? 'AI 生成超时或不稳定，已使用系统兜底生成互动课件。'
+            : '已根据 MDX Block 生成互动课件。',
         },
       ]);
-      setMessages((current) => [
-        ...current,
-        { role: 'user', text: `课件库：${post.title}` },
-        { role: 'assistant', text: '已生成可交互的十以内加减法课件，答完会自动写入学习档案。' },
-      ]);
-      return;
+    } finally {
+      setLoading(false);
     }
+  }
 
-    const prompt =
-      post.whiteboardPrompt?.trim() ||
-      `帮我基于博客《${post.title}》生成一个互动教育课件。博客简介：${post.description}`;
+  function runLessonPrompt(post: LessonPromptPost) {
     setLessonLibraryOpen(false);
-    void runAIWithPrompt(prompt, `课件库：${post.title}`);
+    setAiOpen(false);
+    const run = post.hasSavedCourseware
+      ? runSavedCoursewarePost(post)
+      : runGeneratedCoursewarePost(post);
+    void run.catch((error) => {
+      setMessages((current) => [
+        ...current,
+        { role: 'user', text: `课件库：${post.title}` },
+        {
+          role: 'assistant',
+          text:
+            error instanceof Error
+              ? `生成课件失败：${error.message}`
+              : '生成课件失败。',
+        },
+      ]);
+    });
   }
 
   async function createParentBindQr() {
@@ -2343,25 +2526,36 @@ export default function OwnWhiteboard() {
     setBindQr(null);
 
     try {
-      const activationResponse = await fetch('/api/learning-assistant/profile-activation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentId: targetStudentId,
-          name: bindStudentName.trim(),
-          grade: bindStudentGrade.trim(),
-        }),
-      });
+      const activationResponse = await fetch(
+        '/api/learning-assistant/profile-activation',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentId: targetStudentId,
+            name: bindStudentName.trim(),
+            grade: bindStudentGrade.trim(),
+          }),
+        }
+      );
       const activationData = await activationResponse.json().catch(() => null);
 
       if (!activationResponse.ok || !activationData?.success) {
-        throw new Error(activationData?.error || `HTTP ${activationResponse.status}`);
+        throw new Error(
+          activationData?.error || `HTTP ${activationResponse.status}`
+        );
       }
 
       const nextQr: ParentBindQrResult = {
         studentId: readText(activationData.studentId, targetStudentId),
-        studentName: bindStudentName.trim() || readText(activationData.studentName) || undefined,
-        studentGrade: bindStudentGrade.trim() || readText(activationData.studentGrade) || undefined,
+        studentName:
+          bindStudentName.trim() ||
+          readText(activationData.studentName) ||
+          undefined,
+        studentGrade:
+          bindStudentGrade.trim() ||
+          readText(activationData.studentGrade) ||
+          undefined,
         assistantId: readText(activationData.assistantId) || undefined,
         activationId: readText(activationData.activationId),
         status: readText(activationData.status, 'qr_ready'),
@@ -2379,26 +2573,39 @@ export default function OwnWhiteboard() {
       if (!nextQr.activationId) {
         throw new Error('Hermes 未返回 activationId');
       }
-      if (!nextQr.qrPayload && !nextQr.qrImageUrl && nextQr.status !== 'activated') {
+      if (
+        !nextQr.qrPayload &&
+        !nextQr.qrImageUrl &&
+        nextQr.status !== 'activated'
+      ) {
         throw new Error('Hermes Bridge 未返回可扫码二维码');
       }
 
       setBindQr(nextQr);
-      createShape('preview_html', {
-        w: 390,
-        h: 320,
-        html: buildParentBindQrHtml(nextQr),
-      }, {
-        y: 28,
-        select: false,
-      });
+      createShape(
+        'preview_html',
+        {
+          w: 390,
+          h: 320,
+          html: buildParentBindQrHtml(nextQr),
+        },
+        {
+          y: 28,
+          select: false,
+        }
+      );
       setSelectedId(null);
       setMessages((current) => [
         ...current,
-        { role: 'system', text: `已生成 ${targetStudentId} 的 Hermes 微信绑定二维码，请让家长扫码确认。` },
+        {
+          role: 'system',
+          text: `已生成 ${targetStudentId} 的 Hermes 微信绑定二维码，请让家长扫码确认。`,
+        },
       ]);
     } catch (error) {
-      setBindError(error instanceof Error ? error.message : '生成 Hermes 绑定二维码失败');
+      setBindError(
+        error instanceof Error ? error.message : '生成 Hermes 绑定二维码失败'
+      );
     } finally {
       setBindLoading(false);
     }
@@ -2414,15 +2621,36 @@ export default function OwnWhiteboard() {
         limit: '8',
         dueBefore: new Date().toISOString(),
       });
-      const response = await fetch(`/api/learning-assistant/next-practice?${params.toString()}`);
+      const response = await fetch(
+        `/api/learning-assistant/next-practice?${params.toString()}`,
+        {
+          headers: studentAccessToken
+            ? { Authorization: `Bearer ${studentAccessToken}` }
+            : undefined,
+        }
+      );
       const data = await response.json().catch(() => null);
-      const items = Array.isArray(data?.items) ? (data.items as DueWrongbookItem[]) : [];
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || `HTTP ${response.status}`);
+      }
+      const items = Array.isArray(data?.items)
+        ? (data.items as DueWrongbookItem[])
+        : [];
 
       return {
         count: Number(data?.count || items.length),
         prompt: readText(data?.prompt) || formatDueWrongbookPrompt(items),
       };
-    } catch {
+    } catch (error) {
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'system',
+          text: `无法读取学生错题：${
+            error instanceof Error ? error.message : '未知错误'
+          }`,
+        },
+      ]);
       return { count: 0, prompt: '' };
     }
   }
@@ -2445,14 +2673,17 @@ export default function OwnWhiteboard() {
       const finalPrompt = `${SYSTEM_PROMPT}\n\nCURRENT CONTEXT:\n${context}\n\nUSER REQUEST${
         sourceLabel ? ` (${sourceLabel})` : ''
       }: ${userText}\n\nCURRENT STUDENT ID: ${
-        studentId ? `"${studentId}"` : '未提供，生成组件可以继续，但答题结果无法入档'
-      }${
-        dueWrongbook.prompt ? `\n\n${dueWrongbook.prompt}` : ''
-      }`;
+        studentId
+          ? `"${studentId}"`
+          : '未提供，生成组件可以继续，但答题结果无法入档'
+      }${dueWrongbook.prompt ? `\n\n${dueWrongbook.prompt}` : ''}`;
       if (dueWrongbook.count > 0) {
         setMessages((current) => [
           ...current,
-          { role: 'system', text: `已加入 ${dueWrongbook.count} 道到期错题用于重现。` },
+          {
+            role: 'system',
+            text: `已加入 ${dueWrongbook.count} 道到期错题用于重现。`,
+          },
         ]);
       }
       const response = await fetch('/api/whiteboard/chat', {
@@ -2479,17 +2710,26 @@ export default function OwnWhiteboard() {
       const normalizedOperations = collectBoardOperations(plan, responseText);
 
       if (normalizedOperations.length === 0) {
-        createFallbackShape(userText, 'Hermes 没有返回 JSON operations，因此已自动生成本地 HTML 组件。');
+        createFallbackShape(
+          userText,
+          'Hermes 没有返回 JSON operations，因此已自动生成本地 HTML 组件。'
+        );
         setMessages((current) => [
           ...current,
-          { role: 'assistant', text: 'Hermes 没有返回组件 JSON，已使用本地兜底生成 HTML 组件。' },
+          {
+            role: 'assistant',
+            text: 'Hermes 没有返回组件 JSON，已使用本地兜底生成 HTML 组件。',
+          },
         ]);
         return;
       }
 
       executeOperations(normalizedOperations);
       const assistantText = isObjectRecord(plan)
-        ? readText(plan.thought, readText(plan.voice_response, '已生成互动课件。'))
+        ? readText(
+            plan.thought,
+            readText(plan.voice_response, '已生成互动课件。')
+          )
         : '已从 Hermes 返回中恢复并生成互动课件。';
       setMessages((current) => [
         ...current,
@@ -2519,16 +2759,24 @@ export default function OwnWhiteboard() {
   }
 
   useEffect(() => {
-    if (!ready || !initialCoursewareImportKey || coursewareImportStartedRef.current) return;
+    if (
+      !ready ||
+      !initialCoursewareImportKey ||
+      coursewareImportStartedRef.current
+    )
+      return;
     coursewareImportStartedRef.current = true;
 
-    const storageKey = initialCoursewareImportKey.startsWith('dlgzz-courseware-import:')
+    const storageKey = initialCoursewareImportKey.startsWith(
+      'dlgzz-courseware-import:'
+    )
       ? initialCoursewareImportKey
       : `dlgzz-courseware-import:${initialCoursewareImportKey}`;
 
     try {
       const raw =
-        window.sessionStorage.getItem(storageKey) || window.localStorage.getItem(storageKey);
+        window.sessionStorage.getItem(storageKey) ||
+        window.localStorage.getItem(storageKey);
       if (!raw) {
         throw new Error('没有找到后台生成的课件数据');
       }
@@ -2556,14 +2804,22 @@ export default function OwnWhiteboard() {
         ...current,
         {
           role: 'system',
-          text: error instanceof Error ? `导入课件失败：${error.message}` : '导入课件失败',
+          text:
+            error instanceof Error
+              ? `导入课件失败：${error.message}`
+              : '导入课件失败',
         },
       ]);
     }
   }, [initialCoursewareImportKey, initialPromptTitle, ready]);
 
   useEffect(() => {
-    if (!ready || !initialLoadCoursewareSlug || coursewareSlugLoadStartedRef.current) return;
+    if (
+      !ready ||
+      !initialLoadCoursewareSlug ||
+      coursewareSlugLoadStartedRef.current
+    )
+      return;
     coursewareSlugLoadStartedRef.current = true;
 
     const params = new URLSearchParams({
@@ -2572,8 +2828,11 @@ export default function OwnWhiteboard() {
       studentId,
     });
 
-    void fetch(`/api/whiteboard/courseware-mdx?${params.toString()}`)
-      .then(async (response) => {
+    async function openCoursewareSlug() {
+      try {
+        const response = await fetch(
+          `/api/whiteboard/courseware-mdx?${params.toString()}`
+        );
         const data = await response.json().catch(() => null);
         if (!response.ok || !data?.success || !Array.isArray(data.operations)) {
           throw new Error(data?.error || `HTTP ${response.status}`);
@@ -2588,16 +2847,62 @@ export default function OwnWhiteboard() {
             text: `已从博客打开课件：${readText(data?.post?.title, initialPromptTitle || initialLoadCoursewareSlug)}`,
           },
         ]);
-      })
-      .catch((error) => {
-        setMessages((current) => [
-          ...current,
-          {
-            role: 'system',
-            text: error instanceof Error ? `打开博客课件失败：${error.message}` : '打开博客课件失败',
-          },
-        ]);
-      });
+      } catch (savedError) {
+        try {
+          const response = await fetch('/api/teacher/courseware/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slug: initialLoadCoursewareSlug,
+              locale: 'zh',
+              studentId,
+              extraPrompt: '从这个 Block 生成一个可触屏互动课件，并放入白板。',
+            }),
+          });
+          const data = await response.json().catch(() => null);
+          if (!response.ok || !data?.success) {
+            throw new Error(data?.error || `HTTP ${response.status}`);
+          }
+          const operations = collectBoardOperations(
+            data?.plan,
+            JSON.stringify(data?.plan || data)
+          );
+          if (operations.length === 0) {
+            throw new Error('生成结果里没有可创建的白板组件');
+          }
+          executeOperations(operations);
+          setAiOpen(false);
+          setLessonLibraryOpen(false);
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'system',
+              text: data?.fallback
+                ? `已根据博客 Block 生成兜底互动课件：${readText(data?.post?.title, initialPromptTitle || initialLoadCoursewareSlug)}`
+                : `已根据博客 Block 生成互动课件：${readText(data?.post?.title, initialPromptTitle || initialLoadCoursewareSlug)}`,
+            },
+          ]);
+        } catch (generateError) {
+          const savedMessage =
+            savedError instanceof Error
+              ? savedError.message
+              : '读取已保存课件失败';
+          const generateMessage =
+            generateError instanceof Error
+              ? generateError.message
+              : '生成互动课件失败';
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'system',
+              text: `打开博客课件失败：${savedMessage}；自动生成也失败：${generateMessage}`,
+            },
+          ]);
+        }
+      }
+    }
+
+    void openCoursewareSlug();
   }, [initialLoadCoursewareSlug, initialPromptTitle, ready, studentId]);
 
   useEffect(() => {
@@ -2622,7 +2927,9 @@ export default function OwnWhiteboard() {
 
   function downloadSelectedHtml() {
     if (!selectedShape?.props.html) return;
-    const blob = new Blob([selectedShape.props.html || ''], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([selectedShape.props.html || ''], {
+      type: 'text/html;charset=utf-8',
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -2640,7 +2947,8 @@ export default function OwnWhiteboard() {
         backgroundImage:
           'linear-gradient(rgba(17,24,39,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,.06) 1px, transparent 1px)',
         backgroundSize: '24px 24px',
-        fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        fontFamily:
+          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) setSelectedId(null);
@@ -2713,7 +3021,10 @@ export default function OwnWhiteboard() {
           </div>
           <div className="max-h-56 overflow-y-auto">
             {eduAttempts.slice(0, 6).map((attempt) => (
-              <div key={attempt.id} className="border-b border-black/10 px-3 py-2 last:border-b-0">
+              <div
+                key={attempt.id}
+                className="border-b border-black/10 px-3 py-2 last:border-b-0"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 truncate text-sm font-medium text-[#111827]">
                     {attempt.question}
@@ -2771,7 +3082,10 @@ export default function OwnWhiteboard() {
                 event.currentTarget.setPointerCapture(event.pointerId);
                 const position =
                   aiPanelPosition ||
-                  clampAiPanelPosition(window.innerWidth - AI_PANEL_WIDTH - 20, 20);
+                  clampAiPanelPosition(
+                    window.innerWidth - AI_PANEL_WIDTH - 20,
+                    20
+                  );
                 setAiPanelPosition(position);
                 document.body.style.cursor = 'grabbing';
                 document.body.style.userSelect = 'none';
@@ -2794,7 +3108,9 @@ export default function OwnWhiteboard() {
                 type="button"
                 className={[
                   'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs hover:bg-black/5',
-                  lessonLibraryOpen ? 'bg-[#111827] text-white' : 'text-black/60',
+                  lessonLibraryOpen
+                    ? 'bg-[#111827] text-white'
+                    : 'text-black/60',
                 ].join(' ')}
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={toggleLessonLibrary}
@@ -2820,7 +3136,9 @@ export default function OwnWhiteboard() {
                 type="button"
                 className="rounded-md px-2 py-1 text-xs text-black/60 hover:bg-black/5"
                 onPointerDown={(event) => event.stopPropagation()}
-                onClick={() => setMessages([{ role: 'system', text: '对话已清空。' }])}
+                onClick={() =>
+                  setMessages([{ role: 'system', text: '对话已清空。' }])
+                }
               >
                 清空
               </button>
@@ -2837,9 +3155,13 @@ export default function OwnWhiteboard() {
               />
               <div className="max-h-44 overflow-y-auto rounded-md border border-black/10">
                 {lessonLoading ? (
-                  <div className="px-3 py-4 text-center text-xs text-black/50">加载中...</div>
+                  <div className="px-3 py-4 text-center text-xs text-black/50">
+                    加载中...
+                  </div>
                 ) : filteredLessonPosts.length === 0 ? (
-                  <div className="px-3 py-4 text-center text-xs text-black/45">暂无教育课件</div>
+                  <div className="px-3 py-4 text-center text-xs text-black/45">
+                    暂无教育课件
+                  </div>
                 ) : (
                   filteredLessonPosts.map((post) => (
                     <button
@@ -2850,7 +3172,9 @@ export default function OwnWhiteboard() {
                       onClick={() => runLessonPrompt(post)}
                       className="block w-full border-b border-black/10 px-3 py-2 text-left last:border-b-0 hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-45"
                     >
-                      <div className="truncate text-sm font-medium text-[#111827]">{post.title}</div>
+                      <div className="truncate text-sm font-medium text-[#111827]">
+                        {post.title}
+                      </div>
                       <div className="mt-1 line-clamp-2 text-xs leading-4 text-black/55">
                         {post.description}
                       </div>
@@ -2907,17 +3231,27 @@ export default function OwnWhiteboard() {
                   <div className="text-xs leading-5 text-black/65">
                     <div className="flex items-center justify-between gap-2">
                       <div className="font-semibold text-[#111827]">
-                        {bindQr.studentName || '未填写姓名'} · {bindQr.studentId}
+                        {bindQr.studentName || '未填写姓名'} ·{' '}
+                        {bindQr.studentId}
                       </div>
                       <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold text-cyan-700">
                         {getBindStatusLabel(bindQr.status, bindQr.bound)}
                       </span>
                     </div>
-                    {bindQr.studentGrade && <div>年级：{bindQr.studentGrade}</div>}
-                    <div>Profile：{bindQr.profileName || bindQr.hermesProfileId || '等待创建'}</div>
+                    {bindQr.studentGrade && (
+                      <div>年级：{bindQr.studentGrade}</div>
+                    )}
+                    <div>
+                      Profile：
+                      {bindQr.profileName ||
+                        bindQr.hermesProfileId ||
+                        '等待创建'}
+                    </div>
                     <div>
                       有效期：
-                      {bindQr.expiresAt ? formatLocalDateTime(bindQr.expiresAt) : '未返回'}
+                      {bindQr.expiresAt
+                        ? formatLocalDateTime(bindQr.expiresAt)
+                        : '未返回'}
                     </div>
                   </div>
                   {bindQr.qrImageUrl ? (
@@ -2936,7 +3270,8 @@ export default function OwnWhiteboard() {
                   <div className="mt-2 text-xs leading-5 text-black/55">
                     {bindQr.bound
                       ? '绑定完成。家长之后在同一条微信聊天里提问即可读取这个学生档案。'
-                      : bindQr.message || '请让家长用微信扫码并确认，页面会自动更新状态。'}
+                      : bindQr.message ||
+                        '请让家长用微信扫码并确认，页面会自动更新状态。'}
                   </div>
                   {bindQr.weixinUserId && (
                     <div className="mt-1 truncate text-[11px] leading-4 text-black/40">
@@ -2964,7 +3299,9 @@ export default function OwnWhiteboard() {
                 {message.text}
               </div>
             ))}
-            {loading && <div className="text-xs text-black/50">Hermes 正在生成...</div>}
+            {loading && (
+              <div className="text-xs text-black/50">Hermes 正在生成...</div>
+            )}
           </div>
 
           <div className="border-t border-black/10 p-3">
@@ -2975,10 +3312,15 @@ export default function OwnWhiteboard() {
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') callAI();
                 }}
-                placeholder={selectedId ? '描述如何修改选中组件...' : '描述你想生成的组件...'}
+                placeholder={
+                  selectedId
+                    ? '描述如何修改选中组件...'
+                    : '描述你想生成的组件...'
+                }
                 className="h-10 min-w-0 flex-1 rounded-md border border-black/15 px-3 text-sm outline-none focus:border-[#111827]"
               />
               <button
+                type="button"
                 onClick={callAI}
                 disabled={loading || !input.trim()}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#111827] text-white disabled:cursor-not-allowed disabled:opacity-40"
@@ -2992,23 +3334,45 @@ export default function OwnWhiteboard() {
       )}
 
       <div className="absolute bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-md border border-black/10 bg-white/95 p-2 shadow-xl backdrop-blur">
-        <IconButton title="AI 助手" active={aiOpen} onClick={() => setAiOpen((open) => !open)}>
+        <IconButton
+          title="AI 助手"
+          active={aiOpen}
+          onClick={() => setAiOpen((open) => !open)}
+        >
           <Bot size={18} />
         </IconButton>
-        <IconButton title="课件库" active={lessonLibraryOpen} onClick={toggleLessonLibrary}>
+        <IconButton
+          title="课件库"
+          active={lessonLibraryOpen}
+          onClick={toggleLessonLibrary}
+        >
           <BookOpen size={18} />
         </IconButton>
-        <IconButton title="新增 HTML 组件" onClick={() => createShape('preview_html')}>
+        <IconButton
+          title="新增 HTML 组件"
+          onClick={() => createShape('preview_html')}
+        >
           <Code2 size={18} />
         </IconButton>
-        <IconButton title="新增文本卡片" onClick={() => createShape('ai_result')}>
+        <IconButton
+          title="新增文本卡片"
+          onClick={() => createShape('ai_result')}
+        >
           <FileText size={18} />
         </IconButton>
         <div className="mx-1 h-7 w-px bg-black/10" />
-        <IconButton title="下载选中 HTML" disabled={!selectedShape?.props.html} onClick={downloadSelectedHtml}>
+        <IconButton
+          title="下载选中 HTML"
+          disabled={!selectedShape?.props.html}
+          onClick={downloadSelectedHtml}
+        >
           <Download size={18} />
         </IconButton>
-        <IconButton title="删除选中组件" disabled={!selectedId} onClick={deleteSelected}>
+        <IconButton
+          title="删除选中组件"
+          disabled={!selectedId}
+          onClick={deleteSelected}
+        >
           <Trash2 size={18} />
         </IconButton>
         <IconButton
@@ -3033,17 +3397,26 @@ function MathQuizShape({
 }) {
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState('');
-  const [results, setResults] = useState<Array<QuizWrongItem & { isCorrect: boolean }>>([]);
+  const [results, setResults] = useState<
+    Array<QuizWrongItem & { isCorrect: boolean }>
+  >([]);
   const [feedback, setFeedback] = useState('看图想一想，再输入答案。');
-  const [feedbackKind, setFeedbackKind] = useState<'idle' | 'ok' | 'no'>('idle');
+  const [feedbackKind, setFeedbackKind] = useState<'idle' | 'ok' | 'no'>(
+    'idle'
+  );
   const [reported, setReported] = useState(false);
   const [startedAt, setStartedAt] = useState(() => Date.now());
 
-  const question = TEN_WITHIN_MATH_QUESTIONS[Math.min(index, TEN_WITHIN_MATH_QUESTIONS.length - 1)];
+  const question =
+    TEN_WITHIN_MATH_QUESTIONS[
+      Math.min(index, TEN_WITHIN_MATH_QUESTIONS.length - 1)
+    ];
   const isDone = results.length >= TEN_WITHIN_MATH_QUESTIONS.length;
   const correct = results.filter((item) => item.isCorrect).length;
 
-  function buildQuiz(nextResults: Array<QuizWrongItem & { isCorrect: boolean }>): QuizResultPayload {
+  function buildQuiz(
+    nextResults: Array<QuizWrongItem & { isCorrect: boolean }>
+  ): QuizResultPayload {
     const wrong = nextResults
       .filter((item) => !item.isCorrect)
       .map(({ question, studentAnswer, correctAnswer }) => ({
@@ -3051,11 +3424,13 @@ function MathQuizShape({
         studentAnswer,
         correctAnswer,
       }));
-    const questions = nextResults.map(({ question, studentAnswer, correctAnswer }) => ({
-      question,
-      studentAnswer,
-      correctAnswer,
-    }));
+    const questions = nextResults.map(
+      ({ question, studentAnswer, correctAnswer }) => ({
+        question,
+        studentAnswer,
+        correctAnswer,
+      })
+    );
 
     return {
       topic: '10以内加减法',
@@ -3097,7 +3472,11 @@ function MathQuizShape({
 
     setResults(nextResults);
     setAnswer('');
-    setFeedback(isCorrect ? '答对了，很棒！' : `这题正确答案是 ${question.answer}，我们继续练。`);
+    setFeedback(
+      isCorrect
+        ? '答对了，很棒！'
+        : `这题正确答案是 ${question.answer}，我们继续练。`
+    );
     setFeedbackKind(isCorrect ? 'ok' : 'no');
 
     if (nextResults.length >= TEN_WITHIN_MATH_QUESTIONS.length) {
@@ -3106,7 +3485,9 @@ function MathQuizShape({
     }
 
     window.setTimeout(() => {
-      setIndex((current) => Math.min(current + 1, TEN_WITHIN_MATH_QUESTIONS.length - 1));
+      setIndex((current) =>
+        Math.min(current + 1, TEN_WITHIN_MATH_QUESTIONS.length - 1)
+      );
       setFeedback('看图想一想，再输入答案。');
       setFeedbackKind('idle');
     }, 450);
@@ -3122,14 +3503,19 @@ function MathQuizShape({
     setStartedAt(Date.now());
   }
 
-  const visualCount = question.op === '+' ? question.a + question.b : question.a;
+  const visualCount =
+    question.op === '+' ? question.a + question.b : question.a;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 bg-[#f5f7fb] p-4 text-[#172033]">
       <div className="flex items-center justify-between gap-3 rounded-md border border-[#d9e2f2] bg-white px-4 py-3 shadow-sm">
-        <h2 className="m-0 text-lg font-extrabold leading-tight">十以内加减法乐园</h2>
+        <h2 className="m-0 text-lg font-extrabold leading-tight">
+          十以内加减法乐园
+        </h2>
         <div className="shrink-0 text-sm font-extrabold text-[#2563eb]">
-          {isDone ? `完成 ${correct}/${TEN_WITHIN_MATH_QUESTIONS.length}` : `第 ${index + 1} / ${TEN_WITHIN_MATH_QUESTIONS.length} 题`}
+          {isDone
+            ? `完成 ${correct}/${TEN_WITHIN_MATH_QUESTIONS.length}`
+            : `第 ${index + 1} / ${TEN_WITHIN_MATH_QUESTIONS.length} 题`}
         </div>
       </div>
 
@@ -3140,7 +3526,8 @@ function MathQuizShape({
           </div>
           <div className="flex min-h-[92px] w-full max-w-[430px] flex-wrap items-center justify-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3">
             {Array.from({ length: visualCount }).map((_, itemIndex) => {
-              const removed = question.op === '-' && itemIndex >= question.answer;
+              const removed =
+                question.op === '-' && itemIndex >= question.answer;
               return (
                 <span
                   key={itemIndex}
@@ -3195,7 +3582,9 @@ function MathQuizShape({
         </div>
 
         <aside className="min-h-0 overflow-auto rounded-md border border-[#d9e2f2] bg-white p-3 shadow-sm">
-          <h3 className="mb-2 mt-0 text-sm font-bold text-slate-600">答题记录</h3>
+          <h3 className="mb-2 mt-0 text-sm font-bold text-slate-600">
+            答题记录
+          </h3>
           {results.length === 0 ? (
             <div className="flex justify-between border-b border-slate-100 py-2 text-sm text-slate-500">
               <span>还没有作答</span>
@@ -3207,8 +3596,12 @@ function MathQuizShape({
                 key={`${item.question}-${itemIndex}`}
                 className="flex justify-between gap-2 border-b border-slate-100 py-2 text-sm"
               >
-                <span className="font-semibold text-slate-900">{itemIndex + 1}. {item.question}</span>
-                <span>{item.isCorrect ? '答对' : `答错：${item.correctAnswer}`}</span>
+                <span className="font-semibold text-slate-900">
+                  {itemIndex + 1}. {item.question}
+                </span>
+                <span>
+                  {item.isCorrect ? '答对' : `答错：${item.correctAnswer}`}
+                </span>
               </div>
             ))
           )}
@@ -3259,11 +3652,17 @@ function ShapeView({
         top: shape.y,
         width: shape.props.w,
         height: shape.props.h,
-        outline: selected ? '2px solid #2563eb' : '1px solid rgba(17,24,39,.14)',
+        outline: selected
+          ? '2px solid #2563eb'
+          : '1px solid rgba(17,24,39,.14)',
         zIndex: selected ? 20 : 10,
       }}
       onPointerDown={(event) => {
-        if ((event.target as HTMLElement).closest('[data-shape-interactive="true"]')) {
+        if (
+          (event.target as HTMLElement).closest(
+            '[data-shape-interactive="true"]'
+          )
+        ) {
           return;
         }
         event.stopPropagation();
@@ -3292,7 +3691,9 @@ function ShapeView({
             title={shape.id}
             srcDoc={shape.props.html || ''}
             className="h-full w-full border-0 bg-white"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
+            sandbox="allow-scripts"
+            referrerPolicy="no-referrer"
+            allow="camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'"
           />
         ) : (
           <div
@@ -3327,6 +3728,7 @@ function IconButton({
 }) {
   return (
     <button
+      type="button"
       title={title}
       onClick={onClick}
       disabled={disabled}

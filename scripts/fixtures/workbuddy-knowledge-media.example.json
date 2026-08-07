@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "defaults": {
+    "visibility": "public",
+    "safeToPublish": true,
+    "official": true,
+    "publisher": "独立工作者",
+    "publishChecks": {
+      "licenseOk": true,
+      "noQr": true,
+      "noContact": true,
+      "noLocalUserPath": true,
+      "noUnmaskedSecret": true,
+      "noSessionQuery": true,
+      "noPersonalMemory": true,
+      "identitySafe": true
+    }
+  },
+  "assets": [
+    {
+      "assetType": "video",
+      "sourceRef": "https://example.com/independent-worker/workbuddy-demo",
+      "title": "独立工作者的 WorkBuddy 实战演示",
+      "platform": "video_channel",
+      "caption": "演示如何从目标出发，让 WorkBuddy 找到下一步操作。",
+      "durationSeconds": 420,
+      "publishedAt": "2026-08-02T00:00:00+08:00",
+      "sourceType": "self_media_video",
+      "metadata": {
+        "renderMode": "link"
+      },
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes.md",
+          "heading": "一、在哪里切换权限模式",
+          "role": "video_demo",
+          "sortOrder": 1,
+          "occurrenceIndex": 0
+        }
+      ]
+    },
+    {
+      "assetType": "link",
+      "sourceRef": "https://example.com/independent-worker/workbuddy-notes",
+      "title": "独立工作者的 WorkBuddy 补充文章",
+      "platform": "official_site",
+      "caption": "与当前操作步骤配套的官方自媒体文章。",
+      "publishedAt": "2026-08-02T00:00:00+08:00",
+      "sourceType": "self_media_article",
+      "links": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes.md",
+          "heading": "一、在哪里切换权限模式",
+          "role": "official_source",
+          "sortOrder": 2,
+          "occurrenceIndex": 0
+        }
+      ]
+    }
+  ]
+}

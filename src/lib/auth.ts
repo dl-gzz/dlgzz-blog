@@ -10,13 +10,9 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
 import { parse as parseCookies } from 'cookie';
 import type { Locale } from 'next-intl';
-import {
-  getBaseUrl,
-  getOriginFromRequest,
-  getUrlWithLocaleInCallbackUrl,
-} from './urls/urls';
+import { getBaseUrl, getUrlWithLocaleInCallbackUrl } from './urls/urls';
 
-function getTrustedOrigins(request?: Request) {
+function getTrustedOrigins() {
   const envOrigins = (process.env.AUTH_TRUSTED_ORIGINS || '')
     .split(',')
     .map((origin) => origin.trim())
@@ -26,7 +22,6 @@ function getTrustedOrigins(request?: Request) {
     new Set(
       [
         getBaseUrl(),
-        getOriginFromRequest(request),
         getLocalClientOrigin(),
         'http://localhost:3000',
         'http://127.0.0.1:3000',

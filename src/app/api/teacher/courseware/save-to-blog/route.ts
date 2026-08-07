@@ -1,3 +1,4 @@
+import { requireHermesAdmin } from '@/lib/api-security';
 import { saveGeneratedCoursewareToDatabase } from '@/lib/edu-content';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -11,7 +12,8 @@ function findHtmlFromPlan(plan: unknown) {
   if (!Array.isArray(operations)) return '';
 
   for (const operation of operations) {
-    if (!operation || typeof operation !== 'object' || Array.isArray(operation)) continue;
+    if (!operation || typeof operation !== 'object' || Array.isArray(operation))
+      continue;
     const props = (operation as { props?: unknown }).props;
     if (!props || typeof props !== 'object' || Array.isArray(props)) continue;
     const html = readText((props as { html?: unknown }).html);
@@ -22,6 +24,9 @@ function findHtmlFromPlan(plan: unknown) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireHermesAdmin('课件后台仅限管理员访问');
+  if ('response' in auth) return auth.response;
+
   try {
     const body = await request.json();
     const plan = body.plan;

@@ -16,12 +16,12 @@ export default function LogoCloudSection() {
         <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-x-12 gap-y-8 sm:gap-x-16 sm:gap-y-12">
           <div
             aria-label="独立工作者"
-            className="flex items-center gap-3 rounded-lg border border-slate-200 bg-[#f8f7f2] px-5 py-3 shadow-sm shadow-slate-950/5 dark:border-white/10 dark:bg-white/5"
+            className="flex items-center gap-3 rounded-lg border border-blue-600 bg-blue-600 px-5 py-3 shadow-sm shadow-blue-600/20"
           >
-            <span className="flex size-8 items-center justify-center rounded-md bg-slate-950 text-sm font-black text-white dark:bg-white dark:text-slate-950">
+            <span className="flex size-8 items-center justify-center rounded-md bg-white text-sm font-black text-blue-600">
               独
             </span>
-            <span className="text-base font-semibold text-slate-900 dark:text-white">
+            <span className="text-base font-semibold text-white">
               独立工作者
             </span>
           </div>

@@ -1,3 +1,4 @@
+import { requireHermesAdmin } from '@/lib/api-security';
 import { runLearningAssistant } from '@/lib/hermes-learning-assistant';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -12,6 +13,9 @@ function readText(value: unknown, fallback = '') {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireHermesAdmin('学习助手接口暂只允许管理员访问');
+  if ('response' in auth) return auth.response;
+
   try {
     const body = (await request.json().catch(() => null)) as unknown;
     if (!isObjectRecord(body)) {

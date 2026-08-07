@@ -25,7 +25,7 @@ export default function CallToActionSection() {
               size="lg"
               className="rounded-lg bg-white text-slate-950 shadow-none hover:bg-white/90"
             >
-              <LocaleLink href="/bots">
+              <LocaleLink href="/pricing">
                 <span>{t('primaryButton')}</span>
               </LocaleLink>
             </Button>

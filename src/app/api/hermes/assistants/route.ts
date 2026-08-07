@@ -2,7 +2,7 @@ import {
   getBotAssistantRole,
   isActiveBotAssistantRole,
 } from '@/config/bot-assistants';
-import { getSession } from '@/lib/server';
+import { requireHermesAdmin } from '@/lib/api-security';
 import { nanoid } from 'nanoid';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -32,7 +32,14 @@ interface BridgeProvisionResponse {
   error?: string;
 }
 
+function getConnectionModeForRole(roleId: string) {
+  return roleId === 'health' ? 'browser_profile' : 'qr_activation';
+}
+
 export async function GET() {
+  const auth = await requireHermesAdmin('Hermes Bridge 状态只允许管理员查看');
+  if ('response' in auth) return auth.response;
+
   const bridgeUrl = getBridgeUrl();
 
   if (!bridgeUrl) {
@@ -75,19 +82,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    return NextResponse.json(
-      {
-        success: false,
-        code: 'UNAUTHORIZED',
-        error: '请先登录后再创建微信 AI 助手',
-      },
-      { status: 401 }
-    );
-  }
+  const auth = await requireHermesAdmin('创建 Hermes 助手暂只允许管理员操作');
+  if ('response' in auth) return auth.response;
+  const userId = auth.session.user.id;
 
   let body: ProvisionRequestBody;
   try {
@@ -117,7 +114,9 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         code: 'SERVICE_NOT_AVAILABLE',
-        error: role ? `${role.name} 还没有开放真实服务开通` : '这个助手服务不存在',
+        error: role
+          ? `${role.name} 还没有开放真实服务开通`
+          : '这个助手服务不存在',
       },
       { status: 400 }
     );
@@ -147,6 +146,7 @@ export async function POST(request: NextRequest) {
     servicePrompt: role.systemPrompt,
     serviceCapabilities: role.capabilities,
     serviceDeliverables: role.deliverables,
+    connectionMode: getConnectionModeForRole(role.id),
     source:
       typeof body.source === 'string' && body.source.trim()
         ? body.source.trim()
@@ -169,9 +169,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(payload),
     });
 
-    const data = (await response.json().catch(() => null)) as
-      | BridgeProvisionResponse
-      | null;
+    const data = (await response
+      .json()
+      .catch(() => null)) as BridgeProvisionResponse | null;
 
     if (!response.ok || !data?.success) {
       return NextResponse.json(

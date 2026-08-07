@@ -1,0 +1,364 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "approvedAt": "2026-08-04T00:00:00+08:00",
+  "reviewerType": "codex_host_multimodal_curator",
+  "assets": [
+    {
+      "id": "workbuddy-official-first-task-new-task",
+      "localBasename": "ead29c1001e0ce7fb2fd39f7a03e4ef59a015e58.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/8.DJpznnpV.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/FirstTask",
+      "title": "新建 WorkBuddy 任务",
+      "altText": "WorkBuddy 桌面端新建任务界面，用户可开始创建 PC 端任务",
+      "caption": "返回 WorkBuddy 后点击新建任务，开始创建 PC 端任务。",
+      "documentPath": "workbuddy_official/workbuddy/FirstTask.md",
+      "heading": "第二步 新建任务",
+      "role": "ui_step",
+      "context": "完成登录后，在 WorkBuddy 中点击新建任务，进入新的任务对话。",
+      "sortOrder": 60,
+      "additionalLinks": [
+        {
+          "documentPath": "workbuddy_official/workbuddy/Create-Task.md",
+          "heading": "描述任务",
+          "role": "ui_step",
+          "context": "官方创建任务说明介绍如何用自然语言描述目标、输入、输出格式和约束。",
+          "sortOrder": 18
+        },
+        {
+          "documentPath": "independent_worker_workbuddy_course/01_别把WorkBuddy当聊天框，把它当新员工带.md",
+          "heading": "先别追求神奇，先把一件小事交付明白",
+          "role": "ui_step",
+          "context": "课程建议先用一个明确的小任务熟悉 WorkBuddy 的交付流程。",
+          "sortOrder": 65
+        }
+      ],
+      "visualFacts": {
+        "page": "新建任务",
+        "control": "新建任务入口",
+        "action": "点击新建任务",
+        "successSignal": "进入空白任务对话"
+      }
+    },
+    {
+      "id": "workbuddy-official-first-task-describe",
+      "localBasename": "a9a4987a8b4cf5da567132cfeff18ff92b36b70f.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/10.Cs0Zb7Z7.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/FirstTask",
+      "title": "描述任务要求",
+      "altText": "WorkBuddy 任务对话框中填写自然语言任务要求",
+      "caption": "在任务输入框中用自然语言说明目标、素材和交付要求。",
+      "documentPath": "workbuddy_official/workbuddy/Create-Task.md",
+      "heading": "描述任务",
+      "role": "ui_step",
+      "context": "进入任务对话后，在输入框描述希望 WorkBuddy 完成的任务。",
+      "sortOrder": 76,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/01_别把WorkBuddy当聊天框，把它当新员工带.md",
+          "heading": "用 WorkBuddy 的第一个原则：先带，再放手",
+          "role": "ui_step",
+          "context": "课程强调要把目标、边界和验收标准交代清楚。",
+          "sortOrder": 90
+        }
+      ],
+      "visualFacts": {
+        "page": "任务对话",
+        "control": "任务输入框",
+        "action": "输入任务要求",
+        "successSignal": "任务内容出现在待发送消息中"
+      }
+    },
+    {
+      "id": "workbuddy-official-first-task-send",
+      "localBasename": "09d9e6bf738d941c3c3ce27bf8a16730fc410736.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/11.BGjzaRGH.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/FirstTask",
+      "title": "发送任务开始执行",
+      "altText": "WorkBuddy 任务输入框右侧发送按钮被突出显示",
+      "caption": "确认任务描述后点击发送，WorkBuddy 开始执行任务。",
+      "documentPath": "workbuddy_official/workbuddy/FirstTask.md",
+      "heading": "第四步 开始执行任务",
+      "role": "ui_step",
+      "context": "任务描述完成后，点击发送按钮提交任务并开始执行。",
+      "sortOrder": 88,
+      "visualFacts": {
+        "page": "任务对话",
+        "control": "发送按钮",
+        "action": "点击发送",
+        "successSignal": "任务进入执行状态并显示处理中"
+      }
+    },
+    {
+      "id": "workbuddy-official-first-task-result-pane",
+      "localBasename": "aea74ab79d77fcf7eb0515a7b1bc869b29d9c1f9.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/12.Tam3vKE3.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/FirstTask",
+      "title": "打开任务结果区",
+      "altText": "WorkBuddy 任务右侧结果窗口展示任务执行结果",
+      "caption": "任务执行后打开右侧结果区，边看对话边查看产出。",
+      "documentPath": "workbuddy_official/workbuddy/FirstTask.md",
+      "heading": "第五步 查看结果",
+      "role": "ui_step",
+      "context": "任务执行完成或进行中时，在右侧结果窗口查看当前任务产出。",
+      "sortOrder": 104,
+      "visualFacts": {
+        "page": "任务结果区",
+        "control": "右侧结果窗口",
+        "action": "打开结果区",
+        "successSignal": "结果区显示任务产出或预览"
+      }
+    },
+    {
+      "id": "workbuddy-official-first-task-artifact",
+      "localBasename": "425dcf7fdf3189786b91ddfa1381ce6bd6384ba9.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/13.CLbCs6z8.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/FirstTask",
+      "title": "在产物中查看生成文件",
+      "altText": "WorkBuddy 结果区的产物列表展示任务生成的目标文件",
+      "caption": "生成的目标文件可在结果区的产物中找到。",
+      "documentPath": "workbuddy_official/workbuddy/Results.md",
+      "heading": "产物",
+      "role": "ui_step",
+      "context": "任务生成交付文件后，在结果区打开产物列表查看目标文件。",
+      "sortOrder": 115,
+      "visualFacts": {
+        "page": "产物",
+        "control": "产物列表",
+        "action": "打开目标文件",
+        "successSignal": "目标文件出现在产物列表"
+      }
+    },
+    {
+      "id": "workbuddy-official-first-task-workspace-files",
+      "localBasename": "06b0fd1f1335826645869163b2bca860f88a9d3f.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/14.BbNZ0jqe.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/FirstTask",
+      "title": "查看工作空间文件",
+      "altText": "WorkBuddy 结果区概览中的工作空间文件列表展示任务产生的文件",
+      "caption": "任务产生的其他文件可在概览的工作空间文件中查看。",
+      "documentPath": "workbuddy_official/workbuddy/Results.md",
+      "heading": "工作空间文件",
+      "role": "ui_step",
+      "context": "需要查看任务工作目录中的其他文件时，打开概览中的工作空间文件。",
+      "sortOrder": 124,
+      "visualFacts": {
+        "page": "概览-工作空间文件",
+        "control": "工作空间文件列表",
+        "action": "选择文件查看",
+        "successSignal": "文件内容在右侧预览区打开"
+      }
+    },
+    {
+      "id": "workbuddy-official-taskbar-overview",
+      "localBasename": "202947e85274a0811eeb2013d69bdc46b6d03b8f.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/task-1.H0Sit-qs.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar",
+      "title": "认识 WorkBuddy 任务栏",
+      "altText": "WorkBuddy 本地任务统一入口和桌面工作台界面",
+      "caption": "任务栏是 WorkBuddy 发起和管理本地任务的统一入口。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar.md",
+      "heading": "新建任务栏（本地 AI 工作台）",
+      "role": "ui_step",
+      "context": "首次进入 WorkBuddy 时，通过任务栏认识本地任务工作台布局。",
+      "sortOrder": 12,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/01_别把WorkBuddy当聊天框，把它当新员工带.md",
+          "heading": "聊天框和员工，差在哪？",
+          "role": "ui_step",
+          "context": "课程解释 WorkBuddy 不只是聊天框，而是能够执行任务并交付结果的工作台。",
+          "sortOrder": 42
+        }
+      ],
+      "visualFacts": {
+        "page": "WorkBuddy 任务栏",
+        "sections": ["侧边栏", "对话区", "结果区"],
+        "successSignal": "能识别任务列表、对话区和结果区"
+      }
+    },
+    {
+      "id": "workbuddy-official-taskbar-modes",
+      "localBasename": "11cb86ff3c8aa05339b92c7c50d22d5bacab1d98.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/image-1.EgVh8HI9.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar",
+      "title": "选择 WorkBuddy 工作模式",
+      "altText": "WorkBuddy 工作模式选择界面展示 Ask、Craft 和 Plan",
+      "caption": "根据任务风险和复杂度选择问一问、做一做或想一想模式。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar.md",
+      "heading": "工作模式",
+      "role": "ui_step",
+      "context": "在任务栏中选择工作模式；首次使用重要文件时优先从 Ask 或 Plan 开始。",
+      "sortOrder": 27,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/02_WorkBuddy会乱改文件吗，先看懂这两个旋钮.md",
+          "heading": "第一个旋钮：它用什么方式干活",
+          "role": "ui_step",
+          "context": "课程解释 Ask、Plan、Craft 三种模式的风险边界。",
+          "sortOrder": 40
+        }
+      ],
+      "visualFacts": {
+        "page": "工作模式",
+        "controls": ["Ask", "Craft", "Plan"],
+        "successSignal": "当前模式在任务输入区可见"
+      }
+    },
+    {
+      "id": "workbuddy-official-taskbar-workspace-picker",
+      "localBasename": "62bdecceaf85250866327cac16f9e183c7bae7f7.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/image-6.CGRDyKxH.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar",
+      "title": "设置 WorkBuddy 工作空间",
+      "altText": "WorkBuddy 选择工作空间或工作目录的文件选择界面",
+      "caption": "设置工作空间后，任务会优先在该目录中读取和保存文件。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar.md",
+      "heading": "设置工作目录",
+      "role": "ui_step",
+      "context": "执行文件任务前，在任务栏设置合适的工作空间或工作目录。",
+      "sortOrder": 52,
+      "visualFacts": {
+        "page": "工作空间选择器",
+        "control": "文件夹选择",
+        "action": "选择目标工作目录",
+        "successSignal": "工作空间路径显示在任务配置中"
+      }
+    },
+    {
+      "id": "workbuddy-official-taskbar-skill-menu",
+      "localBasename": "c730f5992ebdb615e0d7b0a954c9740d0b46579a.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/image-7.C15-_p58.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar",
+      "title": "在任务栏选择 Skill",
+      "altText": "WorkBuddy 任务配置中的 Skill 选择入口",
+      "caption": "启用对应 Skill 后，WorkBuddy 可在任务执行时调用特定能力。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar.md",
+      "heading": "选择技能",
+      "role": "ui_step",
+      "context": "在任务配置中打开 Skill 选择入口，启用与当前任务匹配的技能。",
+      "sortOrder": 73,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "技能市场和“已安装”，别混在一起",
+          "role": "ui_step",
+          "context": "课程帮助用户区分查找技能、已安装技能和任务中实际启用的技能。",
+          "sortOrder": 81
+        }
+      ],
+      "visualFacts": {
+        "page": "任务配置",
+        "control": "Skill 选择入口",
+        "action": "打开 Skill 菜单",
+        "successSignal": "可选技能列表出现"
+      }
+    },
+    {
+      "id": "workbuddy-official-taskbar-skill-selected",
+      "localBasename": "6f9edc972ba922c7a1cd0d31db199a5f0af62f88.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/image-8.CcNU1SIQ.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar",
+      "title": "确认任务已启用 Skill",
+      "altText": "WorkBuddy 任务对话中已选择并启用某个 Skill",
+      "caption": "选择技能后，在任务对话中确认当前任务会调用该 Skill。",
+      "documentPath": "workbuddy_official/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Task-Bar.md",
+      "heading": "选择技能",
+      "role": "ui_step",
+      "context": "从已安装技能中选择一个，并确认它已附加到当前任务。",
+      "sortOrder": 88,
+      "additionalLinks": [
+        {
+          "documentPath": "independent_worker_workbuddy_course/04_别再让AI猜，给WorkBuddy一本操作手册.md",
+          "heading": "添加技能，有三种办法",
+          "role": "ui_step",
+          "context": "课程说明技能安装后还要在具体任务中正确调用。",
+          "sortOrder": 105
+        }
+      ],
+      "visualFacts": {
+        "page": "任务对话",
+        "control": "已安装 Skill 列表",
+        "action": "选择 Skill",
+        "successSignal": "Skill 名称显示在当前任务配置中"
+      }
+    },
+    {
+      "id": "workbuddy-official-results-share",
+      "localBasename": "4b43f015aa9ce4f9e8c570cab7d9af62ee980f75.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/results-2.CHN1y69w.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/Results",
+      "title": "分享任务产物",
+      "altText": "WorkBuddy 产物预览右上角的分享按钮",
+      "caption": "预览产物文件时，可以点击右上角分享图标。",
+      "documentPath": "workbuddy_official/workbuddy/Results.md",
+      "heading": "产物",
+      "role": "ui_step",
+      "context": "需要把生成文件交给他人时，在产物预览页打开分享入口。",
+      "sortOrder": 42,
+      "visualFacts": {
+        "page": "产物预览",
+        "control": "分享图标",
+        "action": "点击分享",
+        "successSignal": "分享选项或链接面板出现"
+      }
+    },
+    {
+      "id": "workbuddy-official-results-cloud-upload",
+      "localBasename": "07de4ecd02ec4f61f41ce7ca7f2599cebf32ba80.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/results-3.PA3T0X1N.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/Results",
+      "title": "将产物上传到云端",
+      "altText": "WorkBuddy 产物上传菜单提供云端网盘、腾讯文档、ima 知识库和乐享知识库",
+      "caption": "产物可以上传到云端网盘、腾讯文档、ima 知识库或乐享知识库。",
+      "documentPath": "workbuddy_official/workbuddy/Results.md",
+      "heading": "产物",
+      "role": "ui_step",
+      "context": "需要在其他端继续查看或共享结果时，打开产物的云端上传菜单。",
+      "sortOrder": 55,
+      "visualFacts": {
+        "page": "产物上传",
+        "targets": ["我的云端网盘", "腾讯文档", "ima 知识库", "乐享知识库"],
+        "successSignal": "选择的云端目标开始上传"
+      }
+    },
+    {
+      "id": "workbuddy-official-results-workspace-files",
+      "localBasename": "a656e82a52597f0e3b2f4c37b4958e810d0e0fc5.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/results-5.BQcGOAhv.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/Results",
+      "title": "浏览工作空间文件",
+      "altText": "WorkBuddy 结果区工作空间文件视图包含文件树和文件内容区域",
+      "caption": "在工作空间文件视图中查看生成文件的完整内容和文件关系。",
+      "documentPath": "workbuddy_official/workbuddy/Results.md",
+      "heading": "工作空间文件",
+      "role": "ui_step",
+      "context": "需要检查任务写入了哪些文件时，打开结果区的工作空间文件视图。",
+      "sortOrder": 92,
+      "visualFacts": {
+        "page": "结果区-工作空间文件",
+        "sections": ["文件列表", "文件树", "文件内容"],
+        "successSignal": "选中文件后内容区域显示文件内容"
+      }
+    },
+    {
+      "id": "workbuddy-official-results-changes",
+      "localBasename": "cd2c9ae2a427c1eeef994ad2e57181ff80b6a34d.png",
+      "officialUrl": "https://www.codebuddy.cn/docs/static/results-6.CgDwNO45.png",
+      "sourcePage": "https://www.codebuddy.cn/docs/workbuddy/Results",
+      "title": "检查任务文件变更",
+      "altText": "WorkBuddy 结果区变更视图展示任务修改的文件列表和具体差异",
+      "caption": "涉及代码或配置修改时，先在变更视图检查文件改动再接受结果。",
+      "documentPath": "workbuddy_official/workbuddy/Results.md",
+      "heading": "变更",
+      "role": "ui_step",
+      "context": "任务修改文件后，在变更视图检查改动范围和具体差异。",
+      "sortOrder": 110,
+      "visualFacts": {
+        "page": "结果区-变更",
+        "sections": ["变更文件列表", "具体差异"],
+        "successSignal": "变更内容可逐项审阅"
+      }
+    }
+  ]
+}

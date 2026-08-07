@@ -33,7 +33,8 @@ export function PricingTable({
   className,
 }: PricingTableProps) {
   const t = useTranslations('PricingPage');
-  const [interval, setInterval] = useState<PlanInterval>(PlanIntervals.MONTH);
+  // 会员只提供年费（XorPay 无自动续费），默认选中年付，否则会找不到价格显示「不可用」
+  const [interval, setInterval] = useState<PlanInterval>(PlanIntervals.YEAR);
 
   // Get price plans with translations
   const pricePlans = getPricePlans();

@@ -280,6 +280,7 @@ function hasUiInstructionIntent(query: string) {
 function uiEvidenceTier(sourceType: string | null) {
   switch (sourceType) {
     case 'official_product_screenshot':
+    case 'official_platform_screenshot':
       return 400;
     case 'user_uploaded_screenshot':
     case 'user_provided_screenshot':
@@ -320,6 +321,7 @@ function instructionalRoleTier(role: string) {
 function isUiScreenshotEvidence(sourceType: string | null) {
   return [
     'official_product_screenshot',
+    'official_platform_screenshot',
     'user_uploaded_screenshot',
     'user_provided_screenshot',
     'product_ui_screenshot',

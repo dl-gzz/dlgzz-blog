@@ -331,7 +331,9 @@ function DatabaseCoursewareBlogPage({
               <iframe
                 title={post.title}
                 srcDoc={post.htmlContent}
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts"
+                referrerPolicy="no-referrer"
+                allow="camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'"
                 className="h-[720px] w-full bg-white"
               />
             </div>

@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/server';
+import { requireHermesAdmin } from '@/lib/api-security';
 import { type NextRequest, NextResponse } from 'next/server';
 
 interface RouteContext {
@@ -22,19 +22,8 @@ interface BridgeActivationStatusResponse {
 }
 
 export async function GET(_request: NextRequest, context: RouteContext) {
-  const session = await getSession();
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    return NextResponse.json(
-      {
-        success: false,
-        code: 'UNAUTHORIZED',
-        error: '请先登录后再查看微信助手激活状态',
-      },
-      { status: 401 }
-    );
-  }
+  const auth = await requireHermesAdmin('Hermes 激活状态暂只允许管理员查看');
+  if ('response' in auth) return auth.response;
 
   const { assistantId } = await context.params;
   const bridgeUrl = getBridgeUrl();
@@ -60,9 +49,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       signal: AbortSignal.timeout(getBridgeTimeoutMs()),
       headers: getBridgeHeaders(),
     });
-    const data = (await response.json().catch(() => null)) as
-      | BridgeActivationStatusResponse
-      | null;
+    const data = (await response
+      .json()
+      .catch(() => null)) as BridgeActivationStatusResponse | null;
 
     if (!response.ok || !data?.success) {
       return NextResponse.json(

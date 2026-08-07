@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "packId": "onework-workbuddy-v1",
+  "approvals": [
+    {
+      "contentHash": "762fd90c41bfcc3a80930edbed2f3d8bca403df34105a4df5728983c9900777a",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-03T00:00:00.000Z",
+      "title": "给数字员工排班，到点自动交付",
+      "altText": "佩戴“首领”胸牌的蓝猫把日报、周报和简报排入班表，AI 机器人按时生成日报并自动交付",
+      "caption": "自动化就是给数字员工排班：设定时间与交付要求后，到点自动执行。",
+      "role": "cover",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "concept_illustration",
+        "topic": "WorkBuddy 自动化排班",
+        "concepts": ["排班", "到点执行", "自动交付"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "abf9d3ae523d273e1ffc0e8308dcb77c14c385e9a0c7d62a83288d5bcdbc0116",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-03T00:00:00.000Z",
+      "title": "自动化任务配置说明书",
+      "altText": "佩戴“首领”胸牌的蓝猫填写自动化任务配置表，表中包含名称、工作区、提示词和定时四项",
+      "caption": "新建自动化任务时，先写清名称、工作区、提示词和定时规则。",
+      "role": "configuration_diagram",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "configuration_diagram",
+        "topic": "WorkBuddy 自动化任务配置",
+        "fields": ["名称", "工作区", "提示词", "定时"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "3620be525a13fcaa285dc0678a0afc3f0e74548f5b990f90faacb6b33be40b62",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-03T00:00:00.000Z",
+      "title": "从任务模板到手机推送",
+      "altText": "佩戴“首领”胸牌的蓝猫选择任务模板、按需修改，并把自动化结果推送到手机",
+      "caption": "先从模板起步，改成自己的任务说明，再把执行结果推送到手机查看。",
+      "role": "concept_diagram",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "workflow_diagram",
+        "topic": "WorkBuddy 自动化模板与推送",
+        "steps": ["选择任务模板", "按需修改", "推送结果到手机"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    },
+    {
+      "contentHash": "2cd49782932a01e42d7730bf6b613b18b25c3d527f903171e868adceba3643e4",
+      "status": "approved",
+      "reviewerType": "host_multimodal",
+      "approvedAt": "2026-08-03T00:00:00.000Z",
+      "title": "自动化先试跑，再放大",
+      "altText": "佩戴“首领”胸牌的蓝猫检查低频试跑结果，危险的写入、删除、外发和资金动作被安全门拦住",
+      "caption": "无人值守任务先低频试跑、检查结果并保留日志，确认稳定后再提高频率。",
+      "role": "safety_diagram",
+      "platform": "wechat_official_account",
+      "usageContexts": ["wechat_official_account_article", "knowledge_answer"],
+      "official": false,
+      "publisher": "独立工作者",
+      "sourceType": "owned_course_illustration",
+      "visualFacts": {
+        "type": "safety_diagram",
+        "topic": "WorkBuddy 自动化安全试跑",
+        "steps": ["低频试跑", "检查结果", "确认后放大频率", "保留日志"],
+        "blockedRisks": ["写入", "删除", "外发", "资金动作"],
+        "characters": [
+          {
+            "id": "blue_cat",
+            "name": "蓝猫",
+            "role": "brand_mascot",
+            "brand": "独立工作者",
+            "visibleLabel": "首领"
+          }
+        ]
+      },
+      "confirmations": {
+        "licenseOk": true,
+        "noSensitiveData": true,
+        "meaningVerified": true
+      }
+    }
+  ]
+}
