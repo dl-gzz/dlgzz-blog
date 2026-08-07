@@ -8,9 +8,10 @@ import {
   oneworkEntitlement,
   oneworkInstallToken,
 } from '@/db/schema';
+import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { and, desc, eq, gt, isNull, or } from 'drizzle-orm';
 
-/** 目前向用户开放的受治理知识包。新增产品时只需扩展这个白名单。 */
+/** 现有知识包仍保留用于兼容旧兑换码；新授权统一使用全量权限。 */
 export const ONEWORK_PUBLIC_PACKS = [
   'onework-workbuddy-v1',
   'xhs-open-shop-v1',
@@ -50,6 +51,9 @@ function addDays(date: Date, days: number) {
 }
 
 function normalizePackIds(packIds: string[]) {
+  if (packIds.some((packId) => packId.trim() === ALL_PACKS_GRANT)) {
+    return [ALL_PACKS_GRANT];
+  }
   const allowed = new Set<string>(ONEWORK_PUBLIC_PACKS);
   const normalized = [...new Set(
     packIds
@@ -296,13 +300,8 @@ export function shouldGrantOneWorkForPrice(priceId: string) {
 }
 
 export function getOneWorkPaymentPacks() {
-  const configured = (process.env.ONEWORK_PACK_IDS || '')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean);
-  return normalizePackIds(
-    configured.length > 0 ? configured : ['onework-workbuddy-v1']
-  );
+  // 一次购买即授予全部 OneWorkOS 知识库；后续新增知识包无需改环境变量。
+  return [ALL_PACKS_GRANT];
 }
 
 /** 用户兑换码，返回一把仅显示一次的设备 Key。 */
@@ -482,16 +481,24 @@ export async function claimOneWorkInstallToken({
           or(isNull(oneworkEntitlement.expiresAt), gt(oneworkEntitlement.expiresAt, now))
         )
       );
-    const packIds = normalizePackIds(entitlements.map((item) => item.knowledgePackId));
+    const allAccessEntitlements = entitlements.filter(
+      (item) => item.knowledgePackId === ALL_PACKS_GRANT
+    );
+    const effectiveEntitlements = allAccessEntitlements.length > 0
+      ? allAccessEntitlements
+      : entitlements;
+    const packIds = allAccessEntitlements.length > 0
+      ? [ALL_PACKS_GRANT]
+      : normalizePackIds(entitlements.map((item) => item.knowledgePackId));
     const packExpiries = Object.fromEntries(
-      entitlements.map((item) => [item.knowledgePackId, item.expiresAt])
+      effectiveEntitlements.map((item) => [item.knowledgePackId, item.expiresAt])
     ) as Record<string, Date | null>;
-    const earliestExpiry = entitlements.reduce<Date | null>((current, item) => {
+    const earliestExpiry = effectiveEntitlements.reduce<Date | null>((current, item) => {
       if (!item.expiresAt) return null;
       if (!current || item.expiresAt.getTime() < current.getTime()) return item.expiresAt;
       return current;
     }, null);
-    const monthlyQuota = entitlements.reduce(
+    const monthlyQuota = effectiveEntitlements.reduce(
       (max, item) => Math.max(max, item.monthlyQuota || 0),
       1000
     );

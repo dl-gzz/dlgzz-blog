@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
+import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { Routes } from '@/routes';
 import { ExternalLinkIcon, KeyRoundIcon, MonitorDownIcon, RefreshCwIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -47,6 +48,7 @@ function formatDate(value: string | null | undefined) {
 }
 
 function packName(packId: string) {
+  if (packId === ALL_PACKS_GRANT) return '全部 OneWorkOS 知识库';
   if (packId === 'onework-workbuddy-v1') return 'WorkBuddy 办公助手';
   if (packId === 'xhs-open-shop-v1') return '小红书开店助手';
   if (packId === 'xhs-operations-v1') return '小红书运营助手';

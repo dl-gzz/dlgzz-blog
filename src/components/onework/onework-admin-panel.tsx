@@ -3,16 +3,10 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { useState } from 'react';
 
-const PACKS = [
-  { id: 'onework-workbuddy-v1', name: 'WorkBuddy 办公助手' },
-  { id: 'xhs-open-shop-v1', name: '小红书开店助手' },
-  { id: 'xhs-operations-v1', name: '小红书运营助手' },
-];
-
 export function OneWorkAdminPanel() {
-  const [selectedPacks, setSelectedPacks] = useState(['onework-workbuddy-v1']);
   const [label, setLabel] = useState('');
   const [source, setSource] = useState('xhs');
   const [trialDays, setTrialDays] = useState('30');
@@ -22,14 +16,6 @@ export function OneWorkAdminPanel() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-
-  function togglePack(packId: string) {
-    setSelectedPacks((current) =>
-      current.includes(packId)
-        ? current.filter((item) => item !== packId)
-        : [...current, packId]
-    );
-  }
 
   async function issue() {
     setBusy(true);
@@ -41,7 +27,7 @@ export function OneWorkAdminPanel() {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          packIds: selectedPacks,
+          packIds: [ALL_PACKS_GRANT],
           label,
           source,
           trialDays: Number(trialDays),
@@ -67,13 +53,8 @@ export function OneWorkAdminPanel() {
         <CardDescription>每笔小红书/抖音成交可以生成一枚一次性兑换码。支付回调接入后，这一步可自动化。</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        <div className="grid gap-3 sm:grid-cols-3">
-          {PACKS.map((pack) => (
-            <label key={pack.id} className="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm">
-              <input type="checkbox" checked={selectedPacks.includes(pack.id)} onChange={() => togglePack(pack.id)} />
-              {pack.name}
-            </label>
-          ))}
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100">
+          这枚兑换码默认开通全部 OneWorkOS 知识库。以后新增知识包会自动包含，不需要重新生成兑换码或重新安装 Skill。
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input value={label} onChange={(event) => setLabel(event.target.value)} placeholder="订单备注（可选）" />
@@ -82,7 +63,7 @@ export function OneWorkAdminPanel() {
           <Input type="number" min="0" value={monthlyQuota} onChange={(event) => setMonthlyQuota(event.target.value)} placeholder="每月检索次数" />
           <Input type="number" min="1" value={maxRedemptions} onChange={(event) => setMaxRedemptions(event.target.value)} placeholder="最大兑换次数" />
         </div>
-        <Button onClick={() => void issue()} disabled={busy || selectedPacks.length === 0}>
+        <Button onClick={() => void issue()} disabled={busy}>
           {busy ? '签发中…' : '生成兑换码'}
         </Button>
         {code && <code className="block break-all rounded-lg border bg-muted p-4 text-lg font-semibold">{code}</code>}
@@ -92,4 +73,3 @@ export function OneWorkAdminPanel() {
     </Card>
   );
 }
-

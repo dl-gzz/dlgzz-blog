@@ -9,6 +9,7 @@ import {
   issueOneWorkActivationCode,
   redeemOneWorkActivation,
 } from '@/lib/onework-access';
+import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 
 dotenv.config({ path: join(process.cwd(), '.env') });
 dotenv.config({ path: join(process.cwd(), '.env.local'), override: true });
@@ -22,7 +23,8 @@ async function main() {
   const [user] = await sql<{ id: string }[]>`select id from "user" order by created_at limit 1`;
   if (!user) throw new Error('数据库里没有用户，无法测试外键');
 
-  const packId = 'xhs-operations-v1';
+  const packId = ALL_PACKS_GRANT;
+  const futurePackId = 'future-pack-added-later-v1';
   const before = await sql<{ id: string }[]>`
     select id from onework_entitlement where user_id = ${user.id} and knowledge_pack_id = ${packId}
   `;
@@ -34,7 +36,7 @@ async function main() {
 
   try {
     const issued = await issueOneWorkActivationCode({
-      packIds: [packId],
+      packIds: [ALL_PACKS_GRANT],
       trialDays: 1,
       monthlyQuota: 7,
       label: 'e2e-test',
@@ -51,6 +53,11 @@ async function main() {
       platform: 'test',
     });
     keyIds.push(redeemed.apiKeyId);
+    const redeemedWildcard = await sql<{ id: string }[]>`
+      select id from api_key_pack_grant
+      where api_key_id = ${redeemed.apiKeyId} and knowledge_pack_id = ${ALL_PACKS_GRANT}
+    `;
+    if (redeemedWildcard.length !== 1) throw new Error('兑换后的 Key 未写入全量授权');
 
     const install = await createOneWorkInstallToken({
       userId: user.id,
@@ -64,8 +71,14 @@ async function main() {
       platform: 'test',
     });
     keyIds.push(claimed.apiKeyId);
+    const claimedWildcard = await sql<{ id: string }[]>`
+      select id from api_key_pack_grant
+      where api_key_id = ${claimed.apiKeyId} and knowledge_pack_id = ${ALL_PACKS_GRANT}
+    `;
+    if (claimedWildcard.length !== 1) throw new Error('安装领取的 Key 未写入全量授权');
     console.log('✅ 授权闭环通过:', {
       packs: redeemed.packIds,
+      futurePackAccess: `wildcard grant covers ${futurePackId}`,
       redeemKeyPrefix: redeemed.keyPrefix,
       installKeyPrefix: claimed.keyPrefix,
       quota: redeemed.monthlyQuota,

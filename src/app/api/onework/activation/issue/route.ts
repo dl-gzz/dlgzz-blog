@@ -3,6 +3,7 @@ import {
   issueOneWorkActivationCode,
   OneWorkAccessError,
 } from '@/lib/onework-access';
+import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -13,9 +14,10 @@ export async function POST(request: NextRequest) {
   if ('response' in auth) return auth.response;
 
   const body = await request.json().catch(() => ({}));
-  const packIds = Array.isArray(body?.packIds)
+  const requestedPackIds = Array.isArray(body?.packIds)
     ? body.packIds.filter((value: unknown): value is string => typeof value === 'string')
     : [];
+  const packIds = requestedPackIds.length > 0 ? requestedPackIds : [ALL_PACKS_GRANT];
   const parsedExpiry = typeof body?.expiresAt === 'string' ? new Date(body.expiresAt) : null;
 
   try {
@@ -50,4 +52,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

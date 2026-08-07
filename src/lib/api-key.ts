@@ -3,7 +3,8 @@ import 'server-only';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { getDb } from '@/db';
 import { apiKey, apiKeyPackGrant, apiUsageEvent } from '@/db/schema';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
+import { and, desc, eq, gte, or, sql } from 'drizzle-orm';
 
 const KEY_PREFIX = 'dk_live_';
 
@@ -111,17 +112,20 @@ export async function verifyApiKey(headerValue: string | null): Promise<KeyVerif
 /** Key 是否被授权访问某个知识包（未过期）。 */
 export async function keyHasPackAccess(apiKeyId: string, packId: string): Promise<boolean> {
   const db = await getDb();
-  const [grant] = await db
+  const grants = await db
     .select({ id: apiKeyPackGrant.id, expiresAt: apiKeyPackGrant.expiresAt })
     .from(apiKeyPackGrant)
     .where(
-      and(eq(apiKeyPackGrant.apiKeyId, apiKeyId), eq(apiKeyPackGrant.knowledgePackId, packId))
-    )
-    .limit(1);
+      and(
+        eq(apiKeyPackGrant.apiKeyId, apiKeyId),
+        or(
+          eq(apiKeyPackGrant.knowledgePackId, packId),
+          eq(apiKeyPackGrant.knowledgePackId, ALL_PACKS_GRANT)
+        )
+      )
+    );
 
-  if (!grant) return false;
-  if (grant.expiresAt && grant.expiresAt.getTime() < Date.now()) return false;
-  return true;
+  return grants.some((grant) => !grant.expiresAt || grant.expiresAt.getTime() >= Date.now());
 }
 
 /** 授权一个 Key 访问某知识包（幂等）。 */
