@@ -4,6 +4,7 @@ import {
   getServiceRequestAccess,
 } from '@/lib/service-route-access';
 import { buildShapePackage } from '@/lib/shape-package';
+import { getBaseUrl } from '@/lib/urls/urls';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
     const shapePackage = await buildShapePackage(
       locale,
       slug,
-      request.nextUrl.origin
+      getBaseUrl()
     );
     if (!shapePackage) {
       return NextResponse.json(

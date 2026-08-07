@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBaseUrl } from '@/lib/urls/urls';
 
 /**
  * Handle OpenID callback from XorPay
@@ -18,13 +19,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log('Received OpenID from XorPay:', openid);
-
-    // Store openid in session/cookie for later use
-    // For now, we'll redirect to a payment page with openid as parameter
-    const response = NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/payment/create?openid=${openid}`
-    );
+    const baseUrl = getBaseUrl();
+    // OpenID is already stored in an HttpOnly cookie; do not put it in the URL,
+    // browser history, analytics, or the Referrer header.
+    const response = NextResponse.redirect(`${baseUrl}/payment/checkout`);
 
     // Set openid in cookie (valid for 1 hour)
     response.cookies.set('xorpay_openid', openid, {

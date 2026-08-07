@@ -1,16 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSameOrigin } from '@/lib/api-security';
+import { getSession } from '@/lib/server';
+import { hasAccessToPremiumContent } from '@/lib/premium-access';
+import {
+  checkTrialQuota,
+  recordTrialUsage,
+  visitorIdFromRequest,
+} from '@/lib/free-trial-quota';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
-  try {
-    const { text, question } = await request.json();
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
 
-    if (!text) {
+  try {
+    const contentLength = Number(request.headers.get('content-length') || 0);
+    if (contentLength > 100_000) {
+      return NextResponse.json({ error: '请求内容过大' }, { status: 413 });
+    }
+
+    const body = await request.json();
+    const text = typeof body?.text === 'string' ? body.text.trim() : '';
+    const question = typeof body?.question === 'string' ? body.question.trim() : '';
+
+    if (!text || text.length > 20_000 || question.length > 2_000) {
       return NextResponse.json(
-        { error: '缺少文本数据' },
-        { status: 400 }
+        { error: text ? '文本或问题过长' : '缺少文本数据' },
+        { status: 413 }
+      );
+    }
+
+    const session = await getSession();
+    const userId = session?.user?.id ?? null;
+    const isMember = userId ? await hasAccessToPremiumContent() : false;
+    const visitorId = userId ? null : visitorIdFromRequest(request);
+    const quota = await checkTrialQuota({ userId, visitorId, isMember });
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { error: '今日免费体验次数已用完', code: 'TRIAL_LIMIT', limit: quota.limit },
+        { status: 429 }
       );
     }
 
@@ -54,7 +84,7 @@ export async function POST(request: NextRequest) {
       const errorData = await response.json().catch(() => ({}));
       console.error('[Circle Search] DeepSeek API 错误:', errorData);
       return NextResponse.json(
-        { error: 'DeepSeek API 调用失败', details: errorData },
+        { error: 'DeepSeek API 调用失败，请稍后重试' },
         { status: response.status }
       );
     }
@@ -62,13 +92,23 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     const answer = data.choices?.[0]?.message?.content || '无法获取回答';
 
+    if (!quota.isMember) {
+      await recordTrialUsage({
+        userId,
+        visitorId,
+        query: question ? `${text}\n${question}` : text,
+        resultCount: answer ? 1 : 0,
+        latencyMs: 0,
+      });
+    }
+
     console.log('[Circle Search] DeepSeek API 调用成功');
 
     return NextResponse.json({ answer });
   } catch (error) {
     console.error('[Circle Search] 服务器错误:', error);
     return NextResponse.json(
-      { error: '服务器错误', details: error instanceof Error ? error.message : String(error) },
+      { error: '服务器错误，请稍后重试' },
       { status: 500 }
     );
   }

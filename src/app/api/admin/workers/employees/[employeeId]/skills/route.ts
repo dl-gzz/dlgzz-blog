@@ -1,4 +1,5 @@
 import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { requireSameOrigin } from '@/lib/api-security';
 import { getSession } from '@/lib/server';
 import { setEmployeeWorkerSkillAdmin } from '@/lib/workers';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -10,6 +11,17 @@ interface RouteContext {
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
+  const originError = requireSameOrigin(request);
+  if (originError) return originError;
+
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > 20_000) {
+    return NextResponse.json(
+      { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+      { status: 413 }
+    );
+  }
+
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -35,6 +47,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const { employeeId } = await context.params;
+  if (!/^[A-Za-z0-9_-]{1,160}$/.test(employeeId)) {
+    return NextResponse.json(
+      { success: false, code: 'BAD_REQUEST', error: '员工 ID 无效' },
+      { status: 400 }
+    );
+  }
   const body = await request.json().catch(() => ({}));
   const skillId =
     typeof body.skillId === 'string' && body.skillId.trim()

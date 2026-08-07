@@ -3,7 +3,19 @@ import { getDatabaseCoursewarePost } from '@/lib/edu-content';
 import { type NextRequest, NextResponse } from 'next/server';
 
 function injectStudentIdGuard(html: string, studentId: string) {
-  const safeStudentId = JSON.stringify(studentId);
+  const safeStudentId = JSON.stringify(studentId).replace(/[<>&\u2028\u2029]/g, (char) =>
+    `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`
+  );
+  const safeHtmlStudentId = studentId.replace(/[&<>"']/g, (char) => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    };
+    return entities[char] || char;
+  });
   const script = `<script>
 (function(){
   var targetStudentId = ${safeStudentId};
@@ -20,7 +32,7 @@ function injectStudentIdGuard(html: string, studentId: string) {
   };
 })();
 </script>`;
-  const replaced = html.replaceAll('__DLGZZ_STUDENT_ID__', studentId);
+  const replaced = html.replaceAll('__DLGZZ_STUDENT_ID__', safeHtmlStudentId);
   if (replaced.includes('</body>')) {
     return replaced.replace('</body>', `${script}</body>`);
   }
@@ -33,14 +45,22 @@ export async function GET(request: NextRequest) {
     const locale = request.nextUrl.searchParams.get('locale') || 'zh';
     const studentId = request.nextUrl.searchParams.get('studentId') || '';
 
-    if (!slug.trim()) {
+    if (
+      !slug.trim() ||
+      !['zh', 'en'].includes(locale) ||
+      studentId.length > 160 ||
+      /[\u0000-\u001f]/.test(studentId)
+    ) {
       return NextResponse.json(
         { success: false, error: '缺少课件 slug' },
         { status: 400 }
       );
     }
 
-    const post = getCoursewareMdxPost(slug, locale) || (await getDatabaseCoursewarePost(slug, locale));
+    const localPost = getCoursewareMdxPost(slug, locale);
+    const post =
+      (localPost?.published ? localPost : null) ||
+      (await getDatabaseCoursewarePost(slug, locale));
     if (!post) {
       return NextResponse.json(
         { success: false, error: '没有找到对应的 MDX 课件' },
@@ -56,6 +76,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: '这篇 MDX 里没有已保存的课件 HTML' },
         { status: 404 }
+      );
+    }
+    if (html.length > 2_000_000) {
+      return NextResponse.json(
+        { success: false, error: '课件内容过大' },
+        { status: 413 }
       );
     }
 
@@ -84,7 +110,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : '读取已保存课件失败',
+        error: '读取已保存课件失败，请稍后重试',
       },
       { status: 500 }
     );

@@ -1,15 +1,25 @@
 import { uploadFile } from '@/storage';
 import { StorageError } from '@/storage/types';
+import { requireSameOrigin, requireSession } from '@/lib/api-security';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+  const auth = await requireSession();
+  if ('response' in auth) return auth.response;
+
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File | null;
+    const file = formData.get('file');
     const folder = formData.get('folder') as string | null;
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    }
+
+    if (folder && (!/^[A-Za-z0-9/_-]{1,80}$/.test(folder) || folder.includes('..'))) {
+      return NextResponse.json({ error: '文件夹路径无效' }, { status: 400 });
     }
 
     // Validate file size (max 10MB)
@@ -18,6 +28,10 @@ export async function POST(request: NextRequest) {
         { error: 'File size exceeds the 10MB limit' },
         { status: 400 }
       );
+    }
+
+    if (file.name.length > 200) {
+      return NextResponse.json({ error: '文件名过长' }, { status: 400 });
     }
 
     // Validate file type (optional, based on your requirements)

@@ -1,4 +1,4 @@
-import { requireSession } from '@/lib/api-security';
+import { requireSameOrigin, requireSession } from '@/lib/api-security';
 import {
   createHealthMeasurement,
   getHealthDashboardForUser,
@@ -20,6 +20,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireSession('请先登录后再记录三高数据');
   if ('response' in auth) return auth.response;
 

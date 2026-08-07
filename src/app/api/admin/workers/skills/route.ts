@@ -1,4 +1,5 @@
 import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { requireSameOrigin } from '@/lib/api-security';
 import { getSession } from '@/lib/server';
 import { createWorkerSkillAdmin, listAdminWorkerSkills } from '@/lib/workers';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -37,6 +38,17 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const originError = requireSameOrigin(request);
+  if (originError) return originError;
+
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > 50_000) {
+    return NextResponse.json(
+      { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+      { status: 413 }
+    );
+  }
+
   const session = await getSession();
 
   if (!session?.user?.id) {

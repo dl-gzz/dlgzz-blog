@@ -1,4 +1,9 @@
-import { recordUsage, verifyApiKey } from '@/lib/api-key';
+import {
+  completeApiKeyUsage,
+  recordUsage,
+  reserveApiKeyUsage,
+  verifyApiKey,
+} from '@/lib/api-key';
 import {
   SemanticQueryError,
   type SemanticQueryMode,
@@ -68,6 +73,14 @@ function unwrapRequest(body: unknown): {
 
 export async function POST(request: NextRequest) {
   const startedAt = Date.now();
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > 100_000) {
+    return NextResponse.json(
+      { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+      { status: 413 }
+    );
+  }
+
   const verified = await verifyApiKey(request.headers.get('authorization'));
   if (!verified.ok) {
     const deny = DENY_MESSAGE[verified.reason];
@@ -82,6 +95,7 @@ export async function POST(request: NextRequest) {
   }
 
   let body: unknown;
+  let reservation: Awaited<ReturnType<typeof reserveApiKeyUsage>> = null;
   try {
     body = await request.json();
   } catch {
@@ -94,20 +108,29 @@ export async function POST(request: NextRequest) {
   try {
     const parsed = unwrapRequest(body);
     const usageQuery = summarizeQuery(parsed.semanticQuery);
-    const result = await executeSemanticQuery(
-      parsed.semanticQuery,
-      verified.key.userId,
-      parsed.mode
-    );
-    await recordUsage({
+    reservation = await reserveApiKeyUsage({
       apiKeyId: verified.key.id,
       userId: verified.key.userId,
       kind: 'analytics_query',
       serviceId: 'onework-analytics-v1',
       query: usageQuery,
+    });
+    if (!reservation) {
+      return NextResponse.json(
+        { success: false, code: 'QUOTA_EXCEEDED', error: '本月调用额度已用完' },
+        { status: 429 }
+      );
+    }
+    const result = await executeSemanticQuery(
+      parsed.semanticQuery,
+      verified.key.userId,
+      parsed.mode
+    );
+    await completeApiKeyUsage({
+      eventId: reservation.eventId,
+      status: 'ok',
       resultCount: result.rowCount,
       latencyMs: Date.now() - startedAt,
-      status: 'ok',
     });
 
     return NextResponse.json({
@@ -132,7 +155,7 @@ export async function POST(request: NextRequest) {
       queryHash: result.queryHash,
       quota: {
         limit: verified.key.monthlyQuota,
-        usedThisMonth: verified.usedThisMonth + 1,
+        usedThisMonth: reservation.usedThisMonth + 1,
       },
     });
   } catch (error) {
@@ -143,15 +166,23 @@ export async function POST(request: NextRequest) {
       'semanticQuery' in body
         ? (body as Record<string, unknown>).semanticQuery
         : body;
-    await recordUsage({
-      apiKeyId: verified.key.id,
-      userId: verified.key.userId,
-      kind: 'analytics_query',
-      serviceId: 'onework-analytics-v1',
-      query: summarizeQuery(semanticQuery),
-      latencyMs: Date.now() - startedAt,
-      status: error instanceof SemanticQueryError ? 'denied' : 'error',
-    });
+    if (reservation) {
+      await completeApiKeyUsage({
+        eventId: reservation.eventId,
+        status: 'error',
+        latencyMs: Date.now() - startedAt,
+      });
+    } else {
+      await recordUsage({
+        apiKeyId: verified.key.id,
+        userId: verified.key.userId,
+        kind: 'analytics_query',
+        serviceId: 'onework-analytics-v1',
+        query: summarizeQuery(semanticQuery),
+        latencyMs: Date.now() - startedAt,
+        status: error instanceof SemanticQueryError ? 'denied' : 'error',
+      });
+    }
 
     if (error instanceof SemanticQueryError) {
       return NextResponse.json(

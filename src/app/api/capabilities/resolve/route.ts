@@ -36,6 +36,14 @@ const requestSchema = z
   });
 
 export async function POST(request: NextRequest) {
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > 100_000) {
+    return NextResponse.json(
+      { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+      { status: 413 }
+    );
+  }
+
   const verified = await verifyApiKey(request.headers.get('authorization'));
   if (!verified.ok) {
     const deny = DENY_MESSAGE[verified.reason];

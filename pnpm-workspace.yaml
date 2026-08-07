@@ -1,10 +1,6 @@
-dangerouslyAllowAllBuilds: true
-
 onlyBuiltDependencies:
   - '@biomejs/biome'
   - '@vercel/speed-insights'
   - core-js
   - esbuild
   - sharp
-ignoredBuiltDependencies:
-  - libpq

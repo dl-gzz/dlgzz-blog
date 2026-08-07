@@ -1,4 +1,4 @@
-import { requireHermesAdmin } from '@/lib/api-security';
+import { requireHermesAdmin, requireSameOrigin } from '@/lib/api-security';
 import { runLearningAssistant } from '@/lib/hermes-learning-assistant';
 import {
   StudentAccessConfigurationError,
@@ -18,6 +18,9 @@ function readText(value: unknown, fallback = '') {
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireHermesAdmin('学习助手接口暂只允许管理员访问');
   if ('response' in auth) return auth.response;
 
@@ -31,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const studentId = readText(body.studentId);
-    if (!studentId) {
+    if (!studentId || studentId.length > 160 || /[\u0000-\u001f]/.test(studentId)) {
       return NextResponse.json(
         { success: false, error: '缺少 studentId' },
         { status: 400 }
@@ -41,6 +44,12 @@ export async function POST(request: NextRequest) {
     const args = ['--student-id', studentId];
     const name = readText(body.name);
     const grade = readText(body.grade);
+    if (name.length > 200 || grade.length > 80) {
+      return NextResponse.json(
+        { success: false, error: '学生资料过长' },
+        { status: 400 }
+      );
+    }
     if (name) args.push('--name', name);
     if (grade) args.push('--grade', grade);
 

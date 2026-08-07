@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash, timingSafeEqual } from 'crypto';
 import { getDb } from '@/db';
 import { payment, user } from '@/db/schema';
 import { markWorkerInstancePayment } from '@/lib/workers';
@@ -30,14 +30,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const pay_time = formData.get('pay_time') as string;
     const sign = formData.get('sign') as string;
 
-    console.log('XorPay webhook received:', {
-      aoid,
-      order_id,
-      pay_price,
-      pay_time,
-      sign,
-    });
-
     // Validate required parameters
     if (!aoid || !order_id || !pay_price || !pay_time || !sign) {
       console.error('Missing required parameters');
@@ -55,8 +47,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const signString = `${aoid}${order_id}${pay_price}${pay_time}${appSecret}`;
     const expectedSign = createHash('md5').update(signString).digest('hex');
 
-    if (sign !== expectedSign) {
-      console.error('Invalid signature', { received: sign, expected: expectedSign });
+    const received = Buffer.from(sign, 'utf8');
+    const expected = Buffer.from(expectedSign, 'utf8');
+    if (received.length !== expected.length || !timingSafeEqual(received, expected)) {
+      console.error('Invalid XorPay webhook signature', { aoid, order_id });
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 

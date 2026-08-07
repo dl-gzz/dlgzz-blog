@@ -1,4 +1,4 @@
-import { requireSession } from '@/lib/api-security';
+import { requireSameOrigin, requireSession } from '@/lib/api-security';
 import {
   OneWorkAccessError,
   redeemOneWorkActivation,
@@ -8,6 +8,9 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireSession();
   if ('response' in auth) return auth.response;
 
@@ -47,4 +50,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

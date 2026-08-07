@@ -1,4 +1,5 @@
 import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { requireSameOrigin } from '@/lib/api-security';
 import { provisionHermesAssistant } from '@/lib/hermes-bridge-client';
 import { getSession } from '@/lib/server';
 import {
@@ -17,6 +18,9 @@ interface RouteContext {
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const session = await getSession();
   const userId = session?.user?.id;
 

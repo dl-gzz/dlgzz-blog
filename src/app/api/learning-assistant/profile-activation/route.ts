@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { requireHermesAdmin } from '@/lib/api-security';
+import { requireHermesAdmin, requireSameOrigin } from '@/lib/api-security';
 import { provisionHermesAssistant } from '@/lib/hermes-bridge-client';
 import { runLearningAssistant } from '@/lib/hermes-learning-assistant';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -110,6 +110,9 @@ async function rememberActivation({
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireHermesAdmin('学习助手激活接口暂只允许管理员访问');
   if ('response' in auth) return auth.response;
 
@@ -123,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     const studentId = readText(body.studentId);
-    if (!studentId) {
+    if (!studentId || studentId.length > 160 || /[\u0000-\u001f]/.test(studentId)) {
       return NextResponse.json(
         { success: false, error: '缺少 studentId' },
         { status: 400 }
@@ -133,6 +136,12 @@ export async function POST(request: NextRequest) {
     const name = readText(body.name);
     const grade = readText(body.grade);
     const assistantId = readText(body.assistantId, buildAssistantId(studentId));
+    if (name.length > 200 || grade.length > 80 || assistantId.length > 160) {
+      return NextResponse.json(
+        { success: false, error: '学习助手资料过长' },
+        { status: 400 }
+      );
+    }
 
     const profile = await ensureStudentProfile({ studentId, name, grade });
     const displayName = name || studentId;

@@ -1,6 +1,7 @@
 import { buildHermesSkillMd } from '@/lib/hermes-skill-md';
 import { getServiceArticleBundle } from '@/lib/service-article';
 import { getServiceCatalogItem } from '@/lib/service-catalog';
+import { getBaseUrl } from '@/lib/urls/urls';
 import {
   buildServiceAccessErrorResponse,
   getServiceRequestAccess,
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const origin = request.nextUrl.origin;
+    const origin = getBaseUrl();
     const articleUrl = `${origin}/${locale}/blog/${slug}`;
     const skillMd = buildHermesSkillMd({
       manifest: item.manifest,

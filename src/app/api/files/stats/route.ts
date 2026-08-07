@@ -22,8 +22,14 @@ export async function GET(req: NextRequest) {
 
     const searchParams = req.nextUrl.searchParams;
     const fileKey = searchParams.get('fileKey');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const requestedLimit = Number(searchParams.get('limit') || 50);
+    const requestedOffset = Number(searchParams.get('offset') || 0);
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(1000, Math.max(1, Math.floor(requestedLimit)))
+      : 50;
+    const offset = Number.isFinite(requestedOffset)
+      ? Math.min(10_000_000, Math.max(0, Math.floor(requestedOffset)))
+      : 0;
 
     // 如果指定了文件，返回该文件的统计
     if (fileKey) {

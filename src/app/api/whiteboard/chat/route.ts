@@ -1,4 +1,5 @@
 import { chatWithResolvedServerProvider } from '@/lib/ai/provider';
+import { requireSameOrigin } from '@/lib/api-security';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { getSession } from '@/lib/server';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -66,18 +67,36 @@ const WHITEBOARD_ACTION_SCHEMA = {
  * 3. Auto-detect by available server keys.
  */
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   try {
+    const contentLength = Number(request.headers.get('content-length') || 0);
+    if (contentLength > 250_000) {
+      return NextResponse.json(
+        { success: false, error: '请求内容过大' },
+        { status: 413 }
+      );
+    }
+
     const { messages, purpose } = await request.json();
     const isCoursewareGeneration = purpose === 'courseware';
 
-    if (!messages || !Array.isArray(messages)) {
+    if (
+      !Array.isArray(messages) ||
+      messages.length === 0 ||
+      messages.length > 30 ||
+      JSON.stringify(messages).length > 200_000
+    ) {
       return NextResponse.json(
         { success: false, error: '无效的消息格式' },
         { status: 400 }
       );
     }
 
-    const requireCoursewareAuth = process.env.WHITEBOARD_COURSEWARE_REQUIRE_AUTH === 'true';
+    // Secure by default. Public courseware generation can be explicitly enabled
+    // for a controlled demo with WHITEBOARD_COURSEWARE_REQUIRE_AUTH=false.
+    const requireCoursewareAuth = process.env.WHITEBOARD_COURSEWARE_REQUIRE_AUTH !== 'false';
     if (!isCoursewareGeneration || requireCoursewareAuth) {
       const session = await getSession();
       if (!session?.user) {
@@ -122,7 +141,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'AI 请求失败',
+        error: 'AI 请求失败，请稍后重试',
       },
       { status: 500 }
     );

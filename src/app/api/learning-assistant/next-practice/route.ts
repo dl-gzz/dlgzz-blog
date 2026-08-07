@@ -10,7 +10,7 @@ function readText(value: string | null, fallback = '') {
 
 export async function GET(request: NextRequest) {
   const studentId = readText(request.nextUrl.searchParams.get('studentId'));
-  if (!studentId) {
+  if (!studentId || studentId.length > 160 || /[\u0000-\u001f]/.test(studentId)) {
     return NextResponse.json(
       { success: false, error: '缺少 studentId' },
       { status: 400 }
@@ -23,13 +23,20 @@ export async function GET(request: NextRequest) {
   try {
     const args = ['--student-id', studentId];
     const dueBefore = readText(request.nextUrl.searchParams.get('dueBefore'));
-    const limit = readText(request.nextUrl.searchParams.get('limit'), '8');
-    const poolLimit = readText(
-      request.nextUrl.searchParams.get('poolLimit'),
-      '20'
+    const limitValue = Number(request.nextUrl.searchParams.get('limit') || 8);
+    const poolLimitValue = Number(
+      request.nextUrl.searchParams.get('poolLimit') || 20
     );
+    const limit = Number.isInteger(limitValue)
+      ? String(Math.min(50, Math.max(1, limitValue)))
+      : '8';
+    const poolLimit = Number.isInteger(poolLimitValue)
+      ? String(Math.min(200, Math.max(1, poolLimitValue)))
+      : '20';
 
-    if (dueBefore) args.push('--due-before', dueBefore);
+    if (dueBefore && /^\d{4}-\d{2}-\d{2}$/.test(dueBefore)) {
+      args.push('--due-before', dueBefore);
+    }
     args.push('--limit', limit, '--pool-limit', poolLimit);
 
     const result = await runLearningAssistant('next_practice', args, {

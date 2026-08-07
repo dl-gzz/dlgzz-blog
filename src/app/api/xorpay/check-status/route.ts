@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/db';
 import { payment } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { findPriceInPlan, findPlanByPriceId } from '@/lib/price-plan';
+import { requireSession } from '@/lib/api-security';
 
 /**
  * Check XorPay payment status
@@ -12,6 +13,9 @@ import { findPriceInPlan, findPlanByPriceId } from '@/lib/price-plan';
  */
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireSession();
+    if ('response' in auth) return auth.response;
+
     const searchParams = req.nextUrl.searchParams;
     const aoid = searchParams.get('aoid');
 
@@ -27,7 +31,7 @@ export async function GET(req: NextRequest) {
     const paymentRecord = await db
       .select()
       .from(payment)
-      .where(eq(payment.subscriptionId, aoid))
+      .where(and(eq(payment.subscriptionId, aoid), eq(payment.userId, auth.session.user.id)))
       .limit(1);
 
     if (paymentRecord.length === 0) {
@@ -58,10 +62,10 @@ export async function GET(req: NextRequest) {
         createdAt: paymentRecord[0].createdAt,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error checking payment status:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to check payment status' },
+      { error: 'Failed to check payment status' },
       { status: 500 }
     );
   }

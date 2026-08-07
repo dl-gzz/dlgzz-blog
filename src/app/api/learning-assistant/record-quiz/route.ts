@@ -13,6 +13,14 @@ function readText(value: unknown) {
 }
 
 export async function POST(request: NextRequest) {
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > 100_000) {
+    return NextResponse.json(
+      { success: false, error: '请求体过大' },
+      { status: 413 }
+    );
+  }
+
   const body = (await request.json().catch(() => null)) as unknown;
   if (!isObjectRecord(body)) {
     return NextResponse.json(
@@ -22,7 +30,7 @@ export async function POST(request: NextRequest) {
   }
 
   const studentId = readText(body.studentId);
-  if (!studentId) {
+  if (!studentId || studentId.length > 160 || /[\u0000-\u001f]/.test(studentId)) {
     return NextResponse.json(
       { success: false, error: '缺少 studentId' },
       { status: 400 }

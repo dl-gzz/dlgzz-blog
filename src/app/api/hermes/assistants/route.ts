@@ -2,7 +2,7 @@ import {
   getBotAssistantRole,
   isActiveBotAssistantRole,
 } from '@/config/bot-assistants';
-import { requireHermesAdmin } from '@/lib/api-security';
+import { requireHermesAdmin, requireSameOrigin } from '@/lib/api-security';
 import { nanoid } from 'nanoid';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -82,6 +82,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireHermesAdmin('创建 Hermes 助手暂只允许管理员操作');
   if ('response' in auth) return auth.response;
   const userId = auth.session.user.id;

@@ -1,4 +1,4 @@
-import { requireSession } from '@/lib/api-security';
+import { requireSameOrigin, requireSession } from '@/lib/api-security';
 import {
   issueApiKey,
   listUserApiKeys,
@@ -19,6 +19,9 @@ export async function GET() {
 
 /** POST：签发一把新 Key（明文只在这次响应里返回一次）。 */
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireSession();
   if ('response' in auth) return auth.response;
 
@@ -39,6 +42,9 @@ export async function POST(request: NextRequest) {
 
 /** DELETE?id=…：吊销一把 Key。 */
 export async function DELETE(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireSession();
   if ('response' in auth) return auth.response;
 

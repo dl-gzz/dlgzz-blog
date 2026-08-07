@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { Readable } from 'node:stream';
 import path from 'path';
 import { getDb } from '@/db';
 import { fileDownload } from '@/db/schema';
@@ -26,6 +27,9 @@ export async function GET(req: NextRequest) {
 
     if (!fileKey) {
       return NextResponse.json({ error: '缺少文件标识' }, { status: 400 });
+    }
+    if (fileKey.length > 300 || fileKey.includes('\0')) {
+      return NextResponse.json({ error: '文件标识无效' }, { status: 400 });
     }
 
     // 权限检查
@@ -78,13 +82,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: '非法的文件路径' }, { status: 400 });
     }
 
-    // 检查文件是否存在
+    // 检查文件是否存在，并限制单次读取大小，避免公开下载接口被用作
+    // 大文件内存耗尽点。
     if (!fs.existsSync(normalizedPath)) {
       return NextResponse.json({ error: '文件不存在' }, { status: 404 });
     }
+    const fileStat = fs.statSync(normalizedPath);
+    if (!fileStat.isFile()) {
+      return NextResponse.json({ error: '文件不存在' }, { status: 404 });
+    }
+    if (fileStat.size > 500 * 1024 * 1024) {
+      return NextResponse.json({ error: '文件超过 500MB 下载限制' }, { status: 413 });
+    }
 
-    // 读取文件
-    const fileBuffer = fs.readFileSync(normalizedPath);
     const fileName = path.basename(normalizedPath);
 
     // 获取文件的 MIME 类型
@@ -129,12 +139,12 @@ export async function GET(req: NextRequest) {
         id: nanoid(),
         fileKey,
         fileName,
-        fileSize: fileBuffer.length,
+        fileSize: fileStat.size,
         userId,
         userEmail,
-        ipAddress,
-        userAgent,
-        referer,
+        ipAddress: ipAddress.slice(0, 200),
+        userAgent: userAgent.slice(0, 1000),
+        referer: referer?.slice(0, 2000) || null,
         requireAuth,
         requirePremium,
       });
@@ -153,14 +163,17 @@ export async function GET(req: NextRequest) {
     );
 
     // 返回文件
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(
+      Readable.toWeb(fs.createReadStream(normalizedPath)) as ReadableStream,
+      {
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
-        'Content-Length': fileBuffer.length.toString(),
+        'Content-Length': fileStat.size.toString(),
         'Cache-Control': 'private, max-age=0',
       },
-    });
+      }
+    );
   } catch (error: any) {
     console.error('文件下载错误:', error);
     return NextResponse.json(

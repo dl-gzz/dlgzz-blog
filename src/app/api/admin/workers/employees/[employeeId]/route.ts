@@ -1,4 +1,5 @@
 import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { requireSameOrigin } from '@/lib/api-security';
 import { getSession } from '@/lib/server';
 import { updateWorkerEmployeeAdmin } from '@/lib/workers';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -10,6 +11,17 @@ interface RouteContext {
 }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const originError = requireSameOrigin(request);
+  if (originError) return originError;
+
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > 50_000) {
+    return NextResponse.json(
+      { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+      { status: 413 }
+    );
+  }
+
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -48,10 +60,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       ? body.monthlyPriceId.trim()
       : undefined;
   const currency =
-    typeof body.currency === 'string' && body.currency.trim()
+    typeof body.currency === 'string' && /^[A-Z]{3}$/.test(body.currency.trim().toUpperCase())
       ? body.currency.trim().toUpperCase()
       : undefined;
   const { employeeId } = await context.params;
+
+  if (!/^[A-Za-z0-9_-]{1,160}$/.test(employeeId)) {
+    return NextResponse.json(
+      { success: false, code: 'BAD_REQUEST', error: '员工 ID 无效' },
+      { status: 400 }
+    );
+  }
 
   try {
     const employee = await updateWorkerEmployeeAdmin({

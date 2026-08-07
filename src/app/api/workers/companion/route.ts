@@ -1,4 +1,5 @@
 import { getMembershipEntitlementForUser } from '@/lib/entitlements';
+import { requireSameOrigin } from '@/lib/api-security';
 import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
 import { getSession } from '@/lib/server';
 import {
@@ -40,6 +41,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const session = await getSession();
   const userId = session?.user?.id;
 

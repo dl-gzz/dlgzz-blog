@@ -2019,6 +2019,19 @@ export default function OwnWhiteboard() {
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
+      // Sandboxed lesson iframes have an opaque (`null`) origin, so origin
+      // checks alone are insufficient. Only accept events from an iframe
+      // currently rendered by this whiteboard; otherwise any page opened in
+      // the browser could forge quiz results and trigger a persistence call.
+      if (
+        !event.source ||
+        !Array.from(document.querySelectorAll<HTMLIFrameElement>('iframe[sandbox]')).some(
+          (frame) => frame.contentWindow === event.source
+        )
+      ) {
+        return;
+      }
+
       const data = event.data;
       if (!isObjectRecord(data)) return;
 

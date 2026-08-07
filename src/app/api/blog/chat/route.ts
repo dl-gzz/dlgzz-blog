@@ -4,10 +4,16 @@
  * 支持 DeepSeek API (OpenAI 兼容格式)
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSameOrigin } from '@/lib/api-security';
 import { createOpenAICompatibleClient } from '@/lib/ai/openai-compatible';
 import { blogSource } from '@/lib/source';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
+import {
+  checkTrialQuota,
+  recordTrialUsage,
+  visitorIdFromRequest,
+} from '@/lib/free-trial-quota';
 import fs from 'fs';
 import path from 'path';
 
@@ -18,13 +24,36 @@ function estimateTokens(text: string): number {
 
 export async function POST(req: NextRequest) {
   try {
-    const { slug, question, locale = 'zh' } = await req.json();
+    const csrf = requireSameOrigin(req);
+    if (csrf) return csrf;
+
+    const contentLength = Number(req.headers.get('content-length') || 0);
+    if (contentLength > 250_000) {
+      return NextResponse.json({ error: '请求内容过大' }, { status: 413 });
+    }
+
+    const body = await req.json();
+    const slug = typeof body?.slug === 'string' ? body.slug.trim() : '';
+    const question = typeof body?.question === 'string' ? body.question.trim() : '';
+    const locale = body?.locale === 'en' ? 'en' : 'zh';
 
     // 验证必填参数
-    if (!slug || !question) {
+    if (!slug || !question || question.length > 2_000 || !/^[A-Za-z0-9_/-]{1,160}$/.test(slug)) {
       return NextResponse.json(
-        { error: '缺少必需参数: slug 和 question' },
-        { status: 400 }
+        { error: !slug || !question ? '缺少必需参数: slug 和 question' : '请求参数过长或格式无效' },
+        { status: !slug || !question ? 400 : 413 }
+      );
+    }
+
+    const session = await getSession();
+    const userId = session?.user?.id ?? null;
+    const isMember = userId ? await hasAccessToPremiumContent() : false;
+    const visitorId = userId ? null : visitorIdFromRequest(req);
+    const quota = await checkTrialQuota({ userId, visitorId, isMember });
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { error: '今日免费体验次数已用完', code: 'TRIAL_LIMIT', limit: quota.limit },
+        { status: 429 }
       );
     }
 
@@ -46,8 +75,6 @@ export async function POST(req: NextRequest) {
 
     // 如果是付费文章，检查用户权限
     if (isPremium) {
-      const session = await getSession();
-
       // 检查是否登录
       if (!session?.user) {
         return NextResponse.json(
@@ -57,8 +84,7 @@ export async function POST(req: NextRequest) {
       }
 
       // 检查是否有付费权限
-      const hasPremiumAccess = await hasAccessToPremiumContent();
-      if (!hasPremiumAccess) {
+      if (!isMember) {
         return NextResponse.json(
           { error: '此文章为付费内容，请升级订阅后使用 AI 问答功能' },
           { status: 403 }
@@ -164,6 +190,15 @@ ${articleContent}
           }
           // 发送结束信号
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          if (!quota.isMember) {
+            await recordTrialUsage({
+              userId,
+              visitorId,
+              query: question,
+              resultCount: 1,
+              latencyMs: 0,
+            });
+          }
           controller.close();
         } catch (error) {
           controller.error(error);

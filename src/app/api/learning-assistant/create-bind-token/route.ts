@@ -1,4 +1,4 @@
-import { requireHermesAdmin } from '@/lib/api-security';
+import { requireHermesAdmin, requireSameOrigin } from '@/lib/api-security';
 import { runLearningAssistant } from '@/lib/hermes-learning-assistant';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -13,6 +13,9 @@ function readText(value: unknown, fallback = '') {
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireHermesAdmin('学习助手接口暂只允许管理员访问');
   if ('response' in auth) return auth.response;
 
@@ -26,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const studentId = readText(body.studentId);
-    if (!studentId) {
+    if (!studentId || studentId.length > 160 || /[\u0000-\u001f]/.test(studentId)) {
       return NextResponse.json(
         { success: false, error: '缺少 studentId' },
         { status: 400 }

@@ -1,10 +1,15 @@
 import os from 'os';
 import path from 'path';
-import { requireHermesAdmin } from '@/lib/api-security';
+import { requireHermesAdmin, requireSameOrigin } from '@/lib/api-security';
 import fs from 'fs/promises';
 import { type NextRequest, NextResponse } from 'next/server';
 
 const API = 'https://www.dajiala.com/fbmain/monitor/v3/wxvideo';
+const DOWNLOAD_HOSTS = [
+  'xhscdn.com',
+  'xiaohongshu.com',
+  'xhslink.com',
+];
 const DOWNLOAD_ROOT = path.resolve(
   process.env.WXVIDEO_DOWNLOAD_DIR ||
     path.join(os.tmpdir(), 'dlgzz-wxvideo-downloads')
@@ -49,7 +54,12 @@ async function postJson(
         signal: AbortSignal.timeout(45_000),
       });
       if (res.status >= 500) throw new Error(`HTTP ${res.status}`);
+      const contentLength = Number(res.headers.get('content-length') || 0);
+      if (contentLength > 2 * 1024 * 1024) {
+        throw new Error('上游响应过大');
+      }
       const text = await res.text();
+      if (text.length > 2 * 1024 * 1024) throw new Error('上游响应过大');
       if (!text.trim()) throw new Error('empty response');
       return JSON.parse(text);
     } catch (e) {
@@ -141,14 +151,81 @@ async function getDownloadDetail(
 }
 
 async function downloadFile(url: string, filePath: string): Promise<number> {
-  const res = await fetch(url, { signal: AbortSignal.timeout(180_000) });
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    throw new Error('下载地址无效');
+  }
+  if (parsedUrl.protocol !== 'https:') {
+    throw new Error('下载地址协议不受支持');
+  }
+
+  const isAllowedDownloadHost = (candidate: URL) =>
+    DOWNLOAD_HOSTS.some(
+      (host) =>
+        candidate.hostname === host || candidate.hostname.endsWith(`.${host}`)
+    );
+  if (!isAllowedDownloadHost(parsedUrl)) {
+    throw new Error('下载地址域名不受信任');
+  }
+
+  let currentUrl = parsedUrl;
+  let res: Response | null = null;
+  for (let redirectCount = 0; redirectCount <= 3; redirectCount += 1) {
+    res = await fetch(currentUrl, {
+      signal: AbortSignal.timeout(180_000),
+      redirect: 'manual',
+    });
+    if (res.status < 300 || res.status >= 400) break;
+    const location = res.headers.get('location');
+    if (!location || redirectCount === 3) throw new Error('下载地址重定向无效');
+    const next = new URL(location, currentUrl);
+    if (next.protocol !== 'https:' || !isAllowedDownloadHost(next)) {
+      throw new Error('下载地址重定向到不受信任的域名');
+    }
+    currentUrl = next;
+  }
+
+  if (!res) throw new Error('下载失败');
   if (!res.ok) throw new Error(`下载失败 HTTP ${res.status}`);
-  const buffer = await res.arrayBuffer();
-  await fs.writeFile(filePath, Buffer.from(buffer));
-  return buffer.byteLength;
+  const contentLength = Number(res.headers.get('content-length') || 0);
+  const maxBytes = 500 * 1024 * 1024;
+  if (contentLength > maxBytes) throw new Error('视频文件超过 500MB 限制');
+  if (!res.body) throw new Error('下载响应为空');
+
+  const handle = await fs.open(filePath, 'w');
+  let total = 0;
+  try {
+    const reader = res.body.getReader();
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      total += chunk.value.byteLength;
+      if (total > maxBytes) throw new Error('视频文件超过 500MB 限制');
+      await handle.write(chunk.value);
+    }
+  } catch (error) {
+    await fs.rm(filePath, { force: true });
+    throw error;
+  } finally {
+    await handle.close();
+  }
+  return total;
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > 20_000) {
+    return NextResponse.json(
+      { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+      { status: 413 }
+    );
+  }
+
   const auth = await requireHermesAdmin('微信视频下载接口只允许管理员访问');
   if ('response' in auth) return auth.response;
 
@@ -172,11 +249,22 @@ export async function POST(request: NextRequest) {
       limit = 5,
       outDir,
     } = await request.json();
-    if (!keyword)
+    if (typeof keyword !== 'string' || !keyword.trim() || keyword.length > 120)
       return NextResponse.json(
-        { success: false, error: '缺少关键词' },
+        { success: false, error: '关键词无效或过长' },
         { status: 400 }
       );
+    if (
+      (accountName !== undefined &&
+        (typeof accountName !== 'string' || accountName.length > 120)) ||
+      (v2NameInput !== undefined &&
+        (typeof v2NameInput !== 'string' || v2NameInput.length > 120))
+    ) {
+      return NextResponse.json(
+        { success: false, error: '账号名称无效或过长' },
+        { status: 400 }
+      );
+    }
     if (!accountName && !v2NameInput)
       return NextResponse.json(
         { success: false, error: '缺少账号名称' },
@@ -192,11 +280,15 @@ export async function POST(request: NextRequest) {
 
     const v2Name: string =
       v2NameInput || (await resolveV2Name(apiKey, accountName));
+    const requestedLimit = Number(limit);
+    const safeLimit = Number.isFinite(requestedLimit)
+      ? Math.max(1, Math.min(20, Math.floor(requestedLimit)))
+      : 5;
     const candidates = await fetchCandidates(
       apiKey,
       v2Name,
-      keyword,
-      Number(limit) || 5,
+      keyword.trim(),
+      safeLimit,
       afterTs
     );
 

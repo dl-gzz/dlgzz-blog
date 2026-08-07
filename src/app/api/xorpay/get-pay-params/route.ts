@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDb } from '@/db';
+import { payment } from '@/db/schema';
+import { requireSession } from '@/lib/api-security';
+import { and, eq } from 'drizzle-orm';
 
 /**
  * Get XorPay payment parameters
@@ -9,6 +13,9 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireSession();
+    if ('response' in auth) return auth.response;
+
     const searchParams = req.nextUrl.searchParams;
     const aoid = searchParams.get('aoid');
 
@@ -17,6 +24,16 @@ export async function GET(req: NextRequest) {
         { error: 'Missing aoid parameter' },
         { status: 400 }
       );
+    }
+
+    const db = await getDb();
+    const [ownedPayment] = await db
+      .select({ id: payment.id })
+      .from(payment)
+      .where(and(eq(payment.subscriptionId, aoid), eq(payment.userId, auth.session.user.id)))
+      .limit(1);
+    if (!ownedPayment) {
+      return NextResponse.json({ error: '订单不存在' }, { status: 404 });
     }
 
     const appId = process.env.XORPAY_APP_ID;
@@ -36,14 +53,12 @@ export async function GET(req: NextRequest) {
 
     const data = await response.json();
 
-    console.log('XorPay payment params:', data);
-
     // Return payment parameters
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching XorPay payment params:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch payment parameters' },
+      { error: 'Failed to fetch payment parameters' },
       { status: 500 }
     );
   }

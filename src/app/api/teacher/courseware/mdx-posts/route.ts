@@ -1,8 +1,12 @@
 import { listCoursewareMdxPosts } from '@/lib/courseware-mdx';
 import { listDatabaseCoursewarePosts } from '@/lib/edu-content';
+import { requireHermesAdmin } from '@/lib/api-security';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  const auth = await requireHermesAdmin('课件目录仅限管理员访问');
+  if ('response' in auth) return auth.response;
+
   try {
     const locale = request.nextUrl.searchParams.get('locale') || 'zh';
     const fsPosts = listCoursewareMdxPosts(locale);

@@ -1,9 +1,13 @@
 import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { requireSameOrigin } from '@/lib/api-security';
 import { getSession } from '@/lib/server';
 import { syncWorkerEmployees } from '@/lib/workers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const originError = requireSameOrigin(request);
+  if (originError) return originError;
+
   const session = await getSession();
 
   if (!session?.user?.id) {

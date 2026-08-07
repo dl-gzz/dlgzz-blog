@@ -1,4 +1,5 @@
 import { websiteConfig } from '@/config/website';
+import { requireSameOrigin } from '@/lib/api-security';
 import { findPlanByPriceId } from '@/lib/price-plan';
 import { getSession } from '@/lib/server';
 import { getUrlWithLocale } from '@/lib/urls/urls';
@@ -20,6 +21,9 @@ interface WorkerCheckoutBody {
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const session = await getSession();
   const userId = session?.user?.id;
 
@@ -152,7 +156,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         code: 'CHECKOUT_FAILED',
-        error: error instanceof Error ? error.message : '创建付款失败',
+        error: '创建付款失败，请稍后重试',
         instanceId: created.instance.id,
       },
       { status: 502 }

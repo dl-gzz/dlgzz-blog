@@ -1975,7 +1975,7 @@ function serializeWorkerEmployeeSkill(
 }
 
 function cleanText(value: unknown) {
-  return typeof value === 'string' ? value.trim() : '';
+  return typeof value === 'string' ? value.trim().slice(0, 4000) : '';
 }
 
 function normalizeSkillId(value: unknown) {

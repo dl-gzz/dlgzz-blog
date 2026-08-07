@@ -22,7 +22,7 @@ async function getZhipuEmbedding(text: string): Promise<number[]> {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${process.env.ZHIPU_API_KEY}`,
     },
-    body: JSON.stringify({ model: 'embedding-3', input: text }),
+    body: JSON.stringify({ model: 'embedding-3', input: text.slice(0, 8000) }),
   });
   if (!resp.ok) throw new Error(`智谱 embedding 请求失败: ${resp.status}`);
   const data = await resp.json() as { data: Array<{ embedding: number[] }> };
@@ -44,7 +44,15 @@ async function keywordSearch(
   try {
     // 把查询拆成词，用 ilike 做模糊匹配
     const keywords = query.trim().split(/\s+/).slice(0, 5);
-    const conditions = keywords.map((kw) => `(title ilike '%${kw.replace(/'/g, "''")}%' or content ilike '%${kw.replace(/'/g, "''")}%' or description ilike '%${kw.replace(/'/g, "''")}%')`).join(' or ');
+    // Keep every search term as a bound parameter. Building this clause with
+    // sql.unsafe() made the fallback unnecessarily dependent on manual SQL
+    // escaping and widened the blast radius of malformed user input.
+    const patterns = sql(keywords.map((keyword) => `%${keyword}%`));
+    const conditions = sql`(
+      title ilike any(${patterns}) or
+      content ilike any(${patterns}) or
+      description ilike any(${patterns})
+    )`;
 
     const results = await sql<
       Array<{
@@ -58,7 +66,7 @@ async function keywordSearch(
     >`
       select id, slug, title, description, content, url
       from blog_embeddings
-      where ${sql.unsafe(conditions)}
+      where ${conditions}
       limit ${limit}
     `;
     await sql.end();

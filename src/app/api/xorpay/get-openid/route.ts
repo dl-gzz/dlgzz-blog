@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBaseUrl } from '@/lib/urls/urls';
 
 /**
  * Get OpenID from XorPay
@@ -18,16 +19,32 @@ export async function GET(req: NextRequest) {
 
     // Get callback URL from query params or use default
     const searchParams = req.nextUrl.searchParams;
-    const callbackUrl = searchParams.get('callback') ||
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/xorpay/openid-callback`;
+    // Use the configured public origin instead of the request Host header;
+    // otherwise a forged Host could make XorPay redirect the OpenID to an
+    // attacker-controlled domain.
+    const publicOrigin = new URL(getBaseUrl()).origin;
+    const defaultCallbackUrl = `${publicOrigin}/api/xorpay/openid-callback`;
+    const requestedCallback = searchParams.get('callback');
+    let callbackUrl = defaultCallbackUrl;
+    if (requestedCallback) {
+      try {
+        const candidate = new URL(requestedCallback, publicOrigin);
+        if (
+          candidate.origin === publicOrigin &&
+          candidate.pathname === '/api/xorpay/openid-callback'
+        ) {
+          callbackUrl = candidate.toString();
+        }
+      } catch {
+        // Use the fixed same-origin callback below.
+      }
+    }
 
     // Encode callback URL
     const encodedCallback = encodeURIComponent(callbackUrl);
 
     // Redirect to XorPay OpenID endpoint
     const xorpayUrl = `https://xorpay.com/api/openid/${appId}?callback=${encodedCallback}`;
-
-    console.log('Redirecting to XorPay OpenID:', xorpayUrl);
 
     return NextResponse.redirect(xorpayUrl);
   } catch (error: any) {

@@ -1,4 +1,4 @@
-import { requireHermesAdmin } from '@/lib/api-security';
+import { requireHermesAdmin, requireSameOrigin } from '@/lib/api-security';
 import { type NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_BRIDGE_TIMEOUT_MS = 30_000;
@@ -19,6 +19,9 @@ interface BridgePairingApproveResponse {
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireHermesAdmin('Hermes 配对授权暂只允许管理员操作');
   if ('response' in auth) return auth.response;
 

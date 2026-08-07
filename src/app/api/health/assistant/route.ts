@@ -2,7 +2,7 @@ import {
   getBotAssistantRole,
   isActiveBotAssistantRole,
 } from '@/config/bot-assistants';
-import { requireSession } from '@/lib/api-security';
+import { requireSameOrigin, requireSession } from '@/lib/api-security';
 import {
   ensureHealthProfile,
   updateHealthAssistantForUser,
@@ -12,6 +12,9 @@ import { nanoid } from 'nanoid';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireSession('请先登录后再连接三高健康管家');
   if ('response' in auth) return auth.response;
 

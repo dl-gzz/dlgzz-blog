@@ -1,4 +1,5 @@
 import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { requireSameOrigin } from '@/lib/api-security';
 import { getSession } from '@/lib/server';
 import { setWorkerInstanceSkillForUser } from '@/lib/workers';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -11,6 +12,9 @@ interface RouteContext {
 }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const session = await getSession();
   const userId = session?.user?.id;
 

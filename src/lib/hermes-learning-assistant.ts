@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 const DEFAULT_SCRIPT =
   '/Users/baiyang/.hermes/skills/learning-assistant/scripts/learning_assistant.py';
 const DEFAULT_PYTHON = 'python3';
+const MAX_OUTPUT_BYTES = 2 * 1024 * 1024;
 
 type RunOptions = {
   input?: unknown;
@@ -58,7 +59,14 @@ async function runRemoteLearningAssistant(
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_OUTPUT_BYTES) {
+      throw new Error('Hermes learning-assistant response too large');
+    }
     const text = await response.text();
+    if (text.length > MAX_OUTPUT_BYTES) {
+      throw new Error('Hermes learning-assistant response too large');
+    }
     let parsed: Record<string, unknown> | null = null;
     if (text.trim()) {
       try {
@@ -115,12 +123,21 @@ function runLocalLearningAssistant(
     }, options.timeoutMs || 30000);
     let stdout = '';
     let stderr = '';
+    let outputTooLarge = false;
 
     child.stdout.on('data', (chunk) => {
       stdout += chunk.toString();
+      if (Buffer.byteLength(stdout, 'utf8') > MAX_OUTPUT_BYTES) {
+        outputTooLarge = true;
+        child.kill('SIGKILL');
+      }
     });
     child.stderr.on('data', (chunk) => {
       stderr += chunk.toString();
+      if (Buffer.byteLength(stderr, 'utf8') > MAX_OUTPUT_BYTES) {
+        outputTooLarge = true;
+        child.kill('SIGKILL');
+      }
     });
     child.on('error', (error) => {
       clearTimeout(timeout);
@@ -129,6 +146,10 @@ function runLocalLearningAssistant(
     child.on('close', (code) => {
       clearTimeout(timeout);
       const raw = stdout.trim() || stderr.trim();
+      if (outputTooLarge) {
+        reject(new Error('Hermes learning-assistant 输出过大'));
+        return;
+      }
       let parsed: Record<string, unknown> | null = null;
       if (raw) {
         try {

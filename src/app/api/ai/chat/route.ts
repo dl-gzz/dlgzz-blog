@@ -1,4 +1,5 @@
 import { streamText, createDataStreamResponse } from 'ai';
+import { requireSameOrigin } from '@/lib/api-security';
 import { createOpenAICompatibleSdk } from '@/lib/ai/openai-compatible';
 import { getSession } from '@/lib/server';
 import { hasAccessToPremiumContent } from '@/lib/premium-access';
@@ -66,6 +67,17 @@ export const maxDuration = 60; // 设置最大执行时间 60 秒
  */
 export async function POST(req: Request) {
   try {
+    const csrf = requireSameOrigin(req);
+    if (csrf) return csrf;
+
+    const contentLength = Number(req.headers.get('content-length') || 0);
+    if (contentLength > 250_000) {
+      return new Response(JSON.stringify({ error: '请求内容过大' }), {
+        status: 413,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const { sdk, config: aiConfig } = createOpenAICompatibleSdk({
       defaultOpenAIModel: 'gpt-4o-mini',
     });
@@ -92,9 +104,21 @@ export async function POST(req: Request) {
     }
 
     // 3. 获取请求数据
-    const { messages } = await req.json();
+    const body = await req.json();
+    const messages = body?.messages;
 
-    if (!messages || messages.length === 0) {
+    if (
+      !Array.isArray(messages) ||
+      messages.length === 0 ||
+      messages.length > 30 ||
+      messages.some(
+        (message) =>
+          !message ||
+          typeof message !== 'object' ||
+          typeof message.content !== 'string' ||
+          message.content.length > 20_000
+      )
+    ) {
       return new Response('No messages provided', { status: 400 });
     }
 
@@ -251,7 +275,7 @@ ${relevantContext}
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'AI 请求失败，请稍后重试',
       }),
       {
         status: 500,

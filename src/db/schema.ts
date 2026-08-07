@@ -685,7 +685,7 @@ export const apiUsageEvent = pgTable("api_usage_event", {
 	resultCount: integer('result_count').notNull().default(0),
 	embeddingTokens: integer('embedding_tokens').notNull().default(0),
 	latencyMs: integer('latency_ms').notNull().default(0),
-	status: text('status').notNull().default('ok'), // ok | denied | error
+	status: text('status').notNull().default('ok'), // pending | ok | denied | error
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
 	index('api_usage_event_key_created_idx').on(table.apiKeyId, table.createdAt),

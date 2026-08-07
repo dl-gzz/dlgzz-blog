@@ -1,21 +1,27 @@
 import { uploadFile } from '@/storage';
 import { StorageError } from '@/storage/types';
+import { requireSameOrigin, requireSession } from '@/lib/api-security';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+  const auth = await requireSession();
+  if ('response' in auth) return auth.response;
+
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const type = formData.get('type') as string; // 'model' | 'clothing'
+    const file = formData.get('file');
+    const type = formData.get('type'); // 'model' | 'clothing'
     
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json(
         { error: 'No file provided' },
         { status: 400 }
       );
     }
 
-    if (!type || !['model', 'clothing'].includes(type)) {
+    if (typeof type !== 'string' || !['model', 'clothing'].includes(type)) {
       return NextResponse.json(
         { error: 'Invalid upload type. Must be "model" or "clothing"' },
         { status: 400 }

@@ -1,5 +1,5 @@
 import { chatWithResolvedServerProvider } from '@/lib/ai/provider';
-import { requireHermesAdmin } from '@/lib/api-security';
+import { requireHermesAdmin, requireSameOrigin } from '@/lib/api-security';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export const maxDuration = 60;
@@ -202,6 +202,9 @@ ${idea}`;
 }
 
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
   const auth = await requireHermesAdmin('课件后台仅限管理员访问');
   if ('response' in auth) return auth.response;
 
