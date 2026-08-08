@@ -15,6 +15,19 @@ export async function POST(request: NextRequest) {
   if ('response' in auth) return auth.response;
 
   const body = await request.json().catch(() => ({}));
+  if (
+    (body?.deviceId !== undefined &&
+      (typeof body.deviceId !== 'string' || body.deviceId.length > 200)) ||
+    (body?.deviceName !== undefined &&
+      (typeof body.deviceName !== 'string' || body.deviceName.length > 200)) ||
+    (body?.platform !== undefined &&
+      (typeof body.platform !== 'string' || body.platform.length > 80))
+  ) {
+    return NextResponse.json(
+      { success: false, code: 'BAD_REQUEST', error: '设备参数无效' },
+      { status: 400 }
+    );
+  }
   try {
     const result = await redeemOneWorkActivation({
       userId: auth.session.user.id,

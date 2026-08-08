@@ -12,7 +12,7 @@
  *   Windows:     %USERPROFILE%\\.workbuddy\\one-work-os.local.env
  */
 import { createHash, randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, renameSync, writeFileSync, mkdtempSync, rmSync, chmodSync } from 'node:fs';
+import { existsSync, mkdirSync, renameSync, writeFileSync, mkdtempSync, rmSync, chmodSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { homedir, hostname, platform, release } from 'node:os';
 import { join } from 'node:path';
@@ -40,9 +40,33 @@ const serverUrl = new URL(server);
 if (!['http:', 'https:'].includes(serverUrl.protocol)) {
   throw new Error('安装服务器地址必须使用 http 或 https');
 }
-const deviceId = createHash('sha256')
+const targetDir = join(homedir(), '.workbuddy');
+const deviceIdentityFile = join(targetDir, 'onework-device-id');
+const suppliedDeviceId = arg('--device-id');
+let deviceId = suppliedDeviceId.trim();
+const deterministicDeviceId = createHash('sha256')
   .update(`${hostname()}|${platform()}|${release()}|${homedir()}`)
   .digest('hex');
+if (!deviceId) {
+  try {
+    deviceId = readFileSync(deviceIdentityFile, 'utf8').trim();
+  } catch {
+    // First install on this computer: create a stable local identity below.
+  }
+}
+if (!deviceId) {
+  // Keep the identity compatible with installers issued before the de-dup fix.
+  deviceId = deterministicDeviceId;
+  try {
+    mkdirSync(targetDir, { recursive: true, mode: 0o700 });
+    writeFileSync(deviceIdentityFile, `${deviceId}\n`, { encoding: 'utf8', mode: 0o600 });
+  } catch {
+    // If the profile directory is unavailable, retain a deterministic fallback.
+    deviceId = createHash('sha256')
+      .update(`${hostname()}|${platform()}|${release()}|${homedir()}`)
+      .digest('hex');
+  }
+}
 
 const response = await fetch(`${server}/api/onework/install/claim`, {
   method: 'POST',
@@ -59,7 +83,6 @@ if (!response.ok || !data.success || !data.key?.rawKey) {
   throw new Error(data.error || `安装授权失败（HTTP ${response.status}）`);
 }
 
-const targetDir = join(homedir(), '.workbuddy');
 const targetFile = join(targetDir, 'one-work-os.local.env');
 mkdirSync(targetDir, { recursive: true, mode: 0o700 });
 

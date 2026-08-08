@@ -7,9 +7,10 @@ import {
   oneworkDevice,
   oneworkEntitlement,
   oneworkInstallToken,
+  user,
 } from '@/db/schema';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
-import { and, desc, eq, gt, isNull, or } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, isNull, or } from 'drizzle-orm';
 
 /** 现有知识包仍保留用于兼容旧兑换码；新授权统一使用全量权限。 */
 export const ONEWORK_PUBLIC_PACKS = [
@@ -108,6 +109,7 @@ async function insertApiKeyAndGrants({
   deviceId,
   deviceName,
   platform,
+  registerDevice = true,
 }: {
   tx: any;
   userId: string;
@@ -120,6 +122,7 @@ async function insertApiKeyAndGrants({
   deviceId: string;
   deviceName: string;
   platform: string;
+  registerDevice?: boolean;
 }) {
   const { rawKey, keyHash, keyPrefix } = makeApiKey();
   const apiKeyId = `apikey_${randomUUID()}`;
@@ -149,16 +152,67 @@ async function insertApiKeyAndGrants({
       });
   }
 
-  await tx.insert(oneworkDevice).values({
-    id: `device_${randomUUID()}`,
-    userId,
-    apiKeyId,
-    deviceHash: hashDeviceId(deviceId),
-    deviceName: deviceName.slice(0, 80),
-    platform: platform.slice(0, 30),
-    status: 'active',
-    lastSeenAt: now,
-  });
+  if (registerDevice) {
+    // Serialize device issuance per account. The same computer may run the
+    // installer more than once; it must update one device row rather than
+    // creating a new active device on every install.
+    await tx
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, userId))
+      .for('update')
+      .limit(1);
+
+    const deviceHash = hashDeviceId(deviceId);
+    const existingDevices: Array<{ id: string; apiKeyId: string }> = await tx
+      .select({ id: oneworkDevice.id, apiKeyId: oneworkDevice.apiKeyId })
+      .from(oneworkDevice)
+      .where(and(eq(oneworkDevice.userId, userId), eq(oneworkDevice.deviceHash, deviceHash)))
+      .orderBy(desc(oneworkDevice.createdAt), desc(oneworkDevice.id))
+      .for('update');
+
+    const oldApiKeyIds = existingDevices
+      .map((device) => device.apiKeyId)
+      .filter((oldApiKeyId) => oldApiKeyId !== apiKeyId);
+    if (oldApiKeyIds.length > 0) {
+      await tx
+        .update(apiKey)
+        .set({ status: 'revoked', revokedAt: now, updatedAt: now })
+        .where(inArray(apiKey.id, oldApiKeyIds));
+    }
+
+    const canonicalDevice = existingDevices[0];
+    if (canonicalDevice) {
+      const duplicateDeviceIds = existingDevices
+        .slice(1)
+        .map((device) => device.id);
+      if (duplicateDeviceIds.length > 0) {
+        await tx.delete(oneworkDevice).where(inArray(oneworkDevice.id, duplicateDeviceIds));
+      }
+      await tx
+        .update(oneworkDevice)
+        .set({
+          apiKeyId,
+          deviceName: deviceName.slice(0, 80),
+          platform: platform.slice(0, 30),
+          status: 'active',
+          lastSeenAt: now,
+          updatedAt: now,
+        })
+        .where(eq(oneworkDevice.id, canonicalDevice.id));
+    } else {
+      await tx.insert(oneworkDevice).values({
+        id: `device_${randomUUID()}`,
+        userId,
+        apiKeyId,
+        deviceHash,
+        deviceName: deviceName.slice(0, 80),
+        platform: platform.slice(0, 30),
+        status: 'active',
+        lastSeenAt: now,
+      });
+    }
+  }
 
   return { apiKeyId, rawKey, keyPrefix };
 }
@@ -393,6 +447,7 @@ export async function redeemOneWorkActivation({
       deviceId: deviceId?.trim() || randomUUID(),
       deviceName,
       platform,
+      registerDevice: false,
     });
 
     const nextCount = activation.redeemedCount + 1;

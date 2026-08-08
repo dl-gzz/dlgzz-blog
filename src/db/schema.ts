@@ -760,6 +760,7 @@ export const oneworkDevice = pgTable("onework_device", {
 }, (table) => [
 	index('onework_device_hash_idx').on(table.deviceHash),
 	index('onework_device_user_status_idx').on(table.userId, table.status),
+	uniqueIndex('onework_device_user_hash_unique_idx').on(table.userId, table.deviceHash),
 ]);
 
 /** 网站生成的短时安装授权，原始 token 只返回一次，消费后立即失效。 */

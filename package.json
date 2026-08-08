@@ -21,6 +21,7 @@
     "worker:xhs:seed": "tsx scripts/seed-xhs-open-shop-worker.ts",
     "worker:provision": "tsx scripts/provision-worker-instance.ts",
     "worker:stability": "tsx scripts/check-worker-platform-stability.ts",
+    "db:onework-device-dedup": "tsx scripts/apply-onework-device-dedup.ts",
     "upload:xhs-assets": "tsx scripts/upload-obsidian-assets-to-cdn.ts",
     "content": "fumadocs-mdx",
     "email": "email dev --dir src/mail/templates --port 3333",
