@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { Routes } from '@/routes';
-import { DownloadIcon, ExternalLinkIcon, KeyRoundIcon, MonitorDownIcon, RefreshCwIcon } from 'lucide-react';
+import { CopyIcon, DownloadIcon, ExternalLinkIcon, KeyRoundIcon, MonitorDownIcon, RefreshCwIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -64,6 +64,7 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
   const [rawKey, setRawKey] = useState('');
   const [installToken, setInstallToken] = useState('');
   const [installExpiresAt, setInstallExpiresAt] = useState<string | null>(null);
+  const [installPrompt, setInstallPrompt] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -103,23 +104,60 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
     }
   }
 
+  async function fetchInstallSession() {
+    const response = await fetch('/api/onework/install/session', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ deviceName, platform }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.success || typeof data.token !== 'string') {
+      throw new Error(data.error || '生成安装授权失败');
+    }
+    setInstallToken(data.token);
+    setInstallExpiresAt(data.expiresAt || null);
+    return { token: data.token as string, expiresAt: data.expiresAt as string | null };
+  }
+
   async function createInstallSession() {
     setBusy(true);
     setError('');
     setMessage('');
     try {
-      const response = await fetch('/api/onework/install/session', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ deviceName, platform }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.success) throw new Error(data.error || '生成安装授权失败');
-      setInstallToken(data.token);
-      setInstallExpiresAt(data.expiresAt);
+      await fetchInstallSession();
       setMessage('安装授权已生成，10 分钟内使用一次即可。');
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : '生成安装授权失败');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyAiInstallPrompt() {
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const { token } = await fetchInstallSession();
+      const server = window.location.origin;
+      const command = `curl -fsSL ${server}/downloads/onework-install.mjs | node - --server ${server} --token "${token}"`;
+      const prompt = [
+        '请直接在本机终端执行 OneWorkOS 安装，不要只解释步骤：',
+        '1. 检查 Node.js 18+；',
+        `2. 执行：${command}`,
+        '3. 自动安装或更新 ~/.workbuddy/skills/one-work-os；',
+        '4. 检查授权文件和 SKILL.md 是否存在；',
+        '5. 不要输出或回显长期 API Key；完成后提示我重启 WorkBuddy。',
+      ].join('\n');
+      setInstallPrompt(prompt);
+      try {
+        await navigator.clipboard.writeText(prompt);
+        setMessage('AI 安装指令已复制，请粘贴到 WorkBuddy。');
+      } catch {
+        setMessage('AI 安装指令已生成，请展开下方内容并手动复制。');
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '生成 AI 安装指令失败');
     } finally {
       setBusy(false);
     }
@@ -130,21 +168,8 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
     setError('');
     setMessage('');
     try {
-      const response = await fetch('/api/onework/install/session', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ deviceName, platform }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.success || typeof data.token !== 'string') {
-        throw new Error(data.error || '生成安装器授权失败');
-      }
-
-      setInstallToken(data.token);
-      setInstallExpiresAt(data.expiresAt || null);
-
+      const { token } = await fetchInstallSession();
       const server = window.location.origin;
-      const token = data.token as string;
       const quote = (value: string) => value.replaceAll("'", "'\\''");
       const isWindows = platform === 'Windows';
       const filename = isWindows ? 'onework-install.cmd' : 'onework-install.command';
@@ -224,7 +249,7 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
             {rawKey && (
               <details className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
                 <summary className="cursor-pointer font-medium">手动 Key（通常不需要复制）</summary>
-                <p className="mt-2 text-xs">优先点击下面的“一键安装器”。只有手动配置时才需要使用这把 Key。</p>
+                <p className="mt-2 text-xs">优先复制 AI 安装指令。只有手动配置时才需要使用这把 Key。</p>
                 <code className="mt-2 block break-all rounded bg-black/10 p-2">{rawKey}</code>
               </details>
             )}
@@ -238,15 +263,24 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
           <CardDescription>权益属于账号，不属于某台电脑。新设备打开 WorkBuddy 前，生成一次性安装授权即可。</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={() => void downloadInstaller()} disabled={busy}>
-            <DownloadIcon className="size-4" />下载一键安装器
+          <Button onClick={() => void copyAiInstallPrompt()} disabled={busy}>
+            <CopyIcon className="size-4" />复制 AI 安装指令
           </Button>
           <p className="text-xs text-muted-foreground">
-            安装器会自动领取 Key、安装或更新 Skill。你只需双击下载文件，并在系统提示时点击“允许”。
+            把这段指令粘贴到 WorkBuddy，由它调用本机终端自动完成安装。你只需允许终端权限并重启 WorkBuddy。
           </p>
+          {installPrompt && (
+            <details className="rounded-lg border p-4 text-sm">
+              <summary className="cursor-pointer font-medium">查看 AI 安装指令</summary>
+              <textarea className="mt-3 min-h-44 w-full rounded border bg-muted p-3 font-mono text-xs" value={installPrompt} readOnly />
+            </details>
+          )}
           <details className="rounded-lg border p-4 text-sm">
-            <summary className="cursor-pointer font-medium">高级：手动安装（需要终端）</summary>
+            <summary className="cursor-pointer font-medium">高级：下载备用安装器</summary>
             <div className="mt-3 space-y-2">
+              <Button onClick={() => void downloadInstaller()} disabled={busy}>
+                <DownloadIcon className="size-4" />下载 Mac / Windows 安装器
+              </Button>
               <Button variant="outline" onClick={() => void createInstallSession()} disabled={busy}>
                 <RefreshCwIcon className="size-4" />生成安装授权
               </Button>
