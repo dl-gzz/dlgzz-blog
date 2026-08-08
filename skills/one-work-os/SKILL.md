@@ -11,6 +11,13 @@ Act as the control plane. Use OneWorkOS memory and semantic services for governe
 
 When this Skill is explicitly invoked (including `@skill:one-work-os`), do not answer the user's goal from model memory before dispatching it.
 
+### OneWorkOS source boundary (hard rule)
+
+- For any WorkBuddy or Xiaohongshu product, UI, setup, operation, or “下一步怎么做” question, `query-knowledge.mjs` is the source of truth. Do not call `WebSearch` or `WebFetch` before the governed query.
+- When the governed query returns `success: true` with at least one relevant result, do not call `WebSearch` or `WebFetch` afterward. Compose the answer only from the returned `results[]`, `assets[]`, `resources[]`, and `sourceUrl` values. This keeps the answer inside the user's OneWorkOS knowledge asset.
+- If the user explicitly asks for internet research or the latest information, first run the governed query, then clearly label any separately requested web evidence as external. Do not silently mix it into a OneWorkOS answer.
+- If the governed query fails, stop and report the exact failed stage and error. Do not silently replace it with a generic model answer or web search.
+
 - For every WorkBuddy or Xiaohongshu product, UI, setup, or “下一步怎么做” question, **must** run `scripts/query-knowledge.mjs` with `--pack auto`, `includeAssets: true`, and `--json` before drafting the answer. The script routes WorkBuddy to `onework-workbuddy-v1`, Xiaohongshu store-entry questions to `xhs-open-shop-v1`, and other Xiaohongshu operation questions to `xhs-operations-v1`. The final answer must be grounded in the returned result, not a generic explanation.
 - If the returned result contains a relevant `assets[]` image, the final answer is incomplete unless it emits that exact returned `assets[].url` as a native image/media part, or as Markdown `![说明](url)` when the host only supports Markdown, followed immediately by `[图片未显示时查看原图](url)`.
 - If the returned result contains `sourceUrl`, the final answer must include a clickable source link. Do not replace it with a bare domain, a paraphrased “官方文档”, or a source invented from memory.
@@ -69,7 +76,7 @@ node "${CODEBUDDY_SKILL_DIR}/scripts/query-analytics.mjs" \
   --json
 ```
 
-Set `ONEWORK_API_KEY`. Set endpoint-specific variables when needed: `ONEWORK_CAPABILITY_URL`, `ONEWORK_ANALYTICS_URL`, `ONEWORK_KNOWLEDGE_URL`, or `ONEWORK_API_URL` for the shared OneWorkOS origin. Read [api-schema.md](references/api-schema.md) for knowledge query responses and errors.
+The installer stores the user's credential at `~/.workbuddy/one-work-os.local.env` (Windows: `%USERPROFILE%\\.workbuddy\\one-work-os.local.env`), and the bundled scripts load it automatically. `ONEWORK_API_KEY` may still be supplied as an environment override. Set endpoint-specific variables when needed: `ONEWORK_CAPABILITY_URL`, `ONEWORK_ANALYTICS_URL`, `ONEWORK_KNOWLEDGE_URL`, or `ONEWORK_API_URL` for the shared OneWorkOS origin. Read [api-schema.md](references/api-schema.md) for knowledge query responses and errors.
 
 ## Enforce boundaries
 

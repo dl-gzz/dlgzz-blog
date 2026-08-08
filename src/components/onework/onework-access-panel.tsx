@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,12 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { Routes } from '@/routes';
-import { ExternalLinkIcon, KeyRoundIcon, MonitorDownIcon, RefreshCwIcon } from 'lucide-react';
+import { DownloadIcon, ExternalLinkIcon, KeyRoundIcon, MonitorDownIcon, RefreshCwIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -125,6 +125,51 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
     }
   }
 
+  async function downloadInstaller() {
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await fetch('/api/onework/install/session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ deviceName, platform }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success || typeof data.token !== 'string') {
+        throw new Error(data.error || '生成安装器授权失败');
+      }
+
+      setInstallToken(data.token);
+      setInstallExpiresAt(data.expiresAt || null);
+
+      const server = window.location.origin;
+      const token = data.token as string;
+      const quote = (value: string) => value.replaceAll("'", "'\\''");
+      const isWindows = platform === 'Windows';
+      const filename = isWindows ? 'onework-install.cmd' : 'onework-install.command';
+      const script = isWindows
+        ? `@echo off\r\nsetlocal\r\nset \"SERVER=${quote(server)}\"\r\nset \"TOKEN=${quote(token)}\"\r\nwhere node >nul 2>nul\r\nif errorlevel 1 (\r\n  echo 未检测到 Node.js 18+，请先安装：https://nodejs.org/\r\n  start \"\" https://nodejs.org/\r\n  pause\r\n  exit /b 1\r\n)\r\nset \"INSTALLER=%TEMP%\\onework-install-%RANDOM%.mjs\"\r\npowershell -NoProfile -ExecutionPolicy Bypass -Command \"Invoke-WebRequest -UseBasicParsing -Uri '%SERVER%/downloads/onework-install.mjs' -OutFile '%INSTALLER%'\"\r\nnode \"%INSTALLER%\" --server \"%SERVER%\" --token \"%TOKEN%\"\r\ndel /q \"%INSTALLER%\" >nul 2>nul\r\necho.\r\necho 安装完成，请重启 WorkBuddy。\r\npause\r\n`
+        : `#!/bin/bash\nset -euo pipefail\nSERVER='${quote(server)}'\nTOKEN='${quote(token)}'\nif ! command -v node >/dev/null 2>&1; then\n  echo '未检测到 Node.js 18+，请先安装：https://nodejs.org/'\n  if command -v open >/dev/null 2>&1; then open 'https://nodejs.org/'; fi\n  read -r -p '按回车关闭'\n  exit 1\nfi\nINSTALLER=\"$(mktemp -t onework-install).mjs\"\ntrap 'rm -f \"$INSTALLER\"' EXIT\ncurl -fsSL \"$SERVER/downloads/onework-install.mjs\" -o \"$INSTALLER\"\nnode \"$INSTALLER\" --server \"$SERVER\" --token \"$TOKEN\"\necho ''\nread -r -p '安装完成，按回车关闭'\n`;
+
+      const blob = new Blob([script], { type: 'text/plain;charset=utf-8' });
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(href);
+
+      setMessage(`已下载 ${filename}。双击运行并允许系统授权即可自动安装。`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '下载安装器失败');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (isPending) {
     return <div className="py-12 text-center text-muted-foreground">正在检查登录状态…</div>;
   }
@@ -174,13 +219,14 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
               </select>
             </div>
             <Button onClick={() => void redeem()} disabled={busy || !code.trim()}>
-              {busy ? '处理中…' : '兑换并生成 Key'}
+              {busy ? '处理中…' : '兑换权益'}
             </Button>
             {rawKey && (
-              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-                <p className="font-medium">请立即复制这把 Key（只显示一次）</p>
+              <details className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+                <summary className="cursor-pointer font-medium">手动 Key（通常不需要复制）</summary>
+                <p className="mt-2 text-xs">优先点击下面的“一键安装器”。只有手动配置时才需要使用这把 Key。</p>
                 <code className="mt-2 block break-all rounded bg-black/10 p-2">{rawKey}</code>
-              </div>
+              </details>
             )}
           </CardContent>
         </Card>
@@ -192,16 +238,27 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
           <CardDescription>权益属于账号，不属于某台电脑。新设备打开 WorkBuddy 前，生成一次性安装授权即可。</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button variant="outline" onClick={() => void createInstallSession()} disabled={busy}>
-            <RefreshCwIcon className="size-4" />生成安装授权
+          <Button onClick={() => void downloadInstaller()} disabled={busy}>
+            <DownloadIcon className="size-4" />下载一键安装器
           </Button>
-          {installToken && (
-            <div className="space-y-2 rounded-lg border p-4 text-sm">
-              <p>有效期至：{formatDate(installExpiresAt)}</p>
-              <code className="block break-all rounded bg-muted p-2">{installToken}</code>
-              <p className="text-muted-foreground">安装器使用这个短时授权领取 Key；它本身不是长期密钥，使用一次后失效。</p>
+          <p className="text-xs text-muted-foreground">
+            安装器会自动领取 Key、安装或更新 Skill。你只需双击下载文件，并在系统提示时点击“允许”。
+          </p>
+          <details className="rounded-lg border p-4 text-sm">
+            <summary className="cursor-pointer font-medium">高级：手动安装（需要终端）</summary>
+            <div className="mt-3 space-y-2">
+              <Button variant="outline" onClick={() => void createInstallSession()} disabled={busy}>
+                <RefreshCwIcon className="size-4" />生成安装授权
+              </Button>
+              {installToken && (
+                <>
+                  <p>有效期至：{formatDate(installExpiresAt)}</p>
+                  <code className="block break-all rounded bg-muted p-2">{installToken}</code>
+                  <p className="text-muted-foreground">安装器使用这个短时授权领取 Key；它本身不是长期密钥，使用一次后失效。</p>
+                </>
+              )}
             </div>
-          )}
+          </details>
         </CardContent>
       </Card>
 

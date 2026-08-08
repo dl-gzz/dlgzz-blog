@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { getOneWorkApiKey } from './onework-credentials.mjs';
+
 const DEFAULT_ORIGIN = 'https://www.dlgzz.com';
 const ENDPOINT_PATH = '/api/capabilities/resolve';
 
@@ -162,7 +164,7 @@ async function main() {
     return;
   }
 
-  const apiKey = process.env.ONEWORK_API_KEY?.trim();
+  const apiKey = getOneWorkApiKey();
   if (!apiKey) throw new Error('ONEWORK_API_KEY is not set');
 
   const response = await fetch(resolveEndpoint(), {

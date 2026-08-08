@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { getOneWorkApiKey } from './onework-credentials.mjs';
+
 const DEFAULT_ORIGIN = 'https://www.dlgzz.com';
 const ENDPOINT_PATH = '/api/knowledge/query';
 const DEFAULT_PACK_ID = 'onework-workbuddy-v1';
@@ -431,7 +433,7 @@ async function main() {
     usage(process.stdout);
     return;
   }
-  const apiKey = process.env.ONEWORK_API_KEY?.trim();
+  const apiKey = getOneWorkApiKey();
 
   if (!apiKey) throw new Error('ONEWORK_API_KEY is not set');
 

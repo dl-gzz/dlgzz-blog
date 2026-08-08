@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { getOneWorkApiKey } from './onework-credentials.mjs';
+
 import { readFile } from 'node:fs/promises';
 
 const DEFAULT_ORIGIN = 'https://www.dlgzz.com';
@@ -211,7 +213,7 @@ async function main() {
     parseJsonObject(raw, options.file || '--request')
   );
 
-  const apiKey = process.env.ONEWORK_API_KEY?.trim();
+  const apiKey = getOneWorkApiKey();
   if (!apiKey) throw new Error('ONEWORK_API_KEY is not set');
 
   const response = await fetch(resolveEndpoint(), {

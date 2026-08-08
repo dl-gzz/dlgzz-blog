@@ -78,7 +78,7 @@ function monthStart(): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }
 
-/** 校验 Key：存在、未吊销、当月未超额。返回时附带当月已用量。 */
+/** 校验 Key：存在、未吊销、当月未超额。OneWorkOS 同一账号的多台设备共享账号额度。 */
 export async function verifyApiKey(headerValue: string | null): Promise<KeyVerifyResult> {
   const rawKey = extractRawKey(headerValue);
   if (!rawKey) return { ok: false, reason: 'missing' };
@@ -98,7 +98,7 @@ export async function verifyApiKey(headerValue: string | null): Promise<KeyVerif
     .from(apiUsageEvent)
     .where(
       and(
-        eq(apiUsageEvent.apiKeyId, row.id),
+        eq(apiUsageEvent.userId, row.userId),
         eq(apiUsageEvent.status, 'ok'),
         gte(apiUsageEvent.createdAt, monthStart())
       )
@@ -167,6 +167,8 @@ export async function grantPackToKey({
  * concurrent requests could all pass verifyApiKey before any one of them was
  * recorded. Pending reservations expire from quota accounting after ten
  * minutes so a crashed request cannot permanently consume a user's quota.
+ * Usage is counted by user rather than apiKeyId so a customer cannot multiply
+ * the monthly allowance by installing the Skill on multiple devices.
  */
 export async function reserveApiKeyUsage(event: {
   apiKeyId: string;
@@ -181,12 +183,12 @@ export async function reserveApiKeyUsage(event: {
   const pendingSince = new Date(now.getTime() - 10 * 60 * 1000);
 
   return db.transaction(async (tx) => {
-    const [key] = await tx
+    const keys = await tx
       .select({ id: apiKey.id, monthlyQuota: apiKey.monthlyQuota, status: apiKey.status })
       .from(apiKey)
-      .where(and(eq(apiKey.id, event.apiKeyId), eq(apiKey.userId, event.userId)))
-      .limit(1)
+      .where(eq(apiKey.userId, event.userId))
       .for('update');
+    const key = keys.find((item) => item.id === event.apiKeyId);
 
     if (!key || key.status !== 'active') return null;
 
@@ -195,7 +197,7 @@ export async function reserveApiKeyUsage(event: {
       .from(apiUsageEvent)
       .where(
         and(
-          eq(apiUsageEvent.apiKeyId, key.id),
+          eq(apiUsageEvent.userId, event.userId),
           gte(apiUsageEvent.createdAt, monthStart()),
           or(
             eq(apiUsageEvent.status, 'ok'),
