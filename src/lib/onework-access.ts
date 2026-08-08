@@ -358,19 +358,13 @@ export function getOneWorkPaymentPacks() {
   return [ALL_PACKS_GRANT];
 }
 
-/** 用户兑换码，返回一把仅显示一次的设备 Key。 */
+/** 用户兑换码，只开通账号权益；设备 Key 由安装器在绑定电脑时领取。 */
 export async function redeemOneWorkActivation({
   userId,
   code,
-  deviceId,
-  deviceName = '',
-  platform = 'unknown',
 }: {
   userId: string;
   code: string;
-  deviceId?: string;
-  deviceName?: string;
-  platform?: string;
 }) {
   const rawCode = code.trim();
   if (!rawCode) throw new OneWorkAccessError('请输入兑换码', 'MISSING_CODE');
@@ -436,20 +430,6 @@ export async function redeemOneWorkActivation({
         });
     }
 
-    const issued = await insertApiKeyAndGrants({
-      tx,
-      userId,
-      packIds,
-      monthlyQuota: activation.monthlyQuota,
-      expiresAt,
-      name: `${activation.label || 'OneWorkOS'} · ${platform}`,
-      source: activation.source,
-      deviceId: deviceId?.trim() || randomUUID(),
-      deviceName,
-      platform,
-      registerDevice: false,
-    });
-
     const nextCount = activation.redeemedCount + 1;
     await tx
       .update(oneworkActivationCode)
@@ -463,12 +443,9 @@ export async function redeemOneWorkActivation({
       .where(eq(oneworkActivationCode.id, activation.id));
 
     return {
-      ...issued,
       packIds,
       expiresAt,
       monthlyQuota: activation.monthlyQuota,
-      deviceName,
-      platform,
     };
   });
 }

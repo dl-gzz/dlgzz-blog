@@ -15,39 +15,18 @@ export async function POST(request: NextRequest) {
   if ('response' in auth) return auth.response;
 
   const body = await request.json().catch(() => ({}));
-  if (
-    (body?.deviceId !== undefined &&
-      (typeof body.deviceId !== 'string' || body.deviceId.length > 200)) ||
-    (body?.deviceName !== undefined &&
-      (typeof body.deviceName !== 'string' || body.deviceName.length > 200)) ||
-    (body?.platform !== undefined &&
-      (typeof body.platform !== 'string' || body.platform.length > 80))
-  ) {
-    return NextResponse.json(
-      { success: false, code: 'BAD_REQUEST', error: '设备参数无效' },
-      { status: 400 }
-    );
-  }
   try {
     const result = await redeemOneWorkActivation({
       userId: auth.session.user.id,
       code: typeof body?.code === 'string' ? body.code : '',
-      deviceId: typeof body?.deviceId === 'string' ? body.deviceId : undefined,
-      deviceName: typeof body?.deviceName === 'string' ? body.deviceName : '',
-      platform: typeof body?.platform === 'string' ? body.platform : 'unknown',
     });
 
     return NextResponse.json({
       success: true,
-      key: {
-        id: result.apiKeyId,
-        rawKey: result.rawKey,
-        keyPrefix: result.keyPrefix,
-      },
       packs: result.packIds,
       expiresAt: result.expiresAt,
       monthlyQuota: result.monthlyQuota,
-      notice: 'rawKey 只显示这一次，请立即复制保存。以后换电脑可在网站重新生成安装授权。',
+      notice: '权益已开通。请点击“复制 AI 安装指令”，由安装器自动绑定当前电脑。',
     });
   } catch (error) {
     if (error instanceof OneWorkAccessError) {

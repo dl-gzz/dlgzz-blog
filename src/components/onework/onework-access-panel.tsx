@@ -61,7 +61,6 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
   const [deviceName, setDeviceName] = useState('');
   const [platform, setPlatform] = useState('macOS');
   const [access, setAccess] = useState<AccessData | null>(null);
-  const [rawKey, setRawKey] = useState('');
   const [installToken, setInstallToken] = useState('');
   const [installExpiresAt, setInstallExpiresAt] = useState<string | null>(null);
   const [installPrompt, setInstallPrompt] = useState('');
@@ -84,7 +83,6 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
     setBusy(true);
     setError('');
     setMessage('');
-    setRawKey('');
     try {
       const response = await fetch('/api/onework/activation/redeem', {
         method: 'POST',
@@ -93,7 +91,6 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) throw new Error(data.error || '兑换失败');
-      setRawKey(data.key.rawKey);
       setMessage(`兑换成功，已开通：${data.packs.map(packName).join('、')}`);
       setCode('');
       await loadAccess();
@@ -223,7 +220,7 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><KeyRoundIcon className="size-5" />兑换 OneWorkOS</CardTitle>
-            <CardDescription>输入购买后收到的兑换码。兑换成功后，网站会为当前设备签发专属 Key。</CardDescription>
+            <CardDescription>输入购买后收到的兑换码。兑换只开通账号权益，设备 Key 会在安装时自动领取。</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
@@ -248,13 +245,6 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
             <Button onClick={() => void redeem()} disabled={busy || !code.trim()}>
               {busy ? '处理中…' : '兑换权益'}
             </Button>
-            {rawKey && (
-              <details className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-                <summary className="cursor-pointer font-medium">手动 Key（通常不需要复制）</summary>
-                <p className="mt-2 text-xs">优先复制 AI 安装指令。只有手动配置时才需要使用这把 Key。</p>
-                <code className="mt-2 block break-all rounded bg-black/10 p-2">{rawKey}</code>
-              </details>
-            )}
           </CardContent>
         </Card>
       )}

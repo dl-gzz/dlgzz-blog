@@ -28,7 +28,6 @@ async function main() {
   const before = await sql<{ id: string }[]>`
     select id from onework_entitlement where user_id = ${user.id} and knowledge_pack_id = ${packId}
   `;
-  const deviceId = `e2e-${randomUUID()}`;
   const secondDeviceId = `e2e-install-${randomUUID()}`;
   let activationCode = '';
   let activationHash = '';
@@ -48,16 +47,8 @@ async function main() {
     const redeemed = await redeemOneWorkActivation({
       userId: user.id,
       code: activationCode,
-      deviceId,
-      deviceName: 'OneWorkOS E2E',
-      platform: 'test',
     });
-    keyIds.push(redeemed.apiKeyId);
-    const redeemedWildcard = await sql<{ id: string }[]>`
-      select id from api_key_pack_grant
-      where api_key_id = ${redeemed.apiKeyId} and knowledge_pack_id = ${ALL_PACKS_GRANT}
-    `;
-    if (redeemedWildcard.length !== 1) throw new Error('兑换后的 Key 未写入全量授权');
+    if (!redeemed.packIds.includes(ALL_PACKS_GRANT)) throw new Error('兑换后的账号权益未写入全量授权');
 
     const install = await createOneWorkInstallToken({
       userId: user.id,
@@ -79,7 +70,6 @@ async function main() {
     console.log('✅ 授权闭环通过:', {
       packs: redeemed.packIds,
       futurePackAccess: `wildcard grant covers ${futurePackId}`,
-      redeemKeyPrefix: redeemed.keyPrefix,
       installKeyPrefix: claimed.keyPrefix,
       quota: redeemed.monthlyQuota,
     });
