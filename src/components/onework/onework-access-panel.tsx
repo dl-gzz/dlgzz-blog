@@ -140,13 +140,15 @@ export function OneWorkAccessPanel({ showRedeem = true }: { showRedeem?: boolean
     try {
       const { token } = await fetchInstallSession();
       const server = window.location.origin;
-      const command = `curl -fsSL ${server}/downloads/onework-install.mjs | node - --server ${server} --token "${token}"`;
+      const unixCommand = `curl -fsSL ${server}/downloads/onework-install.mjs | node - --server ${server} --token "${token}"`;
+      const windowsCommand = `\$tmp = Join-Path \$env:TEMP 'onework-install.mjs'; Invoke-WebRequest -UseBasicParsing -Uri '${server}/downloads/onework-install.mjs' -OutFile \$tmp; node \$tmp --server '${server}' --token '${token}'`;
       const prompt = [
         '请直接在本机终端执行 OneWorkOS 安装，不要只解释步骤：',
         '1. 检查 Node.js 18+；',
-        `2. 执行：${command}`,
-        '3. 自动安装或更新 ~/.workbuddy/skills/one-work-os；',
-        '4. 检查授权文件和 SKILL.md 是否存在；',
+        `2. 先判断操作系统：macOS/Linux 执行：${unixCommand}`,
+        `   Windows PowerShell 执行：${windowsCommand}`,
+        '3. 自动安装或更新 OneWorkOS Skill；',
+        '4. 检查本机 WorkBuddy 的 Skill 目录和授权文件是否存在；',
         '5. 不要输出或回显长期 API Key；完成后提示我重启 WorkBuddy。',
       ].join('\n');
       setInstallPrompt(prompt);
