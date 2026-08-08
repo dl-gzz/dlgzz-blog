@@ -58,7 +58,11 @@ export type KeyVerifyResult =
   | { ok: true; key: VerifiedKey; usedThisMonth: number }
   | { ok: false; reason: KeyDenyReason };
 
-export type ApiUsageKind = 'knowledge_query' | 'analytics_query' | 'skill_install';
+export type ApiUsageKind =
+  | 'knowledge_query'
+  | 'analytics_query'
+  | 'capability_resolve'
+  | 'skill_install';
 
 export interface ApiUsageReservation {
   eventId: string;
