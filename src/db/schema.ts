@@ -308,7 +308,7 @@ export const knowledgeDocument = pgTable("knowledge_documents", {
 	filePath: text('file_path').notNull(),
 	contentHash: text('content_hash').notNull(),
 	rawContent: text('raw_content').notNull(),
-	status: text('status').notNull().default('active'),
+	status: text('status').notNull().default('pending'),
 	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
 	importedAt: timestamp('imported_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -327,6 +327,71 @@ export const knowledgeChunk = pgTable("knowledge_chunks", {
 	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 });
+
+export const knowledgeAsset = pgTable("knowledge_assets", {
+	id: text("id").primaryKey(),
+	contentHash: text('content_hash').notNull(),
+	assetType: text('asset_type').notNull().default('image'),
+	mimeType: text('mime_type').notNull(),
+	storageProvider: text('storage_provider').notNull().default('cos'),
+	storageBucket: text('storage_bucket'),
+	objectKey: text('object_key'),
+	publicUrl: text('public_url'),
+	title: text('title'),
+	platform: text('platform'),
+	thumbnailUrl: text('thumbnail_url'),
+	embedUrl: text('embed_url'),
+	width: integer('width'),
+	height: integer('height'),
+	durationSeconds: integer('duration_seconds'),
+	publishedAt: timestamp('published_at'),
+	caption: text('caption'),
+	ocrText: text('ocr_text'),
+	visualFacts: jsonb('visual_facts').$type<Record<string, unknown>>().notNull(),
+	embeddingText: text('embedding_text'),
+	embeddingTextHash: text('embedding_text_hash'),
+	embedding: vector('embedding', { dimensions: 2048 }),
+	embeddingModel: text('embedding_model'),
+	embeddingDimensions: integer('embedding_dimensions'),
+	embeddedAt: timestamp('embedded_at'),
+	analysisProvider: text('analysis_provider'),
+	analysisModel: text('analysis_model'),
+	analysisVersion: text('analysis_version'),
+	analyzedAt: timestamp('analyzed_at'),
+	sourceType: text('source_type'),
+	sourceLocator: text('source_locator'),
+	status: text('status').notNull().default('pending'),
+	visibility: text('visibility').notNull().default('private'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('knowledge_assets_content_hash_unique_idx').on(table.contentHash),
+	index('knowledge_assets_object_key_idx').on(table.storageProvider, table.storageBucket, table.objectKey),
+	index('knowledge_assets_status_visibility_idx').on(table.status, table.visibility),
+	index('knowledge_assets_type_status_idx').on(table.assetType, table.status, table.visibility),
+]);
+
+export const knowledgeAssetLink = pgTable("knowledge_asset_links", {
+	id: text("id").primaryKey(),
+	assetId: text('asset_id').notNull().references(() => knowledgeAsset.id, { onDelete: 'cascade' }),
+	documentId: text('document_id').notNull().references(() => knowledgeDocument.id, { onDelete: 'cascade' }),
+	chunkId: text('chunk_id').references(() => knowledgeChunk.id, { onDelete: 'set null' }),
+	role: text('role').notNull().default('inline'),
+	sourceRef: text('source_ref').notNull(),
+	occurrenceIndex: integer('occurrence_index').notNull().default(0),
+	altText: text('alt_text'),
+	context: text('context'),
+	sortOrder: integer('sort_order').notNull().default(0),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('knowledge_asset_links_occurrence_unique_idx').on(table.documentId, table.sourceRef, table.occurrenceIndex),
+	index('knowledge_asset_links_chunk_id_idx').on(table.chunkId),
+	index('knowledge_asset_links_document_role_idx').on(table.documentId, table.role),
+	index('knowledge_asset_links_asset_id_idx').on(table.assetId),
+]);
 
 export const knowledgeUnit = pgTable("knowledge_units", {
 	id: text("id").primaryKey(),
@@ -620,11 +685,195 @@ export const apiUsageEvent = pgTable("api_usage_event", {
 	resultCount: integer('result_count').notNull().default(0),
 	embeddingTokens: integer('embedding_tokens').notNull().default(0),
 	latencyMs: integer('latency_ms').notNull().default(0),
-	status: text('status').notNull().default('ok'), // ok | denied | error
+	status: text('status').notNull().default('ok'), // pending | ok | denied | error
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
 	index('api_usage_event_key_created_idx').on(table.apiKeyId, table.createdAt),
 	index('api_usage_event_user_created_idx').on(table.userId, table.createdAt),
 	index('api_usage_event_visitor_created_idx').on(table.visitorId, table.createdAt),
 	index('api_usage_event_pack_idx').on(table.knowledgePackId),
+]);
+
+// ─────────────────────────────────────────────────────────
+// OneWorkOS 会员授权层：兑换码 → 用户权益 → 设备 Key
+// ─────────────────────────────────────────────────────────
+
+/**
+ * 面向小红书/抖音成交用户的一次性兑换码。
+ * 数据库只保存哈希，原始兑换码只在管理员签发和用户兑换时短暂出现。
+ */
+export const oneworkActivationCode = pgTable("onework_activation_code", {
+	id: text("id").primaryKey(),
+	codeHash: text("code_hash").notNull(),
+	codePrefix: text("code_prefix").notNull(),
+	label: text("label").notNull().default(''),
+	source: text("source").notNull().default('manual'), // manual | xhs | douyin | partner
+	packIds: jsonb('pack_ids').$type<string[]>().notNull(),
+	trialDays: integer('trial_days').notNull().default(30),
+	monthlyQuota: integer('monthly_quota').notNull().default(1000),
+	maxRedemptions: integer('max_redemptions').notNull().default(1),
+	redeemedCount: integer('redeemed_count').notNull().default(0),
+	status: text('status').notNull().default('active'), // active | redeemed | revoked
+	redeemedByUserId: text('redeemed_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+	redeemedAt: timestamp('redeemed_at'),
+	expiresAt: timestamp('expires_at'),
+	createdByUserId: text('created_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_activation_code_hash_unique_idx').on(table.codeHash),
+	index('onework_activation_code_status_idx').on(table.status),
+	index('onework_activation_code_redeemed_user_idx').on(table.redeemedByUserId),
+]);
+
+/** 用户拥有的知识包权益。权益与设备解耦，换电脑只需重新生成设备 Key。 */
+export const oneworkEntitlement = pgTable("onework_entitlement", {
+	id: text("id").primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	knowledgePackId: text('knowledge_pack_id').notNull(),
+	source: text('source').notNull().default('activation'),
+	status: text('status').notNull().default('active'), // active | expired | revoked
+	monthlyQuota: integer('monthly_quota').notNull().default(1000),
+	startsAt: timestamp('starts_at').notNull().defaultNow(),
+	expiresAt: timestamp('expires_at'),
+	externalOrderId: text('external_order_id'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_entitlement_user_pack_unique_idx').on(table.userId, table.knowledgePackId),
+	index('onework_entitlement_user_status_idx').on(table.userId, table.status),
+	index('onework_entitlement_expires_idx').on(table.expiresAt),
+]);
+
+/** 一台电脑/运行环境对应一把 Key，撤销设备不会影响用户其他设备。 */
+export const oneworkDevice = pgTable("onework_device", {
+	id: text("id").primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	apiKeyId: text('api_key_id').notNull().references(() => apiKey.id, { onDelete: 'cascade' }),
+	deviceHash: text('device_hash').notNull(),
+	deviceName: text('device_name').notNull().default(''),
+	platform: text('platform').notNull().default('unknown'),
+	status: text('status').notNull().default('active'), // active | revoked
+	lastSeenAt: timestamp('last_seen_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	index('onework_device_hash_idx').on(table.deviceHash),
+	index('onework_device_user_status_idx').on(table.userId, table.status),
+]);
+
+/** 网站生成的短时安装授权，原始 token 只返回一次，消费后立即失效。 */
+export const oneworkInstallToken = pgTable("onework_install_token", {
+	id: text("id").primaryKey(),
+	tokenHash: text('token_hash').notNull(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	platform: text('platform').notNull().default('unknown'),
+	deviceName: text('device_name').notNull().default(''),
+	expiresAt: timestamp('expires_at').notNull(),
+	consumedAt: timestamp('consumed_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_install_token_hash_unique_idx').on(table.tokenHash),
+	index('onework_install_token_user_idx').on(table.userId),
+	index('onework_install_token_expires_idx').on(table.expiresAt),
+]);
+
+// ─────────────────────────────────────────────────────────
+// OneWorkOS V1：能力注册表 + Skill 映射 + 受控语义层
+// ─────────────────────────────────────────────────────────
+
+/**
+ * OneWorkOS 的能力注册表。它描述“能做什么”，不保存密钥。
+ * runtime 只保存 adapter/transport/auth mode 等非敏感调用配置。
+ */
+export const oneWorkCapability = pgTable("onework_capability", {
+	id: text("id").primaryKey(),
+	capabilityKey: text('capability_key').notNull(),
+	name: text('name').notNull(),
+	description: text('description').notNull().default(''),
+	ownerUserId: text('owner_user_id').references(() => user.id, { onDelete: 'set null' }),
+	scope: text('scope').notNull().default('global'),
+	provider: text('provider').notNull(),
+	kind: text('kind').notNull(),
+	intents: jsonb('intents').$type<string[]>().notNull(),
+	inputSchema: jsonb('input_schema').$type<Record<string, unknown>>().notNull(),
+	outputSchema: jsonb('output_schema').$type<Record<string, unknown>>().notNull(),
+	runtime: jsonb('runtime').$type<Record<string, unknown>>().notNull(),
+	riskLevel: text('risk_level').notNull().default('low'),
+	requiresConfirmation: boolean('requires_confirmation').notNull().default(false),
+	status: text('status').notNull().default('draft'),
+	version: text('version').notNull().default('1.0.0'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_capability_key_version_unique_idx').on(table.capabilityKey, table.version),
+	index('onework_capability_kind_status_idx').on(table.kind, table.status),
+	index('onework_capability_provider_status_idx').on(table.provider, table.status),
+	index('onework_capability_owner_scope_idx').on(table.ownerUserId, table.scope),
+]);
+
+/** Skill 允许使用的能力及其非敏感调度配置。 */
+export const workerSkillCapability = pgTable("worker_skill_capability", {
+	id: text("id").primaryKey(),
+	skillId: text('skill_id').notNull().references(() => workerSkill.id, { onDelete: 'cascade' }),
+	capabilityId: text('capability_id').notNull().references(() => oneWorkCapability.id, { onDelete: 'cascade' }),
+	status: text('status').notNull().default('enabled'),
+	priority: integer('priority').notNull().default(100),
+	configuration: jsonb('configuration').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('worker_skill_capability_unique_idx').on(table.skillId, table.capabilityId),
+	index('worker_skill_capability_skill_status_idx').on(table.skillId, table.status),
+	index('worker_skill_capability_capability_status_idx').on(table.capabilityId, table.status),
+]);
+
+/**
+ * 受控的结构化数据语义模型。definition 由运行时验证，不接受自由 SQL；
+ * V1 可承载 source、metrics、dimensions、filters、timeRange 和 userScope。
+ */
+export const semanticModel = pgTable("semantic_model", {
+	id: text("id").primaryKey(),
+	modelKey: text('model_key').notNull(),
+	name: text('name').notNull(),
+	description: text('description').notNull().default(''),
+	ownerUserId: text('owner_user_id').references(() => user.id, { onDelete: 'set null' }),
+	scope: text('scope').notNull().default('private'),
+	provider: text('provider').notNull().default('postgres'),
+	definition: jsonb('definition').$type<Record<string, unknown>>().notNull(),
+	status: text('status').notNull().default('draft'),
+	version: text('version').notNull().default('1.0.0'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('semantic_model_key_version_unique_idx').on(table.modelKey, table.version),
+	index('semantic_model_owner_scope_status_idx').on(table.ownerUserId, table.scope, table.status),
+	index('semantic_model_provider_status_idx').on(table.provider, table.status),
+]);
+
+/** 语义查询的可追溯审计记录，不保存完整查询结果。 */
+export const semanticQueryRun = pgTable("semantic_query_run", {
+	id: text("id").primaryKey(),
+	semanticModelId: text('semantic_model_id').references(() => semanticModel.id, { onDelete: 'set null' }),
+	capabilityId: text('capability_id').references(() => oneWorkCapability.id, { onDelete: 'set null' }),
+	skillId: text('skill_id').references(() => workerSkill.id, { onDelete: 'set null' }),
+	instanceId: text('instance_id').references(() => workerInstance.id, { onDelete: 'set null' }),
+	userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+	request: jsonb('request').$type<Record<string, unknown>>().notNull(),
+	compiledQuery: jsonb('compiled_query').$type<Record<string, unknown>>(),
+	queryHash: text('query_hash'),
+	status: text('status').notNull().default('pending'),
+	rowCount: integer('row_count').notNull().default(0),
+	durationMs: integer('duration_ms'),
+	error: text('error'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	completedAt: timestamp('completed_at'),
+}, (table) => [
+	index('semantic_query_run_model_created_idx').on(table.semanticModelId, table.createdAt),
+	index('semantic_query_run_user_created_idx').on(table.userId, table.createdAt),
+	index('semantic_query_run_status_created_idx').on(table.status, table.createdAt),
+	index('semantic_query_run_query_hash_idx').on(table.queryHash),
 ]);

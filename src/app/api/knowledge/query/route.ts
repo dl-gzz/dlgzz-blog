@@ -1,8 +1,15 @@
-import { keyHasPackAccess, recordUsage, verifyApiKey } from '@/lib/api-key';
+import {
+  completeApiKeyUsage,
+  keyHasPackAccess,
+  recordUsage,
+  reserveApiKeyUsage,
+  verifyApiKey,
+} from '@/lib/api-key';
 import {
   type KnowledgeAssetResult,
   searchKnowledgeChunks,
 } from '@/lib/knowledge-search';
+import { getBaseUrl } from '@/lib/urls/urls';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -83,22 +90,11 @@ function isInternalOrigin(value: string) {
   }
 }
 
-function getAssetProxyBaseUrl(request: NextRequest) {
+function getAssetProxyBaseUrl() {
   const configuredOrigin =
-    process.env.KNOWLEDGE_PUBLIC_ORIGIN || process.env.NEXT_PUBLIC_BASE_URL;
+    process.env.KNOWLEDGE_PUBLIC_ORIGIN || process.env.NEXT_PUBLIC_BASE_URL || getBaseUrl();
   if (configuredOrigin && !isInternalOrigin(configuredOrigin)) {
     return new URL('/api/knowledge/assets', configuredOrigin).toString().replace(/\/$/, '');
-  }
-
-  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
-  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
-  if (forwardedHost && !isInternalOrigin(`${forwardedProto}://${forwardedHost}`)) {
-    return `${forwardedProto}://${forwardedHost}/api/knowledge/assets`;
-  }
-
-  const requestOrigin = new URL(request.url).origin;
-  if (!isInternalOrigin(requestOrigin)) {
-    return new URL('/api/knowledge/assets', request.url).toString().replace(/\/$/, '');
   }
 
   // Zeabur/容器内请求可能只有 0.0.0.0:8080；对外 Skill 必须拿到可渲染的公开域名。
@@ -117,6 +113,14 @@ function getAssetProxyBaseUrl(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   const startedAt = Date.now();
+
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > 100_000) {
+    return NextResponse.json(
+      { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+      { status: 413 }
+    );
+  }
 
   const verified = await verifyApiKey(request.headers.get('authorization'));
   if (!verified.ok) {
@@ -160,9 +164,15 @@ export async function POST(request: NextRequest) {
       ? body.includeResources
       : includeAssets;
 
-  if (!query || !packId) {
+  if (
+    !query ||
+    query.length > 5_000 ||
+    !packId ||
+    packId.length > 160 ||
+    !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(packId)
+  ) {
     return NextResponse.json(
-      { success: false, code: 'BAD_REQUEST', error: '缺少 query 或 packId' },
+      { success: false, code: 'BAD_REQUEST', error: 'query 或 packId 无效' },
       { status: 400 }
     );
   }
@@ -188,27 +198,37 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const reservation = await reserveApiKeyUsage({
+    apiKeyId: verified.key.id,
+    userId: verified.key.userId,
+    kind: 'knowledge_query',
+    knowledgePackId: packId,
+    query,
+  });
+  if (!reservation) {
+    return NextResponse.json(
+      { success: false, code: 'QUOTA_EXCEEDED', error: '本月调用额度已用完' },
+      { status: 429 }
+    );
+  }
+
   try {
     const results = await searchKnowledgeChunks(query, {
       packId,
       limit,
       includeAssets: includeAssets || includeResources,
     });
-    await recordUsage({
-      apiKeyId: verified.key.id,
-      userId: verified.key.userId,
-      kind: 'knowledge_query',
-      knowledgePackId: packId,
-      query,
+    await completeApiKeyUsage({
+      eventId: reservation.eventId,
+      status: 'ok',
       resultCount: results.length,
       latencyMs: Date.now() - startedAt,
-      status: 'ok',
     });
 
     // 部分官方文档 CDN 对没有浏览器 User-Agent 的抓取器返回 404。
     // 统一把知识图片交给同源代理，Skill、Markdown 渲染器和普通浏览器
     // 都能拿到同一张图；原图地址仍通过 originalUrl 保留，便于溯源。
-    const assetProxyBaseUrl = getAssetProxyBaseUrl(request);
+    const assetProxyBaseUrl = getAssetProxyBaseUrl();
 
     return NextResponse.json({
       success: true,
@@ -216,7 +236,7 @@ export async function POST(request: NextRequest) {
       query,
       quota: {
         limit: verified.key.monthlyQuota,
-        usedThisMonth: verified.usedThisMonth + 1,
+        usedThisMonth: reservation.usedThisMonth + 1,
       },
       results: results.map((row) => ({
         title: row.title,
@@ -262,12 +282,8 @@ export async function POST(request: NextRequest) {
       })),
     });
   } catch (error) {
-    await recordUsage({
-      apiKeyId: verified.key.id,
-      userId: verified.key.userId,
-      kind: 'knowledge_query',
-      knowledgePackId: packId,
-      query,
+    await completeApiKeyUsage({
+      eventId: reservation.eventId,
       status: 'error',
       latencyMs: Date.now() - startedAt,
     });
@@ -275,7 +291,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         code: 'QUERY_FAILED',
-        error: error instanceof Error ? error.message : '检索失败',
+        error: '检索失败，请稍后重试',
       },
       { status: 500 }
     );

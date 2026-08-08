@@ -118,26 +118,24 @@ async function keywordSearch(
 ): Promise<KnowledgeSearchResult[]> {
   const sql = getSql();
   try {
-    const keywords = getKeywordTerms(query)
-      .map((keyword) => keyword.replace(/'/g, "''"))
-      .slice(0, 12);
-
+    const keywords = getKeywordTerms(query).slice(0, 12);
+    // Use bound parameters for the fallback search instead of interpolating
+    // user text into sql.unsafe() fragments.
+    const patterns = sql(keywords.map((keyword) => `%${keyword}%`));
     const condition = keywords.length
-      ? keywords
-          .map(
-            (keyword) =>
-              `(kc.content ilike '%${keyword}%' or kd.title ilike '%${keyword}%' or coalesce(kc.heading, '') ilike '%${keyword}%')`
-          )
-          .join(' or ')
-      : 'true';
+      ? sql`(
+          kc.content ilike any(${patterns}) or
+          kd.title ilike any(${patterns}) or
+          coalesce(kc.heading, '') ilike any(${patterns})
+        )`
+      : sql`true`;
     const rankExpression = keywords.length
-      ? keywords
-          .map(
-            (keyword) =>
-              `case when kc.content ilike '%${keyword}%' or kd.title ilike '%${keyword}%' or coalesce(kc.heading, '') ilike '%${keyword}%' then 1 else 0 end`
-          )
-          .join(' + ')
-      : '0';
+      ? sql`case when (
+          kc.content ilike any(${patterns}) or
+          kd.title ilike any(${patterns}) or
+          coalesce(kc.heading, '') ilike any(${patterns})
+        ) then 1 else 0 end`
+      : sql`0`;
 
     const rows = await sql<
       Array<{
@@ -165,7 +163,7 @@ async function keywordSearch(
 				kd.file_path,
 				coalesce(kd.metadata->>'sourceUrl', kd.metadata->>'source_url') as source_url,
 				kc.metadata,
-				(${sql.unsafe(rankExpression)})::int as keyword_score
+				(${rankExpression})::int as keyword_score
 			from knowledge_chunks kc
 			join knowledge_documents kd on kd.id = kc.document_id
 			where exists (
@@ -173,7 +171,7 @@ async function keywordSearch(
 				where kpd.document_id = kd.id
 					and kpd.knowledge_pack_id in ${sql(packIds)}
 			)
-				and ${sql.unsafe(condition)}
+				and ${condition}
 			order by keyword_score desc,
 				case when kd.source = 'xhs_official' then 1 else 0 end desc,
 				kd.title asc
@@ -280,6 +278,7 @@ function hasUiInstructionIntent(query: string) {
 function uiEvidenceTier(sourceType: string | null) {
   switch (sourceType) {
     case 'official_product_screenshot':
+    case 'official_platform_screenshot':
       return 400;
     case 'user_uploaded_screenshot':
     case 'user_provided_screenshot':
@@ -320,6 +319,7 @@ function instructionalRoleTier(role: string) {
 function isUiScreenshotEvidence(sourceType: string | null) {
   return [
     'official_product_screenshot',
+    'official_platform_screenshot',
     'user_uploaded_screenshot',
     'user_provided_screenshot',
     'product_ui_screenshot',

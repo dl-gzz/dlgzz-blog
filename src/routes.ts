@@ -37,10 +37,13 @@ export enum Routes {
   Whiteboard = '/whiteboard',
   AdminBots = '/admin/bots',
   AdminUsers = '/admin/users',
+  AdminOneWork = '/admin/onework',
   SettingsProfile = '/settings/profile',
   SettingsBilling = '/settings/billing',
   SettingsSecurity = '/settings/security',
   SettingsNotifications = '/settings/notifications',
+  SettingsOneWork = '/settings/onework',
+  OneWork = '/onework',
 
 }
 
@@ -59,10 +62,12 @@ export const protectedRoutes = [
   // （额度由 src/lib/free-trial-quota.ts 按 IP 哈希限制，会员无限）
   Routes.AdminBots,
   Routes.AdminUsers,
+  Routes.AdminOneWork,
   Routes.SettingsProfile,
   Routes.SettingsBilling,
   Routes.SettingsSecurity,
   Routes.SettingsNotifications,
+  Routes.SettingsOneWork,
 ];
 
 /**

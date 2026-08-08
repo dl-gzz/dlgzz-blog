@@ -3,7 +3,8 @@ import 'server-only';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { getDb } from '@/db';
 import { apiKey, apiKeyPackGrant, apiUsageEvent } from '@/db/schema';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
+import { and, desc, eq, gte, or, sql } from 'drizzle-orm';
 
 const KEY_PREFIX = 'dk_live_';
 
@@ -56,6 +57,13 @@ export type KeyDenyReason = 'missing' | 'invalid' | 'revoked' | 'quota_exceeded'
 export type KeyVerifyResult =
   | { ok: true; key: VerifiedKey; usedThisMonth: number }
   | { ok: false; reason: KeyDenyReason };
+
+export type ApiUsageKind = 'knowledge_query' | 'analytics_query' | 'skill_install';
+
+export interface ApiUsageReservation {
+  eventId: string;
+  usedThisMonth: number;
+}
 
 function extractRawKey(headerValue: string | null): string {
   if (!headerValue) return '';
@@ -111,17 +119,20 @@ export async function verifyApiKey(headerValue: string | null): Promise<KeyVerif
 /** Key 是否被授权访问某个知识包（未过期）。 */
 export async function keyHasPackAccess(apiKeyId: string, packId: string): Promise<boolean> {
   const db = await getDb();
-  const [grant] = await db
+  const grants = await db
     .select({ id: apiKeyPackGrant.id, expiresAt: apiKeyPackGrant.expiresAt })
     .from(apiKeyPackGrant)
     .where(
-      and(eq(apiKeyPackGrant.apiKeyId, apiKeyId), eq(apiKeyPackGrant.knowledgePackId, packId))
-    )
-    .limit(1);
+      and(
+        eq(apiKeyPackGrant.apiKeyId, apiKeyId),
+        or(
+          eq(apiKeyPackGrant.knowledgePackId, packId),
+          eq(apiKeyPackGrant.knowledgePackId, ALL_PACKS_GRANT)
+        )
+      )
+    );
 
-  if (!grant) return false;
-  if (grant.expiresAt && grant.expiresAt.getTime() < Date.now()) return false;
-  return true;
+  return grants.some((grant) => !grant.expiresAt || grant.expiresAt.getTime() >= Date.now());
 }
 
 /** 授权一个 Key 访问某知识包（幂等）。 */
@@ -151,11 +162,110 @@ export async function grantPackToKey({
     });
 }
 
+/**
+ * Atomically reserve one metered request. The row lock closes the race where
+ * concurrent requests could all pass verifyApiKey before any one of them was
+ * recorded. Pending reservations expire from quota accounting after ten
+ * minutes so a crashed request cannot permanently consume a user's quota.
+ */
+export async function reserveApiKeyUsage(event: {
+  apiKeyId: string;
+  userId: string;
+  kind: ApiUsageKind;
+  knowledgePackId?: string | null;
+  serviceId?: string | null;
+  query?: string;
+}): Promise<ApiUsageReservation | null> {
+  const db = await getDb();
+  const now = new Date();
+  const pendingSince = new Date(now.getTime() - 10 * 60 * 1000);
+
+  return db.transaction(async (tx) => {
+    const [key] = await tx
+      .select({ id: apiKey.id, monthlyQuota: apiKey.monthlyQuota, status: apiKey.status })
+      .from(apiKey)
+      .where(and(eq(apiKey.id, event.apiKeyId), eq(apiKey.userId, event.userId)))
+      .limit(1)
+      .for('update');
+
+    if (!key || key.status !== 'active') return null;
+
+    const [usage] = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(apiUsageEvent)
+      .where(
+        and(
+          eq(apiUsageEvent.apiKeyId, key.id),
+          gte(apiUsageEvent.createdAt, monthStart()),
+          or(
+            eq(apiUsageEvent.status, 'ok'),
+            and(
+              eq(apiUsageEvent.status, 'pending'),
+              gte(apiUsageEvent.createdAt, pendingSince)
+            )
+          )
+        )
+      );
+
+    const usedThisMonth = usage?.count ?? 0;
+    if (key.monthlyQuota > 0 && usedThisMonth >= key.monthlyQuota) {
+      return null;
+    }
+
+    const eventId = `usage_${randomUUID()}`;
+    await tx.insert(apiUsageEvent).values({
+      id: eventId,
+      apiKeyId: key.id,
+      userId: event.userId,
+      kind: event.kind,
+      knowledgePackId: event.knowledgePackId ?? null,
+      serviceId: event.serviceId ?? null,
+      query: (event.query ?? '').slice(0, 500),
+      status: 'pending',
+      createdAt: now,
+    });
+
+    return { eventId, usedThisMonth };
+  });
+}
+
+/** Complete a previously reserved request without creating a second billable row. */
+export async function completeApiKeyUsage(event: {
+  eventId: string;
+  status: 'ok' | 'error';
+  resultCount?: number;
+  embeddingTokens?: number;
+  latencyMs?: number;
+}) {
+  try {
+    const db = await getDb();
+    const [updated] = await db
+      .update(apiUsageEvent)
+      .set({
+        status: event.status,
+        resultCount: event.resultCount ?? 0,
+        embeddingTokens: event.embeddingTokens ?? 0,
+        latencyMs: event.latencyMs ?? 0,
+      })
+      .where(and(eq(apiUsageEvent.id, event.eventId), eq(apiUsageEvent.status, 'pending')))
+      .returning({ apiKeyId: apiUsageEvent.apiKeyId });
+
+    if (updated?.apiKeyId) {
+      await db
+        .update(apiKey)
+        .set({ lastUsedAt: new Date(), updatedAt: new Date() })
+        .where(eq(apiKey.id, updated.apiKeyId));
+    }
+  } catch (error) {
+    console.warn('[api-key] completeUsage failed:', error);
+  }
+}
+
 /** 记一条用量事件（算账的地基）。绝不抛错影响主流程。 */
 export async function recordUsage(event: {
   apiKeyId?: string | null;
   userId?: string | null;
-  kind: 'knowledge_query' | 'analytics_query' | 'skill_install';
+  kind: ApiUsageKind;
   knowledgePackId?: string | null;
   serviceId?: string | null;
   query?: string;
