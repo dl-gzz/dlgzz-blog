@@ -153,7 +153,11 @@ async function readResponse(response) {
   try {
     return JSON.parse(text);
   } catch {
-    return { error: text.slice(0, 500) };
+    return {
+      error: text.slice(0, 500),
+      nonJson: true,
+      contentType: response.headers.get('content-type') || '',
+    };
   }
 }
 
@@ -184,6 +188,12 @@ async function main() {
 
   const data = await readResponse(response);
   if (!response.ok) {
+    if (data?.nonJson) {
+      const contentType = data.contentType || 'non-JSON';
+      throw new Error(
+        `OneWorkOS API HTTP ${response.status}: resolver returned ${contentType}; check deployment of /api/capabilities/resolve`
+      );
+    }
     const code = data?.code ? ` ${data.code}` : '';
     const message = data?.error || `HTTP ${response.status}`;
     throw new Error(`OneWorkOS API${code}: ${message}`);

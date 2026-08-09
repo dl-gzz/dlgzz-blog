@@ -7,6 +7,18 @@ description: Orchestrate OneWorkOS capabilities across WorkBuddy and Xiaohongshu
 
 Act as the control plane. Use OneWorkOS memory and semantic services for governed evidence. Use only the user's available model, Skills, connectors, and tools for reasoning or execution.
 
+## What `/api/capabilities/resolve` does
+
+`/api/capabilities/resolve` is the OneWorkOS **capability resolver**, not a knowledge query endpoint and not a browser executor. The Skill sends it a compact dispatch frame (`goal`, optional context, installed capability IDs, and whether execution was requested); it returns a JSON recommendation describing:
+
+- `route`: `knowledge`, `analytics`, `action`, `composite`, or `human_required`;
+- `capabilities`: the registered capabilities to call and their operation/reason;
+- `missingCapabilities`, `requiresConfirmation`, and success criteria.
+
+For example, “小红书店铺怎么设置发货” should resolve to `knowledge.search`; “帮我把发货设置好” may resolve to a composite route that first searches the governed pack and then uses an actually available browser action. The resolver selects and orders capabilities; `query-knowledge.mjs` retrieves evidence and a host browser Skill performs UI actions. Never claim that resolver output itself searched the database or clicked the browser.
+
+The endpoint is called by `scripts/resolve-capability.mjs` with `POST` and a Bearer key. It is not a page users open directly. A `404`, `502`, `5xx`, or non-JSON response means the remote registry is unavailable: label the result as an unregistered local fallback, use only capabilities actually present in the host, and do not report the remote route as successfully resolved.
+
 ## Mandatory dispatch gate
 
 When this Skill is explicitly invoked (including `@skill:one-work-os`), do not answer the user's goal from model memory before dispatching it.
