@@ -99,10 +99,6 @@ const nextConfig: NextConfig = {
         hostname: 'static-main.aiyeshi.cn',
       },
       {
-        protocol: 'https',
-        hostname: 'outfittest.oss-cn-beijing.aliyuncs.com',
-      },
-      {
         protocol: 'http',
         hostname: 'dashscope-result-sh.oss-cn-shanghai.aliyuncs.com',
       },

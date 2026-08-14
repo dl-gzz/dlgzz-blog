@@ -47,7 +47,7 @@ OSS_ACCESS_KEY_ID="for_image_upload"
 
 ### Step 1: 构建生产版本
 ```bash
-cd /path/to/mksaas-outfit-main
+cd /path/to/dlgzz-blog-main
 pnpm build
 ```
 
@@ -169,7 +169,7 @@ pm2 monit             # 监控资源使用
 
 ### Q: 如何更新代码？
 ```bash
-cd /path/to/mksaas-outfit-main
+cd /path/to/dlgzz-blog-main
 git pull
 pnpm install
 pnpm build

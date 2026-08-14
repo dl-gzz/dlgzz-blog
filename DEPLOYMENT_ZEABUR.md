@@ -20,7 +20,7 @@
 1. 在 Zeabur 控制台点击 "Deploy"
 2. 选择 "From GitHub"
 3. 授权 Zeabur 访问您的 GitHub 仓库
-4. 选择 `mksaas-outfit-main` 仓库
+4. 选择 `dlgzz-blog-main` 仓库
 
 ### Step 3: 配置服务
 Zeabur 会自动检测 Next.js 项目并配置：

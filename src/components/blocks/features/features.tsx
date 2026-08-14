@@ -8,19 +8,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import {
-  Sparkles,
-  Search,
-  Palette,
-  Zap,
-} from 'lucide-react';
+import { Palette, Search, Sparkles, Zap } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useState } from 'react';
 
 /**
- * 独立工作者 Features Section - AI-powered virtual try-on features
+ * 独立工作者知识库功能展示。
  */
 export default function FeaturesSection() {
   const t = useTranslations('HomePage.features');

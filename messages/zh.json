@@ -125,27 +125,6 @@
     "talkWithMe": "联系我们",
     "followMe": "关注我们"
   },
-  "OutfitPage": {
-    "title": "AI虚拟试衣",
-    "description": "通过AI驱动的虚拟试衣技术发现您的完美风格",
-    "comingSoon": "体验我们AI虚拟试衣平台的时尚未来",
-    "filters": {
-      "all": "全部",
-      "male": "男装",
-      "female": "女装"
-    },
-    "buttons": {
-      "buyNow": "立即购买",
-      "tryOn": "虚拟试衣",
-      "viewOutfit": "查看搭配"
-    },
-    "loading": "加载中...",
-    "noResults": "未找到搭配",
-    "modal": {
-      "close": "关闭",
-      "outfitDetails": "搭配详情"
-    }
-  },
   "ChangelogPage": {
     "title": "更新日志",
     "description": "了解独立沉思录的最新功能和改进",
@@ -153,11 +132,11 @@
   },
   "ContactPage": {
     "title": "联系我们",
-    "description": "联系我们的AI时尚专家",
-    "subtitle": "联系我们的AI时尚专家",
+    "description": "联系独立沉思录团队",
+    "subtitle": "关于内容、知识库或会员服务，欢迎与我们联系",
     "form": {
       "title": "联系独立沉思录",
-      "description": "对我们的AI虚拟试衣技术有疑问？我们的团队随时为您提供帮助",
+      "description": "对独立沉思录的内容、知识库或会员服务有疑问？请给我们留言。",
       "name": "姓名",
       "email": "邮箱",
       "message": "消息",
@@ -178,7 +157,7 @@
     "subtitle": "预约抢先体验独立沉思录",
     "form": {
       "title": "加入独立沉思录预约名单",
-      "description": "抢先体验我们革命性的AI虚拟试衣技术",
+      "description": "抢先体验独立沉思录即将推出的新功能",
       "email": "邮箱",
       "subscribe": "加入预约",
       "subscribing": "加入中...",
@@ -190,7 +169,7 @@
   "Newsletter": {
     "title": "邮件订阅",
     "subtitle": "获取独立沉思录最新资讯",
-    "description": "订阅邮件获取AI时尚技术和新功能的最新资讯",
+    "description": "订阅邮件，获取最新文章、知识库与产品更新",
     "form": {
       "email": "邮箱",
       "subscribe": "订阅",
@@ -206,7 +185,7 @@
       "welcomeBack": "欢迎回到独立沉思录",
       "signUpHint": "初次使用独立沉思录？注册账号",
       "signInWithGoogle": "使用Google登录",
-      "loginWithGoogle": "使用Google登录开始您的AI时尚之旅",
+      "loginWithGoogle": "使用 Google 登录独立沉思录",
       "or": "或者使用社交账号登录",
       "orContinueWith": "或",
       "email": "邮箱",
@@ -333,40 +312,16 @@
       "whiteboard": {
         "title": "白板"
       },
-      "outfit": {
-        "title": "立即试用"
-      },
-      "ai": {
-        "title": "AI功能",
-        "items": {
-          "text": {
-            "title": "AI风格顾问",
-            "description": "获得AI驱动的个性化风格推荐"
-          },
-          "image": {
-            "title": "虚拟试衣",
-            "description": "通过AI虚拟试衣技术看看衣服在您身上的效果"
-          },
-          "video": {
-            "title": "3D建模",
-            "description": "通过AI身体建模技术以惊人的3D效果体验服装"
-          },
-          "audio": {
-            "title": "语音助手",
-            "description": "通过我们的AI语音助手获得风格建议"
-          }
-        }
-      },
       "pages": {
         "title": "页面",
         "items": {
           "about": {
             "title": "关于我",
-            "description": "了解我们的AI时尚技术和使命"
+            "description": "了解独立沉思录的内容、产品与使命"
           },
           "contact": {
             "title": "联系我们",
-            "description": "联系我们的AI时尚专家"
+            "description": "联系独立沉思录团队"
           },
           "waitlist": {
             "title": "预约体验",
@@ -378,7 +333,7 @@
           },
           "roadmap": {
             "title": "发展路线",
-            "description": "探索我们未来的AI时尚创新"
+            "description": "了解独立沉思录的后续产品规划"
           },
           "cookiePolicy": {
             "title": "Cookie政策",
@@ -519,109 +474,6 @@
     "renewNow": "立即续费",
     "viewAllPlans": "查看所有套餐",
     "renewalReminder": "您的订阅即将到期，建议提前续费以确保不间断地访问付费内容。",
-    "fittingRoom": {
-      "title": "AI试衣间",
-      "selectModel": "选择模特",
-      "addModel": "新增模特",
-      "clothingType": "服装类型",
-      "topAndBottom": "上下装",
-      "onepiece": "单件连体",
-      "uploadTop": "上传上装",
-      "uploadBottom": "上传下装",
-      "uploadClothing": "上传服装",
-      "startTryOn": "开始试衣",
-      "modelSelection": "模特选择",
-      "tryingOn": "正在试衣中...",
-      "uploadModelImage": "上传模特图片",
-      "modelName": "模特姓名",
-      "height": "身高",
-      "weight": "体重",
-      "bodyType": "身材类型",
-      "style": "风格",
-      "addNewModel": "添加新模特",
-      "cancel": "取消",
-      "confirm": "确认",
-      "uploading": "上传中...",
-      "modelAdded": "模特添加成功",
-      "modelAddFailed": "模特添加失败",
-      "dragDropImage": "拖拽图片到此处或点击浏览",
-      "imageRequired": "请上传图片",
-      "nameRequired": "请输入姓名",
-      "heightRequired": "请输入身高",
-      "weightRequired": "请输入体重",
-      "bodyTypeRequired": "请选择身材类型",
-      "styleRequired": "请选择风格",
-      "uploadSuccess": "上传成功",
-      "uploadFailed": "上传失败",
-      "uploadInProgress": "上传中...",
-      "selectModelFirst": "请先选择模特",
-      "uploadClothingFirst": "请上传所需的服装图片",
-      "tryOnSuccess": "试衣完成!",
-      "fillAllFields": "请填写所有必填项并上传模特图片",
-      "clickToReupload": "点击重新上传",
-      "loadingModels": "加载模特中...",
-      "customModel": "自定义",
-      "cannotDeleteDefault": "无法删除默认模特",
-      "modelDeletedSuccess": "模特删除成功",
-      "modelDeleteFailed": "模特删除失败",
-      "aiTryOnResult": "AI试衣效果",
-      "aiTryOnComplete": "✨ AI试衣完成",
-      "tryOnEffectGenerated": "试衣效果已生成",
-      "download": "下载",
-      "share": "分享",
-      "retryTryOn": "重新试衣",
-      "subscriptionRequired": "付费功能",
-      "subscriptionRequiredMessage": "AI虚拟试衣功能仅限付费用户使用",
-      "subscriptionRequiredDescription": "升级到专业版或终身版以解锁无限AI虚拟试衣功能",
-      "upgradeToPro": "升级套餐",
-      "freeTrial": "免费体验",
-      "subscriptionExpired": "订阅已过期",
-      "subscriptionExpiredMessage": "您的订阅已过期，请续费以继续使用AI虚拟试衣功能",
-      "renewSubscription": "续费订阅",
-      "premiumFeature": "高级功能",
-      "preloaded": "已预加载",
-      "fromOutfitPreset": "来自套装预设",
-      "outfitPreloaded": "套装已预加载",
-      "onePiece": "连体衣",
-      "topAndBottomLoaded": "上装 + 下装已自动加载",
-      "clear": "清除",
-      "clickToSelectModel": "点击选择AI试衣模特",
-      "autoSelectedByOutfit": "已根据套装自动选择",
-      "paidFeature": "付费功能",
-      "checkingSubscription": "检查订阅状态...",
-      "goBack": "返回",
-      "lifetimeMember": "终身会员",
-      "subscriptionActive": "订阅已激活",
-      "statusActive": "正常",
-      "statusTrialing": "试用中",
-      "aiVirtualTryonPremium": "AI虚拟试衣 - 付费功能",
-      "upgradeNow": "立即升级",
-      "topAndBottomType": "上装 + 下装",
-      "onepieceType": "连体衣",
-      "loadingTryOnHistory": "加载试衣历史中...",
-      "noTryOnHistory": "暂无试衣记录",
-      "startFirstTryOn": "开始您的第一次AI试衣体验吧！",
-      "tryOnHistory": "试衣历史",
-      "yourTryOnRecords": "您的AI试衣记录",
-      "records": "条",
-      "refresh": "刷新",
-      "selectModelAndClothing": "选择模特和服装，开始AI试衣",
-      "taskQueued": "任务排队中...",
-      "preprocessing": "前置处理中...",
-      "aiGenerating": "AI试衣生成中...",
-      "postprocessing": "后置处理中...",
-      "tryOnCompleted": "试衣完成",
-      "tryOnFailed": "试衣失败",
-      "taskCanceled": "任务已取消",
-      "unknownStatus": "未知状态",
-      "estimatedTime": "预计需要 30-60 秒",
-      "queuedStatus": "排队中",
-      "processingStatus": "处理中",
-      "generatingStatus": "生成中",
-      "completedStatus": "已完成",
-      "tryOnFailedMsg": "生成失败，请重试",
-      "retryAttempt": "重试"
-    },
     "admin": {
       "title": "系统管理",
       "users": {
@@ -685,8 +537,8 @@
         "description": "管理您的独立沉思录账户信息",
         "avatar": {
           "title": "头像",
-          "description": "上传您的照片以获得更准确的AI试衣效果",
-          "recommendation": "清晰的照片有助于我们的AI提供更好的推荐",
+          "description": "上传头像，完善您的个人资料",
+          "recommendation": "清晰的头像方便识别您的账号",
           "uploading": "上传中...",
           "uploadAvatar": "上传头像",
           "success": "头像更新成功",
@@ -744,7 +596,7 @@
         "description": "管理您的独立沉思录通知偏好",
         "newsletter": {
           "title": "邮件订阅",
-          "description": "获取新AI功能和时尚趋势的更新",
+          "description": "获取最新文章、知识库与产品更新",
           "label": "订阅邮件",
           "hint": "您可以随时更改订阅偏好",
           "emailRequired": "订阅需要邮箱",
@@ -796,7 +648,7 @@
     },
     "upgrade": {
       "title": "升级",
-      "description": "升级到专业版享受无限AI试衣和高级功能",
+      "description": "升级会员，解锁完整知识库、付费文章和会员组件",
       "button": "升级到专业版"
     }
   },
@@ -807,7 +659,7 @@
     },
     "verifyEmail": {
       "title": "欢迎来到独立沉思录，{name}！",
-      "body": "请点击下方链接验证您的邮箱，开始您的AI时尚之旅。",
+      "body": "请点击下方链接验证邮箱，开始使用独立沉思录。",
       "confirmEmail": "验证邮箱",
       "subject": "验证您的独立沉思录账号"
     },
@@ -818,7 +670,7 @@
       "subject": "重置您的独立沉思录密码"
     },
     "subscribeNewsletter": {
-      "body": "感谢您订阅独立沉思录邮件！我们将为您提供最新的AI时尚技术和新功能资讯。",
+      "body": "感谢您订阅独立沉思录邮件！我们会向您发送最新文章、知识库与产品更新。",
       "subject": "欢迎订阅独立沉思录邮件"
     },
     "contactMessage": {
@@ -874,44 +726,6 @@
     "logocloud": {
       "title": "独立生活、独立工作、独立思考"
     },
-    "integration": {
-      "title": "AI集成",
-      "subtitle": "由先进AI技术驱动",
-      "description": "独立沉思录与尖端AI模型和时尚平台集成，提供最准确的虚拟试衣体验。",
-      "learnMore": "了解更多",
-      "items": {
-        "item-1": {
-          "title": "先进计算机视觉",
-          "description": "最先进的身体检测和姿态估计技术，实现精确试衣。"
-        },
-        "item-2": {
-          "title": "3D身体建模",
-          "description": "创建逼真的3D身体模型，实现精确的服装可视化。"
-        },
-        "item-3": {
-          "title": "AI风格助手",
-          "description": "基于您的偏好获得个性化的风格推荐。"
-        },
-        "item-4": {
-          "title": "实时处理",
-          "description": "通过我们优化的AI推理引擎获得即时试衣结果。"
-        },
-        "item-5": {
-          "title": "时尚数据库",
-          "description": "通过AI驱动的搜索和匹配访问数百万件服装。"
-        },
-        "item-6": {
-          "title": "趋势分析",
-          "description": "AI驱动的时尚趋势分析和个性化推荐。"
-        }
-      }
-    },
-    "integration2": {
-      "title": "无缝AI时尚集成",
-      "description": "连接您喜爱的时尚零售商，在所有平台上获得AI驱动的风格推荐。",
-      "primaryButton": "立即试用",
-      "secondaryButton": "观看演示"
-    },
     "features": {
       "title": "AI驱动的博客",
       "subtitle": "文章即服务",
@@ -935,50 +749,10 @@
         }
       }
     },
-    "features2": {
-      "title": "先进AI能力",
-      "subtitle": "下一代时尚技术",
-      "description": "发现使独立沉思录成为最先进虚拟试衣平台的强大AI功能",
-      "feature-1": "AI身体分析与测量",
-      "feature-2": "智能面料模拟",
-      "feature-3": "个性化风格AI",
-      "feature-4": "实时时尚趋势"
-    },
-    "features3": {
-      "title": "核心AI功能",
-      "subtitle": "触手可及的尖端技术",
-      "description": "探索驱动独立沉思录虚拟试衣体验的先进AI能力",
-      "items": {
-        "item-1": {
-          "title": "闪电般的AI处理",
-          "description": "通过我们优化的AI模型获得即时试衣结果，实时处理图像"
-        },
-        "item-2": {
-          "title": "先进身体识别",
-          "description": "精确的身体检测和姿态估计，实现准确的虚拟服装放置"
-        },
-        "item-3": {
-          "title": "智能风格建议",
-          "description": "基于您的风格偏好和身体类型的AI驱动推荐"
-        },
-        "item-4": {
-          "title": "智能合身分析",
-          "description": "基于您的测量数据预测服装合身度的先进算法"
-        },
-        "item-5": {
-          "title": "逼真面料渲染",
-          "description": "通过我们基于物理的AI模拟看看不同面料的垂坠和运动效果"
-        },
-        "item-6": {
-          "title": "趋势预测AI",
-          "description": "通过我们分析全球时尚数据的AI保持时尚趋势领先"
-        }
-      }
-    },
     "pricing": {
-      "title": "AI试衣价格",
-      "subtitle": "选择您的方案",
-      "description": "选择一个适合自己的方案"
+      "title": "会员方案",
+      "subtitle": "选择适合您的方案",
+      "description": "解锁完整知识库、付费文章与会员组件"
     },
     "faqs": {
       "title": "常见问题",
@@ -1006,125 +780,11 @@
         }
       }
     },
-    "testimonials": {
-      "title": "用户对独立沉思录的评价",
-      "subtitle": "来自时尚爱好者的真实体验",
-      "items": {
-        "item-1": {
-          "name": "莎拉·约翰逊",
-          "role": "时尚博主",
-          "image": "https://randomuser.me/api/portraits/women/1.jpg",
-          "quote": "独立沉思录彻底改变了我的在线购物方式。AI试衣如此准确，我没有退过一件商品！"
-        },
-        "item-2": {
-          "name": "迈克尔·陈",
-          "role": "风格影响者",
-          "image": "https://randomuser.me/api/portraits/men/6.jpg",
-          "quote": "AI推荐非常准确。就像有一个私人造型师，完全知道什么在我身上好看。"
-        },
-        "item-3": {
-          "name": "艾玛·罗德里格斯",
-          "role": "时装设计师",
-          "image": "https://randomuser.me/api/portraits/women/7.jpg",
-          "quote": "作为设计师，我对面料模拟的准确性感到惊讶。独立沉思录是时尚科技的未来。"
-        },
-        "item-4": {
-          "name": "大卫·金",
-          "role": "电商经理",
-          "image": "https://randomuser.me/api/portraits/men/8.jpg",
-          "quote": "集成独立沉思录后，我们的退货率下降了60%。客户喜欢看到衣服实际在他们身上的效果。"
-        },
-        "item-5": {
-          "name": "丽莎·王",
-          "role": "私人购物顾问",
-          "image": "https://randomuser.me/api/portraits/women/4.jpg",
-          "quote": "独立沉思录帮助我通过快速展示不同服装的效果为更多客户服务。非常高效。"
-        },
-        "item-6": {
-          "name": "詹姆斯·汤普森",
-          "role": "时尚零售商",
-          "image": "https://randomuser.me/api/portraits/men/2.jpg",
-          "quote": "AI技术令人印象深刻。我们的客户对购买更有信心，满意度显著提高。"
-        },
-        "item-7": {
-          "name": "索菲亚·马丁内兹",
-          "role": "风格顾问",
-          "image": "https://randomuser.me/api/portraits/women/5.jpg",
-          "quote": "虚拟试衣如此逼真，感觉就像魔法。独立沉思录革新了我帮助客户选择服装的方式。"
-        },
-        "item-8": {
-          "name": "亚历克斯·特纳",
-          "role": "时尚摄影师",
-          "image": "https://randomuser.me/api/portraits/men/9.jpg",
-          "quote": "3D渲染质量非常出色。独立沉思录比我见过的任何东西都能更好地捕捉面料的运动和合身度。"
-        },
-        "item-9": {
-          "name": "雷切尔·格林",
-          "role": "精品店主",
-          "image": "https://randomuser.me/api/portraits/women/10.jpg",
-          "quote": "自从使用独立沉思录以来，我的在线销售额增长了三倍。客户喜欢能够先试后买。"
-        },
-        "item-10": {
-          "name": "马克·戴维斯",
-          "role": "科技爱好者",
-          "image": "https://randomuser.me/api/portraits/men/11.jpg",
-          "quote": "AI非常复杂。它考虑身体类型、姿态甚至面料属性。真正令人印象深刻的技术。"
-        },
-        "item-11": {
-          "name": "安娜·科瓦尔斯基",
-          "role": "时装学生",
-          "image": "https://randomuser.me/api/portraits/women/12.jpg",
-          "quote": "独立沉思录帮助我比任何教科书都更好地理解合身和比例。这是一个宝贵的学习工具。"
-        },
-        "item-12": {
-          "name": "托尼·斯塔克",
-          "role": "零售创新总监",
-          "image": "https://randomuser.me/api/portraits/men/13.jpg",
-          "quote": "独立沉思录正在为虚拟试衣技术设定标准。AI的准确性和速度在行业中无与伦比。"
-        }
-      }
-    },
-    "stats": {
-      "title": "独立沉思录影响力",
-      "subtitle": "用AI革新时尚",
-      "description": "看看独立沉思录如何用尖端AI技术改变时尚行业",
-      "items": {
-        "item-1": {
-          "title": "完成的AI试衣次数"
-        },
-        "item-2": {
-          "title": "满意的客户"
-        },
-        "item-3": {
-          "title": "集成的时尚品牌"
-        }
-      }
-    },
     "calltoaction": {
       "title": "让你的 AI 拥有我的知识库",
       "description": "724 篇小红书官方经营知识，每日更新。开通会员拿到 API Key，一条命令装进你自己的 AI。",
       "primaryButton": "开通会员",
       "secondaryButton": "阅读博客"
     }
-  },
-  "AITextPage": {
-    "title": "AI风格助手",
-    "description": "获得AI驱动的个性化时尚建议和造型技巧",
-    "content": "即将推出 - AI驱动的风格推荐"
-  },
-  "AIImagePage": {
-    "title": "虚拟试衣",
-    "description": "通过我们先进的AI虚拟试衣技术看看任何服装在您身上的效果",
-    "content": "体验在线购物的未来"
-  },
-  "AIVideoPage": {
-    "title": "3D时尚建模",
-    "description": "通过我们的3D AI建模技术观看服装栩栩如生的效果",
-    "content": "革命性的3D时尚可视化"
-  },
-  "AIAudioPage": {
-    "title": "语音风格助手",
-    "description": "通过我们AI驱动的语音助手获得时尚建议",
-    "content": "与您的私人AI造型师对话"
   }
 }

@@ -41,8 +41,8 @@
   },
   "PricingPage": {
     "title": "Pricing",
-    "description": "Choose the perfect plan for your virtual try-on needs",
-    "subtitle": "Choose the perfect plan for your virtual try-on needs",
+    "description": "Choose the membership plan that works for you",
+    "subtitle": "Choose the membership plan that works for you",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "PricingCard": {
@@ -93,16 +93,16 @@
       "limits": {}
     },
     "lifetime": {
-      "name": "Lifetime",
-      "description": "One-time payment for unlimited AI try-ons",
+      "name": "Annual Membership",
+      "description": "Best value for long-term members",
       "features": {
-        "feature-1": "All Pro features",
-        "feature-2": "Unlimited AI processing",
-        "feature-3": "Priority customer support",
-        "feature-4": "Early access to new features",
-        "feature-5": "API access for developers",
-        "feature-6": "White-label solutions",
-        "feature-7": "Lifetime updates"
+        "feature-1": "Unlimited access to all articles",
+        "feature-2": "Unlimited knowledge-base Q&A",
+        "feature-3": "Priority access to the strongest AI models",
+        "feature-4": "Unlimited file downloads",
+        "feature-5": "Offline save and export",
+        "feature-6": "Member badge",
+        "feature-7": "Early access to new features"
       }
     }
   },
@@ -118,33 +118,12 @@
   },
   "AboutPage": {
     "title": "About",
-    "description": "Independent Meditations is revolutionizing the fashion industry with cutting-edge AI technology that allows you to virtually try on clothes before purchasing.",
+    "description": "Independent Meditations shares practical knowledge and AI-assisted tools for independent workers.",
     "authorName": "Independent Meditations",
-    "authorBio": "AI Virtual Try-On Platform",
-    "introduction": "👋 Welcome to Independent Meditations! We're revolutionizing online shopping with AI-powered virtual try-on technology. See how any outfit looks on you before you buy. Have questions? We'd love to help!",
+    "authorBio": "Knowledge and AI Q&A platform",
+    "introduction": "👋 Welcome to Independent Meditations. We publish useful knowledge for independent workers and make it available to your AI through our knowledge base. Members get full article access, knowledge-base Q&A, and downloadable components.",
     "talkWithMe": "Contact Us",
     "followMe": "Follow us on X"
-  },
-  "OutfitPage": {
-    "title": "AI Virtual Try-On",
-    "description": "Discover your perfect style with AI-powered virtual try-on technology",
-    "comingSoon": "Experience the future of fashion with our AI virtual try-on platform",
-    "filters": {
-      "all": "All",
-      "male": "Men",
-      "female": "Women"
-    },
-    "buttons": {
-      "buyNow": "Buy Now",
-      "tryOn": "Try On",
-      "viewOutfit": "View Outfit"
-    },
-    "loading": "Loading outfits...",
-    "noResults": "No outfits found",
-    "modal": {
-      "close": "Close",
-      "outfitDetails": "Outfit Details"
-    }
   },
   "ChangelogPage": {
     "title": "Changelog",
@@ -153,11 +132,11 @@
   },
   "ContactPage": {
     "title": "Contact",
-    "description": "Get in touch with our AI fashion experts",
-    "subtitle": "Get in touch with our AI fashion experts",
+    "description": "Contact the Independent Meditations team",
+    "subtitle": "Questions about our content, knowledge base, or membership? Get in touch.",
     "form": {
       "title": "Contact Independent Meditations",
-      "description": "Have questions about our AI virtual try-on technology? Our team is here to help",
+      "description": "Questions about Independent Meditations content, knowledge base, or membership? Send us a message.",
       "name": "Name",
       "email": "Email",
       "message": "Message",
@@ -178,7 +157,7 @@
     "subtitle": "Join our waitlist for early access to Independent Meditations",
     "form": {
       "title": "Join Independent Meditations Waitlist",
-      "description": "Be the first to experience our revolutionary AI virtual try-on technology",
+      "description": "Be the first to try upcoming Independent Meditations features",
       "email": "Email",
       "subscribe": "Join Waitlist",
       "subscribing": "Joining...",
@@ -190,7 +169,7 @@
   "Newsletter": {
     "title": "Newsletter",
     "subtitle": "Stay updated with Independent Meditations",
-    "description": "Subscribe to get the latest updates on AI fashion technology and new features",
+    "description": "Subscribe for new articles, knowledge-base updates, and product news",
     "form": {
       "email": "Email",
       "subscribe": "Subscribe",
@@ -206,7 +185,7 @@
       "welcomeBack": "Welcome back to Independent Meditations",
       "signUpHint": "New to Independent Meditations? Sign up",
       "signInWithGoogle": "Sign In with Google",
-      "loginWithGoogle": "Sign in with Google to start your AI fashion journey",
+      "loginWithGoogle": "Sign in to Independent Meditations with Google",
       "or": "Or continue with",
       "orContinueWith": "Or",
       "email": "Email",
@@ -333,40 +312,16 @@
       "whiteboard": {
         "title": "Whiteboard"
       },
-      "outfit": {
-        "title": "Try Now"
-      },
-      "ai": {
-        "title": "AI Features",
-        "items": {
-          "text": {
-            "title": "AI Styling",
-            "description": "Get personalized style recommendations powered by AI"
-          },
-          "image": {
-            "title": "Virtual Try-On",
-            "description": "See how clothes look on you with AI-powered virtual fitting"
-          },
-          "video": {
-            "title": "3D Modeling",
-            "description": "Experience clothes in stunning 3D with AI body modeling"
-          },
-          "audio": {
-            "title": "Voice Assistant",
-            "description": "Get style advice through our AI voice assistant"
-          }
-        }
-      },
       "pages": {
         "title": "Pages",
         "items": {
           "about": {
             "title": "About",
-            "description": "Learn about our AI fashion technology and mission"
+            "description": "Learn about the content, products, and mission behind Independent Meditations"
           },
           "contact": {
             "title": "Contact",
-            "description": "Get in touch with our AI fashion experts"
+            "description": "Contact the Independent Meditations team"
           },
           "waitlist": {
             "title": "Waitlist",
@@ -378,7 +333,7 @@
           },
           "roadmap": {
             "title": "Roadmap",
-            "description": "Explore our future AI fashion innovations"
+            "description": "See what is planned next for Independent Meditations"
           },
           "cookiePolicy": {
             "title": "Cookie Policy",
@@ -455,7 +410,7 @@
       }
     },
     "footer": {
-      "tagline": "Revolutionize your style with AI-powered virtual try-on technology",
+      "tagline": "Articles as a Service: written for people, callable by your AI",
       "product": {
         "title": "Product",
         "items": {
@@ -467,7 +422,7 @@
       "resources": {
         "title": "Resources",
         "items": {
-          "blog": "AI Fashion Blog",
+          "blog": "Independent Meditations Blog",
           "docs": "API Documentation",
           "changelog": "What's New",
           "roadmap": "AI Roadmap"
@@ -521,109 +476,6 @@
     "renewNow": "Renew Now",
     "viewAllPlans": "View All Plans",
     "renewalReminder": "Your subscription is expiring soon. Renew early to ensure uninterrupted access to premium content.",
-    "fittingRoom": {
-      "title": "AI Fitting Room",
-      "selectModel": "Select Model",
-      "addModel": "Add Model",
-      "clothingType": "Clothing Type",
-      "topAndBottom": "Top & Bottom",
-      "onepiece": "One-piece",
-      "uploadTop": "Upload Top",
-      "uploadBottom": "Upload Bottom",
-      "uploadClothing": "Upload Clothing",
-      "startTryOn": "Start Try-On",
-      "modelSelection": "Model Selection",
-      "tryingOn": "Trying on clothes...",
-      "uploadModelImage": "Upload Model Image",
-      "modelName": "Model Name",
-      "height": "Height",
-      "weight": "Weight",
-      "bodyType": "Body Type",
-      "style": "Style",
-      "addNewModel": "Add New Model",
-      "cancel": "Cancel",
-      "confirm": "Confirm",
-      "uploading": "Uploading...",
-      "modelAdded": "Model added successfully",
-      "modelAddFailed": "Failed to add model",
-      "dragDropImage": "Drag and drop image here or click to browse",
-      "imageRequired": "Image is required",
-      "nameRequired": "Name is required",
-      "heightRequired": "Height is required",
-      "weightRequired": "Weight is required",
-      "bodyTypeRequired": "Body type is required",
-      "styleRequired": "Style is required",
-      "uploadSuccess": "Upload successful",
-      "uploadFailed": "Upload failed",
-      "uploadInProgress": "Uploading...",
-      "selectModelFirst": "Please select a model first",
-      "uploadClothingFirst": "Please upload the required clothing images",
-      "tryOnSuccess": "Try-on completed successfully!",
-      "fillAllFields": "Please fill in all required fields and upload model image",
-      "clickToReupload": "Click to re-upload",
-      "loadingModels": "Loading models...",
-      "customModel": "Custom",
-      "cannotDeleteDefault": "Cannot delete default model",
-      "modelDeletedSuccess": "Model deleted successfully",
-      "modelDeleteFailed": "Failed to delete model",
-      "aiTryOnResult": "AI Try-On Result",
-      "aiTryOnComplete": "✨ AI Try-On Complete",
-      "tryOnEffectGenerated": "Try-on effect generated",
-      "download": "Download",
-      "share": "Share",
-      "retryTryOn": "Retry Try-On",
-      "selectModelAndClothing": "Select model and clothing to start AI try-on",
-      "taskQueued": "Task queued...",
-      "preprocessing": "Pre-processing...",
-      "aiGenerating": "AI generating try-on...",
-      "postprocessing": "Post-processing...",
-      "tryOnCompleted": "Try-on completed",
-      "tryOnFailed": "Try-on failed",
-      "taskCanceled": "Task canceled",
-      "unknownStatus": "Unknown status",
-      "estimatedTime": "Estimated time: 30-60 seconds",
-      "queuedStatus": "Queued",
-      "processingStatus": "Processing",
-      "generatingStatus": "Generating",
-      "completedStatus": "Completed",
-      "tryOnFailedMsg": "Generation failed, please try again",
-      "retryAttempt": "Retry",
-      "subscriptionRequired": "Premium Feature",
-      "subscriptionRequiredMessage": "AI virtual try-on is available for paid users only",
-      "subscriptionRequiredDescription": "Upgrade to Pro or Lifetime to unlock unlimited AI virtual try-on features",
-      "upgradeToPro": "Upgrade Plan",
-      "freeTrial": "Free Trial",
-      "subscriptionExpired": "Subscription Expired",
-      "subscriptionExpiredMessage": "Your subscription has expired, please renew to continue using AI virtual try-on",
-      "renewSubscription": "Renew Subscription",
-      "premiumFeature": "Premium Feature",
-      "preloaded": "Preloaded",
-      "fromOutfitPreset": "From outfit preset",
-      "outfitPreloaded": "Outfit preloaded",
-      "onePiece": "One-piece",
-      "topAndBottomLoaded": "Top & bottom auto-loaded",
-      "clear": "Clear",
-      "clickToSelectModel": "Click to select AI try-on model",
-      "autoSelectedByOutfit": "Auto-selected based on outfit",
-      "paidFeature": "Paid Feature",
-      "checkingSubscription": "Checking subscription...",
-      "goBack": "Go Back",
-      "lifetimeMember": "Lifetime Member",
-      "subscriptionActive": "Subscription Active",
-      "statusActive": "Active",
-      "statusTrialing": "Trial",
-      "aiVirtualTryonPremium": "AI Virtual Try-On - Premium Feature",
-      "upgradeNow": "Upgrade Now",
-      "topAndBottomType": "Top & Bottom",
-      "onepieceType": "One-piece",
-      "loadingTryOnHistory": "Loading try-on history...",
-      "noTryOnHistory": "No try-on history",
-      "startFirstTryOn": "Start your first AI try-on experience!",
-      "tryOnHistory": "Try-On History",
-      "yourTryOnRecords": "Your AI try-on records",
-      "records": "records",
-      "refresh": "Refresh"
-    },
     "admin": {
       "title": "Admin",
       "users": {
@@ -687,8 +539,8 @@
         "description": "Manage your Independent Meditations account information",
         "avatar": {
           "title": "Avatar",
-          "description": "Upload your photo for better AI fitting accuracy",
-          "recommendation": "A clear photo helps our AI provide better recommendations",
+          "description": "Upload an avatar to complete your profile",
+          "recommendation": "A clear avatar makes your account easier to recognize",
           "uploading": "Uploading...",
           "uploadAvatar": "Upload Avatar",
           "success": "Avatar updated successfully",
@@ -733,7 +585,7 @@
         "price": "Price:",
         "nextBillingDate": "Next billing date:",
         "trialEnds": "Trial ends:",
-        "freePlanMessage": "You're on the free plan with limited AI try-ons",
+        "freePlanMessage": "You are on the free plan with limited access",
         "lifetimeMessage": "You have lifetime access to all Independent Meditations features",
         "manageSubscription": "Manage Subscription",
         "manageBilling": "Manage Billing",
@@ -746,7 +598,7 @@
         "description": "Manage your Independent Meditations notification preferences",
         "newsletter": {
           "title": "Newsletter Subscription",
-          "description": "Get updates on new AI features and fashion trends",
+          "description": "Get new articles, knowledge-base updates, and product news",
           "label": "Subscribe to newsletter",
           "hint": "You can change your subscription preferences at any time",
           "emailRequired": "Email is required to subscribe",
@@ -798,7 +650,7 @@
     },
     "upgrade": {
       "title": "Upgrade",
-      "description": "Upgrade to Pro for unlimited AI try-ons and advanced features",
+      "description": "Upgrade to unlock the full knowledge base, premium articles, and member components",
       "button": "Upgrade to Pro"
     }
   },
@@ -809,7 +661,7 @@
     },
     "verifyEmail": {
       "title": "Welcome to Independent Meditations, {name}!",
-      "body": "Please click the link below to verify your email and start your AI fashion journey.",
+      "body": "Please click the link below to verify your email and start using Independent Meditations.",
       "confirmEmail": "Verify Email",
       "subject": "Verify your Independent Meditations account"
     },
@@ -820,7 +672,7 @@
       "subject": "Reset your Independent Meditations password"
     },
     "subscribeNewsletter": {
-      "body": "Thank you for subscribing to Independent Meditations updates! We'll keep you informed about the latest AI fashion technology and new features.",
+      "body": "Thanks for subscribing to Independent Meditations. We will send you new articles, knowledge-base updates, and product news.",
       "subject": "Welcome to Independent Meditations Newsletter"
     },
     "contactMessage": {
@@ -874,231 +726,59 @@
       "secondary": "See membership"
     },
     "logocloud": {
-      "title": "Trusted by leading fashion brands worldwide"
-    },
-    "integration": {
-      "title": "AI Integrations",
-      "subtitle": "Powered by advanced AI technology",
-      "description": "Independent Meditations integrates with cutting-edge AI models and fashion platforms to provide the most accurate virtual try-on experience.",
-      "learnMore": "Learn More",
-      "items": {
-        "item-1": {
-          "title": "Advanced Computer Vision",
-          "description": "State-of-the-art body detection and pose estimation for accurate fitting."
-        },
-        "item-2": {
-          "title": "3D Body Modeling",
-          "description": "Create realistic 3D body models for precise garment visualization."
-        },
-        "item-3": {
-          "title": "AI Style Assistant",
-          "description": "Get personalized style recommendations based on your preferences."
-        },
-        "item-4": {
-          "title": "Real-time Processing",
-          "description": "Instant try-on results with our optimized AI inference engine."
-        },
-        "item-5": {
-          "title": "Fashion Database",
-          "description": "Access millions of clothing items with AI-powered search and matching."
-        },
-        "item-6": {
-          "title": "Trend Analysis",
-          "description": "AI-powered fashion trend analysis and personalized recommendations."
-        }
-      }
-    },
-    "integration2": {
-      "title": "Seamless AI Fashion Integration",
-      "description": "Connect with your favorite fashion retailers and get AI-powered styling recommendations across all platforms.",
-      "primaryButton": "Try Now",
-      "secondaryButton": "Watch Demo"
+      "title": "Independent living, independent work, independent thinking"
     },
     "features": {
-      "title": "AI-Powered Features",
-      "subtitle": "Revolutionary virtual try-on technology",
-      "description": "Experience the future of online shopping with our advanced AI features designed to transform how you discover and try on clothes.",
+      "title": "AI-Powered Knowledge",
+      "subtitle": "Articles as a Service",
+      "description": "Turn reading into an interactive knowledge experience with searchable articles and AI-assisted exploration.",
       "items": {
         "item-1": {
-          "title": "Virtual Try-On Technology",
-          "description": "See how any outfit looks on you with our advanced AI that creates realistic virtual fittings using just your photo, eliminating guesswork from online shopping."
+          "title": "Knowledge-Base Q&A",
+          "description": "Ask questions across curated source material and get answers grounded in the actual content."
         },
         "item-2": {
-          "title": "Smart Size Recommendations",
-          "description": "Get accurate size suggestions powered by AI analysis of your body measurements and fit preferences, reducing returns and ensuring perfect fits every time."
+          "title": "Content Exploration",
+          "description": "Explore related ideas, follow useful connections, and go deeper with an AI assistant."
         },
         "item-3": {
-          "title": "Style Matching AI",
-          "description": "Discover clothes that match your personal style with our AI that learns your preferences and suggests outfits tailored to your taste and lifestyle."
+          "title": "Document Downloads",
+          "description": "Members can download supported content for offline reading and reuse."
         },
         "item-4": {
-          "title": "Real-time Outfit Combinations",
-          "description": "Mix and match different clothing items instantly with AI-powered outfit generation that creates stunning combinations you never thought of."
-        }
-      }
-    },
-    "features2": {
-      "title": "Advanced AI Capabilities",
-      "subtitle": "Next-generation fashion technology",
-      "description": "Discover the powerful AI features that make Independent Meditations the most advanced virtual try-on platform",
-      "feature-1": "AI Body Analysis & Measurement",
-      "feature-2": "Smart Fabric Simulation",
-      "feature-3": "Personalized Style AI",
-      "feature-4": "Real-time Fashion Trends"
-    },
-    "features3": {
-      "title": "Core AI Features",
-      "subtitle": "Cutting-edge technology at your fingertips",
-      "description": "Explore the advanced AI capabilities that power Independent Meditations's virtual try-on experience",
-      "items": {
-        "item-1": {
-          "title": "Lightning-Fast AI Processing",
-          "description": "Get instant try-on results with our optimized AI models that process images in real-time"
-        },
-        "item-2": {
-          "title": "Advanced Body Recognition",
-          "description": "Precise body detection and pose estimation for accurate virtual clothing placement"
-        },
-        "item-3": {
-          "title": "Smart Style Suggestions",
-          "description": "AI-powered recommendations based on your style preferences and body type"
-        },
-        "item-4": {
-          "title": "Intelligent Fit Analysis",
-          "description": "Advanced algorithms that predict how clothes will fit based on your measurements"
-        },
-        "item-5": {
-          "title": "Realistic Fabric Rendering",
-          "description": "See how different fabrics drape and move with our physics-based AI simulation"
-        },
-        "item-6": {
-          "title": "Trend Prediction AI",
-          "description": "Stay ahead of fashion trends with our AI that analyzes global fashion data"
+          "title": "Multimodal Learning",
+          "description": "Learn through text, images, video, and interactive components in one place."
         }
       }
     },
     "pricing": {
-      "title": "AI Try-On Pricing",
+      "title": "Membership Plans",
       "subtitle": "Choose your plan",
-      "description": "Select the perfect plan for your virtual try-on needs"
+      "description": "Unlock the full knowledge base, premium articles, and member components"
     },
     "faqs": {
       "title": "Frequently Asked Questions",
       "subtitle": "Everything you need to know about Independent Meditations",
       "items": {
         "item-1": {
-          "question": "How accurate is the AI virtual try-on?",
-          "answer": "Our AI technology achieves 95% accuracy in virtual fitting by using advanced computer vision and 3D body modeling."
+          "question": "How does knowledge-base Q&A work?",
+          "answer": "Answers are generated from the actual source material in the knowledge base, with references provided when available."
         },
         "item-2": {
-          "question": "What types of clothing can I try on?",
-          "answer": "You can virtually try on shirts, dresses, pants, jackets, shoes, and accessories from our partner retailers."
+          "question": "What content is available?",
+          "answer": "The platform covers independent work, creator operations, personal growth, technology, and other practical topics, with new material added regularly."
         },
         "item-3": {
           "question": "Is my personal data secure?",
-          "answer": "Yes, we use enterprise-grade encryption and never store your photos longer than necessary for processing."
+          "answer": "Yes. We protect account data with standard security controls and handle personal information according to our privacy policy."
         },
         "item-4": {
           "question": "Can I use Independent Meditations on mobile devices?",
-          "answer": "Absolutely! Independent Meditations works seamlessly on all devices including smartphones, tablets, and desktops."
+          "answer": "Yes. The site works across phones, tablets, and desktop browsers."
         },
         "item-5": {
           "question": "Need more help?",
-          "answer": "Contact our AI fashion experts at support@outfitai.com for personalized assistance."
-        }
-      }
-    },
-    "testimonials": {
-      "title": "What Users Say About Independent Meditations",
-      "subtitle": "Real experiences from fashion enthusiasts",
-      "items": {
-        "item-1": {
-          "name": "Sarah Johnson",
-          "role": "Fashion Blogger",
-          "image": "https://randomuser.me/api/portraits/women/1.jpg",
-          "quote": "Independent Meditations completely changed how I shop online. The AI try-on is so accurate, I haven't returned a single item!"
-        },
-        "item-2": {
-          "name": "Michael Chen",
-          "role": "Style Influencer",
-          "image": "https://randomuser.me/api/portraits/men/6.jpg",
-          "quote": "The AI recommendations are spot-on. It's like having a personal stylist that knows exactly what looks good on me."
-        },
-        "item-3": {
-          "name": "Emma Rodriguez",
-          "role": "Fashion Designer",
-          "image": "https://randomuser.me/api/portraits/women/7.jpg",
-          "quote": "As a designer, I'm amazed by the accuracy of the fabric simulation. Independent Meditations is the future of fashion tech."
-        },
-        "item-4": {
-          "name": "David Kim",
-          "role": "E-commerce Manager",
-          "image": "https://randomuser.me/api/portraits/men/8.jpg",
-          "quote": "Our return rates dropped by 60% after integrating Independent Meditations. Customers love seeing how clothes actually look on them."
-        },
-        "item-5": {
-          "name": "Lisa Wang",
-          "role": "Personal Shopper",
-          "image": "https://randomuser.me/api/portraits/women/4.jpg",
-          "quote": "Independent Meditations helps me serve more clients by quickly showing them how different outfits will look. It's incredibly efficient."
-        },
-        "item-6": {
-          "name": "James Thompson",
-          "role": "Fashion Retailer",
-          "image": "https://randomuser.me/api/portraits/men/2.jpg",
-          "quote": "The AI technology is remarkable. Our customers are more confident in their purchases and satisfaction has increased dramatically."
-        },
-        "item-7": {
-          "name": "Sofia Martinez",
-          "role": "Style Consultant",
-          "image": "https://randomuser.me/api/portraits/women/5.jpg",
-          "quote": "The virtual try-on is so realistic, it feels like magic. Independent Meditations has revolutionized how I help clients choose outfits."
-        },
-        "item-8": {
-          "name": "Alex Turner",
-          "role": "Fashion Photographer",
-          "image": "https://randomuser.me/api/portraits/men/9.jpg",
-          "quote": "The 3D rendering quality is exceptional. Independent Meditations captures how fabric moves and fits better than anything I've seen."
-        },
-        "item-9": {
-          "name": "Rachel Green",
-          "role": "Boutique Owner",
-          "image": "https://randomuser.me/api/portraits/women/10.jpg",
-          "quote": "Since using Independent Meditations, my online sales have tripled. Customers love being able to try before they buy."
-        },
-        "item-10": {
-          "name": "Mark Davis",
-          "role": "Tech Enthusiast",
-          "image": "https://randomuser.me/api/portraits/men/11.jpg",
-          "quote": "The AI is incredibly sophisticated. It considers body type, posture, and even fabric properties. Truly impressive technology."
-        },
-        "item-11": {
-          "name": "Anna Kowalski",
-          "role": "Fashion Student",
-          "image": "https://randomuser.me/api/portraits/women/12.jpg",
-          "quote": "Independent Meditations helped me understand fit and proportion better than any textbook. It's an invaluable learning tool."
-        },
-        "item-12": {
-          "name": "Tony Stark",
-          "role": "Retail Innovation Director",
-          "image": "https://randomuser.me/api/portraits/men/13.jpg",
-          "quote": "Independent Meditations is setting the standard for virtual try-on technology. The AI accuracy and speed are unmatched in the industry."
-        }
-      }
-    },
-    "stats": {
-      "title": "Independent Meditations Impact",
-      "subtitle": "Revolutionizing fashion with AI",
-      "description": "See how Independent Meditations is transforming the fashion industry with cutting-edge AI technology",
-      "items": {
-        "item-1": {
-          "title": "AI Try-Ons Completed"
-        },
-        "item-2": {
-          "title": "Happy Customers"
-        },
-        "item-3": {
-          "title": "Fashion Brands Integrated"
+          "answer": "Contact us through the contact page and we will get back to you as soon as possible."
         }
       }
     },
@@ -1108,25 +788,5 @@
       "primaryButton": "Become a member",
       "secondaryButton": "Read the blog"
     }
-  },
-  "AITextPage": {
-    "title": "AI Style Assistant",
-    "description": "Get personalized fashion advice and styling tips powered by AI",
-    "content": "Coming soon - AI-powered style recommendations"
-  },
-  "AIImagePage": {
-    "title": "Virtual Try-On",
-    "description": "See how any outfit looks on you with our advanced AI virtual try-on technology",
-    "content": "Experience the future of online shopping"
-  },
-  "AIVideoPage": {
-    "title": "3D Fashion Modeling",
-    "description": "Watch clothes come to life with our 3D AI modeling technology",
-    "content": "Revolutionary 3D fashion visualization"
-  },
-  "AIAudioPage": {
-    "title": "Voice Style Assistant",
-    "description": "Get fashion advice through our AI-powered voice assistant",
-    "content": "Talk to your personal AI stylist"
   }
 }

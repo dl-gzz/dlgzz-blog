@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS "try_on_history" CASCADE;

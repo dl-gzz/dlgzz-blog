@@ -35,17 +35,6 @@
 - 文件：`docs/templates/IMAGE_COMPONENT_CHECKLIST_TEMPLATE.md`
 - 用途：开发新图片组件时直接复制填空，避免漏掉返回协议、参考图感应、安装链路和交付验收
 
-## 基础能力文档
-
-### 6. AI API 说明
-
-- 文件：`docs/ai-api.md`
-
-### 7. OSS 相关
-
-- 文件：`docs/aliyun-oss.md`
-- 文件：`docs/oss-setup.md`
-
 ## 建议阅读顺序
 
 如果你要上架一个新的图片组件，推荐按这个顺序：
