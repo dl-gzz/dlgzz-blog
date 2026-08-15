@@ -1,10 +1,10 @@
 import { requireHermesAdmin, requireSameOrigin } from '@/lib/api-security';
 import {
-  issueOneWorkActivationCode,
   OneWorkAccessError,
+  issueOneWorkActivationCode,
 } from '@/lib/onework-access';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
@@ -18,20 +18,28 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}));
   const requestedPackIds = Array.isArray(body?.packIds)
-    ? body.packIds.filter((value: unknown): value is string => typeof value === 'string')
+    ? body.packIds.filter(
+        (value: unknown): value is string => typeof value === 'string'
+      )
     : [];
-  const packIds = requestedPackIds.length > 0 ? requestedPackIds : [ALL_PACKS_GRANT];
-  const parsedExpiry = typeof body?.expiresAt === 'string' ? new Date(body.expiresAt) : null;
+  const packIds =
+    requestedPackIds.length > 0 ? requestedPackIds : [ALL_PACKS_GRANT];
+  const parsedExpiry =
+    typeof body?.expiresAt === 'string' ? new Date(body.expiresAt) : null;
 
   try {
     const result = await issueOneWorkActivationCode({
       packIds,
       trialDays: typeof body?.trialDays === 'number' ? body.trialDays : 30,
-      monthlyQuota: typeof body?.monthlyQuota === 'number' ? body.monthlyQuota : 1000,
-      maxRedemptions: typeof body?.maxRedemptions === 'number' ? body.maxRedemptions : 1,
+      monthlyQuota:
+        typeof body?.monthlyQuota === 'number' ? body.monthlyQuota : 1000,
+      maxRedemptions: 1,
       label: typeof body?.label === 'string' ? body.label : '',
       source: typeof body?.source === 'string' ? body.source : 'manual',
-      expiresAt: parsedExpiry && !Number.isNaN(parsedExpiry.getTime()) ? parsedExpiry : null,
+      expiresAt:
+        parsedExpiry && !Number.isNaN(parsedExpiry.getTime())
+          ? parsedExpiry
+          : null,
       createdByUserId: auth.session.user.id,
     });
     return NextResponse.json({

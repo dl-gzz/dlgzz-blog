@@ -694,6 +694,19 @@ export const apiUsageEvent = pgTable("api_usage_event", {
 	index('api_usage_event_pack_idx').on(table.knowledgePackId),
 ]);
 
+/** 不计入月额度的公开 API 固定窗口限流；每个账号/能力只保留一行。 */
+export const apiRateLimitBucket = pgTable("api_rate_limit_bucket", {
+	id: text('id').primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	kind: text('kind').notNull(),
+	windowStart: timestamp('window_start').notNull(),
+	requestCount: integer('request_count').notNull().default(0),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('api_rate_limit_bucket_user_kind_unique_idx').on(table.userId, table.kind),
+	index('api_rate_limit_bucket_updated_idx').on(table.updatedAt),
+]);
+
 // ─────────────────────────────────────────────────────────
 // OneWorkOS 会员授权层：兑换码 → 用户权益 → 设备 Key
 // ─────────────────────────────────────────────────────────
@@ -745,6 +758,26 @@ export const oneworkEntitlement = pgTable("onework_entitlement", {
 	index('onework_entitlement_expires_idx').on(table.expiresAt),
 ]);
 
+/**
+ * 不可变的权益发放账本。聚合权益行会随续费更新，不能单独承担
+ * 支付回调幂等；这张表确保同一订单对同一知识包只发放一次。
+ */
+export const oneworkEntitlementGrant = pgTable("onework_entitlement_grant", {
+	id: text("id").primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	knowledgePackId: text('knowledge_pack_id').notNull(),
+	externalOrderId: text('external_order_id').notNull(),
+	source: text('source').notNull().default('payment'),
+	grantedAt: timestamp('granted_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_entitlement_grant_order_pack_unique_idx').on(
+		table.userId,
+		table.externalOrderId,
+		table.knowledgePackId,
+	),
+	index('onework_entitlement_grant_user_created_idx').on(table.userId, table.grantedAt),
+]);
+
 /** 一台电脑/运行环境对应一把 Key，撤销设备不会影响用户其他设备。 */
 export const oneworkDevice = pgTable("onework_device", {
 	id: text("id").primaryKey(),
@@ -760,6 +793,7 @@ export const oneworkDevice = pgTable("onework_device", {
 }, (table) => [
 	index('onework_device_hash_idx').on(table.deviceHash),
 	index('onework_device_user_status_idx').on(table.userId, table.status),
+	index('onework_device_api_key_idx').on(table.apiKeyId),
 	uniqueIndex('onework_device_user_hash_unique_idx').on(table.userId, table.deviceHash),
 ]);
 

@@ -21,6 +21,14 @@ const DENY_MESSAGE: Record<string, { status: number; error: string }> = {
   },
   invalid: { status: 401, error: 'API Key 无效' },
   revoked: { status: 403, error: 'API Key 已被吊销' },
+  entitlement_expired: {
+    status: 403,
+    error: 'OneWorkOS 权益已过期，请续费后重试',
+  },
+  device_mismatch: {
+    status: 403,
+    error: '这把 Key 不属于当前电脑，请在 OneWorkOS 网站重新生成安装授权',
+  },
   quota_exceeded: { status: 429, error: '本月调用额度已用完' },
 };
 
@@ -92,9 +100,13 @@ function isInternalOrigin(value: string) {
 
 function getAssetProxyBaseUrl() {
   const configuredOrigin =
-    process.env.KNOWLEDGE_PUBLIC_ORIGIN || process.env.NEXT_PUBLIC_BASE_URL || getBaseUrl();
+    process.env.KNOWLEDGE_PUBLIC_ORIGIN ||
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    getBaseUrl();
   if (configuredOrigin && !isInternalOrigin(configuredOrigin)) {
-    return new URL('/api/knowledge/assets', configuredOrigin).toString().replace(/\/$/, '');
+    return new URL('/api/knowledge/assets', configuredOrigin)
+      .toString()
+      .replace(/\/$/, '');
   }
 
   // Zeabur/容器内请求可能只有 0.0.0.0:8080；对外 Skill 必须拿到可渲染的公开域名。
@@ -122,7 +134,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const verified = await verifyApiKey(request.headers.get('authorization'));
+  let verified: Awaited<ReturnType<typeof verifyApiKey>>;
+  try {
+    verified = await verifyApiKey(
+      request.headers.get('authorization'),
+      request.headers.get('x-onework-device-id')
+    );
+  } catch (error) {
+    console.error('[knowledge/query] authorization unavailable', error);
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'AUTH_SERVICE_UNAVAILABLE',
+        error: '授权服务暂时不可用，请稍后重试',
+      },
+      { status: 503 }
+    );
+  }
   if (!verified.ok) {
     const deny = DENY_MESSAGE[verified.reason];
     // 未知 Key 无法归属，只在能定位到 Key 时才计 denied
@@ -177,7 +205,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const hasAccess = await keyHasPackAccess(verified.key.id, packId);
+  let hasAccess: boolean;
+  try {
+    hasAccess = await keyHasPackAccess(verified.key.id, packId);
+  } catch (error) {
+    console.error('[knowledge/query] entitlement lookup unavailable', error);
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'AUTH_SERVICE_UNAVAILABLE',
+        error: '权益校验暂时不可用，请稍后重试',
+      },
+      { status: 503 }
+    );
+  }
   if (!hasAccess) {
     await recordUsage({
       apiKeyId: verified.key.id,
@@ -198,13 +239,27 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const reservation = await reserveApiKeyUsage({
-    apiKeyId: verified.key.id,
-    userId: verified.key.userId,
-    kind: 'knowledge_query',
-    knowledgePackId: packId,
-    query,
-  });
+  let reservation: Awaited<ReturnType<typeof reserveApiKeyUsage>>;
+  try {
+    reservation = await reserveApiKeyUsage({
+      apiKeyId: verified.key.id,
+      userId: verified.key.userId,
+      monthlyQuota: verified.key.monthlyQuota,
+      kind: 'knowledge_query',
+      knowledgePackId: packId,
+      query,
+    });
+  } catch (error) {
+    console.error('[knowledge/query] metering unavailable', error);
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'METERING_UNAVAILABLE',
+        error: '用量校验暂时不可用，请稍后重试',
+      },
+      { status: 503 }
+    );
+  }
   if (!reservation) {
     return NextResponse.json(
       { success: false, code: 'QUOTA_EXCEEDED', error: '本月调用额度已用完' },

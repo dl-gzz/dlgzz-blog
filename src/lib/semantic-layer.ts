@@ -572,7 +572,9 @@ function compileQuery(
       sql`, `
     )}`;
   }
-  statement = sql`${statement} limit ${limit}`;
+  // Fetch one extra row so callers can report truncation without returning
+  // more than the governed model limit to the client.
+  statement = sql`${statement} limit ${limit + 1}`;
 
   const normalizedRequest = {
     ...query,
@@ -771,6 +773,7 @@ export async function executeSemanticQuery(
       columns: compiled.columns,
       rows: null,
       rowCount: 0,
+      truncated: false,
       durationMs,
       queryHash: hash,
       resolvedTimeRange: compiled.timeRange
@@ -795,7 +798,10 @@ export async function executeSemanticQuery(
       );
       return transaction.execute(compiled.statement);
     });
-    const rows = Array.from(result as Iterable<Record<string, unknown>>);
+    const fetchedRows = Array.from(result as Iterable<Record<string, unknown>>);
+    const requestedLimit = compiled.normalizedRequest.limit;
+    const truncated = fetchedRows.length > requestedLimit;
+    const rows = truncated ? fetchedRows.slice(0, requestedLimit) : fetchedRows;
     const durationMs = Date.now() - startedAt;
     await db
       .update(semanticQueryRun)
@@ -820,6 +826,7 @@ export async function executeSemanticQuery(
       rows,
       columns: compiled.columns,
       rowCount: rows.length,
+      truncated,
       durationMs,
       queryHash: hash,
       resolvedTimeRange: compiled.timeRange

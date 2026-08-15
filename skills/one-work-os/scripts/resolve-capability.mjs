@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
-import { getOneWorkApiKey } from './onework-credentials.mjs';
+import {
+  getOneWorkAuthHeaders,
+  oneWorkApiErrorMessage,
+} from './onework-credentials.mjs';
 
 const DEFAULT_ORIGIN = 'https://www.dlgzz.com';
 const ENDPOINT_PATH = '/api/capabilities/resolve';
@@ -20,6 +23,7 @@ function usage(stream = process.stderr) {
       '',
       'Environment:',
       '  ONEWORK_API_KEY        Required bearer key',
+      '  ONEWORK_DEVICE_ID      Required bound device ID',
       '  ONEWORK_CAPABILITY_URL Optional full resolver endpoint',
       '  ONEWORK_API_URL        Optional OneWorkOS URL; its origin is used',
       '',
@@ -103,6 +107,12 @@ function resolveEndpoint() {
   if (!['http:', 'https:'].includes(parsed.protocol)) {
     throw new Error('OneWorkOS endpoint must use HTTP or HTTPS');
   }
+  if (
+    parsed.protocol === 'http:' &&
+    !['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname)
+  ) {
+    throw new Error('远程 OneWorkOS endpoint 必须使用 HTTPS');
+  }
   return explicit
     ? parsed.toString()
     : new URL(ENDPOINT_PATH, parsed.origin).toString();
@@ -161,6 +171,23 @@ async function readResponse(response) {
   }
 }
 
+async function fetchWithTimeout(url, init, timeoutMs = 15_000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new Error(
+        `OneWorkOS 能力路由超时（${Math.round(timeoutMs / 1000)} 秒），请检查网络后重试。`
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
@@ -168,15 +195,9 @@ async function main() {
     return;
   }
 
-  const apiKey = getOneWorkApiKey();
-  if (!apiKey) throw new Error('ONEWORK_API_KEY is not set');
-
-  const response = await fetch(resolveEndpoint(), {
+  const response = await fetchWithTimeout(resolveEndpoint(), {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: getOneWorkAuthHeaders(),
     body: JSON.stringify({
       goal: options.goal,
       ...(options.intentHint ? { intentHint: options.intentHint } : {}),
@@ -195,7 +216,7 @@ async function main() {
       );
     }
     const code = data?.code ? ` ${data.code}` : '';
-    const message = data?.error || `HTTP ${response.status}`;
+    const message = oneWorkApiErrorMessage(data, response.status);
     throw new Error(`OneWorkOS API${code}: ${message}`);
   }
   if (!data?.success || !data.resolution) {

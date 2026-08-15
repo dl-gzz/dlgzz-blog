@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { websiteConfig } from '@/config/website';
 import { authClient } from '@/lib/auth-client';
-import { DEFAULT_LOGIN_REDIRECT, Routes } from '@/routes';
+import { Routes } from '@/routes';
 import { Loader2Icon } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -24,9 +24,10 @@ export const RegisterForm = ({
 }: RegisterFormProps) => {
   const t = useTranslations('AuthPage.register');
   const searchParams = useSearchParams();
-  const paramCallbackUrl = searchParams.get('callbackUrl');
-  const locale = useLocale();
-  const callbackUrl = propCallbackUrl || paramCallbackUrl || DEFAULT_LOGIN_REDIRECT;
+  const paramCallbackUrl =
+    searchParams.get('callbackUrl') || searchParams.get('callbackURL');
+  const callbackUrl = propCallbackUrl || paramCallbackUrl || Routes.OneWork;
+  const loginHref = `${Routes.Login}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -94,13 +95,15 @@ export const RegisterForm = ({
   };
 
   const showEmailRegister = websiteConfig.auth.enableEmailLogin !== false;
-  const showSocialLogin = websiteConfig.auth.enableGoogleLogin || websiteConfig.auth.enableGithubLogin;
+  const showSocialLogin =
+    websiteConfig.auth.enableGoogleLogin ||
+    websiteConfig.auth.enableGithubLogin;
 
   return (
     <AuthCard
       headerLabel={t('createAccount')}
       bottomButtonLabel={t('signInHint')}
-      bottomButtonHref={`${Routes.Login}`}
+      bottomButtonHref={loginHref}
     >
       <div className="space-y-6">
         {showEmailRegister && (
@@ -143,11 +146,15 @@ export const RegisterForm = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">{t('confirmPassword') || '确认密码'}</Label>
+              <Label htmlFor="confirmPassword">
+                {t('confirmPassword') || '确认密码'}
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder={t('confirmPasswordPlaceholder') || '请再次输入密码'}
+                placeholder={
+                  t('confirmPasswordPlaceholder') || '请再次输入密码'
+                }
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -156,7 +163,9 @@ export const RegisterForm = ({
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2Icon className="mr-2 size-4 animate-spin" />}
+              {isLoading && (
+                <Loader2Icon className="mr-2 size-4 animate-spin" />
+              )}
               {t('signUp') || '注册'}
             </Button>
           </form>

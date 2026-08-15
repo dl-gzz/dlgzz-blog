@@ -7,6 +7,13 @@
 .git
 .wrangler
 .dockerignore
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*AccessKey*.csv
+*SecretKey*.csv
 node_modules
 **/node_modules
 Dockerfile

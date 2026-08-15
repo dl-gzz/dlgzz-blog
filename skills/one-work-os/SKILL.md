@@ -7,6 +7,16 @@ description: Orchestrate OneWorkOS capabilities across WorkBuddy and Xiaohongshu
 
 Act as the control plane. Use OneWorkOS memory and semantic services for governed evidence. Use only the user's available model, Skills, connectors, and tools for reasoning or execution.
 
+## Managed updates
+
+Before the first governed OneWorkOS call in a conversation, run `scripts/update-onework-skill.mjs --json`. The updater caches a successful check for 24 hours, so this does not download on every question. Handle its result as follows:
+
+- `updated: true`: tell the user that OneWorkOS was updated and WorkBuddy must be restarted, then stop this dispatch. Do not mix code from two Skill versions in one answer.
+- `updated: false`: continue normally.
+- update-check failure: state briefly that the update check failed and continue with the installed version. A release-service outage must not erase working local credentials or silently trigger a reinstall.
+
+Use `--force --check-only --json` only for explicit diagnostics. Updates are staged and verified by SHA256 before the current Skill is replaced; backups live in `~/.workbuddy/onework-backups`, outside the host's Skill scan directory.
+
 ## What `/api/capabilities/resolve` does
 
 `/api/capabilities/resolve` is the OneWorkOS **capability resolver**, not a knowledge query endpoint and not a browser executor. The Skill sends it a compact dispatch frame (`goal`, optional context, installed capability IDs, and whether execution was requested); it returns a JSON recommendation describing:
@@ -32,6 +42,7 @@ When this Skill is explicitly invoked (including `@skill:one-work-os`), do not a
 
 - For every WorkBuddy or Xiaohongshu product, UI, setup, or “下一步怎么做” question, **must** run `scripts/query-knowledge.mjs` with `--pack auto`, `includeAssets: true`, and `--json` before drafting the answer. The script routes WorkBuddy to `onework-workbuddy-v1`, Xiaohongshu store-entry questions to `xhs-open-shop-v1`, and other Xiaohongshu operation questions to `xhs-operations-v1`. The final answer must be grounded in the returned result, not a generic explanation.
 - If the returned result contains a relevant `assets[]` image, the final answer is incomplete unless it emits that exact returned `assets[].url` as a native image/media part, or as Markdown `![说明](url)` when the host only supports Markdown, followed immediately by `[图片未显示时查看原图](url)`.
+- If the returned result contains a relevant `resources[]` video, the final answer is incomplete unless it emits a named clickable link using that exact `resources[].url`. When `thumbnailUrl`, `coverUrl`, or `posterUrl` is present, make the returned cover a clickable link to the video as well. Do not claim inline playback unless the host actually rendered a trusted player.
 - If the returned result contains `sourceUrl`, the final answer must include a clickable source link. Do not replace it with a bare domain, a paraphrased “官方文档”, or a source invented from memory.
 - Text such as “点击添加 QQ 邮箱连接器” or “教程图资产” is not an image. Never treat a caption in `content` as proof that an image was returned or rendered.
 - If dispatch, asset retrieval, or host rendering fails, say exactly which stage failed and provide the returned fallback URL/source. Do not silently fall back to a generic answer or an unrelated illustration.
@@ -39,6 +50,7 @@ When this Skill is explicitly invoked (including `@skill:one-work-os`), do not a
 ## Orchestrate the goal
 
 1. Restate the outcome in one sentence. Extract the current state, constraints, requested action, and observable success signal. Inspect attached images with the host model and retain only task-relevant visible facts; never upload a live screenshot to OneWorkOS.
+   - For a short follow-up such as “下一步呢”“然后呢”“这个怎么做”, carry forward only the most recent explicit product and task as compact context. Pass that text with `query-knowledge.mjs --context "..."`; never default an ambiguous follow-up to WorkBuddy merely because it is the default pack.
 2. Build a dispatch frame: `goal`, optional `intentHint`, relevant context, installed capability IDs, whether execution was requested, risk, and success criteria.
 3. Resolve the route with `scripts/resolve-capability.mjs`. Read [dispatch-protocol.md](references/dispatch-protocol.md) before handling composite, mutating, external, or ambiguous work.
 4. Run the smallest sufficient route:
@@ -57,9 +69,9 @@ Use one installed Skill and choose the backend pack from the user's short reques
 
 - WorkBuddy terms such as `WorkBuddy`, 连接器, 完全访问, 自动化, PPT, 日报 → `onework-workbuddy-v1`.
 - Xiaohongshu store-entry terms such as `小红书开店`, 入驻, 个人店, 个体店, 店铺类型, 升级, 营业执照, 资质, 品牌授权, 审核 → `xhs-open-shop-v1`.
-- Other Xiaohongshu terms such as `小红书运营`, 笔记, 直播, 千帆, 推广, 广告, 流量, 账号 → `xhs-operations-v1`.
+- Xiaohongshu store-operation terms such as 发货, 物流, 运费模板, 订单, 售后, 商品, 上下架, 库存, 笔记, 直播, 千帆, 推广, 广告, 流量, 账号运营 → `xhs-operations-v1`. Operation intent takes precedence when the same sentence also mentions “开店” or “店铺”.
 
-Call the bundled query script with `--pack auto` for natural-language requests. Do not ask the customer to provide a pack ID. If the API says `PACK_NOT_LICENSED`, report that the pack is not yet enabled for this Skill instead of answering from memory.
+Call the bundled query script with `--pack auto` for natural-language requests. For short follow-ups, include the prior explicit topic with `--context`. Do not ask the customer to provide a pack ID. If the API says `PACK_NOT_LICENSED`, report that the pack is not yet enabled for this Skill instead of answering from memory.
 
 ## WorkBuddy knowledge and media
 
@@ -83,12 +95,21 @@ node "${CODEBUDDY_SKILL_DIR}/scripts/query-knowledge.mjs" \
 ```
 
 ```bash
+node "${CODEBUDDY_SKILL_DIR}/scripts/query-knowledge.mjs" \
+  --query "下一步呢" \
+  --context "小红书店铺设置发货" \
+  --pack auto --limit 6 --json
+```
+
+```bash
 node "${CODEBUDDY_SKILL_DIR}/scripts/query-analytics.mjs" \
   --request '{"model":"content_performance","metrics":["article_views"],"dimensions":["content_category"],"timeRange":{"preset":"last_30_days","timezone":"Asia/Shanghai"},"limit":10}' \
   --json
 ```
 
-The installer stores the user's credential at `~/.workbuddy/one-work-os.local.env` (Windows: `%USERPROFILE%\\.workbuddy\\one-work-os.local.env`), and the bundled scripts load it automatically. `ONEWORK_API_KEY` may still be supplied as an environment override. Set endpoint-specific variables when needed: `ONEWORK_CAPABILITY_URL`, `ONEWORK_ANALYTICS_URL`, `ONEWORK_KNOWLEDGE_URL`, or `ONEWORK_API_URL` for the shared OneWorkOS origin. Read [api-schema.md](references/api-schema.md) for knowledge query responses and errors.
+The installer stores the user's credential and stable device binding at `~/.workbuddy/one-work-os.local.env` (Windows: `%USERPROFILE%\\.workbuddy\\one-work-os.local.env`) as `ONEWORK_API_KEY` and `ONEWORK_DEVICE_ID`; the bundled scripts load both automatically and send the device header. Never ask a customer to paste either value into chat. Environment variables may still override the local file for diagnostics. If the script says the Key or device binding is missing or invalid, direct the user to the OneWorkOS account page to rerun the managed installation, then restart WorkBuddy. Set endpoint-specific variables when needed: `ONEWORK_CAPABILITY_URL`, `ONEWORK_ANALYTICS_URL`, `ONEWORK_KNOWLEDGE_URL`, or `ONEWORK_API_URL` for the shared OneWorkOS origin. Read [api-schema.md](references/api-schema.md) for knowledge query responses and errors.
+
+After installation or a release update, use the acceptance prompts in [workbuddy-test-cases.md](references/workbuddy-test-cases.md). They verify routing, short follow-ups, screenshots, videos, sources, and authorization errors without performing an unconfirmed mutation.
 
 ## Enforce boundaries
 

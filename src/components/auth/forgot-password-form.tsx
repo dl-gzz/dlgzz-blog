@@ -53,32 +53,39 @@ export const ForgotPasswordForm = ({ className }: { className?: string }) => {
   }, [searchParams, form]);
 
   const onSubmit = async (values: z.infer<typeof ForgotPasswordSchema>) => {
-    await authClient.forgetPassword(
-      {
-        email: values.email,
-        redirectTo: `${Routes.ResetPassword}`,
-      },
-      {
-        onRequest: (ctx) => {
-          // console.log('forgotPassword, request:', ctx.url);
-          setIsPending(true);
-          setError('');
-          setSuccess('');
+    try {
+      await authClient.forgetPassword(
+        {
+          email: values.email,
+          redirectTo: `${Routes.ResetPassword}`,
         },
-        onResponse: (ctx) => {
-          // console.log('forgotPassword, response:', ctx.response);
-          setIsPending(false);
-        },
-        onSuccess: (ctx) => {
-          // console.log('forgotPassword, success:', ctx.data);
-          setSuccess(t('checkEmail'));
-        },
-        onError: (ctx) => {
-          console.error('forgotPassword, error:', ctx.error);
-          setError(`${ctx.error.status}: ${ctx.error.message}`);
-        },
-      }
-    );
+        {
+          onRequest: () => {
+            setIsPending(true);
+            setError('');
+            setSuccess('');
+          },
+          onResponse: () => {
+            setIsPending(false);
+          },
+          onSuccess: () => {
+            setSuccess(t('checkEmail'));
+          },
+          onError: (ctx) => {
+            console.error('forgotPassword, error:', ctx.error);
+            setIsPending(false);
+            setError(ctx.error.message || '重置密码邮件发送失败，请稍后重试。');
+          },
+        }
+      );
+    } catch (reason) {
+      setIsPending(false);
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : '重置密码邮件发送失败，请稍后重试。'
+      );
+    }
   };
 
   return (

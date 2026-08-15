@@ -1,7 +1,10 @@
 import { requireSameOrigin, requireSession } from '@/lib/api-security';
-import { createOneWorkInstallToken } from '@/lib/onework-access';
+import {
+  OneWorkAccessError,
+  createOneWorkInstallToken,
+} from '@/lib/onework-access';
 import { getBaseUrl } from '@/lib/urls/urls';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
@@ -33,18 +36,32 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = await createOneWorkInstallToken({
-    userId: auth.session.user.id,
-    platform: typeof body?.platform === 'string' ? body.platform : 'unknown',
-    deviceName: typeof body?.deviceName === 'string' ? body.deviceName : '',
-  });
-  const baseUrl = getBaseUrl();
+  try {
+    const result = await createOneWorkInstallToken({
+      userId: auth.session.user.id,
+      platform: typeof body?.platform === 'string' ? body.platform : 'unknown',
+      deviceName: typeof body?.deviceName === 'string' ? body.deviceName : '',
+    });
+    const baseUrl = getBaseUrl();
 
-  return NextResponse.json({
-    success: true,
-    token: result.rawToken,
-    expiresAt: result.expiresAt,
-    claimUrl: `${baseUrl}/api/onework/install/claim`,
-    notice: '安装授权 10 分钟内有效，且只能使用一次。',
-  });
+    return NextResponse.json({
+      success: true,
+      token: result.rawToken,
+      expiresAt: result.expiresAt,
+      claimUrl: `${baseUrl}/api/onework/install/claim`,
+      notice: '安装授权 10 分钟内有效，且只能使用一次。',
+    });
+  } catch (error) {
+    if (error instanceof OneWorkAccessError) {
+      return NextResponse.json(
+        { success: false, code: error.code, error: error.message },
+        { status: error.status }
+      );
+    }
+    console.error('[onework/install/session]', error);
+    return NextResponse.json(
+      { success: false, code: 'INTERNAL_ERROR', error: '生成安装授权失败' },
+      { status: 500 }
+    );
+  }
 }

@@ -2,6 +2,52 @@
 
 Use these prompts after installing the Skill. Keep the first run read-only and ask for confirmation before creating or changing anything in WorkBuddy.
 
+## Installation and authorization
+
+Run these commands from the installed Skill folder before testing content:
+
+```bash
+node scripts/update-onework-skill.mjs --force --check-only --json
+node scripts/query-knowledge.mjs --query "WorkBuddy 怎么连接 QQ 邮箱" --pack auto --limit 4 --json
+```
+
+Expected behavior:
+
+- The updater returns the installed and latest versions without consuming a one-time install authorization.
+- The knowledge request succeeds only when both `ONEWORK_API_KEY` and `ONEWORK_DEVICE_ID` were installed and the current device remains bound.
+- A missing device ID produces a friendly reinstallation message. It must not print the API Key, silently search the web, or answer from model memory.
+
+## Pack routing
+
+Run these two read-only queries:
+
+```bash
+node scripts/query-knowledge.mjs --query "小红书开店需要准备什么" --pack auto --limit 4 --json
+node scripts/query-knowledge.mjs --query "小红书店铺怎么设置发货" --pack auto --limit 4 --json
+```
+
+Expected behavior:
+
+- The first response has `packId: "xhs-open-shop-v1"`.
+- The second response has `packId: "xhs-operations-v1"`; “店铺” must not incorrectly force the open-shop pack when the real intent is logistics or order operations.
+
+## Short follow-up
+
+After discussing “小红书店铺设置发货”, ask:
+
+> 下一步呢？
+
+The host should preserve only that most recent explicit topic and run:
+
+```bash
+node scripts/query-knowledge.mjs --query "下一步呢" --context "小红书店铺设置发货" --pack auto --limit 4 --json
+```
+
+Expected behavior:
+
+- The request stays in `xhs-operations-v1` and the effective query contains both the prior topic and the follow-up.
+- It must not switch to the WorkBuddy pack merely because the follow-up is short.
+
 ## Daily report
 
 Prompt:
@@ -39,3 +85,16 @@ Expected behavior:
 - Return at most one directly relevant image and a clickable official source.
 - Use the structured `assets[]` URL, not an image URL copied from article text.
 - If the host cannot render the image, show the fallback link and say that rendering still depends on the host.
+
+## Video and source check
+
+Use a known knowledge result whose `resources[]` contains `type: "video"`, then ask:
+
+> 把这一步对应的视频和出处给我。
+
+Expected behavior:
+
+- Return the exact video URL as a named clickable link.
+- When a returned thumbnail or cover exists, make it a clickable cover pointing to the same video.
+- Include the exact returned article `sourceUrl` separately as the source.
+- Do not omit the video, substitute a guessed platform URL, or claim inline playback unless the host actually rendered a player.

@@ -10,7 +10,7 @@ import { authClient } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 import { DEFAULT_LOGIN_REDIRECT, Routes } from '@/routes';
 import { Loader2Icon } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -27,9 +27,11 @@ export const LoginForm = ({
 }: LoginFormProps) => {
   const t = useTranslations('AuthPage.login');
   const searchParams = useSearchParams();
-  const paramCallbackUrl = searchParams.get('callbackUrl');
-  const locale = useLocale();
-  const callbackUrl = propCallbackUrl || paramCallbackUrl || DEFAULT_LOGIN_REDIRECT;
+  const paramCallbackUrl =
+    searchParams.get('callbackUrl') || searchParams.get('callbackURL');
+  const callbackUrl =
+    propCallbackUrl || paramCallbackUrl || DEFAULT_LOGIN_REDIRECT;
+  const registerHref = `${Routes.Register}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -77,13 +79,15 @@ export const LoginForm = ({
   };
 
   const showEmailLogin = websiteConfig.auth.enableEmailLogin !== false;
-  const showSocialLogin = websiteConfig.auth.enableGoogleLogin || websiteConfig.auth.enableGithubLogin;
+  const showSocialLogin =
+    websiteConfig.auth.enableGoogleLogin ||
+    websiteConfig.auth.enableGithubLogin;
 
   return (
     <AuthCard
       headerLabel={t('welcomeBack')}
       bottomButtonLabel={t('signUpHint')}
-      bottomButtonHref={`${Routes.Register}`}
+      bottomButtonHref={registerHref}
       className={cn('', className)}
     >
       <div className="space-y-6">
@@ -114,7 +118,9 @@ export const LoginForm = ({
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2Icon className="mr-2 size-4 animate-spin" />}
+              {isLoading && (
+                <Loader2Icon className="mr-2 size-4 animate-spin" />
+              )}
               {t('signIn') || '登录'}
             </Button>
             <div className="text-center">

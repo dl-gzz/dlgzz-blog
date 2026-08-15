@@ -1,15 +1,18 @@
-/** OneWorkOS 授权闭环的真实数据库冒烟测试：签发 → 兑换 → 安装会话领取 → 清理。 */
-import postgres from 'postgres';
-import * as dotenv from 'dotenv';
 import { createHash, randomUUID } from 'node:crypto';
 import { join } from 'node:path';
+import { reserveApiKeyRateLimit } from '@/lib/api-key';
 import {
   claimOneWorkInstallToken,
   createOneWorkInstallToken,
+  grantOneWorkEntitlements,
   issueOneWorkActivationCode,
   redeemOneWorkActivation,
 } from '@/lib/onework-access';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
+import * as dotenv from 'dotenv';
+import postgres from 'postgres';
+
+// OneWorkOS 授权闭环的临时用户冒烟测试：签发 → 兑换 → 安装领取 → 清理。
 
 dotenv.config({ path: join(process.cwd(), '.env') });
 dotenv.config({ path: join(process.cwd(), '.env.local'), override: true });
@@ -18,40 +21,151 @@ function hashSecret(value: string) {
   return createHash('sha256').update(value.trim().toUpperCase()).digest('hex');
 }
 
-async function main() {
-  const sql = postgres(process.env.DATABASE_URL!, { ssl: 'require', max: 1, prepare: false });
-  const [user] = await sql<{ id: string }[]>`select id from "user" order by created_at limit 1`;
-  if (!user) throw new Error('数据库里没有用户，无法测试外键');
+function getTestDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+  if (!databaseUrl) throw new Error('DATABASE_URL is not set');
+  const hostname = new URL(databaseUrl).hostname;
+  const isLocal = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(hostname);
+  if (!isLocal && process.env.ONEWORK_ALLOW_REMOTE_E2E !== 'true') {
+    throw new Error(
+      `Refusing temporary writes to remote database ${hostname}; set ONEWORK_ALLOW_REMOTE_E2E=true explicitly`
+    );
+  }
+  return databaseUrl;
+}
 
-  const packId = ALL_PACKS_GRANT;
+async function main() {
+  const ssl = ['false', 'disable', 'off'].includes(
+    (process.env.DATABASE_SSL || '').toLowerCase()
+  )
+    ? false
+    : 'require';
+  const sql = postgres(getTestDatabaseUrl(), {
+    ssl,
+    max: 1,
+    prepare: false,
+  });
+  const runId = randomUUID();
+  const testUserId = `onework-e2e-user-${runId}`;
+  const testEmail = `onework-e2e-${runId}@invalid.example`;
   const futurePackId = 'future-pack-added-later-v1';
-  const before = await sql<{ id: string }[]>`
-    select id from onework_entitlement where user_id = ${user.id} and knowledge_pack_id = ${packId}
-  `;
   const secondDeviceId = `e2e-install-${randomUUID()}`;
   let activationCode = '';
   let activationHash = '';
-  let keyIds: string[] = [];
 
   try {
+    await sql`
+			insert into "user" (
+				id, name, email, email_verified, created_at, updated_at
+			) values (
+				${testUserId}, 'OneWorkOS E2E', ${testEmail}, true, now(), now()
+			)
+		`;
+
+    const firstRoute = await reserveApiKeyRateLimit({
+      userId: testUserId,
+      kind: 'capability_resolve_e2e',
+      limit: 2,
+    });
+    const secondRoute = await reserveApiKeyRateLimit({
+      userId: testUserId,
+      kind: 'capability_resolve_e2e',
+      limit: 2,
+    });
+    const blockedRoute = await reserveApiKeyRateLimit({
+      userId: testUserId,
+      kind: 'capability_resolve_e2e',
+      limit: 2,
+    });
+    if (
+      !firstRoute.allowed ||
+      !secondRoute.allowed ||
+      blockedRoute.allowed ||
+      secondRoute.remaining !== 0
+    ) {
+      throw new Error('能力路由的账号级原子限流未按预期生效');
+    }
+
     const issued = await issueOneWorkActivationCode({
       packIds: [ALL_PACKS_GRANT],
       trialDays: 1,
       monthlyQuota: 7,
       label: 'e2e-test',
       source: 'test',
-      createdByUserId: user.id,
+      createdByUserId: testUserId,
     });
     activationCode = issued.rawCode;
     activationHash = hashSecret(activationCode);
     const redeemed = await redeemOneWorkActivation({
-      userId: user.id,
+      userId: testUserId,
       code: activationCode,
     });
-    if (!redeemed.packIds.includes(ALL_PACKS_GRANT)) throw new Error('兑换后的账号权益未写入全量授权');
+    if (!redeemed.packIds.includes(ALL_PACKS_GRANT))
+      throw new Error('兑换后的账号权益未写入全量授权');
+
+    const [beforeRenewal] = await sql<{ expires_at: Date }[]>`
+      select expires_at from onework_entitlement
+      where user_id = ${testUserId} and knowledge_pack_id = ${ALL_PACKS_GRANT}
+    `;
+    const orderA = `e2e-order-a-${runId}`;
+    const orderB = `e2e-order-b-${runId}`;
+    await Promise.all([
+      grantOneWorkEntitlements({
+        userId: testUserId,
+        packIds: [ALL_PACKS_GRANT],
+        trialDays: 2,
+        monthlyQuota: 7,
+        source: 'test',
+        externalOrderId: orderA,
+      }),
+      grantOneWorkEntitlements({
+        userId: testUserId,
+        packIds: [ALL_PACKS_GRANT],
+        trialDays: 2,
+        monthlyQuota: 7,
+        source: 'test',
+        externalOrderId: orderB,
+      }),
+    ]);
+    const [afterConcurrentRenewal] = await sql<{ expires_at: Date }[]>`
+      select expires_at from onework_entitlement
+      where user_id = ${testUserId} and knowledge_pack_id = ${ALL_PACKS_GRANT}
+    `;
+    const expectedAddedMs = 4 * 24 * 60 * 60 * 1000;
+    if (
+      afterConcurrentRenewal.expires_at.getTime() -
+        beforeRenewal.expires_at.getTime() !==
+      expectedAddedMs
+    ) {
+      throw new Error('并发续费未完整累加两笔订单');
+    }
+
+    await grantOneWorkEntitlements({
+      userId: testUserId,
+      packIds: [ALL_PACKS_GRANT],
+      trialDays: 2,
+      monthlyQuota: 7,
+      source: 'test',
+      externalOrderId: orderA,
+    });
+    const [afterRetry] = await sql<{ expires_at: Date }[]>`
+      select expires_at from onework_entitlement
+      where user_id = ${testUserId} and knowledge_pack_id = ${ALL_PACKS_GRANT}
+    `;
+    const [grantCount] = await sql<{ count: number }[]>`
+      select count(*)::int as count from onework_entitlement_grant
+      where user_id = ${testUserId}
+    `;
+    if (
+      afterRetry.expires_at.getTime() !==
+        afterConcurrentRenewal.expires_at.getTime() ||
+      grantCount.count !== 2
+    ) {
+      throw new Error('同一支付订单重试时重复发放了权益');
+    }
 
     const install = await createOneWorkInstallToken({
-      userId: user.id,
+      userId: testUserId,
       platform: 'test',
       deviceName: 'OneWorkOS E2E 2',
     });
@@ -61,12 +175,12 @@ async function main() {
       deviceName: 'OneWorkOS E2E 2',
       platform: 'test',
     });
-    keyIds.push(claimed.apiKeyId);
     const claimedWildcard = await sql<{ id: string }[]>`
       select id from api_key_pack_grant
       where api_key_id = ${claimed.apiKeyId} and knowledge_pack_id = ${ALL_PACKS_GRANT}
     `;
-    if (claimedWildcard.length !== 1) throw new Error('安装领取的 Key 未写入全量授权');
+    if (claimedWildcard.length !== 1)
+      throw new Error('安装领取的 Key 未写入全量授权');
     console.log('✅ 授权闭环通过:', {
       packs: redeemed.packIds,
       futurePackAccess: `wildcard grant covers ${futurePackId}`,
@@ -74,23 +188,11 @@ async function main() {
       quota: redeemed.monthlyQuota,
     });
   } finally {
-    if (keyIds.length > 0) {
-      await sql`delete from onework_device where api_key_id in ${sql(keyIds)}`;
-      await sql`delete from api_key_pack_grant where api_key_id in ${sql(keyIds)}`;
-      await sql`delete from api_key where id in ${sql(keyIds)}`;
-    }
     if (activationHash) {
       await sql`delete from onework_activation_code where code_hash = ${activationHash}`;
     }
-    const after = await sql<{ id: string }[]>`
-      select id from onework_entitlement where user_id = ${user.id} and knowledge_pack_id = ${packId}
-    `;
-    const createdEntitlementIds = after.map((item) => item.id).filter((id) => !before.some((row) => row.id === id));
-    if (createdEntitlementIds.length > 0) {
-      await sql`delete from onework_entitlement where id in ${sql(createdEntitlementIds)}`;
-    }
+    await sql`delete from "user" where id = ${testUserId}`;
     await sql.end();
-    process.exit(0);
   }
 }
 

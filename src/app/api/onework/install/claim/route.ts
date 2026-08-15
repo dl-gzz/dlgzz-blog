@@ -1,8 +1,8 @@
 import {
-  claimOneWorkInstallToken,
   OneWorkAccessError,
+  claimOneWorkInstallToken,
 } from '@/lib/onework-access';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
@@ -22,8 +22,9 @@ export async function POST(request: NextRequest) {
   if (
     typeof body?.token !== 'string' ||
     body.token.length > 256 ||
-    (body.deviceId !== undefined &&
-      (typeof body.deviceId !== 'string' || body.deviceId.length > 200)) ||
+    typeof body.deviceId !== 'string' ||
+    body.deviceId.trim().length < 8 ||
+    body.deviceId.length > 200 ||
     (body.deviceName !== undefined &&
       (typeof body.deviceName !== 'string' || body.deviceName.length > 200)) ||
     (body.platform !== undefined &&
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await claimOneWorkInstallToken({
       token: typeof body?.token === 'string' ? body.token : '',
-      deviceId: typeof body?.deviceId === 'string' ? body.deviceId : undefined,
+      deviceId: body.deviceId,
       deviceName: typeof body?.deviceName === 'string' ? body.deviceName : '',
       platform: typeof body?.platform === 'string' ? body.platform : 'unknown',
     });
@@ -63,7 +64,11 @@ export async function POST(request: NextRequest) {
     }
     console.error('[onework/install/claim]', error);
     return NextResponse.json(
-      { success: false, code: 'INTERNAL_ERROR', error: '安装授权失败，请重新生成授权' },
+      {
+        success: false,
+        code: 'INTERNAL_ERROR',
+        error: '安装授权失败，请重新生成授权',
+      },
       { status: 500 }
     );
   }

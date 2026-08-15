@@ -3,14 +3,18 @@ import { getDb } from '@/db';
 import {
   apiKey,
   apiKeyPackGrant,
+  apiUsageEvent,
   oneworkActivationCode,
   oneworkDevice,
   oneworkEntitlement,
+  oneworkEntitlementGrant,
   oneworkInstallToken,
   user,
 } from '@/db/schema';
+import { hashOneWorkDeviceId, oneWorkMonthStart } from '@/lib/api-key';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
-import { and, desc, eq, gt, inArray, isNull, or } from 'drizzle-orm';
+import { findPlanByPriceId } from '@/lib/price-plan';
+import { and, desc, eq, gt, gte, inArray, isNull, or, sql } from 'drizzle-orm';
 
 /** 现有知识包仍保留用于兼容旧兑换码；新授权统一使用全量权限。 */
 export const ONEWORK_PUBLIC_PACKS = [
@@ -40,15 +44,26 @@ function hashSecret(value: string) {
   return createHash('sha256').update(normalizeSecret(value)).digest('hex');
 }
 
-function hashDeviceId(value: string) {
-  return createHash('sha256')
-    .update(`onework-device-v1:${value.trim()}`)
-    .digest('hex');
+function addDays(date: Date, days: number) {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
-function addDays(date: Date, days: number) {
-  if (!Number.isFinite(days) || days <= 0) return null;
-  return new Date(date.getTime() + Math.round(days) * 24 * 60 * 60 * 1000);
+function positiveInteger(value: number, field: string, maximum = 1_000_000) {
+  const normalized = Math.floor(value);
+  if (!Number.isFinite(value) || normalized < 1 || normalized > maximum) {
+    throw new OneWorkAccessError(
+      `${field}必须是 1 到 ${maximum} 之间的整数`,
+      'INVALID_LIMIT'
+    );
+  }
+  return normalized;
+}
+
+function oneWorkDeviceLimit() {
+  const configured = Number(process.env.ONEWORK_DEVICE_LIMIT || 3);
+  return Number.isInteger(configured) && configured >= 1 && configured <= 20
+    ? configured
+    : 3;
 }
 
 function normalizePackIds(packIds: string[]) {
@@ -56,13 +71,18 @@ function normalizePackIds(packIds: string[]) {
     return [ALL_PACKS_GRANT];
   }
   const allowed = new Set<string>(ONEWORK_PUBLIC_PACKS);
-  const normalized = [...new Set(
-    packIds
-      .map((packId) => packId.trim())
-      .filter((packId) => allowed.has(packId))
-  )];
+  const normalized = [
+    ...new Set(
+      packIds
+        .map((packId) => packId.trim())
+        .filter((packId) => allowed.has(packId))
+    ),
+  ];
   if (normalized.length === 0) {
-    throw new OneWorkAccessError('至少选择一个有效的 OneWorkOS 知识包', 'INVALID_PACKS');
+    throw new OneWorkAccessError(
+      '至少选择一个有效的 OneWorkOS 知识包',
+      'INVALID_PACKS'
+    );
   }
   return normalized;
 }
@@ -85,16 +105,18 @@ function makeApiKey() {
   };
 }
 
-function getExpiryForEntitlement(
-  currentExpiry: Date | null,
-  requestedExpiry: Date | null,
+function extendEntitlementExpiry(
+  currentExpiry: Date | null | undefined,
+  days: number,
   now: Date
 ) {
-  // null 表示不过期；一旦已有永久权益，就不应被一次试用覆盖。
-  if (currentExpiry === null && requestedExpiry === null) return null;
+  // null 仅表示已存在的永久权益；undefined 表示首次开通。
   if (currentExpiry === null) return null;
-  if (requestedExpiry === null) return currentExpiry;
-  return new Date(Math.max(currentExpiry.getTime(), requestedExpiry.getTime(), now.getTime()));
+  const base =
+    currentExpiry && currentExpiry.getTime() > now.getTime()
+      ? currentExpiry
+      : now;
+  return addDays(base, days);
 }
 
 async function insertApiKeyAndGrants({
@@ -134,7 +156,7 @@ async function insertApiKeyAndGrants({
     name,
     keyHash,
     keyPrefix,
-    monthlyQuota: Math.max(0, Math.floor(monthlyQuota || 1000)),
+    monthlyQuota: Math.max(1, Math.floor(monthlyQuota)),
   });
 
   for (const packId of packIds) {
@@ -163,11 +185,24 @@ async function insertApiKeyAndGrants({
       .for('update')
       .limit(1);
 
-    const deviceHash = hashDeviceId(deviceId);
-    const existingDevices: Array<{ id: string; apiKeyId: string }> = await tx
-      .select({ id: oneworkDevice.id, apiKeyId: oneworkDevice.apiKeyId })
+    const deviceHash = hashOneWorkDeviceId(deviceId);
+    const existingDevices: Array<{
+      id: string;
+      apiKeyId: string;
+      status: string;
+    }> = await tx
+      .select({
+        id: oneworkDevice.id,
+        apiKeyId: oneworkDevice.apiKeyId,
+        status: oneworkDevice.status,
+      })
       .from(oneworkDevice)
-      .where(and(eq(oneworkDevice.userId, userId), eq(oneworkDevice.deviceHash, deviceHash)))
+      .where(
+        and(
+          eq(oneworkDevice.userId, userId),
+          eq(oneworkDevice.deviceHash, deviceHash)
+        )
+      )
       .orderBy(desc(oneworkDevice.createdAt), desc(oneworkDevice.id))
       .for('update');
 
@@ -182,12 +217,35 @@ async function insertApiKeyAndGrants({
     }
 
     const canonicalDevice = existingDevices[0];
+    if (!canonicalDevice || canonicalDevice.status !== 'active') {
+      const activeDevices: Array<{ id: string }> = await tx
+        .select({ id: oneworkDevice.id })
+        .from(oneworkDevice)
+        .where(
+          and(
+            eq(oneworkDevice.userId, userId),
+            eq(oneworkDevice.status, 'active')
+          )
+        )
+        .for('update');
+      const deviceLimit = oneWorkDeviceLimit();
+      if (activeDevices.length >= deviceLimit) {
+        throw new OneWorkAccessError(
+          `已达到 ${deviceLimit} 台设备上限，请先在网站撤销不再使用的设备`,
+          'DEVICE_LIMIT_REACHED',
+          409
+        );
+      }
+    }
+
     if (canonicalDevice) {
       const duplicateDeviceIds = existingDevices
         .slice(1)
         .map((device) => device.id);
       if (duplicateDeviceIds.length > 0) {
-        await tx.delete(oneworkDevice).where(inArray(oneworkDevice.id, duplicateDeviceIds));
+        await tx
+          .delete(oneworkDevice)
+          .where(inArray(oneworkDevice.id, duplicateDeviceIds));
       }
       await tx
         .update(oneworkDevice)
@@ -238,6 +296,18 @@ export async function issueOneWorkActivationCode({
   createdByUserId?: string | null;
 }) {
   const safePackIds = normalizePackIds(packIds);
+  const safeTrialDays = positiveInteger(trialDays, '权益天数', 3650);
+  const safeMonthlyQuota = positiveInteger(
+    monthlyQuota,
+    '每月额度',
+    10_000_000
+  );
+  if (maxRedemptions !== 1) {
+    throw new OneWorkAccessError(
+      '每枚兑换码只能绑定一个账号一次',
+      'SHARED_ACTIVATION_CODE_NOT_ALLOWED'
+    );
+  }
   const rawCode = makeActivationCode();
   const codePrefix = `${rawCode.slice(0, 13)}…`;
   const db = await getDb();
@@ -249,9 +319,9 @@ export async function issueOneWorkActivationCode({
     label: label.slice(0, 120),
     source: source.slice(0, 30),
     packIds: safePackIds,
-    trialDays: Math.max(0, Math.floor(trialDays)),
-    monthlyQuota: Math.max(0, Math.floor(monthlyQuota)),
-    maxRedemptions: Math.max(1, Math.floor(maxRedemptions)),
+    trialDays: safeTrialDays,
+    monthlyQuota: safeMonthlyQuota,
+    maxRedemptions: 1,
     expiresAt,
     createdByUserId: createdByUserId ?? null,
   });
@@ -261,7 +331,7 @@ export async function issueOneWorkActivationCode({
 
 /**
  * 给网站内购成功的账号直接授予权益。外部平台成交仍使用兑换码；
- * 只有把价格 ID 放入 ONEWORK_PRICE_IDS 后，支付回调才会走这里。
+ * 网站 OneWorkOS 会员成交后直接授予全量知识库权益。
  */
 export async function grantOneWorkEntitlements({
   userId,
@@ -279,25 +349,47 @@ export async function grantOneWorkEntitlements({
   externalOrderId?: string | null;
 }) {
   const safePackIds = normalizePackIds(packIds);
+  const safeTrialDays = positiveInteger(trialDays, '权益天数', 3650);
+  const safeMonthlyQuota = positiveInteger(
+    monthlyQuota,
+    '每月额度',
+    10_000_000
+  );
   const db = await getDb();
   const now = new Date();
-  const expiresAt = addDays(now, trialDays);
+  const requestedExpiresAt = addDays(now, safeTrialDays);
 
   await db.transaction(async (tx) => {
+    // 同一账号的不同支付订单也必须串行续期，否则两个回调
+    // 可能都从同一个旧到期时间计算，导致少发一期。
+    await tx
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, userId))
+      .for('update')
+      .limit(1);
+
     for (const packId of safePackIds) {
       if (externalOrderId) {
-        const [alreadyGranted] = await tx
-          .select({ id: oneworkEntitlement.id })
-          .from(oneworkEntitlement)
-          .where(
-            and(
-              eq(oneworkEntitlement.userId, userId),
-              eq(oneworkEntitlement.knowledgePackId, packId),
-              eq(oneworkEntitlement.externalOrderId, externalOrderId)
-            )
-          )
-          .limit(1);
-        if (alreadyGranted) continue;
+        const insertedGrant = await tx
+          .insert(oneworkEntitlementGrant)
+          .values({
+            id: `entitlement_grant_${randomUUID()}`,
+            userId,
+            knowledgePackId: packId,
+            externalOrderId,
+            source,
+            grantedAt: now,
+          })
+          .onConflictDoNothing({
+            target: [
+              oneworkEntitlementGrant.userId,
+              oneworkEntitlementGrant.externalOrderId,
+              oneworkEntitlementGrant.knowledgePackId,
+            ],
+          })
+          .returning({ id: oneworkEntitlementGrant.id });
+        if (insertedGrant.length === 0) continue;
       }
 
       const [existing] = await tx
@@ -310,9 +402,9 @@ export async function grantOneWorkEntitlements({
           )
         )
         .limit(1);
-      const mergedExpiry = getExpiryForEntitlement(
-        existing ? existing.expiresAt : expiresAt,
-        expiresAt,
+      const mergedExpiry = extendEntitlementExpiry(
+        existing ? existing.expiresAt : undefined,
+        safeTrialDays,
         now
       );
 
@@ -324,33 +416,49 @@ export async function grantOneWorkEntitlements({
           knowledgePackId: packId,
           source,
           status: 'active',
-          monthlyQuota: Math.max(0, Math.floor(monthlyQuota)),
+          monthlyQuota: safeMonthlyQuota,
           startsAt: existing?.startsAt ?? now,
           expiresAt: mergedExpiry,
           externalOrderId: externalOrderId ?? null,
         })
         .onConflictDoUpdate({
-          target: [oneworkEntitlement.userId, oneworkEntitlement.knowledgePackId],
+          target: [
+            oneworkEntitlement.userId,
+            oneworkEntitlement.knowledgePackId,
+          ],
           set: {
             status: 'active',
-            monthlyQuota: Math.max(existing?.monthlyQuota ?? 0, monthlyQuota),
+            monthlyQuota: Math.max(
+              existing?.monthlyQuota ?? 0,
+              safeMonthlyQuota
+            ),
             expiresAt: mergedExpiry,
-            externalOrderId: externalOrderId ?? existing?.externalOrderId ?? null,
+            externalOrderId:
+              externalOrderId ?? existing?.externalOrderId ?? null,
             updatedAt: now,
           },
         });
     }
+
+    await tx
+      .update(apiKey)
+      .set({
+        monthlyQuota: sql`greatest(${apiKey.monthlyQuota}, ${safeMonthlyQuota})`,
+        updatedAt: now,
+      })
+      .where(and(eq(apiKey.userId, userId), eq(apiKey.status, 'active')));
   });
 
-  return { packIds: safePackIds, expiresAt, monthlyQuota };
+  return {
+    packIds: safePackIds,
+    expiresAt: requestedExpiresAt,
+    monthlyQuota: safeMonthlyQuota,
+  };
 }
 
 export function shouldGrantOneWorkForPrice(priceId: string) {
-  const configured = (process.env.ONEWORK_PRICE_IDS || '')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean);
-  return configured.includes(priceId);
+  // 产品归属由网站价格计划唯一管理，不再维护第二份环境变量白名单。
+  return findPlanByPriceId(priceId)?.id === 'pro';
 }
 
 export function getOneWorkPaymentPacks() {
@@ -373,6 +481,15 @@ export async function redeemOneWorkActivation({
   const now = new Date();
 
   return db.transaction(async (tx) => {
+    // 不同兑换码也可能在同一账号上同时兑换；与网站支付
+    // 共用账号锁，避免并发续期覆盖。
+    await tx
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, userId))
+      .for('update')
+      .limit(1);
+
     const [activation] = await tx
       .select()
       .from(oneworkActivationCode)
@@ -381,30 +498,53 @@ export async function redeemOneWorkActivation({
       .limit(1);
 
     if (!activation) {
-      throw new OneWorkAccessError('兑换码无效，请检查是否输入正确', 'INVALID_CODE', 404);
+      throw new OneWorkAccessError(
+        '兑换码无效，请检查是否输入正确',
+        'INVALID_CODE',
+        404
+      );
     }
     if (activation.status !== 'active') {
-      throw new OneWorkAccessError('兑换码已使用或已失效', 'CODE_NOT_ACTIVE', 409);
+      throw new OneWorkAccessError(
+        '兑换码已使用或已失效',
+        'CODE_NOT_ACTIVE',
+        409
+      );
     }
-    if (activation.expiresAt && activation.expiresAt.getTime() <= now.getTime()) {
+    if (
+      activation.expiresAt &&
+      activation.expiresAt.getTime() <= now.getTime()
+    ) {
       throw new OneWorkAccessError('兑换码已过期', 'CODE_EXPIRED', 410);
     }
-    if (activation.redeemedCount >= activation.maxRedemptions) {
-      throw new OneWorkAccessError('兑换码已达到使用次数上限', 'CODE_EXHAUSTED', 409);
+    if (activation.redeemedCount >= 1) {
+      throw new OneWorkAccessError(
+        '兑换码已达到使用次数上限',
+        'CODE_EXHAUSTED',
+        409
+      );
     }
 
     const packIds = normalizePackIds(activation.packIds);
-    const expiresAt = addDays(now, activation.trialDays);
+    const trialDays = positiveInteger(activation.trialDays, '权益天数', 3650);
+    const monthlyQuota = positiveInteger(
+      activation.monthlyQuota,
+      '每月额度',
+      10_000_000
+    );
+    const requestedExpiresAt = addDays(now, trialDays);
     const existingEntitlements = await tx
       .select()
       .from(oneworkEntitlement)
       .where(eq(oneworkEntitlement.userId, userId));
 
     for (const packId of packIds) {
-      const existing = existingEntitlements.find((item) => item.knowledgePackId === packId);
-      const mergedExpiry = getExpiryForEntitlement(
-        existing ? existing.expiresAt : expiresAt,
-        expiresAt,
+      const existing = existingEntitlements.find(
+        (item) => item.knowledgePackId === packId
+      );
+      const mergedExpiry = extendEntitlementExpiry(
+        existing ? existing.expiresAt : undefined,
+        trialDays,
         now
       );
       await tx
@@ -415,27 +555,37 @@ export async function redeemOneWorkActivation({
           knowledgePackId: packId,
           source: activation.source,
           status: 'active',
-          monthlyQuota: activation.monthlyQuota,
+          monthlyQuota,
           startsAt: existing?.startsAt ?? now,
           expiresAt: mergedExpiry,
         })
         .onConflictDoUpdate({
-          target: [oneworkEntitlement.userId, oneworkEntitlement.knowledgePackId],
+          target: [
+            oneworkEntitlement.userId,
+            oneworkEntitlement.knowledgePackId,
+          ],
           set: {
             status: 'active',
-            monthlyQuota: Math.max(existing?.monthlyQuota ?? 0, activation.monthlyQuota),
+            monthlyQuota: Math.max(existing?.monthlyQuota ?? 0, monthlyQuota),
             expiresAt: mergedExpiry,
             updatedAt: now,
           },
         });
     }
 
-    const nextCount = activation.redeemedCount + 1;
+    await tx
+      .update(apiKey)
+      .set({
+        monthlyQuota: sql`greatest(${apiKey.monthlyQuota}, ${monthlyQuota})`,
+        updatedAt: now,
+      })
+      .where(and(eq(apiKey.userId, userId), eq(apiKey.status, 'active')));
+
     await tx
       .update(oneworkActivationCode)
       .set({
-        redeemedCount: nextCount,
-        status: nextCount >= activation.maxRedemptions ? 'redeemed' : 'active',
+        redeemedCount: 1,
+        status: 'redeemed',
         redeemedByUserId: userId,
         redeemedAt: now,
         updatedAt: now,
@@ -444,8 +594,8 @@ export async function redeemOneWorkActivation({
 
     return {
       packIds,
-      expiresAt,
-      monthlyQuota: activation.monthlyQuota,
+      expiresAt: requestedExpiresAt,
+      monthlyQuota,
     };
   });
 }
@@ -461,15 +611,60 @@ export async function createOneWorkInstallToken({
   deviceName?: string;
 }) {
   const rawToken = makeInstallToken();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
   const db = await getDb();
-  await db.insert(oneworkInstallToken).values({
-    id: `install_${randomUUID()}`,
-    tokenHash: hashSecret(rawToken),
-    userId,
-    platform: platform.slice(0, 30),
-    deviceName: deviceName.slice(0, 80),
-    expiresAt,
+  await db.transaction(async (tx) => {
+    await tx
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, userId))
+      .for('update')
+      .limit(1);
+
+    const entitlements = await tx
+      .select({ monthlyQuota: oneworkEntitlement.monthlyQuota })
+      .from(oneworkEntitlement)
+      .where(
+        and(
+          eq(oneworkEntitlement.userId, userId),
+          eq(oneworkEntitlement.status, 'active'),
+          or(
+            isNull(oneworkEntitlement.expiresAt),
+            gt(oneworkEntitlement.expiresAt, now)
+          )
+        )
+      );
+    if (
+      entitlements.length === 0 ||
+      entitlements.every((item) => (item.monthlyQuota || 0) < 1)
+    ) {
+      throw new OneWorkAccessError(
+        '当前账号没有有效的 OneWorkOS 权益，请先兑换或续费',
+        'NO_ACTIVE_ENTITLEMENT',
+        403
+      );
+    }
+
+    // 一个账号只保留最新的未使用安装会话，避免旧指令被误用。
+    await tx
+      .update(oneworkInstallToken)
+      .set({ consumedAt: now })
+      .where(
+        and(
+          eq(oneworkInstallToken.userId, userId),
+          isNull(oneworkInstallToken.consumedAt)
+        )
+      );
+
+    await tx.insert(oneworkInstallToken).values({
+      id: `install_${randomUUID()}`,
+      tokenHash: hashSecret(rawToken),
+      userId,
+      platform: platform.slice(0, 30),
+      deviceName: deviceName.slice(0, 80),
+      expiresAt,
+    });
   });
   return { rawToken, expiresAt };
 }
@@ -482,11 +677,18 @@ export async function claimOneWorkInstallToken({
   platform = 'unknown',
 }: {
   token: string;
-  deviceId?: string;
+  deviceId: string;
   deviceName?: string;
   platform?: string;
 }) {
-  if (!token.trim()) throw new OneWorkAccessError('缺少安装授权', 'MISSING_INSTALL_TOKEN');
+  if (!token.trim())
+    throw new OneWorkAccessError('缺少安装授权', 'MISSING_INSTALL_TOKEN');
+  if (!deviceId.trim()) {
+    throw new OneWorkAccessError(
+      '安装器未提供设备标识，请使用网站最新安装指令',
+      'MISSING_DEVICE_ID'
+    );
+  }
   const db = await getDb();
   const now = new Date();
 
@@ -497,10 +699,24 @@ export async function claimOneWorkInstallToken({
       .where(eq(oneworkInstallToken.tokenHash, hashSecret(token)))
       .for('update')
       .limit(1);
-    if (!install) throw new OneWorkAccessError('安装授权无效', 'INVALID_INSTALL_TOKEN', 404);
-    if (install.consumedAt) throw new OneWorkAccessError('安装授权已使用', 'INSTALL_TOKEN_CONSUMED', 409);
+    if (!install)
+      throw new OneWorkAccessError(
+        '安装授权无效',
+        'INVALID_INSTALL_TOKEN',
+        404
+      );
+    if (install.consumedAt)
+      throw new OneWorkAccessError(
+        '安装授权已使用',
+        'INSTALL_TOKEN_CONSUMED',
+        409
+      );
     if (install.expiresAt.getTime() <= now.getTime()) {
-      throw new OneWorkAccessError('安装授权已过期，请在网站重新生成', 'INSTALL_TOKEN_EXPIRED', 410);
+      throw new OneWorkAccessError(
+        '安装授权已过期，请在网站重新生成',
+        'INSTALL_TOKEN_EXPIRED',
+        410
+      );
     }
 
     const entitlements = await tx
@@ -510,29 +726,48 @@ export async function claimOneWorkInstallToken({
         and(
           eq(oneworkEntitlement.userId, install.userId),
           eq(oneworkEntitlement.status, 'active'),
-          or(isNull(oneworkEntitlement.expiresAt), gt(oneworkEntitlement.expiresAt, now))
+          or(
+            isNull(oneworkEntitlement.expiresAt),
+            gt(oneworkEntitlement.expiresAt, now)
+          )
         )
       );
     const allAccessEntitlements = entitlements.filter(
       (item) => item.knowledgePackId === ALL_PACKS_GRANT
     );
-    const effectiveEntitlements = allAccessEntitlements.length > 0
-      ? allAccessEntitlements
-      : entitlements;
-    const packIds = allAccessEntitlements.length > 0
-      ? [ALL_PACKS_GRANT]
-      : normalizePackIds(entitlements.map((item) => item.knowledgePackId));
+    const effectiveEntitlements =
+      allAccessEntitlements.length > 0 ? allAccessEntitlements : entitlements;
+    if (
+      effectiveEntitlements.length === 0 ||
+      effectiveEntitlements.every((item) => (item.monthlyQuota || 0) < 1)
+    ) {
+      throw new OneWorkAccessError(
+        '当前账号没有有效的 OneWorkOS 权益，请先兑换或续费',
+        'NO_ACTIVE_ENTITLEMENT',
+        403
+      );
+    }
+    const packIds =
+      allAccessEntitlements.length > 0
+        ? [ALL_PACKS_GRANT]
+        : normalizePackIds(entitlements.map((item) => item.knowledgePackId));
     const packExpiries = Object.fromEntries(
-      effectiveEntitlements.map((item) => [item.knowledgePackId, item.expiresAt])
+      effectiveEntitlements.map((item) => [
+        item.knowledgePackId,
+        item.expiresAt,
+      ])
     ) as Record<string, Date | null>;
-    const earliestExpiry = effectiveEntitlements.reduce<Date | null>((current, item) => {
-      if (!item.expiresAt) return null;
-      if (!current || item.expiresAt.getTime() < current.getTime()) return item.expiresAt;
-      return current;
-    }, null);
+    const earliestExpiry = effectiveEntitlements.some((item) => !item.expiresAt)
+      ? null
+      : effectiveEntitlements.reduce<Date | null>((current, item) => {
+          if (!item.expiresAt) return current;
+          if (!current || item.expiresAt.getTime() < current.getTime())
+            return item.expiresAt;
+          return current;
+        }, null);
     const monthlyQuota = effectiveEntitlements.reduce(
       (max, item) => Math.max(max, item.monthlyQuota || 0),
-      1000
+      0
     );
 
     const issued = await insertApiKeyAndGrants({
@@ -544,7 +779,7 @@ export async function claimOneWorkInstallToken({
       packExpiries,
       name: `${deviceName || install.deviceName || 'OneWorkOS'} · ${platform || install.platform}`,
       source: 'install',
-      deviceId: deviceId?.trim() || randomUUID(),
+      deviceId: deviceId.trim(),
       deviceName: deviceName || install.deviceName,
       platform: platform || install.platform,
     });
@@ -560,7 +795,9 @@ export async function claimOneWorkInstallToken({
 
 export async function listOneWorkAccess(userId: string) {
   const db = await getDb();
-  const [entitlements, devices, keys] = await Promise.all([
+  const now = new Date();
+  const pendingSince = new Date(now.getTime() - 10 * 60 * 1000);
+  const [rawEntitlements, devices, keys, usageRows] = await Promise.all([
     db
       .select()
       .from(oneworkEntitlement)
@@ -591,9 +828,80 @@ export async function listOneWorkAccess(userId: string) {
       .from(apiKey)
       .where(eq(apiKey.userId, userId))
       .orderBy(desc(apiKey.createdAt)),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(apiUsageEvent)
+      .where(
+        and(
+          eq(apiUsageEvent.userId, userId),
+          gte(apiUsageEvent.createdAt, oneWorkMonthStart(now)),
+          or(
+            eq(apiUsageEvent.status, 'ok'),
+            and(
+              eq(apiUsageEvent.status, 'pending'),
+              gte(apiUsageEvent.createdAt, pendingSince)
+            )
+          )
+        )
+      ),
   ]);
 
-  return { entitlements, devices, keys };
+  const entitlements = rawEntitlements.map((entitlement) => ({
+    ...entitlement,
+    status:
+      entitlement.status === 'active' &&
+      entitlement.expiresAt &&
+      entitlement.expiresAt.getTime() <= now.getTime()
+        ? 'expired'
+        : entitlement.status,
+  }));
+  const activeEntitlements = entitlements.filter(
+    (entitlement) => entitlement.status === 'active'
+  );
+  const limit = activeEntitlements.reduce(
+    (maximum, entitlement) => Math.max(maximum, entitlement.monthlyQuota || 0),
+    0
+  );
+  const usedThisMonth = usageRows[0]?.count ?? 0;
+
+  return {
+    entitlements,
+    devices,
+    keys,
+    usage: {
+      usedThisMonth,
+      limit,
+      remaining: Math.max(0, limit - usedThisMonth),
+    },
+    deviceLimit: oneWorkDeviceLimit(),
+  };
+}
+
+/** 用户主动撤销一台电脑；设备对应的 Key 同时失效。 */
+export async function revokeOneWorkDevice(userId: string, deviceId: string) {
+  const db = await getDb();
+  return db.transaction(async (tx) => {
+    const [device] = await tx
+      .select({ id: oneworkDevice.id, apiKeyId: oneworkDevice.apiKeyId })
+      .from(oneworkDevice)
+      .where(
+        and(eq(oneworkDevice.id, deviceId), eq(oneworkDevice.userId, userId))
+      )
+      .for('update')
+      .limit(1);
+    if (!device) return false;
+
+    const revokedAt = new Date();
+    await tx
+      .update(oneworkDevice)
+      .set({ status: 'revoked', updatedAt: revokedAt })
+      .where(eq(oneworkDevice.id, device.id));
+    await tx
+      .update(apiKey)
+      .set({ status: 'revoked', revokedAt, updatedAt: revokedAt })
+      .where(and(eq(apiKey.id, device.apiKeyId), eq(apiKey.userId, userId)));
+    return true;
+  });
 }
 
 export function isOneWorkPublicPack(value: string): value is OneWorkPublicPack {

@@ -19,7 +19,8 @@ import { Routes } from '@/routes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { EyeIcon, EyeOffIcon, Loader2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { notFound, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -31,22 +32,14 @@ export const ResetPasswordForm = () => {
   const t = useTranslations('AuthPage.resetPassword');
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  if (!token) {
-    notFound();
-  }
-
-  // If the token is valid, the user will be redirected to this URL with the token in the query string.
-  // If the token is invalid, the user will be redirected to this URL with an error message in the query string ?error=invalid_token.
-  // OPTIMIZE: check if the token is valid, show error message instead of redirecting to the 404 page
-  if (searchParams.get('error') === 'invalid_token') {
-    notFound();
-  }
+  const invalidToken = !token || searchParams.get('error') === 'invalid_token';
 
   const router = useLocaleRouter();
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [needsNewLink, setNeedsNewLink] = useState(false);
 
   const ResetPasswordSchema = z.object({
     password: z.string().min(8, {
@@ -66,6 +59,11 @@ export const ResetPasswordForm = () => {
   };
 
   const onSubmit = async (values: z.infer<typeof ResetPasswordSchema>) => {
+    if (!token) {
+      setError('重置链接无效或已过期，请重新发送一封重置邮件。');
+      return;
+    }
+
     await authClient.resetPassword(
       {
         newPassword: values.password,
@@ -77,6 +75,7 @@ export const ResetPasswordForm = () => {
           setIsPending(true);
           setError('');
           setSuccess('');
+          setNeedsNewLink(false);
         },
         onResponse: (ctx) => {
           // console.log("resetPassword, response:", ctx.response);
@@ -89,11 +88,38 @@ export const ResetPasswordForm = () => {
         },
         onError: (ctx) => {
           console.error('resetPassword, error:', ctx.error);
-          setError(`${ctx.error.status}: ${ctx.error.message}`);
+          setIsPending(false);
+          const errorMessage = ctx.error.message || '';
+          const tokenFailed =
+            ctx.error.status === 400 ||
+            /token|expired|invalid|过期|无效/i.test(errorMessage);
+          setNeedsNewLink(tokenFailed);
+          setError(
+            tokenFailed
+              ? '重置链接无效或已过期，请重新发送一封重置邮件。'
+              : errorMessage || '密码重置失败，请稍后重试。'
+          );
         },
       }
     );
   };
+
+  if (invalidToken) {
+    return (
+      <AuthCard
+        headerLabel="重置链接已失效"
+        bottomButtonLabel={t('backToLogin')}
+        bottomButtonHref={`${Routes.Login}`}
+      >
+        <div className="space-y-4">
+          <FormError message="这封邮件中的重置链接无效、已使用或已经过期。请重新申请重置密码。" />
+          <Button asChild className="w-full" size="lg">
+            <Link href={Routes.ForgotPassword}>重新发送重置邮件</Link>
+          </Button>
+        </div>
+      </AuthCard>
+    );
+  }
 
   return (
     <AuthCard
@@ -144,6 +170,11 @@ export const ResetPasswordForm = () => {
             />
           </div>
           <FormError message={error} />
+          {needsNewLink && (
+            <Button asChild className="w-full" variant="outline">
+              <Link href={Routes.ForgotPassword}>重新发送重置邮件</Link>
+            </Button>
+          )}
           <FormSuccess message={success} />
           <Button
             disabled={isPending}

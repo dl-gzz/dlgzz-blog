@@ -14,6 +14,7 @@ Read this reference when configuring access, debugging a query, or adapting the 
 ## Configuration
 
 - `ONEWORK_API_KEY`: required bearer key. Never commit or print it.
+- `ONEWORK_DEVICE_ID`: stable device binding written by every managed installer. Pre-0.2 unbound API keys may omit it only during migration; newly issued device-bound keys require it. Never invent or copy it between customers.
 - `ONEWORK_KNOWLEDGE_URL`: optional full endpoint. Defaults to `/api/knowledge/query` on the OneWorkOS origin.
 - `ONEWORK_API_URL`: optional OneWorkOS URL. The script uses its origin, so an existing full knowledge URL remains compatible.
 - Default pack: `onework-workbuddy-v1`.
@@ -37,6 +38,7 @@ Use a media asset linked to the relevant chunk when an article contains addition
 ```http
 POST /api/knowledge/query
 Authorization: Bearer <key>
+X-OneWork-Device-ID: <bound-device-id>
 Content-Type: application/json
 ```
 
@@ -136,6 +138,8 @@ Deduplicate repeated chunks from the same article and cite no more than three ac
 
 - `MISSING` or `INVALID` (`401`): configure a valid key.
 - `REVOKED` (`403`): request a replacement key.
+- `DEVICE_ID_REQUIRED` or `DEVICE_NOT_BOUND` (`401`/`403`): rerun the managed installation on this computer.
+- `DEVICE_MISMATCH` or `DEVICE_REVOKED` (`403`): generate a fresh installation authorization for this computer.
 - `PACK_NOT_LICENSED` (`403`): the key lacks access to the requested pack.
 - `QUOTA_EXCEEDED` (`429`): stop retrying and report the quota condition.
 - `QUERY_FAILED` (`500`): retry once only if the request is safe, then report the failure.
@@ -146,7 +150,7 @@ Do not send raw user images to this text retrieval endpoint. Let the host multim
 
 `assets` contains already-screened tutorial images associated with the matched chunk. `resources` contains associated official videos or links. Keep these arrays structured through orchestration; a Markdown string containing an image URL is not equivalent to a rendered image. The ingestion model is not fixed: any vision-capable model may have produced stored image captions, OCR, and structured facts. The query response intentionally omits OCR, transcripts, and internal analysis metadata to keep tokens low.
 
-Render no more than one directly relevant tutorial image and one relevant official resource in normal guidance. Prefer the host's native image/media message part. Use Markdown only in clients known to fetch remote images. Whenever Markdown carries a remote image, immediately include a clickable URL fallback; the Markdown line itself is not evidence that rendering succeeded. Render a video as a named link or clickable thumbnail unless the client explicitly supports a trusted inline player. Never emit a raw iframe from `embedUrl`.
+Render no more than one directly relevant tutorial image and one relevant official resource in normal guidance. Prefer the host's native image/media message part. Use Markdown only in clients known to fetch remote images. Whenever Markdown carries a remote image, immediately include a clickable URL fallback; the Markdown line itself is not evidence that rendering succeeded. When a relevant returned resource is a video, the answer is incomplete without its exact URL as a named link; also make the returned thumbnail clickable when one exists. Never claim inline playback unless the client actually supports a trusted player, and never emit a raw iframe from `embedUrl`.
 
 Set both `includeAssets` and `includeResources` to `false` for text-only responses. For backward compatibility, omitting `includeResources` makes it follow `includeAssets`.
 

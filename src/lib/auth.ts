@@ -98,7 +98,7 @@ export const auth = betterAuth({
       const locale = getLocaleFromRequest(request);
       const localizedUrl = getUrlWithLocaleInCallbackUrl(url, locale);
 
-      await sendEmail({
+      const sent = await sendEmail({
         to: user.email,
         template: 'forgotPassword',
         context: {
@@ -107,6 +107,10 @@ export const auth = betterAuth({
         },
         locale,
       });
+
+      if (!sent) {
+        throw new Error('重置密码邮件发送失败，请稍后重试或联系支持人员。');
+      }
     },
   },
   emailVerification: {
@@ -117,7 +121,7 @@ export const auth = betterAuth({
       const locale = getLocaleFromRequest(request);
       const localizedUrl = getUrlWithLocaleInCallbackUrl(url, locale);
 
-      await sendEmail({
+      const sent = await sendEmail({
         to: user.email,
         template: 'verifyEmail',
         context: {
@@ -126,6 +130,9 @@ export const auth = betterAuth({
         },
         locale,
       });
+      if (!sent) {
+        throw new Error('验证邮件发送失败，请稍后重试或联系支持人员。');
+      }
     },
   },
   socialProviders,

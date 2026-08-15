@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
-import { getOneWorkApiKey } from './onework-credentials.mjs';
+import {
+  getOneWorkAuthHeaders,
+  oneWorkApiErrorMessage,
+} from './onework-credentials.mjs';
 
 const DEFAULT_ORIGIN = 'https://www.dlgzz.com';
 const ENDPOINT_PATH = '/api/knowledge/query';
@@ -15,6 +18,7 @@ function usage(stream = process.stderr) {
       '',
       'Options:',
       '  --pack <id|auto>      Licensed knowledge pack ID (auto routes WorkBuddy/XHS)',
+      '  --context <text>      Previous explicit topic for a short follow-up',
       '  --limit <1-20>        Result limit (default: 6)',
       '  --no-assets           Omit linked images and resources',
       '  --json                Print the complete JSON response',
@@ -22,6 +26,7 @@ function usage(stream = process.stderr) {
       '',
       'Environment:',
       '  ONEWORK_API_KEY       Required bearer key',
+      '  ONEWORK_DEVICE_ID     Required bound device ID',
       '  ONEWORK_KNOWLEDGE_URL Optional full knowledge endpoint',
       '  ONEWORK_API_URL       Optional OneWorkOS URL; its origin is used',
       '',
@@ -32,6 +37,7 @@ function usage(stream = process.stderr) {
 function parseArgs(argv) {
   const options = {
     query: '',
+    context: '',
     packId: DEFAULT_PACK_ID,
     limit: 6,
     includeAssets: true,
@@ -43,6 +49,7 @@ function parseArgs(argv) {
     const arg = argv[index];
     if (arg === '--help' || arg === '-h') options.help = true;
     else if (arg === '--query') options.query = argv[++index] || '';
+    else if (arg === '--context') options.context = argv[++index] || '';
     else if (arg === '--pack') options.packId = argv[++index] || '';
     else if (arg === '--limit') options.limit = Number(argv[++index]);
     else if (arg === '--no-assets') options.includeAssets = false;
@@ -52,9 +59,11 @@ function parseArgs(argv) {
   }
 
   options.query = options.query.trim();
+  options.context = options.context.trim();
   options.packId = options.packId.trim();
   if (!options.help && !options.query) throw new Error('Missing --query');
   if (!options.help && !options.packId) throw new Error('Missing --pack');
+  if (options.context.length > 1_000) throw new Error('--context is too long');
   if (
     !Number.isFinite(options.limit) ||
     options.limit < 1 ||
@@ -71,14 +80,50 @@ function resolvePackId(packId, query) {
   const normalized = String(query || '').toLowerCase();
   const isXhs = /小红书|xiaohongshu|xhs|red\b/.test(normalized);
   if (!isXhs) return DEFAULT_PACK_ID;
-  if (
-    /开店|入驻|店铺|个人店|个体店|店铺类型|升级|营业执照|主体|资质|品牌授权|商标|审核|保证金|运费宝/.test(
+  const operationsIntent =
+    /发货|物流|运费模板|订单|售后|退换|商品|上架|下架|库存|笔记|直播|千帆|推广|广告|流量|账号运营|运费宝/.test(
       normalized
-    )
-  ) {
+    );
+  const openingIntent =
+    /开店|入驻|个人店|个体店|店铺类型|店铺升级|营业执照|主体变更|资质|品牌授权|商标|入驻审核|开店审核|保证金/.test(
+      normalized
+    );
+  if (openingIntent && !operationsIntent) {
     return XHS_OPEN_SHOP_PACK_ID;
   }
   return XHS_OPERATIONS_PACK_ID;
+}
+
+function isShortFollowUp(query) {
+  const normalized = String(query || '').trim();
+  return (
+    normalized.length <= 24 &&
+    /^(?:那|那么|然后|接下来|下一步|这个|这里|怎么做|怎么办|继续|对|可以|不行|没有|还有|呢|为什么)/.test(
+      normalized
+    )
+  );
+}
+
+function buildEffectiveQuery(query, context) {
+  if (!context || !isShortFollowUp(query)) return query;
+  return `上一个明确主题：${context}\n用户追问：${query}`.slice(0, 5_000);
+}
+
+async function fetchWithTimeout(url, init, timeoutMs = 20_000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new Error(
+        `OneWorkOS 知识检索超时（${Math.round(timeoutMs / 1000)} 秒），请检查网络后重试。`
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function resolveEndpoint() {
@@ -93,6 +138,12 @@ function resolveEndpoint() {
   }
   if (!['http:', 'https:'].includes(parsed.protocol)) {
     throw new Error('OneWorkOS endpoint must use HTTP or HTTPS');
+  }
+  if (
+    parsed.protocol === 'http:' &&
+    !['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname)
+  ) {
+    throw new Error('远程 OneWorkOS endpoint 必须使用 HTTPS');
   }
   return explicit
     ? parsed.toString()
@@ -110,6 +161,18 @@ function normalizeSourceUrl(value) {
     }
     url.searchParams.sort();
     return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function safeHttpUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  try {
+    const parsed = new URL(value.trim());
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+      ? value.trim()
+      : null;
   } catch {
     return null;
   }
@@ -324,6 +387,7 @@ function printReadable(data) {
   console.log(`Results: ${data.results.length}`);
   const sources = new Map();
   const selectedTutorialImages = selectTutorialImages(data.results, data.query);
+  let displayedResource = false;
 
   for (const [index, result] of data.results.entries()) {
     const heading = result.heading ? ` / ${result.heading}` : '';
@@ -363,37 +427,54 @@ function printReadable(data) {
       .filter((candidate) => candidate.resultIndex === index)
       .map((candidate) => candidate.asset);
     for (const image of images) {
+      const imageUrl = safeHttpUrl(image.url);
+      if (!imageUrl) continue;
+      const fallbackUrl = safeHttpUrl(image.originalUrl) || imageUrl;
       const alt = escapeMarkdownLabel(
         image.alt || image.caption,
         'WorkBuddy 教程图'
       );
       console.log('\n教程图资产（由宿主作为图片渲染）:');
-      console.log(`![${alt}](${image.url})`);
-      console.log(
-        `[图片未显示时查看原图](${image.originalUrl || image.url})`
-      );
+      console.log(`![${alt}](${imageUrl})`);
+      console.log(`[图片未显示时查看原图](${fallbackUrl})`);
       if (image.caption && image.caption !== alt) {
         console.log(`图示: ${image.caption}`);
       }
     }
 
     const resources = Array.isArray(result.resources) ? result.resources : [];
-    const related = [...resources, ...assets].find(
-      (asset) => (asset.type === 'video' || asset.type === 'link') && asset.url
-    );
-    if (related) {
-      const label =
-        related.title ||
-        related.caption ||
-        (related.type === 'video' ? '相关视频' : '官方原文');
+    const resourceCandidates = [...resources, ...assets];
+    const related =
+      resourceCandidates.find(
+        (asset) => asset.type === 'video' && safeHttpUrl(asset.url)
+      ) ||
+      resourceCandidates.find(
+        (asset) => asset.type === 'link' && safeHttpUrl(asset.url)
+      );
+    if (related && !displayedResource) {
+      displayedResource = true;
+      const relatedUrl = safeHttpUrl(related.url);
+      const label = escapeMarkdownLabel(
+        related.title || related.caption,
+        related.type === 'video' ? '相关视频' : '官方原文'
+      );
+      const publisher = escapeMarkdownLabel(related.publisher, '');
       const prefix = related.publisher
-        ? `${related.publisher}的`
+        ? `${publisher}的`
         : related.official
           ? '官方'
           : '相关';
-      const platform = related.platform ? ` · ${related.platform}` : '';
+      const platform = related.platform
+        ? ` · ${escapeMarkdownLabel(related.platform, '')}`
+        : '';
+      const coverUrl = safeHttpUrl(
+        related.thumbnailUrl || related.coverUrl || related.posterUrl || ''
+      );
+      if (related.type === 'video' && coverUrl) {
+        console.log(`\n[![${label}](${coverUrl})](${relatedUrl})`);
+      }
       console.log(
-        `${prefix}${related.type === 'video' ? '视频' : '链接'}${platform}: [${label}](${related.url})`
+        `${prefix}${related.type === 'video' ? '视频' : '链接'}${platform}: [${label}](${relatedUrl})`
       );
     }
   }
@@ -433,30 +514,28 @@ async function main() {
     usage(process.stdout);
     return;
   }
-  const apiKey = getOneWorkApiKey();
+  const effectiveQuery = buildEffectiveQuery(options.query, options.context);
+  const resolvedPackId = resolvePackId(
+    options.packId,
+    `${options.context} ${options.query}`.trim()
+  );
 
-  if (!apiKey) throw new Error('ONEWORK_API_KEY is not set');
-
-  const resolvedPackId = resolvePackId(options.packId, options.query);
-
-  const response = await fetch(resolveEndpoint(), {
+  const response = await fetchWithTimeout(resolveEndpoint(), {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: getOneWorkAuthHeaders(),
     body: JSON.stringify({
-      query: options.query,
+      query: effectiveQuery,
       packId: resolvedPackId,
       limit: options.limit,
       includeAssets: options.includeAssets,
+      includeResources: options.includeAssets,
     }),
   });
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     const code = data?.code ? ` ${data.code}` : '';
-    const message = data?.error || `HTTP ${response.status}`;
+    const message = oneWorkApiErrorMessage(data, response.status);
     throw new Error(`OneWork API${code}: ${message}`);
   }
   if (!data?.success || !Array.isArray(data.results)) {

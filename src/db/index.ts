@@ -8,6 +8,13 @@ import * as schema from './schema';
 
 let db: ReturnType<typeof drizzle> | null = null;
 
+function envInteger(name: string, fallback: number, minimum: number, maximum: number) {
+  const value = Number(process.env[name]);
+  return Number.isInteger(value) && value >= minimum && value <= maximum
+    ? value
+    : fallback;
+}
+
 function resolveSslOption(connectionString: string) {
   const explicit = (process.env.DATABASE_SSL || '').trim().toLowerCase();
 
@@ -48,10 +55,11 @@ export async function getDb() {
   const client = postgres(connectionString, {
     prepare: false,
     ssl: resolveSslOption(connectionString),
-    max: 10,
-    idle_timeout: 20,
-    connect_timeout: 10,
-    max_lifetime: 60 * 30,
+    // 每个应用实例的连接上限；扩容时需保证：实例数 × 此值 < 数据库上限。
+    max: envInteger('DATABASE_POOL_MAX', 10, 1, 100),
+    idle_timeout: envInteger('DATABASE_IDLE_TIMEOUT_SECONDS', 20, 5, 300),
+    connect_timeout: envInteger('DATABASE_CONNECT_TIMEOUT_SECONDS', 10, 3, 60),
+    max_lifetime: envInteger('DATABASE_CONNECTION_LIFETIME_SECONDS', 1800, 60, 7200),
   });
 
   db = drizzle(client, { schema });

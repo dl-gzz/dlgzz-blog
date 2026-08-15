@@ -54,6 +54,8 @@ function normalizeIntent(value: string) {
     .normalize('NFKC')
     .trim()
     .toLocaleLowerCase()
+    .replace(/([\p{Script=Han}])([a-z0-9])/gu, '$1 $2')
+    .replace(/([a-z0-9])([\p{Script=Han}])/gu, '$1 $2')
     .replace(/[\s._:/\\-]+/g, ' ')
     .replace(/[^\p{L}\p{N}\s]/gu, '')
     .replace(/\s+/g, ' ');
@@ -65,7 +67,121 @@ function intentTokens(value: string) {
     .filter((token) => token.length > 1);
 }
 
-function scoreText(query: string, candidate: string) {
+const CJK_BIGRAM_STOP_WORDS = new Set([
+  '一个',
+  '使用',
+  '当前',
+  '已经',
+  '功能',
+  '可以',
+  '用户',
+  '相关',
+  '现在',
+  '系统',
+  '这个',
+  '进行',
+  '需要',
+]);
+
+const CJK_PROCEDURAL_BIGRAMS = new Set(['下一', '一步', '怎么', '如何']);
+
+const CJK_SPECIFIC_INTENT_BIGRAMS = new Set([
+  '上架',
+  '下架',
+  '制作',
+  '创建',
+  '发货',
+  '增长',
+  '安装',
+  '官方',
+  '幻灯',
+  '库存',
+  '执行',
+  '排名',
+  '推广',
+  '操作',
+  '教程',
+  '查找',
+  '查询',
+  '检索',
+  '比较',
+  '流量',
+  '物流',
+  '生成',
+  '统计',
+  '自动',
+  '资料',
+  '趋势',
+  '配置',
+  '邮件',
+  '邮箱',
+]);
+
+function cjkNgrams(value: string, size: number) {
+  const grams = new Set<string>();
+  const sequences = normalizeIntent(value).match(/\p{Script=Han}+/gu) ?? [];
+  for (const sequence of sequences) {
+    const characters = [...sequence];
+    for (let index = 0; index <= characters.length - size; index += 1) {
+      const gram = characters.slice(index, index + size).join('');
+      const containsStoppedBigram =
+        size === 3 &&
+        [gram.slice(0, 2), gram.slice(1)].some((part) =>
+          CJK_BIGRAM_STOP_WORDS.has(part)
+        );
+      if (
+        !containsStoppedBigram &&
+        (size !== 2 || !CJK_BIGRAM_STOP_WORDS.has(gram))
+      ) {
+        grams.add(gram);
+      }
+    }
+  }
+  return grams;
+}
+
+function intersect(left: Set<string>, right: Set<string>) {
+  return [...left].filter((value) => right.has(value));
+}
+
+function scoreCjkText(query: string, candidate: string) {
+  const queryTrigrams = cjkNgrams(query, 3);
+  const candidateTrigrams = cjkNgrams(candidate, 3);
+  const sharedTrigrams = intersect(queryTrigrams, candidateTrigrams);
+  if (sharedTrigrams.length > 0) {
+    const candidateCoverage =
+      sharedTrigrams.length / Math.max(1, candidateTrigrams.size);
+    return Math.min(
+      650,
+      420 + sharedTrigrams.length * 45 + Math.round(candidateCoverage * 100)
+    );
+  }
+
+  const queryBigrams = cjkNgrams(query, 2);
+  const candidateBigrams = cjkNgrams(candidate, 2);
+  const sharedBigrams = intersect(queryBigrams, candidateBigrams);
+  if (sharedBigrams.length === 0) return 0;
+
+  const hasSpecificSignal = sharedBigrams.some((gram) =>
+    CJK_SPECIFIC_INTENT_BIGRAMS.has(gram)
+  );
+  const hasProceduralSignal = sharedBigrams.some((gram) =>
+    CJK_PROCEDURAL_BIGRAMS.has(gram)
+  );
+  if (!hasSpecificSignal && !hasProceduralSignal && sharedBigrams.length < 2) {
+    return 0;
+  }
+
+  const candidateCoverage =
+    sharedBigrams.length / Math.max(1, candidateBigrams.size);
+  const signalScore = hasSpecificSignal ? 300 : hasProceduralSignal ? 180 : 140;
+  return Math.min(
+    410,
+    signalScore + sharedBigrams.length * 40 + Math.round(candidateCoverage * 80)
+  );
+}
+
+export function scoreCapabilityText(query: string, candidate: string) {
   const normalizedQuery = normalizeIntent(query);
   const normalizedCandidate = normalizeIntent(candidate);
   if (!normalizedQuery || !normalizedCandidate) return 0;
@@ -78,10 +194,28 @@ function scoreText(query: string, candidate: string) {
   const overlap = candidateTokens.filter((token) =>
     queryTokens.has(token)
   ).length;
-  if (overlap === 0) return 0;
-  return Math.round(
-    (overlap / Math.max(queryTokens.size, candidateTokens.length)) * 500
+  const tokenScore =
+    overlap === 0
+      ? 0
+      : Math.round(
+          (overlap / Math.max(queryTokens.size, candidateTokens.length)) * 500
+        );
+  return Math.max(tokenScore, scoreCjkText(query, candidate));
+}
+
+export function scoreCapabilityCandidate(
+  requestedIntent: string,
+  candidate: { intents: string[]; name: string; description: string }
+) {
+  const intentMatch = getIntentMatch(requestedIntent, candidate.intents);
+  const descriptiveScore = Math.max(
+    scoreCapabilityText(requestedIntent, candidate.name),
+    scoreCapabilityText(requestedIntent, candidate.description)
   );
+  return {
+    score: Math.max(intentMatch.score, Math.floor(descriptiveScore / 2)),
+    matchedIntent: intentMatch.matchedIntent,
+  };
 }
 
 function getIntentMatch(requestedIntent: string, intents: string[]) {
@@ -89,7 +223,7 @@ function getIntentMatch(requestedIntent: string, intents: string[]) {
   let matchedIntent: string | null = null;
 
   for (const intent of intents) {
-    const score = scoreText(requestedIntent, intent);
+    const score = scoreCapabilityText(requestedIntent, intent);
     if (
       score > bestScore ||
       (score === bestScore && intent < (matchedIntent ?? ''))
@@ -100,6 +234,30 @@ function getIntentMatch(requestedIntent: string, intents: string[]) {
   }
 
   return { score: bestScore, matchedIntent };
+}
+
+/**
+ * Character n-grams deliberately allow low-confidence procedural matches such
+ * as `怎么…` when no better registry entry exists. Once a more concrete match is
+ * present, discard materially weaker rows so generic wording cannot turn a
+ * single route into a false composite route.
+ */
+export function retainMeaningfulCapabilityMatches<
+  T extends { match: { score: number } },
+>(rows: T[]): T[] {
+  const bestScore = rows.reduce(
+    (maximum, row) => Math.max(maximum, row.match.score),
+    0
+  );
+  if (bestScore <= 0) return [];
+
+  const cutoff =
+    bestScore >= 700
+      ? Math.max(500, bestScore - 250)
+      : bestScore >= 300
+        ? Math.max(240, Math.floor(bestScore * 0.8))
+        : bestScore;
+  return rows.filter((row) => row.match.score >= cutoff);
 }
 
 /** Remove credentials before registry data leaves the server. */
@@ -178,7 +336,7 @@ export async function resolveCapabilities(
 
   const seenCapabilityKeys = new Set<string>();
 
-  return rows
+  const rankedRows = rows
     .filter(
       (row) =>
         ENABLED_STATUSES.has(row.status) &&
@@ -189,15 +347,13 @@ export async function resolveCapabilities(
     )
     .map((row) => {
       const intents = asStringArray(row.intents);
-      const intentMatch = requestedIntent
-        ? getIntentMatch(requestedIntent, intents)
+      const capabilityMatch = requestedIntent
+        ? scoreCapabilityCandidate(requestedIntent, {
+            intents,
+            name: row.name,
+            description: row.description,
+          })
         : { score: 0, matchedIntent: null };
-      const descriptiveScore = requestedIntent
-        ? Math.max(
-            scoreText(requestedIntent, row.name),
-            scoreText(requestedIntent, row.description)
-          )
-        : 0;
 
       return {
         id: row.capabilityKey,
@@ -216,8 +372,8 @@ export async function resolveCapabilities(
         metadata: asRecord(redactSecrets(row.metadata)),
         configuration: asRecord(redactSecrets(row.configuration)),
         match: {
-          score: Math.max(intentMatch.score, Math.floor(descriptiveScore / 2)),
-          matchedIntent: intentMatch.matchedIntent,
+          score: capabilityMatch.score,
+          matchedIntent: capabilityMatch.matchedIntent,
           skillPriority: row.skillPriority ?? 0,
         },
       } satisfies ResolvedCapability;
@@ -237,6 +393,7 @@ export async function resolveCapabilities(
       if (seenCapabilityKeys.has(row.id)) return false;
       seenCapabilityKeys.add(row.id);
       return true;
-    })
-    .slice(0, limit);
+    });
+
+  return retainMeaningfulCapabilityMatches(rankedRows).slice(0, limit);
 }

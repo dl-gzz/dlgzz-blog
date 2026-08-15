@@ -31,7 +31,8 @@ export const SocialLoginButton = ({
 
   const t = useTranslations('AuthPage.login');
   const searchParams = useSearchParams();
-  const paramCallbackUrl = searchParams.get('callbackUrl');
+  const paramCallbackUrl =
+    searchParams.get('callbackUrl') || searchParams.get('callbackURL');
   // Use prop callback URL or param callback URL if provided, otherwise use the default login redirect
   const locale = useLocale();
   const defaultCallbackUrl = getUrlWithLocaleInCallbackUrl(
@@ -40,7 +41,6 @@ export const SocialLoginButton = ({
   );
   const callbackUrl = propCallbackUrl || paramCallbackUrl || defaultCallbackUrl;
   const [isLoading, setIsLoading] = useState<'google' | 'github' | null>(null);
-  console.log('social login button, callbackUrl', callbackUrl);
 
   const onClick = async (provider: 'google' | 'github') => {
     await authClient.signIn.social(
