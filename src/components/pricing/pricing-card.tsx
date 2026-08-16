@@ -57,7 +57,9 @@ function getPriceForPlan(
       return price.type === PaymentTypes.ONE_TIME;
     }
     return (
-      price.type === PaymentTypes.SUBSCRIPTION && price.interval === interval
+      !price.disabled &&
+      price.type === PaymentTypes.SUBSCRIPTION &&
+      price.interval === interval
     );
   });
 }

@@ -1,10 +1,4 @@
-import CallToActionSection from '@/components/blocks/calltoaction/calltoaction';
-import FaqSection from '@/components/blocks/faqs/faqs';
-import FeaturesSection from '@/components/blocks/features/features';
-import HeroSection from '@/components/blocks/hero/hero';
-import LogoCloudSection from '@/components/blocks/logo-cloud/logo-cloud';
-import PricingSection from '@/components/blocks/pricing/pricing';
-import { NewsletterCard } from '@/components/newsletter/newsletter-card';
+import OneWorkOSHome from '@/components/marketing/oneworkos-home';
 import { constructMetadata } from '@/lib/metadata';
 import { getUrlWithLocale } from '@/lib/urls/urls';
 import type { Metadata } from 'next';
@@ -34,27 +28,7 @@ interface HomePageProps {
 }
 
 export default async function HomePage(props: HomePageProps) {
-  const params = await props.params;
-  const { locale } = params;
-  const t = await getTranslations('HomePage');
+  await props.params;
 
-  return (
-    <>
-      <div className="flex flex-col">
-        <HeroSection />
-
-        <LogoCloudSection />
-
-        <FeaturesSection />
-
-        <PricingSection />
-
-        <FaqSection />
-
-        <CallToActionSection />
-
-        <NewsletterCard />
-      </div>
-    </>
-  );
+  return <OneWorkOSHome />;
 }

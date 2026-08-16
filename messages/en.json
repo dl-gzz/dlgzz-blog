@@ -1,8 +1,8 @@
 {
   "Metadata": {
-    "name": "Independent Meditations",
-    "title": "Independent Meditations · Articles as a Service",
-    "description": "Articles as a Service: essays written for humans, callable by your AI."
+    "name": "OneWorkOS",
+    "title": "OneWorkOS · The AI work operating system for independent workers",
+    "description": "OneWorkOS connects knowledge, tools, and action for independent workers. State your goal and it helps move the work forward."
   },
   "Common": {
     "login": "Log in",
@@ -80,15 +80,15 @@
       }
     },
     "pro": {
-      "name": "Independent Meditations Membership",
-      "description": "Get an API key — let your own AI query my knowledge base",
+      "name": "OneWorkOS Membership",
+      "description": "Connect all knowledge capabilities and let AI take work from goal to action",
       "features": {
-        "feature-1": "Unlimited access to all knowledge packs (724 official Xiaohongshu docs included)",
-        "feature-2": "Personal API key — install into your own Hermes with one command",
-        "feature-3": "Knowledge base updated daily, members always get the latest",
-        "feature-4": "Unlimited access to all premium articles",
-        "feature-5": "All member components unlocked",
-        "feature-6": "Future knowledge packs included automatically"
+        "feature-1": "Full access to OneWorkOS knowledge bases",
+        "feature-2": "1,000 knowledge searches every month",
+        "feature-3": "WorkBuddy and Xiaohongshu knowledge capabilities",
+        "feature-4": "Official images, citations, and video entries",
+        "feature-5": "Continuously updated cloud knowledge",
+        "feature-6": "New knowledge packs unlock automatically"
       },
       "limits": {}
     },
@@ -292,13 +292,13 @@
         "title": "Features"
       },
       "services": {
-        "title": "Store"
+        "title": "Capabilities"
       },
       "bots": {
         "title": "Companion"
       },
       "blog": {
-        "title": "Blog"
+        "title": "Knowledge"
       },
       "pricing": {
         "title": "Pricing"
@@ -307,7 +307,7 @@
         "title": "Docs"
       },
       "aiChat": {
-        "title": "Try the knowledge base"
+        "title": "Start using"
       },
       "whiteboard": {
         "title": "Whiteboard"
@@ -410,7 +410,7 @@
       }
     },
     "footer": {
-      "tagline": "Articles as a Service: written for people, callable by your AI",
+      "tagline": "The AI work operating system for independent workers: knowledge, tools, and action connected.",
       "product": {
         "title": "Product",
         "items": {

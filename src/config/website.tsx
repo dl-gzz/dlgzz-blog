@@ -69,8 +69,8 @@ export const websiteConfig: WebsiteConfig = {
   },
   mail: {
     provider: 'smtp',
-    fromEmail: '独立沉思录 <395887347@qq.com>',
-    supportEmail: '独立沉思录 <395887347@qq.com>',
+    fromEmail: 'OneWorkOS <395887347@qq.com>',
+    supportEmail: 'OneWorkOS <395887347@qq.com>',
   },
   newsletter: {
     provider: 'resend',
@@ -90,17 +90,34 @@ export const websiteConfig: WebsiteConfig = {
         isFree: true,
         isLifetime: false,
       },
-      // 会员只做年费：XorPay 是单次扣款、无自动续费，月费会导致用户每月手动重买。
-      // 早鸟 ¥99/年，正价 ¥199/年。金额单位为「分」，可用 env 覆盖，不必改代码。
+      // XorPay 采用单次扣款；月付订单会授予一个月的 OneWorkOS 访问权限。
+      // 保留旧年付价格配置，确保已有订单、会员和安装授权仍可被正确识别。
       pro: {
         id: 'pro',
+        name: 'OneWorkOS 会员',
         prices: [
           {
             type: PaymentTypes.SUBSCRIPTION,
-            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'xorpay_pro_yearly',
-            amount: Number(process.env.NEXT_PUBLIC_PRO_YEARLY_AMOUNT_CENTS || 9900),
+            priceId:
+              process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY ||
+              'xorpay_pro_monthly',
+            amount: Number(
+              process.env.NEXT_PUBLIC_PRO_MONTHLY_AMOUNT_CENTS || 1990
+            ),
+            currency: 'CNY',
+            interval: PlanIntervals.MONTH,
+          },
+          {
+            type: PaymentTypes.SUBSCRIPTION,
+            priceId:
+              process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY ||
+              'xorpay_pro_yearly',
+            amount: Number(
+              process.env.NEXT_PUBLIC_PRO_YEARLY_AMOUNT_CENTS || 9900
+            ),
             currency: 'CNY',
             interval: PlanIntervals.YEAR,
+            disabled: true,
           },
         ],
         isFree: false,
@@ -128,7 +145,8 @@ export const websiteConfig: WebsiteConfig = {
           {
             type: PaymentTypes.ONE_TIME,
             priceId:
-              process.env.NEXT_PUBLIC_STRIPE_PRICE_IDEA_SECRETARY_LITE_ONE_TIME ||
+              process.env
+                .NEXT_PUBLIC_STRIPE_PRICE_IDEA_SECRETARY_LITE_ONE_TIME ||
               'price_idea_secretary_lite_one_time',
             amount: 100, // 100 分 = 1.00 元 (install verification)
             currency: 'CNY',
