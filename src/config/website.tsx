@@ -68,8 +68,8 @@ export const websiteConfig: WebsiteConfig = {
     relatedPostsSize: 3,
   },
   mail: {
-    provider: 'smtp',
-    fromEmail: 'OneWorkOS <395887347@qq.com>',
+    provider: 'tencent-ses',
+    fromEmail: 'OneWorkOS <noreply@notify.dlgzz.com>',
     supportEmail: 'OneWorkOS <395887347@qq.com>',
   },
   newsletter: {

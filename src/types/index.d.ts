@@ -112,7 +112,7 @@ export interface BlogConfig {
  * Mail configuration
  */
 export interface MailConfig {
-  provider: 'resend' | 'smtp';       // The email provider, supports resend and smtp
+  provider: 'resend' | 'smtp' | 'tencent-ses'; // The email provider
   fromEmail?: string;                // The email address to send from
   supportEmail?: string;             // The email address to send support emails to
 }
