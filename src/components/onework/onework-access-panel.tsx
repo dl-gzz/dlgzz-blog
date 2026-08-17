@@ -267,11 +267,12 @@ export function OneWorkAccessPanel({
   async function copyPluginInstallPrompt() {
     const prompt = [
       '请直接帮我把 OneWorkOS 安装到当前 WorkBuddy，不要只解释步骤：',
-      '1. 添加插件市场：dl-gzz/dlgzz-blog',
-      '2. 安装插件：one-work-os@onework-os-marketplace',
-      '3. 重新加载插件：/reload-plugins',
-      '4. 连接 https://www.dlgzz.com/mcp，打开网页授权；不要让我复制或输入 API Key。',
-      '5. 我在网页点击「允许连接」后，调用 onework_get_usage 验收。',
+      '1. 先检查用户 Skill 目录中是否存在旧版 one-work-os。如果存在，将整个目录移到 .workbuddy/one-work-os-backups 下的时间戳备份目录，不要删除，并保留 one-work-os.local.env；完成后告诉我备份位置。',
+      '2. 添加插件市场：dl-gzz/dlgzz-blog',
+      '3. 安装插件：one-work-os@onework-os-marketplace',
+      '4. 重新加载插件：/reload-plugins',
+      '5. 确认只加载一个 one-work-os，然后连接 https://www.dlgzz.com/mcp，打开网页授权；不要让我复制或输入 API Key。',
+      '6. 我在网页点击「允许连接」后，调用 onework_get_usage 验收。',
       '如果当前版本不允许你代为执行插件命令，请直接打开「插件」页面，并只告诉我下一个必须点击的位置。',
     ].join('\n');
     setError('');
@@ -539,7 +540,8 @@ export function OneWorkAccessPanel({
           </CardTitle>
           <CardDescription>
             安装一个很薄的插件，然后在网页登录并点击一次授权。不需要
-            Node.js、终端、设备 Key 或手动配置路径。
+            Node.js、设备 Key 或手动配置路径。旧版安装用户会先由 WorkBuddy
+            可恢复地备份旧 Skill。
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
@@ -586,6 +588,11 @@ export function OneWorkAccessPanel({
                 首次调用时 WorkBuddy 会打开 OneWorkOS
                 网页，登录后点击「允许连接」即可。
               </p>
+              <p className="font-medium text-amber-700 dark:text-amber-300">
+                如果以前安装过旧版，请先把用户 Skill 目录中的 one-work-os 移到
+                .workbuddy/one-work-os-backups 再安装；保留
+                one-work-os.local.env，不要直接删除。
+              </p>
             </div>
           </details>
         </CardContent>
@@ -598,8 +605,8 @@ export function OneWorkAccessPanel({
             旧版兼容安装
           </CardTitle>
           <CardDescription>
-            仅在旧版 WorkBuddy 不支持远程 MCP / OAuth 时使用。此通道仍然保留，
-            已安装用户不受影响。
+            仅在旧版 WorkBuddy 不支持远程 MCP / OAuth 时使用。 旧版 Skill
+            与新插件不能同时启用；准备升级时请使用上方的推荐安装话术。
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
