@@ -168,15 +168,23 @@ async function main() {
     const registered = await registerOneWorkOAuthClient({
       clientName: 'OAuth E2E Client',
       redirectUris: [redirectUri],
-      grantTypes: ['authorization_code', 'refresh_token'],
+      // WorkBuddy 5.3.13 的真实 DCR 形状：只声明 authorization_code。
+      grantTypes: ['authorization_code'],
       responseTypes: ['code'],
       scope: 'onework:resolve onework:knowledge',
       tokenEndpointAuthMethod: 'none',
     });
+    assert(
+      registered.grant_types.length === 2 &&
+        registered.grant_types.includes('authorization_code') &&
+        registered.grant_types.includes('refresh_token'),
+      'DCR response must normalize authorization_code to include refresh_token'
+    );
     clientIds.push(registered.client_id);
     const [dynamicRegistration] = await db
       .select({
         dynamicallyRegistered: oneworkOauthClient.dynamicallyRegistered,
+        grantTypes: oneworkOauthClient.grantTypes,
       })
       .from(oneworkOauthClient)
       .where(eq(oneworkOauthClient.clientId, registered.client_id))
@@ -184,6 +192,11 @@ async function main() {
     assert(
       dynamicRegistration?.dynamicallyRegistered === true,
       'DCR clients must be marked unverified/dynamically registered'
+    );
+    assert(
+      dynamicRegistration.grantTypes.includes('authorization_code') &&
+        dynamicRegistration.grantTypes.includes('refresh_token'),
+      'stored DCR grants must include refresh_token for actual rotation'
     );
 
     const verifier = randomBytes(48).toString('base64url');

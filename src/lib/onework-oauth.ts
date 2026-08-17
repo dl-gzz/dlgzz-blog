@@ -699,18 +699,19 @@ export async function registerOneWorkOAuthClient(input: {
   }
 
   const redirectUris = [...new Set(input.redirectUris as string[])];
-  const grantTypes = Array.isArray(input.grantTypes)
+  const requestedGrantTypes = Array.isArray(input.grantTypes)
     ? [...new Set(input.grantTypes)]
     : ['authorization_code', 'refresh_token'];
   const responseTypes = Array.isArray(input.responseTypes)
     ? [...new Set(input.responseTypes)]
     : ['code'];
   if (
-    grantTypes.some(
+    requestedGrantTypes.some(
       (item) =>
         typeof item !== 'string' ||
         !['authorization_code', 'refresh_token'].includes(item)
     ) ||
+    !requestedGrantTypes.includes('authorization_code') ||
     responseTypes.length !== 1 ||
     responseTypes[0] !== 'code' ||
     (input.tokenEndpointAuthMethod !== undefined &&
@@ -718,9 +719,13 @@ export async function registerOneWorkOAuthClient(input: {
   ) {
     throw new OneWorkOAuthError(
       'invalid_client_metadata',
-      '动态注册只支持 public client 的 authorization_code + refresh_token 与 code 响应'
+      '动态注册只支持 public authorization-code client 与 code 响应'
     );
   }
+  // WorkBuddy 5.3.13 的 DCR 仅声明 authorization_code，但会使用授权服务
+  // 随 token response 签发的 refresh_token。服务端在注册时统一规范化，
+  // 使数据库、DCR response 和后续 rotation 的能力声明一致。
+  const grantTypes = ['authorization_code', 'refresh_token'];
 
   const scopes = normalizedScopeList(
     typeof input.scope === 'string' ? input.scope : DEFAULT_SCOPE,
