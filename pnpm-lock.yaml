@@ -309,8 +309,8 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.0.14)
       tencentcloud-sdk-nodejs:
-        specifier: ^4.1.294
-        version: 4.1.294
+        specifier: 4.1.280
+        version: 4.1.280
       tldraw:
         specifier: 4.2.3
         version: 4.2.3(@floating-ui/dom@1.6.13)(@types/react-dom@19.0.3(@types/react@19.0.9))(@types/react@19.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -6358,8 +6358,8 @@ packages:
     resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
     engines: {node: '>=6'}
 
-  tencentcloud-sdk-nodejs@4.1.294:
-    resolution: {integrity: sha512-Q5y0j1pFMuIiaeD/Dtks6CLpPB7oioWxDmCFLoI/u1WD5Ev/ryDksb1q/QN1VSA74fto3QL7T/wzKkywDjlS2A==}
+  tencentcloud-sdk-nodejs@4.1.280:
+    resolution: {integrity: sha512-dregkJgVkglSbIzLVk3iAdpQRT212eNEzOIyzKG6FtMJYaX8rnWA5n38Q2a3R0ntLuTZpgWNbx69d0J/IiJbPQ==}
     engines: {node: '>=10'}
 
   text-segmentation@1.0.3:
@@ -13235,7 +13235,7 @@ snapshots:
 
   tapable@2.2.1: {}
 
-  tencentcloud-sdk-nodejs@4.1.294:
+  tencentcloud-sdk-nodejs@4.1.280:
     dependencies:
       form-data: 3.0.5
       get-stream: 6.0.1

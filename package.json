@@ -142,7 +142,7 @@
     "swiper": "^11.2.5",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
-    "tencentcloud-sdk-nodejs": "^4.1.294",
+    "tencentcloud-sdk-nodejs": "4.1.280",
     "tldraw": "4.2.3",
     "tw-animate-css": "^1.2.4",
     "use-intl": "^3.26.5",
