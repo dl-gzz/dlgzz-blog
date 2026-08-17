@@ -31,6 +31,7 @@
     "test:onework:access": "node --require ./tests/register-server-only.cjs --import tsx scripts/test-onework-access.ts",
     "test:onework:analytics": "node --import tsx scripts/test-onework-analytics-api.ts",
     "test:onework:public-api": "node --import tsx scripts/test-onework-public-api.ts",
+    "test:onework:oauth-public": "node --require ./tests/register-server-only.cjs --import tsx scripts/test-onework-oauth-public.ts",
     "upload:xhs-assets": "tsx scripts/upload-obsidian-assets-to-cdn.ts",
     "content": "fumadocs-mdx",
     "email": "email dev --dir src/mail/templates --port 3333",
