@@ -104,7 +104,7 @@ function extractRawKey(headerValue: string | null): string {
 
 const SHANGHAI_OFFSET_MS = 8 * 60 * 60 * 1000;
 
-/** OneWorkOS 会员按北京时间自然月结算。 */
+/** OneWorkerOS 会员按北京时间自然月结算。 */
 export function oneWorkMonthStart(now = new Date()): Date {
   const shanghai = new Date(now.getTime() + SHANGHAI_OFFSET_MS);
   return new Date(

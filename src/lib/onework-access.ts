@@ -80,7 +80,7 @@ function normalizePackIds(packIds: string[]) {
   ];
   if (normalized.length === 0) {
     throw new OneWorkAccessError(
-      '至少选择一个有效的 OneWorkOS 知识包',
+      '至少选择一个有效的 OneWorkerOS 知识包',
       'INVALID_PACKS'
     );
   }
@@ -331,7 +331,7 @@ export async function issueOneWorkActivationCode({
 
 /**
  * 给网站内购成功的账号直接授予权益。外部平台成交仍使用兑换码；
- * 网站 OneWorkOS 会员成交后直接授予全量知识库权益。
+ * 网站 OneWorkerOS 会员成交后直接授予全量知识库权益。
  */
 export async function grantOneWorkEntitlements({
   userId,
@@ -462,7 +462,7 @@ export function shouldGrantOneWorkForPrice(priceId: string) {
 }
 
 export function getOneWorkPaymentPacks() {
-  // 一次购买即授予全部 OneWorkOS 知识库；后续新增知识包无需改环境变量。
+  // 一次购买即授予全部 OneWorkerOS 知识库；后续新增知识包无需改环境变量。
   return [ALL_PACKS_GRANT];
 }
 
@@ -640,7 +640,7 @@ export async function createOneWorkInstallToken({
       entitlements.every((item) => (item.monthlyQuota || 0) < 1)
     ) {
       throw new OneWorkAccessError(
-        '当前账号没有有效的 OneWorkOS 权益，请先兑换或续费',
+        '当前账号没有有效的 OneWorkerOS 权益，请先兑换或续费',
         'NO_ACTIVE_ENTITLEMENT',
         403
       );
@@ -742,7 +742,7 @@ export async function claimOneWorkInstallToken({
       effectiveEntitlements.every((item) => (item.monthlyQuota || 0) < 1)
     ) {
       throw new OneWorkAccessError(
-        '当前账号没有有效的 OneWorkOS 权益，请先兑换或续费',
+        '当前账号没有有效的 OneWorkerOS 权益，请先兑换或续费',
         'NO_ACTIVE_ENTITLEMENT',
         403
       );
@@ -777,7 +777,7 @@ export async function claimOneWorkInstallToken({
       monthlyQuota,
       expiresAt: earliestExpiry,
       packExpiries,
-      name: `${deviceName || install.deviceName || 'OneWorkOS'} · ${platform || install.platform}`,
+      name: `${deviceName || install.deviceName || 'OneWorkerOS'} · ${platform || install.platform}`,
       source: 'install',
       deviceId: deviceId.trim(),
       deviceName: deviceName || install.deviceName,

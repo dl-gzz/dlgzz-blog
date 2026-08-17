@@ -23,9 +23,9 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: defaultMessages.Metadata.name,
-    short_name: 'One Worker OS',
+    short_name: 'OneWorkerOS',
     description: defaultMessages.Metadata.description,
-    start_url: '/zh/whiteboard',
+    start_url: '/zh',
     scope: '/',
     display: 'standalone',
     background_color: '#0f172a',

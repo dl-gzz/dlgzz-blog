@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
  *
  * NOTICE: used in client components only
  *
- * OneWorkOS 导航：先进入工作入口，再按需探索知识、能力与会员。
+ * OneWorkerOS 导航：先进入工作入口，再按需探索知识、能力与会员。
  *
  * @returns The navbar config with translated titles for navigation
  */

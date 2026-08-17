@@ -67,14 +67,14 @@ export function OneWorkAdminPanel() {
   return (
     <Card className="mx-4 max-w-3xl lg:mx-6">
       <CardHeader>
-        <CardTitle>签发 OneWorkOS 兑换码</CardTitle>
+        <CardTitle>签发 OneWorkerOS 兑换码</CardTitle>
         <CardDescription>
           每笔小红书/抖音成交可以生成一枚一次性兑换码。支付回调接入后，这一步可自动化。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100">
-          这枚兑换码默认开通全部 OneWorkOS
+          这枚兑换码默认开通全部 OneWorkerOS
           知识库。以后新增知识包会自动包含，不需要重新生成兑换码或重新安装
           Skill。
         </div>

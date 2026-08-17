@@ -41,7 +41,7 @@ function paramsFromSerializedQuery(value: unknown) {
 
 /** Consent page bootstrap. Pass through the standard authorize query string. */
 export async function GET(request: NextRequest) {
-  const auth = await requireSession('请先登录后确认 OneWorkOS 授权');
+  const auth = await requireSession('请先登录后确认 OneWorkerOS 授权');
   if ('response' in auth) return auth.response;
   try {
     const prepared = await prepareOneWorkAuthorizationRequest(
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const csrf = requireSameOrigin(request);
   if (csrf) return csrf;
-  const auth = await requireSession('请先登录后确认 OneWorkOS 授权');
+  const auth = await requireSession('请先登录后确认 OneWorkerOS 授权');
   if ('response' in auth) return auth.response;
   try {
     const record = await readOneWorkOAuthJsonObject(request, 16_000);

@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
   const csrf = requireSameOrigin(request);
   if (csrf) return csrf;
 
-  const auth = await requireHermesAdmin('只有管理员可以签发 OneWorkOS 兑换码');
+  const auth = await requireHermesAdmin(
+    '只有管理员可以签发 OneWorkerOS 兑换码'
+  );
   if ('response' in auth) return auth.response;
 
   const body = await request.json().catch(() => ({}));

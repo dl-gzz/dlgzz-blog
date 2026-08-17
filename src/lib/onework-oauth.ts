@@ -640,10 +640,17 @@ function normalizeResource(value: string | undefined) {
   if (requested !== expected) {
     throw new OneWorkOAuthError(
       'invalid_target',
-      'resource 必须指向 OneWorkOS MCP 服务'
+      'resource 必须指向 OneWorkerOS MCP 服务'
     );
   }
   return expected;
+}
+
+function oauthClientDisplayName(value: string | null | undefined) {
+  const name = value?.trim() || 'OneWorkerOS 客户端';
+  // Existing OAuth rows keep their stable client identity and tokens. Only the
+  // presentation name is upgraded so connected users see the current brand.
+  return name.replaceAll('OneWorkOS', 'OneWorkerOS');
 }
 
 function clientFromRow(
@@ -651,7 +658,7 @@ function clientFromRow(
 ): OneWorkOAuthClient {
   return {
     clientId: row.clientId,
-    clientName: row.clientName,
+    clientName: oauthClientDisplayName(row.clientName),
     redirectUris: row.redirectUris,
     grantTypes: row.grantTypes,
     responseTypes: row.responseTypes,
@@ -744,7 +751,7 @@ export async function registerOneWorkOAuthClient(input: {
   const clientName =
     typeof input.clientName === 'string' && input.clientName.trim()
       ? input.clientName.trim().slice(0, 120)
-      : 'OneWorkOS MCP Client';
+      : 'OneWorkerOS MCP Client';
   const now = new Date();
   const staleClientBefore = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const db = await getDb();
@@ -829,7 +836,7 @@ export async function registerOneWorkOAuthClient(input: {
     if ((dynamicCount?.count || 0) >= dynamicClientLimit()) {
       throw new OneWorkOAuthError(
         'invalid_client_metadata',
-        '动态客户端注册数量已达上限，请联系 OneWorkOS',
+        '动态客户端注册数量已达上限，请联系 OneWorkerOS',
         429
       );
     }
@@ -971,7 +978,7 @@ async function requireActiveEntitlement(
   if (!(await userHasActiveOneWorkEntitlement(userId, tx))) {
     throw new OneWorkOAuthError(
       code,
-      'OneWorkOS 权益不存在或已经过期',
+      'OneWorkerOS 权益不存在或已经过期',
       code === 'invalid_grant' ? 400 : 403
     );
   }
@@ -1430,7 +1437,7 @@ export async function listOneWorkOAuthConnections(
     if (!current) {
       connections.set(row.clientId, {
         clientId: row.clientId,
-        clientName: row.clientName || 'OneWorkOS 客户端',
+        clientName: oauthClientDisplayName(row.clientName),
         scopes: [...new Set(scopes)],
         grantedAt: row.grantedAt,
       });
@@ -1553,7 +1560,7 @@ export async function issueOneWorkDeviceCode(input: {
   ) {
     throw new OneWorkOAuthError(
       'unauthorized_client',
-      '只有 OneWorkOS 预注册的可信客户端才能使用 device_code'
+      '只有 OneWorkerOS 预注册的可信客户端才能使用 device_code'
     );
   }
   const rateLimit = await reserveOneWorkOAuthPublicRequest({
@@ -1771,7 +1778,7 @@ export async function pollOneWorkDeviceToken(input: {
   ) {
     throw new OneWorkOAuthError(
       'unauthorized_client',
-      '只有 OneWorkOS 预注册的可信客户端才能使用 device_code'
+      '只有 OneWorkerOS 预注册的可信客户端才能使用 device_code'
     );
   }
   const resource = normalizeResource(input.resource);

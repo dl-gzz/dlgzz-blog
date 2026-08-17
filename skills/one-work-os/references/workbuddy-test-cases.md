@@ -71,7 +71,7 @@ Prompt:
 Expected behavior:
 
 - Resolve this as a composite route: knowledge first, then a host presentation capability if one is actually available.
-- Do not claim that `presentation.create` exists merely because it is registered in OneWorkOS.
+- Do not claim that `presentation.create` exists merely because it is registered in OneWorkerOS.
 - If the host has no presentation tool, provide the exact next step and state the missing capability.
 
 ## Image and source check

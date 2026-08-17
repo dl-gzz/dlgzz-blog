@@ -1,4 +1,4 @@
-/** Apply the additive OneWorkOS device de-duplication migration. */
+/** Apply the additive OneWorkerOS device de-duplication migration. */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as dotenv from 'dotenv';
@@ -24,7 +24,10 @@ const sql = postgres(url, {
 });
 
 async function main() {
-  const migrationPath = join(process.cwd(), 'src/db/migrations/0018_onework_device_dedup.sql');
+  const migrationPath = join(
+    process.cwd(),
+    'src/db/migrations/0018_onework_device_dedup.sql'
+  );
   const statements = readFileSync(migrationPath, 'utf8')
     .split('--> statement-breakpoint')
     .map((statement) => statement.trim())
@@ -37,7 +40,9 @@ async function main() {
       }
     });
 
-    const [summary] = await sql<{ devices: number; duplicate_groups: number }[]>`
+    const [summary] = await sql<
+      { devices: number; duplicate_groups: number }[]
+    >`
       SELECT
         count(*)::int AS devices,
         count(*) FILTER (WHERE duplicate_count > 1)::int AS duplicate_groups
@@ -48,7 +53,7 @@ async function main() {
       ) grouped
     `;
     console.log(
-      `OneWorkOS device de-duplication ready: ${summary.devices} device rows, ${summary.duplicate_groups} duplicate groups`
+      `OneWorkerOS device de-duplication ready: ${summary.devices} device rows, ${summary.duplicate_groups} duplicate groups`
     );
   } finally {
     await sql.end();

@@ -1,4 +1,4 @@
-/** Apply the additive OneWorkOS capability and semantic-layer migration. */
+/** Apply the additive OneWorkerOS capability and semantic-layer migration. */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as dotenv from 'dotenv';
@@ -55,10 +55,10 @@ async function main() {
       order by table_name
     `;
     if (rows.length !== 4) {
-      throw new Error('OneWorkOS semantic-layer tables were not created');
+      throw new Error('OneWorkerOS semantic-layer tables were not created');
     }
     console.log(
-      `OneWorkOS semantic layer ready: ${rows
+      `OneWorkerOS semantic layer ready: ${rows
         .map((row) => row.table_name)
         .join(', ')}`
     );

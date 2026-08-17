@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     if (request.headers.get('authorization')) {
       throw new OneWorkOAuthError(
         'invalid_client',
-        'OneWorkOS 仅支持无需 client_secret 的 public client',
+        'OneWorkerOS 仅支持无需 client_secret 的 public client',
         401
       );
     }

@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: MkSaaS Community Support
-    url: https://github.com/MkSaaSHQ/mksaas-template/discussions
-    about: Please ask and answer questions here.
-  - name: MkSaaS Documentation
-    url: https://mksaas.com/docs
-    about: Please check out the documentation here.
+  - name: OneWorkerOS Support
+    url: https://www.dlgzz.com/contact
+    about: Ask the OneWorkerOS team for help.
+  - name: OneWorkerOS Documentation
+    url: https://www.dlgzz.com/docs
+    about: Read the OneWorkerOS documentation.

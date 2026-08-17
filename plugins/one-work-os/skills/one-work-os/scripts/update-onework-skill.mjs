@@ -43,7 +43,7 @@ function readVersion(root) {
   const raw = readFileSync(join(root, 'manifest.yaml'), 'utf8');
   const version = raw.match(/^version:\s*["']?([^"'\s]+)["']?\s*$/m)?.[1];
   if (!version || !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) {
-    throw new Error('OneWorkOS manifest.yaml 缺少有效版本号');
+    throw new Error('OneWorkerOS manifest.yaml 缺少有效版本号');
   }
   return version;
 }
@@ -110,7 +110,7 @@ function releaseUrl() {
     parsed.protocol === 'http:' &&
     !['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname)
   ) {
-    throw new Error('远程 OneWorkOS 更新必须使用 HTTPS');
+    throw new Error('远程 OneWorkerOS 更新必须使用 HTTPS');
   }
   return configured ? parsed : new URL(RELEASE_PATH, parsed.origin);
 }
@@ -129,7 +129,7 @@ function validateRelease(release) {
     !Array.isArray(release?.files) ||
     release.files.length < 1
   ) {
-    throw new Error('OneWorkOS release 清单格式无效');
+    throw new Error('OneWorkerOS release 清单格式无效');
   }
   const seen = new Set();
   for (const file of release.files) {
@@ -149,7 +149,7 @@ function validateRelease(release) {
       !/^[a-f0-9]{64}$/.test(file.sha256 || '')
     ) {
       throw new Error(
-        `OneWorkOS release 文件清单无效：${file?.path || 'unknown'}`
+        `OneWorkerOS release 文件清单无效：${file?.path || 'unknown'}`
       );
     }
     seen.add(file.path);
@@ -171,13 +171,13 @@ async function fetchRelease() {
     !/^[a-f0-9]{64}$/.test(expectedHash) ||
     sha256(releaseBuffer) !== expectedHash
   ) {
-    throw new Error('OneWorkOS release 清单 SHA256 校验失败');
+    throw new Error('OneWorkerOS release 清单 SHA256 校验失败');
   }
   let parsed;
   try {
     parsed = JSON.parse(releaseBuffer.toString('utf8'));
   } catch {
-    throw new Error('OneWorkOS release 清单不是有效 JSON');
+    throw new Error('OneWorkerOS release 清单不是有效 JSON');
   }
   return { release: validateRelease(parsed), url };
 }
@@ -313,7 +313,7 @@ async function installUpdate(release, manifestUrl) {
     archive.length !== release.artifact.size ||
     sha256(archive) !== release.artifact.sha256
   ) {
-    throw new Error('OneWorkOS Skill ZIP 大小或 SHA256 校验失败');
+    throw new Error('OneWorkerOS Skill ZIP 大小或 SHA256 校验失败');
   }
 
   mkdirSync(workbuddyRoot, { recursive: true, mode: 0o700 });
@@ -422,9 +422,9 @@ main()
       console.log(JSON.stringify(result, null, 2));
     else if (result.updated)
       console.log(
-        `OneWorkOS 已更新到 ${result.currentVersion}，请重启 WorkBuddy。`
+        `OneWorkerOS 已更新到 ${result.currentVersion}，请重启 WorkBuddy。`
       );
-    else console.log(`OneWorkOS ${result.currentVersion} 已是当前版本。`);
+    else console.log(`OneWorkerOS ${result.currentVersion} 已是当前版本。`);
   })
   .catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));

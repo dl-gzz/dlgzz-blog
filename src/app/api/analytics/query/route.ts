@@ -24,11 +24,11 @@ const DENY_MESSAGE: Record<string, { status: number; error: string }> = {
   revoked: { status: 403, error: 'API Key 已被吊销' },
   entitlement_expired: {
     status: 403,
-    error: 'OneWorkOS 权益已过期，请续费后重试',
+    error: 'OneWorkerOS 权益已过期，请续费后重试',
   },
   device_mismatch: {
     status: 403,
-    error: '这把 Key 不属于当前电脑，请在 OneWorkOS 网站重新生成安装授权',
+    error: '这把 Key 不属于当前电脑，请在 OneWorkerOS 网站重新生成安装授权',
   },
   quota_exceeded: { status: 429, error: '本月调用额度已用完' },
 };
@@ -96,7 +96,7 @@ async function completeUsageSafely(
   }
 }
 
-/** Execute a governed semantic query for an entitled OneWorkOS API key. */
+/** Execute a governed semantic query for an entitled OneWorkerOS API key. */
 export async function POST(request: NextRequest) {
   const startedAt = Date.now();
   const contentLength = Number(request.headers.get('content-length') || 0);
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
   let reservation: Awaited<ReturnType<typeof reserveApiKeyUsage>>;
   try {
-    // V1 follows the existing per-endpoint reservation contract. OneWorkOS will
+    // V1 follows the existing per-endpoint reservation contract. OneWorkerOS will
     // later correlate resolver/knowledge/analytics calls into one user-question
     // charge at the orchestration layer without changing this API response.
     reservation = await reserveApiKeyUsage({

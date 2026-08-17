@@ -45,7 +45,7 @@ const workflowSteps: Array<{
     number: '02',
     title: '理解当前阶段',
     description:
-      'OneWorkOS 会识别你想解决的问题，并在需要时询问你现在进行到了哪一步。',
+      'OneWorkerOS 会识别你想解决的问题，并在需要时询问你现在进行到了哪一步。',
     icon: Compass,
   },
   {
@@ -73,7 +73,7 @@ function SectionEyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function OneWorkOSHome() {
+export default function OneWorkerOSHome() {
   return (
     <div className="overflow-hidden bg-[#f8fbff] text-slate-950">
       <section className="relative isolate overflow-hidden bg-[#07172e] px-4 pb-20 pt-14 text-white sm:pt-20 lg:pb-28">
@@ -96,7 +96,7 @@ export default function OneWorkOSHome() {
               把你的工作方式，变成一个会工作的 AI 系统
             </h1>
             <p className="mx-auto mt-7 max-w-3xl text-pretty text-base leading-8 text-slate-300 sm:text-lg">
-              OneWorkOS
+              OneWorkerOS
               为独立工作者连接知识、工具与行动。你只需要说出目标，它会帮你检索可靠答案、展示图文教程、判断下一步，并调度对应能力完成任务。
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
@@ -106,7 +106,7 @@ export default function OneWorkOSHome() {
                 className="h-12 rounded-xl bg-[#2678ff] px-6 text-base shadow-lg shadow-blue-950/40 hover:bg-[#1768eb]"
               >
                 <LocaleLink href="/ai-chat">
-                  立即使用 OneWorkOS <ArrowRight className="size-4" />
+                  立即使用 OneWorkerOS <ArrowRight className="size-4" />
                 </LocaleLink>
               </Button>
               <Button
@@ -129,7 +129,7 @@ export default function OneWorkOSHome() {
               <div className="flex items-center justify-between border-b border-white/10 pb-4 text-sm text-slate-400">
                 <div className="flex items-center gap-2">
                   <span className="size-2 rounded-full bg-cyan-300 shadow-[0_0_14px_3px_rgba(103,232,249,.45)]" />
-                  OneWorkOS · 工作控制台
+                  OneWorkerOS · 工作控制台
                 </div>
                 <span className="hidden rounded-full bg-white/5 px-3 py-1 text-xs sm:block">
                   在线 · 知识与能力已连接
@@ -152,7 +152,7 @@ export default function OneWorkOSHome() {
                 <div className="rounded-2xl border border-blue-400/20 bg-[linear-gradient(135deg,rgba(37,99,235,.2),rgba(99,102,241,.12))] p-5">
                   <div className="flex items-center gap-3 text-sm text-blue-100">
                     <Brain className="size-4 text-cyan-300" />
-                    OneWorkOS 正在工作
+                    OneWorkerOS 正在工作
                   </div>
                   <div className="mt-4 space-y-3 text-sm text-slate-200">
                     <p className="flex items-center gap-2">
@@ -200,7 +200,7 @@ export default function OneWorkOSHome() {
               从一句话，到完整行动
             </h2>
             <p className="mt-5 text-lg leading-8 text-slate-600">
-              不必先学会每一个工具。OneWorkOS
+              不必先学会每一个工具。OneWorkerOS
               会把问题、可靠知识和下一步行动连接起来。
             </p>
           </div>
@@ -267,7 +267,7 @@ export default function OneWorkOSHome() {
               <Layers3 className="size-7 text-blue-600" />
               <h3 className="mt-6 text-2xl font-semibold">能力调度</h3>
               <p className="mt-3 leading-7 text-slate-600">
-                OneWorkOS
+                OneWorkerOS
                 会先判断用户想做什么，再选择正确的知识包、Skill、连接器或工具。
               </p>
               <ul className="mt-6 space-y-3 text-sm text-slate-700">
@@ -288,7 +288,7 @@ export default function OneWorkOSHome() {
               <Zap className="size-7 text-blue-600" />
               <h3 className="mt-6 text-2xl font-semibold">行动闭环</h3>
               <p className="mt-3 leading-7 text-slate-600">
-                答案不是终点。OneWorkOS
+                答案不是终点。OneWorkerOS
                 会继续告诉用户下一步做什么，并在得到授权后调用工具执行。
               </p>
               <ul className="mt-6 space-y-3 text-sm text-slate-700">
@@ -397,7 +397,7 @@ export default function OneWorkOSHome() {
                 </p>
               </div>
               <div className="bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,.35),transparent_45%)] p-7">
-                <p className="text-sm font-medium text-cyan-200">OneWorkOS</p>
+                <p className="text-sm font-medium text-cyan-200">OneWorkerOS</p>
                 <h3 className="mt-3 text-2xl font-semibold">
                   理解目标，连接到行动
                 </h3>
@@ -420,7 +420,7 @@ export default function OneWorkOSHome() {
             </div>
           </div>
           <p className="mt-8 max-w-3xl text-xl leading-9 text-slate-300">
-            OneWorkOS
+            OneWorkerOS
             不是一本需要从头阅读的说明书，而是一本可以直接和你一起工作的“未来之书”。
           </p>
         </div>
@@ -437,7 +437,7 @@ export default function OneWorkOSHome() {
               每天学习的知识、验证过的方法、完成过的案例，都不应该随着时间被遗忘。
             </p>
             <p className="mt-4 text-lg leading-8 text-slate-600">
-              OneWorkOS
+              OneWorkerOS
               将这些内容沉淀成可检索、可调用、可执行的知识资产。它既可以帮助自己，也可以通过
               Skill 服务更多独立工作者。
             </p>
@@ -480,13 +480,13 @@ export default function OneWorkOSHome() {
           <div className="rounded-[1.8rem] bg-[#071e47]/92 px-6 py-12 text-white sm:px-12 sm:py-14">
             <div className="grid items-center gap-10 lg:grid-cols-[1fr_.8fr]">
               <div>
-                <SectionEyebrow>OneWorkOS 会员</SectionEyebrow>
+                <SectionEyebrow>OneWorkerOS 会员</SectionEyebrow>
                 <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-5xl">
                   安装一次，持续获得全部知识能力
                 </h2>
                 <ul className="mt-7 grid gap-3 text-slate-200 sm:grid-cols-2">
                   {[
-                    '使用全部 OneWorkOS 知识库',
+                    '使用全部 OneWorkerOS 知识库',
                     '每月 1000 次知识检索',
                     'WorkBuddy 与小红书知识能力',
                     '官方图片、资料出处和视频入口',
@@ -501,7 +501,7 @@ export default function OneWorkOSHome() {
                 </ul>
               </div>
               <div className="rounded-3xl border border-white/15 bg-white/10 p-7 backdrop-blur">
-                <p className="text-sm text-blue-100">OneWorkOS 会员</p>
+                <p className="text-sm text-blue-100">OneWorkerOS 会员</p>
                 <div className="mt-3 flex items-end gap-2">
                   <span className="text-5xl font-semibold">¥19.9</span>
                   <span className="pb-1 text-lg text-blue-100">/ 月</span>
@@ -512,7 +512,7 @@ export default function OneWorkOSHome() {
                   className="mt-7 h-12 w-full rounded-xl bg-white text-blue-700 hover:bg-blue-50"
                 >
                   <LocaleLink href="/pricing">
-                    立即开通 OneWorkOS <ArrowRight className="size-4" />
+                    立即开通 OneWorkerOS <ArrowRight className="size-4" />
                   </LocaleLink>
                 </Button>
                 <p className="mt-4 text-xs leading-5 text-blue-100">
@@ -528,7 +528,7 @@ export default function OneWorkOSHome() {
         <div className="mx-auto max-w-4xl text-center">
           <SectionEyebrow>开始使用</SectionEyebrow>
           <h2 className="mt-5 text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
-            不用先学会工具，先告诉 OneWorkOS 你想完成什么
+            不用先学会工具，先告诉 OneWorkerOS 你想完成什么
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">
             从一个简短问题开始，让知识、AI 和工具共同推动工作完成。
@@ -539,7 +539,7 @@ export default function OneWorkOSHome() {
             className="mt-8 h-12 rounded-xl bg-blue-600 px-6 text-base hover:bg-blue-700"
           >
             <LocaleLink href="/ai-chat">
-              开始使用 OneWorkOS <ArrowRight className="size-4" />
+              开始使用 OneWorkerOS <ArrowRight className="size-4" />
             </LocaleLink>
           </Button>
         </div>

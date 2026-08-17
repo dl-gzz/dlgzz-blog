@@ -1,17 +1,17 @@
-import { streamText, createDataStreamResponse } from 'ai';
+import fs from 'fs';
+import path from 'path';
 import { createOpenAICompatibleSdk } from '@/lib/ai/openai-compatible';
-import { getSession } from '@/lib/server';
-import { hasAccessToPremiumContent } from '@/lib/premium-access';
 import { searchBlogContent } from '@/lib/blog-search-vector';
-import { searchKnowledgeChunks } from '@/lib/knowledge-search';
 import {
   FREE_DAILY_LIMIT,
   checkTrialQuota,
   recordTrialUsage,
   visitorIdFromRequest,
 } from '@/lib/free-trial-quota';
-import fs from 'fs';
-import path from 'path';
+import { searchKnowledgeChunks } from '@/lib/knowledge-search';
+import { hasAccessToPremiumContent } from '@/lib/premium-access';
+import { getSession } from '@/lib/server';
+import { createDataStreamResponse, streamText } from 'ai';
 
 // 网页问答检索的知识包（试吃）。与会员 API Key 检索共用同一份知识库。
 const WEB_CHAT_KNOWLEDGE_PACK_IDS = (
@@ -25,7 +25,9 @@ const WEB_CHAT_KNOWLEDGE_PACK_IDS = (
  * 从 MDX 原文中提取外部链接（http/https）
  * 返回去重后的 { text, url } 列表
  */
-function extractLinksFromMdx(slug: string): Array<{ text: string; url: string }> {
+function extractLinksFromMdx(
+  slug: string
+): Array<{ text: string; url: string }> {
   const contentDir = path.join(process.cwd(), 'content', 'blog');
   // 依次尝试 .zh.mdx → .mdx
   const candidates = [
@@ -40,13 +42,14 @@ function extractLinksFromMdx(slug: string): Array<{ text: string; url: string }>
     const seen = new Set<string>();
     // 匹配 [text](https://...) 格式
     const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
-    let match;
-    while ((match = linkRegex.exec(raw)) !== null) {
+    let match = linkRegex.exec(raw);
+    while (match !== null) {
       const url = match[2];
       if (!seen.has(url)) {
         seen.add(url);
         links.push({ text: match[1], url });
       }
+      match = linkRegex.exec(raw);
     }
     return links;
   }
@@ -157,13 +160,23 @@ export async function POST(req: Request) {
           const topResults = searchResults.slice(0, 3);
           contextBlocks.push(
             topResults
-              .map((result, index) => `[文章 ${index + 1}] ${result.title}\n${result.content}\n`)
+              .map(
+                (result, index) =>
+                  `[文章 ${index + 1}] ${result.title}\n${result.content}\n`
+              )
               .join('\n---\n\n')
           );
           sources = topResults.map((result) => {
-            const excerpt = (result.description || result.content).substring(0, 150).trim();
+            const excerpt = (result.description || result.content)
+              .substring(0, 150)
+              .trim();
             const slug = result.url.replace(/^\/blog\//, '');
-            return { title: result.title, url: result.url, excerpt, links: extractLinksFromMdx(slug) };
+            return {
+              title: result.title,
+              url: result.url,
+              excerpt,
+              links: extractLinksFromMdx(slug),
+            };
           });
         }
       } catch (searchError) {
@@ -175,7 +188,7 @@ export async function POST(req: Request) {
 
     // 6. 构建系统提示词
     const systemPrompt = relevantContext
-      ? `你是「独立沉思录」知识库的问答助手。下方是针对用户问题检索到的知识库内容，请充分利用它来回答。
+      ? `你是「OneWorkerOS」知识库的问答助手。下方是针对用户问题检索到的知识库内容，请充分利用它来回答。
 
 ## 回答规则：
 1. **默认下方内容就是相关的**——检索已按语义匹配，请把它当作对这个问题有用的材料，整合成有条理的答案，不要说"没有直接针对性内容"这类话
@@ -188,7 +201,7 @@ export async function POST(req: Request) {
 ${relevantContext}
 
 现在请综合以上内容，正面回答用户的问题。`
-      : `你是「独立沉思录」知识库的问答助手。这次没有检索到相关的知识库内容。
+      : `你是「OneWorkerOS」知识库的问答助手。这次没有检索到相关的知识库内容。
 
 请诚实告诉用户：知识库里暂时没有匹配到相关内容，可以换个说法再问，或浏览博客了解已收录的主题。语气友好专业，用中文。`;
 

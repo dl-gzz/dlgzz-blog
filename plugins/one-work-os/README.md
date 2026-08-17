@@ -1,6 +1,6 @@
-# OneWorkOS for WorkBuddy
+# OneWorkerOS for WorkBuddy
 
-This is a thin WorkBuddy/CodeBuddy plugin. It installs the `one-work-os` Skill and connects the remote OneWorkOS MCP server at `https://www.dlgzz.com/mcp`.
+This is a thin WorkBuddy/CodeBuddy plugin. It installs the `one-work-os` Skill and connects the remote OneWorkerOS MCP server at `https://www.dlgzz.com/mcp`.
 
 ## Authentication and data freshness
 

@@ -12,13 +12,13 @@ export default async function OneWorkSettingsLayout({
       <DashboardHeader
         breadcrumbs={[
           { label: t('title'), isCurrentPage: false },
-          { label: 'OneWorkOS', isCurrentPage: true },
+          { label: 'OneWorkerOS', isCurrentPage: true },
         ]}
       />
       <div className="px-4 py-16 lg:px-6">
         <div className="mx-auto max-w-6xl space-y-10">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">OneWorkOS</h1>
+            <h1 className="text-3xl font-bold tracking-tight">OneWorkerOS</h1>
             <p className="mt-2 text-muted-foreground">
               查看会员权益、连接 WorkBuddy，并管理使用额度和已授权应用。
             </p>
