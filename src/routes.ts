@@ -44,7 +44,8 @@ export enum Routes {
   SettingsNotifications = '/settings/notifications',
   SettingsOneWork = '/settings/onework',
   OneWork = '/onework',
-
+  OneWorkOAuthAuthorize = '/onework/oauth/authorize',
+  OneWorkOAuthActivate = '/onework/activate',
 }
 
 /**
@@ -68,6 +69,8 @@ export const protectedRoutes = [
   Routes.SettingsSecurity,
   Routes.SettingsNotifications,
   Routes.SettingsOneWork,
+  Routes.OneWorkOAuthAuthorize,
+  Routes.OneWorkOAuthActivate,
 ];
 
 /**

@@ -134,6 +134,13 @@
       "when": 1781395200000,
       "tag": "0020_onework_entitlement_grant_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1781481600000,
+      "tag": "0021_onework_oauth_mcp",
+      "breakpoints": true
     }
   ]
 }

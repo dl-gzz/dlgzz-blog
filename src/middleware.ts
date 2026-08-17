@@ -85,6 +85,9 @@ export const config = {
     // Match all pathnames except for
     // - if they start with `/api`, `/_next` or `/_vercel`
     // - if they contain a dot (e.g. `favicon.ico`)
-    '/((?!api|_next|_vercel|.*\\..*).*)',
+    // Protocol endpoints must keep their canonical, non-localized URLs.
+    // Rewriting /mcp or /oauth/* through next-intl breaks OAuth issuer/resource
+    // matching and makes PKCE callbacks fail across clients.
+    '/((?!api|mcp|oauth|_next|_vercel|.*\\..*).*)',
   ],
 };

@@ -19,7 +19,9 @@ import {
   ExternalLinkIcon,
   KeyRoundIcon,
   MonitorDownIcon,
+  PlugZapIcon,
   RefreshCwIcon,
+  ShieldCheckIcon,
   SmartphoneIcon,
   Trash2Icon,
 } from 'lucide-react';
@@ -42,9 +44,17 @@ type OneWorkDevice = {
   createdAt: string;
 };
 
+type OneWorkOAuthConnection = {
+  clientId: string;
+  clientName: string;
+  scopes: string[];
+  grantedAt: string;
+};
+
 type AccessData = {
   entitlements: Entitlement[];
   devices: OneWorkDevice[];
+  oauthConnections?: OneWorkOAuthConnection[];
   keys: Array<{
     id: string;
     keyPrefix: string;
@@ -92,6 +102,14 @@ function packName(packId: string) {
   if (packId === 'xhs-open-shop-v1') return '小红书开店助手';
   if (packId === 'xhs-operations-v1') return '小红书运营助手';
   return packId;
+}
+
+function oauthScopeName(scope: string) {
+  if (scope === 'onework:resolve') return '能力调度';
+  if (scope === 'onework:knowledge') return '知识检索';
+  if (scope === 'onework:analytics') return '数据分析';
+  if (scope === 'onework:account') return '账号权益';
+  return scope;
 }
 
 function detectPlatform() {
@@ -153,6 +171,7 @@ export function OneWorkAccessPanel({
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const [revokingDeviceId, setRevokingDeviceId] = useState('');
+  const [revokingClientId, setRevokingClientId] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -242,6 +261,26 @@ export function OneWorkAccessPanel({
       setError(reason instanceof Error ? reason.message : '兑换失败');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function copyPluginInstallPrompt() {
+    const prompt = [
+      '请直接帮我把 OneWorkOS 安装到当前 WorkBuddy，不要只解释步骤：',
+      '1. 添加插件市场：dl-gzz/dlgzz-blog',
+      '2. 安装插件：one-work-os@onework-os-marketplace',
+      '3. 重新加载插件：/reload-plugins',
+      '4. 连接 https://www.dlgzz.com/mcp，打开网页授权；不要让我复制或输入 API Key。',
+      '5. 我在网页点击「允许连接」后，调用 onework_get_usage 验收。',
+      '如果当前版本不允许你代为执行插件命令，请直接打开「插件」页面，并只告诉我下一个必须点击的位置。',
+    ].join('\n');
+    setError('');
+    setMessage('');
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setMessage('新版安装话术已复制，直接粘贴给 WorkBuddy 即可。');
+    } catch {
+      setError('浏览器没有允许复制，请在下方展开后手动复制。');
     }
   }
 
@@ -400,6 +439,35 @@ export function OneWorkAccessPanel({
     }
   }
 
+  async function revokeOAuthConnection(connection: OneWorkOAuthConnection) {
+    if (
+      !window.confirm(
+        `确定断开「${connection.clientName || 'OneWorkOS 客户端'}」吗？断开后，它需要重新进行网页授权才能继续使用。`
+      )
+    )
+      return;
+
+    setRevokingClientId(connection.clientId);
+    setError('');
+    setMessage('');
+    try {
+      const response = await fetch(
+        `/api/onework/oauth/connections/${encodeURIComponent(connection.clientId)}`,
+        { method: 'DELETE' }
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || '断开连接失败');
+      }
+      setMessage(`已断开：${connection.clientName || 'OneWorkOS 客户端'}`);
+      await loadAccess();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '断开连接失败');
+    } finally {
+      setRevokingClientId('');
+    }
+  }
+
   if (isPending) {
     return (
       <div className="py-12 text-center text-muted-foreground">
@@ -460,15 +528,78 @@ export function OneWorkAccessPanel({
         </Card>
       )}
 
+      <Card className="overflow-hidden border-primary/30 shadow-lg shadow-primary/5">
+        <CardHeader className="bg-gradient-to-br from-primary/10 via-background to-background">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Badge>推荐</Badge>
+            <Badge variant="secondary">Mac / Windows 同一流程</Badge>
+          </div>
+          <CardTitle className="flex items-center gap-2">
+            <PlugZapIcon className="size-5" />用 WorkBuddy 插件连接
+          </CardTitle>
+          <CardDescription>
+            安装一个很薄的插件，然后在网页登录并点击一次授权。不需要
+            Node.js、终端、设备 Key 或手动配置路径。
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-6">
+          <div className="grid gap-3 text-sm sm:grid-cols-2">
+            {[
+              '无需复制 API Key',
+              '网页 OAuth 授权',
+              '知识库在云端实时更新',
+              '插件可由 WorkBuddy 管理升级',
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3"
+              >
+                <ShieldCheckIcon className="size-4 shrink-0 text-primary" />
+                {item}
+              </div>
+            ))}
+          </div>
+          {!hasValidEntitlement && !loadingAccess && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+              可以先安装插件，但连接前需要先兑换或开通 OneWorkOS 权益。
+            </div>
+          )}
+          <Button onClick={() => void copyPluginInstallPrompt()}>
+            <CopyIcon className="size-4" />
+            复制 WorkBuddy 安装话术
+          </Button>
+          <details className="rounded-lg border p-4 text-sm">
+            <summary className="cursor-pointer font-medium">
+              我想手动安装
+            </summary>
+            <div className="mt-3 space-y-2 text-muted-foreground">
+              <code className="block break-all rounded bg-muted p-2 text-xs">
+                /plugin marketplace add dl-gzz/dlgzz-blog
+              </code>
+              <code className="block break-all rounded bg-muted p-2 text-xs">
+                /plugin install one-work-os@onework-os-marketplace
+              </code>
+              <code className="block break-all rounded bg-muted p-2 text-xs">
+                /reload-plugins
+              </code>
+              <p>
+                首次调用时 WorkBuddy 会打开 OneWorkOS
+                网页，登录后点击「允许连接」即可。
+              </p>
+            </div>
+          </details>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MonitorDownIcon className="size-5" />
-            换电脑 / 安装授权
+            旧版兼容安装
           </CardTitle>
           <CardDescription>
-            权益属于账号，不属于某台电脑。请在准备使用 WorkBuddy
-            的电脑上完成安装。
+            仅在旧版 WorkBuddy 不支持远程 MCP / OAuth 时使用。此通道仍然保留，
+            已安装用户不受影响。
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -647,7 +778,52 @@ export function OneWorkAccessPanel({
 
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="font-medium">已绑定设备</h3>
+              <h3 className="font-medium">已连接的 AI 客户端</h3>
+              <span className="text-xs text-muted-foreground">
+                {access?.oauthConnections?.length ?? 0} 个
+              </span>
+            </div>
+            {!access?.oauthConnections?.length ? (
+              <p className="text-sm text-muted-foreground">
+                尚未通过网页授权连接 WorkBuddy 或其他 AI 客户端。
+              </p>
+            ) : (
+              access.oauthConnections.map((connection) => (
+                <div
+                  key={connection.clientId}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">
+                        {connection.clientName || 'OneWorkOS 客户端'}
+                      </p>
+                      <Badge>已连接</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {connection.scopes.map(oauthScopeName).join('、')} ·
+                      授权于 {formatDateTime(connection.grantedAt)}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void revokeOAuthConnection(connection)}
+                    disabled={revokingClientId === connection.clientId}
+                  >
+                    <Trash2Icon className="size-4" />
+                    {revokingClientId === connection.clientId
+                      ? '断开中…'
+                      : '断开连接'}
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-medium">旧版安装设备</h3>
               <span className="text-xs text-muted-foreground">
                 有效{' '}
                 {access?.devices?.filter((device) => device.status === 'active')
@@ -657,7 +833,7 @@ export function OneWorkAccessPanel({
             </div>
             {!access?.devices?.length ? (
               <p className="text-sm text-muted-foreground">
-                尚未绑定设备。完成一次安装后会显示在这里。
+                尚未绑定旧版设备。新版 OAuth 插件不需要绑定电脑。
               </p>
             ) : (
               access.devices.map((device) => (
