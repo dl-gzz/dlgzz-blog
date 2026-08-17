@@ -9,6 +9,7 @@ import {
   apiUsageEvent,
   oneworkDevice,
   oneworkEntitlement,
+  user,
 } from '@/db/schema';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { and, desc, eq, gt, gte, isNull, lt, or, sql } from 'drizzle-orm';
@@ -415,6 +416,16 @@ export async function reserveApiKeyUsage(event: {
   const pendingSince = new Date(now.getTime() - 10 * 60 * 1000);
 
   return db.transaction(async (tx) => {
+    // Key 与 OAuth/MCP 两条通道都锁同一个 user 行，才能共享
+    // 一份月度额度并防止跨通道并发超额。
+    const [account] = await tx
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, event.userId))
+      .for('update')
+      .limit(1);
+    if (!account) return null;
+
     const keys = await tx
       .select({ id: apiKey.id, status: apiKey.status })
       .from(apiKey)
@@ -450,6 +461,71 @@ export async function reserveApiKeyUsage(event: {
     await tx.insert(apiUsageEvent).values({
       id: eventId,
       apiKeyId: key.id,
+      userId: event.userId,
+      kind: event.kind,
+      knowledgePackId: event.knowledgePackId ?? null,
+      serviceId: event.serviceId ?? null,
+      query: usageQueryForStorage(event.query),
+      status: 'pending',
+      createdAt: now,
+    });
+
+    return { eventId, usedThisMonth };
+  });
+}
+
+/**
+ * OAuth/MCP 按账号预留一次计量。OAuth 不再绑定某个设备 Key，
+ * 因此通过锁定 user 行串行化同一账号的并发请求。它与旧 Key
+ * 通道共用 api_usage_event，所有客户端共享同一份月度额度。
+ */
+export async function reserveOneWorkUserUsage(event: {
+  userId: string;
+  monthlyQuota: number;
+  kind: ApiUsageKind;
+  knowledgePackId?: string | null;
+  serviceId?: string | null;
+  query?: string;
+}): Promise<ApiUsageReservation | null> {
+  const db = await getDb();
+  const now = new Date();
+  const pendingSince = new Date(now.getTime() - 10 * 60 * 1000);
+
+  return db.transaction(async (tx) => {
+    const [account] = await tx
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, event.userId))
+      .for('update')
+      .limit(1);
+    if (!account) return null;
+
+    const [usage] = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(apiUsageEvent)
+      .where(
+        and(
+          eq(apiUsageEvent.userId, event.userId),
+          gte(apiUsageEvent.createdAt, oneWorkMonthStart(now)),
+          or(
+            eq(apiUsageEvent.status, 'ok'),
+            and(
+              eq(apiUsageEvent.status, 'pending'),
+              gte(apiUsageEvent.createdAt, pendingSince)
+            )
+          )
+        )
+      );
+
+    const usedThisMonth = usage?.count ?? 0;
+    if (event.monthlyQuota < 1 || usedThisMonth >= event.monthlyQuota) {
+      return null;
+    }
+
+    const eventId = `usage_${randomUUID()}`;
+    await tx.insert(apiUsageEvent).values({
+      id: eventId,
+      apiKeyId: null,
       userId: event.userId,
       kind: event.kind,
       knowledgePackId: event.knowledgePackId ?? null,

@@ -1,0 +1,13 @@
+interface:
+  display_name: "OneWorkOS"
+  short_description: "通过 OAuth MCP 实时检索 OneWorkOS 知识并调度工作"
+  default_prompt: "使用 $one-work-os 先调用 OneWorkOS MCP 检索实时知识，保留短追问的最近明确主题，并用返回的资产与出处回答。"
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "onework-os"
+      description: "OneWorkOS live MCP service"
+      transport: "streamable_http"
+      url: "https://www.dlgzz.com/mcp"
+policy:
+  allow_implicit_invocation: true

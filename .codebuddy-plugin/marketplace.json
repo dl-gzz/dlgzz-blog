@@ -1,0 +1,23 @@
+{
+  "name": "onework-os-marketplace",
+  "owner": {
+    "name": "OneWorkOS"
+  },
+  "description": "OneWorkOS plugins for independent workers using WorkBuddy.",
+  "version": "0.1.0",
+  "plugins": [
+    {
+      "name": "one-work-os",
+      "source": "./plugins/one-work-os",
+      "description": "Live OneWorkOS knowledge and governed work orchestration through OAuth-protected MCP.",
+      "version": "0.1.0",
+      "author": {
+        "name": "OneWorkOS"
+      },
+      "homepage": "https://www.dlgzz.com/onework",
+      "repository": "https://github.com/dl-gzz/dlgzz-blog",
+      "keywords": ["oneworkos", "workbuddy", "knowledge", "analytics"],
+      "category": "productivity"
+    }
+  ]
+}

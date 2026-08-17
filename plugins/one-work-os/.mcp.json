@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "onework-os": {
+      "type": "http",
+      "url": "https://www.dlgzz.com/mcp",
+      "description": "OneWorkOS live knowledge, analytics, entitlement, usage, and capability routing"
+    }
+  }
+}

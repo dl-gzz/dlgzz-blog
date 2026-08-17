@@ -814,6 +814,143 @@ export const oneworkInstallToken = pgTable("onework_install_token", {
 ]);
 
 // ─────────────────────────────────────────────────────────
+// OneWorkOS OAuth 2.1：WorkBuddy / MCP 网页授权与设备码兜底。
+
+/** OAuth 公共客户端注册。本地 AI 客户端必须使用 PKCE，不保存 client secret。 */
+export const oneworkOauthClient = pgTable("onework_oauth_client", {
+	clientId: text('client_id').primaryKey(),
+	clientName: text('client_name').notNull().default(''),
+	redirectUris: jsonb('redirect_uris').$type<string[]>().notNull(),
+	grantTypes: jsonb('grant_types').$type<string[]>().notNull(),
+	responseTypes: jsonb('response_types').$type<string[]>().notNull(),
+	scopes: jsonb('scopes').$type<string[]>().notNull(),
+	tokenEndpointAuthMethod: text('token_endpoint_auth_method').notNull().default('none'),
+	status: text('status').notNull().default('active'),
+	dynamicallyRegistered: boolean('dynamically_registered').notNull().default(false),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	index('onework_oauth_client_status_idx').on(table.status),
+	index('onework_oauth_client_created_idx').on(table.createdAt),
+]);
+
+/** 授权码只保存 SHA-256，一次消费并绑定 redirect URI、MCP resource 和 PKCE challenge。 */
+export const oneworkOauthAuthorizationCode = pgTable("onework_oauth_authorization_code", {
+	id: text('id').primaryKey(),
+	codeHash: text('code_hash').notNull(),
+	clientId: text('client_id').notNull().references(() => oneworkOauthClient.clientId, { onDelete: 'cascade' }),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	redirectUri: text('redirect_uri').notNull(),
+	scope: text('scope').notNull(),
+	resource: text('resource').notNull(),
+	codeChallenge: text('code_challenge').notNull(),
+	codeChallengeMethod: text('code_challenge_method').notNull().default('S256'),
+	expiresAt: timestamp('expires_at').notNull(),
+	consumedAt: timestamp('consumed_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_oauth_authorization_code_hash_unique_idx').on(table.codeHash),
+	index('onework_oauth_authorization_code_client_idx').on(table.clientId),
+	index('onework_oauth_authorization_code_user_idx').on(table.userId),
+	index('onework_oauth_authorization_code_expires_idx').on(table.expiresAt),
+]);
+
+/** MCP 资源服务器的短期 Bearer token，数据库中不出现原始 token。 */
+export const oneworkOauthAccessToken = pgTable("onework_oauth_access_token", {
+	id: text('id').primaryKey(),
+	tokenHash: text('token_hash').notNull(),
+	clientId: text('client_id').notNull().references(() => oneworkOauthClient.clientId, { onDelete: 'cascade' }),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	scope: text('scope').notNull(),
+	resource: text('resource').notNull(),
+	familyId: text('family_id'),
+	expiresAt: timestamp('expires_at').notNull(),
+	revokedAt: timestamp('revoked_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_oauth_access_token_hash_unique_idx').on(table.tokenHash),
+	index('onework_oauth_access_token_user_idx').on(table.userId),
+	index('onework_oauth_access_token_client_idx').on(table.clientId),
+	index('onework_oauth_access_token_family_idx').on(table.familyId),
+	index('onework_oauth_access_token_expires_idx').on(table.expiresAt),
+]);
+
+/** 刷新 token 每次使用后旋转；family 用于发现重放后整组撤销。 */
+export const oneworkOauthRefreshToken = pgTable("onework_oauth_refresh_token", {
+	id: text('id').primaryKey(),
+	tokenHash: text('token_hash').notNull(),
+	clientId: text('client_id').notNull().references(() => oneworkOauthClient.clientId, { onDelete: 'cascade' }),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	scope: text('scope').notNull(),
+	resource: text('resource').notNull(),
+	familyId: text('family_id').notNull(),
+	parentTokenId: text('parent_token_id'),
+	replacedByTokenId: text('replaced_by_token_id'),
+	expiresAt: timestamp('expires_at').notNull(),
+	consumedAt: timestamp('consumed_at'),
+	revokedAt: timestamp('revoked_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_oauth_refresh_token_hash_unique_idx').on(table.tokenHash),
+	index('onework_oauth_refresh_token_user_idx').on(table.userId),
+	index('onework_oauth_refresh_token_client_idx').on(table.clientId),
+	index('onework_oauth_refresh_token_family_idx').on(table.familyId),
+	index('onework_oauth_refresh_token_expires_idx').on(table.expiresAt),
+]);
+
+/** 用户对指定 OAuth 客户端和 scope 的显式授权记录。 */
+export const oneworkOauthConsent = pgTable("onework_oauth_consent", {
+	id: text('id').primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	clientId: text('client_id').notNull().references(() => oneworkOauthClient.clientId, { onDelete: 'cascade' }),
+	scope: text('scope').notNull(),
+	grantedAt: timestamp('granted_at').notNull().defaultNow(),
+	revokedAt: timestamp('revoked_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_oauth_consent_user_client_scope_unique_idx').on(table.userId, table.clientId, table.scope),
+	index('onework_oauth_consent_client_idx').on(table.clientId),
+]);
+
+/** 无法回调浏览器的宿主可用 Device Authorization Grant 完成登录。 */
+export const oneworkOauthDeviceCode = pgTable("onework_oauth_device_code", {
+	id: text('id').primaryKey(),
+	deviceCodeHash: text('device_code_hash').notNull(),
+	userCodeHash: text('user_code_hash').notNull(),
+	clientId: text('client_id').notNull().references(() => oneworkOauthClient.clientId, { onDelete: 'cascade' }),
+	userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
+	scope: text('scope').notNull(),
+	resource: text('resource').notNull(),
+	status: text('status').notNull().default('pending'),
+	pollIntervalSeconds: integer('poll_interval_seconds').notNull().default(5),
+	lastPolledAt: timestamp('last_polled_at'),
+	expiresAt: timestamp('expires_at').notNull(),
+	approvedAt: timestamp('approved_at'),
+	consumedAt: timestamp('consumed_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_oauth_device_code_hash_unique_idx').on(table.deviceCodeHash),
+	uniqueIndex('onework_oauth_device_user_code_hash_unique_idx').on(table.userCodeHash),
+	index('onework_oauth_device_client_idx').on(table.clientId),
+	index('onework_oauth_device_user_idx').on(table.userId),
+	index('onework_oauth_device_status_expires_idx').on(table.status, table.expiresAt),
+]);
+
+/** OAuth 公开端点的固定窗口限流。只保存网络/客户端标识的单向哈希。 */
+export const oneworkOauthRateLimitBucket = pgTable("onework_oauth_rate_limit_bucket", {
+	id: text('id').primaryKey(),
+	subjectHash: text('subject_hash').notNull(),
+	kind: text('kind').notNull(),
+	windowStart: timestamp('window_start').notNull(),
+	requestCount: integer('request_count').notNull().default(0),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_oauth_rate_limit_subject_kind_unique_idx').on(table.subjectHash, table.kind),
+	index('onework_oauth_rate_limit_updated_idx').on(table.updatedAt),
+]);
+
 // OneWorkOS V1：能力注册表 + Skill 映射 + 受控语义层
 // ─────────────────────────────────────────────────────────
 
