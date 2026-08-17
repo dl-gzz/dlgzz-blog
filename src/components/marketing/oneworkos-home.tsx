@@ -516,7 +516,7 @@ export default function OneWorkOSHome() {
                   </LocaleLink>
                 </Button>
                 <p className="mt-4 text-xs leading-5 text-blue-100">
-                  权益属于账号。更换电脑后，可在账号中心重新生成安装授权。
+                  权益属于账号。更换电脑后，重新安装插件并登录网页授权即可。
                 </p>
               </div>
             </div>

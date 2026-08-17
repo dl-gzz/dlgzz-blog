@@ -101,7 +101,7 @@ export function NavbarMobile({
             variant="ghost"
             size="icon"
             aria-expanded={open}
-            aria-label="Toggle Mobile Menu"
+            aria-label={open ? '关闭移动端菜单' : '打开移动端菜单'}
             onClick={handleToggleMobileMenu}
             className="size-8 flex aspect-square h-fit select-none items-center
               justify-center rounded-md border cursor-pointer"

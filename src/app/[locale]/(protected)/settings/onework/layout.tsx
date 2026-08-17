@@ -19,7 +19,9 @@ export default async function OneWorkSettingsLayout({
         <div className="mx-auto max-w-6xl space-y-10">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">OneWorkOS</h1>
-            <p className="mt-2 text-muted-foreground">管理知识包权益、设备和 WorkBuddy 安装授权。</p>
+            <p className="mt-2 text-muted-foreground">
+              查看会员权益、连接 WorkBuddy，并管理使用额度和已授权应用。
+            </p>
           </div>
           {children}
         </div>
@@ -27,4 +29,3 @@ export default async function OneWorkSettingsLayout({
     </>
   );
 }
-

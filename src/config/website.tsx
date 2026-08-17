@@ -70,7 +70,7 @@ export const websiteConfig: WebsiteConfig = {
   mail: {
     provider: 'tencent-ses',
     fromEmail: 'OneWorkOS <noreply@notify.dlgzz.com>',
-    supportEmail: 'OneWorkOS <395887347@qq.com>',
+    supportEmail: '395887347@qq.com',
   },
   newsletter: {
     provider: 'resend',

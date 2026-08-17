@@ -1,6 +1,6 @@
 {
   "name": "one-work-os",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Connect WorkBuddy to live OneWorkOS knowledge, analytics, entitlements, and capability routing over OAuth-protected MCP.",
   "author": {
     "name": "OneWorkOS",
