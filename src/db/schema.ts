@@ -708,7 +708,7 @@ export const apiRateLimitBucket = pgTable("api_rate_limit_bucket", {
 ]);
 
 // ─────────────────────────────────────────────────────────
-// OneWorkOS 会员授权层：兑换码 → 用户权益 → 设备 Key
+// one-worker-os 会员授权层：兑换码 → 用户权益 → 设备 Key
 // ─────────────────────────────────────────────────────────
 
 /**
@@ -955,7 +955,7 @@ export const oneworkOauthRateLimitBucket = pgTable("onework_oauth_rate_limit_buc
 // ─────────────────────────────────────────────────────────
 
 /**
- * OneWorkOS 的能力注册表。它描述“能做什么”，不保存密钥。
+ * one-worker-os 的能力注册表。它描述“能做什么”，不保存密钥。
  * runtime 只保存 adapter/transport/auth mode 等非敏感调用配置。
  */
 export const oneWorkCapability = pgTable("onework_capability", {

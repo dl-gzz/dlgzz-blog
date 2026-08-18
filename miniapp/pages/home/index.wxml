@@ -33,7 +33,7 @@
       <view class="entry-icon-frame">
         <image class="entry-image-icon" mode="aspectFit" src="/assets/icons/thinking.png" />
       </view>
-      <view class="entry-text">独立沉思录</view>
+      <view class="entry-text">独立工作者</view>
     </view>
   </view>
 

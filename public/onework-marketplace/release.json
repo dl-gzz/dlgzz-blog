@@ -1,17 +1,17 @@
 {
   "schema": "onework.plugin-release.v1",
   "name": "one-work-os",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "artifacts": [
     {
-      "name": "one-work-os-plugin-0.1.1.zip",
-      "size": 35034,
-      "sha256": "5473515b8ba9e182bd716c22407aca4e1d81cc073cf7cbca4744537ca7940c71"
+      "name": "one-work-os-plugin-0.1.3.zip",
+      "size": 35049,
+      "sha256": "1662fd585b56cea8e62b07c496bbf91d93e6c696acd7f01177f78677934e3fef"
     },
     {
-      "name": "onework-os-marketplace-0.1.1.zip",
-      "size": 36399,
-      "sha256": "89277d2ecd90381bd87a69f3ef60534d064c7e54be59ace1c714207a0cdd3997"
+      "name": "onework-os-marketplace-0.1.3.zip",
+      "size": 36416,
+      "sha256": "b1fed66601a4c97fffc6a18176c478f43642d8e24937b285a081584cd33cae8b"
     }
   ]
 }

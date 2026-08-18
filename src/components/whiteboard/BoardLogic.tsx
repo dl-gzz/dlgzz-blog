@@ -45,7 +45,7 @@ const BoardLogic: React.FC = () => {
     const [isAiOpen, setIsAiOpen] = useState(false);
     const [aiInput, setAiInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'system', text: '已进入 One Worker OS，您的智能工作空间。' }
+        { role: 'system', text: '已进入 OneWorkOS，您的智能工作空间。' }
     ]);
     const [loading, setLoading] = useState(false);
     const [isListening, setIsListening] = useState(false);

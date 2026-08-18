@@ -1,5 +1,5 @@
-// One Worker OS — Service Worker v2
-const CACHE_NAME = 'ow-os-cache-v2';
+// one-worker-os — Service Worker v4
+const CACHE_NAME = 'one-worker-os-cache-v4';
 
 // Pre-cache on install
 const PRE_CACHE_URLS = [

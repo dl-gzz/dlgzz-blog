@@ -218,7 +218,7 @@ const requiredLegacyColumns: Record<string, readonly string[]> = {
 };
 const requiredLegacyTables = Object.keys(requiredLegacyColumns);
 // Current production was originally created with db:push. Baseline only the
-// verified legacy migrations so the additive OneWorkOS migrations can run.
+// verified legacy migrations so the additive one-worker-os migrations can run.
 const baselineMillis = 1780358400000;
 const baselineFile = join(
   process.cwd(),

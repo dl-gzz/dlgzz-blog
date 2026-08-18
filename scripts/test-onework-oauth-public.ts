@@ -1,5 +1,5 @@
 /**
- * Public-network OneWorkOS OAuth security E2E.
+ * Public-network one-worker-os OAuth security E2E.
  *
  * It exercises the deployed HTTP endpoints but uses the database only to
  * assert persistence and to restore the exact DCR rows/buckets created by this
@@ -181,8 +181,9 @@ async function main() {
   const issuer = publicIssuer();
   const db = await getDb();
   const suffix = randomUUID();
-  const clientName = `OneWorkOS Public OAuth E2E ${suffix}`;
-  const workBuddyRedirect = `workbuddy://workbuddy/mcp/public-e2e%3A${suffix}/oauth/callback`;
+  const clientName = `one-worker-os Public OAuth E2E ${suffix}`;
+  const workBuddyRedirect =
+    'workbuddy://workbuddy/mcp/custom-mcp%3Aone-worker-os/oauth/callback';
   const loopbackRedirect = 'http://127.0.0.1:43123/oauth/callback';
   const beforeBuckets = await dcrBuckets();
   let expectedAfterBuckets: BucketRow[] | null = null;

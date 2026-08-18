@@ -1,12 +1,12 @@
+import { join } from 'node:path';
+import * as dotenv from 'dotenv';
 /**
- * 幂等创建 OneWorkOS 会员授权层。
+ * 幂等创建 one-worker-os 会员授权层。
  *
  * 这组表不修改现有知识向量数据，只负责：兑换码、用户权益、设备 Key、安装会话。
  * Run: pnpm db:apply-onework-access
  */
 import postgres from 'postgres';
-import * as dotenv from 'dotenv';
-import { join } from 'node:path';
 
 dotenv.config({ path: join(process.cwd(), '.env') });
 dotenv.config({ path: join(process.cwd(), '.env.local'), override: true });
@@ -112,7 +112,10 @@ async function main() {
       where table_name in ('onework_activation_code','onework_entitlement','onework_device','onework_install_token')
       order by table_name
     `;
-    console.log('✅ OneWorkOS 授权层已就绪:', tables.map((t) => t.table_name).join(', '));
+    console.log(
+      '✅ one-worker-os 授权层已就绪:',
+      tables.map((t) => t.table_name).join(', ')
+    );
   } finally {
     await sql.end();
   }

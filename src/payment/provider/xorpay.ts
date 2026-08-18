@@ -2,23 +2,20 @@ import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
 import { getDb } from '@/db';
 import { payment, user } from '@/db/schema';
-import {
-  findPlanByPriceId,
-  findPriceInPlan,
-} from '@/lib/price-plan';
+import { findPlanByPriceId, findPriceInPlan } from '@/lib/price-plan';
 import { sendEmail } from '@/mail';
 import { sendNotification } from '@/notification/notification';
 import { desc, eq } from 'drizzle-orm';
-import {
-  type CheckoutResult,
-  type CreateCheckoutParams,
-  type CreatePortalParams,
-  type PaymentProvider,
-  type PaymentStatus,
+import type {
+  CheckoutResult,
+  CreateCheckoutParams,
+  CreatePortalParams,
+  PaymentProvider,
+  PaymentStatus,
   PaymentTypes,
-  type PortalResult,
-  type Subscription,
-  type getSubscriptionsParams,
+  PortalResult,
+  Subscription,
+  getSubscriptionsParams,
 } from '../types';
 
 /**
@@ -49,7 +46,9 @@ export class XorPayProvider implements PaymentProvider {
 
     const webhookSecret = process.env.XORPAY_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      console.warn('XORPAY_WEBHOOK_SECRET is not set. Webhook validation will be disabled.');
+      console.warn(
+        'XORPAY_WEBHOOK_SECRET is not set. Webhook validation will be disabled.'
+      );
     }
 
     this.appId = appId;
@@ -64,7 +63,7 @@ export class XorPayProvider implements PaymentProvider {
     // Sort parameters by key
     const sortedKeys = Object.keys(params).sort();
     const signString = sortedKeys
-      .map(key => `${key}=${params[key]}`)
+      .map((key) => `${key}=${params[key]}`)
       .join('&');
 
     // Add app secret
@@ -100,7 +99,7 @@ export class XorPayProvider implements PaymentProvider {
         .update(user)
         .set({
           customerId: customerId,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(user.email, email));
     }
@@ -111,7 +110,9 @@ export class XorPayProvider implements PaymentProvider {
   /**
    * Create a checkout session for XorPay (WeChat JSAPI Payment or Alipay)
    */
-  async createCheckout(params: CreateCheckoutParams & { openid?: string }): Promise<CheckoutResult> {
+  async createCheckout(
+    params: CreateCheckoutParams & { openid?: string }
+  ): Promise<CheckoutResult> {
     try {
       const { priceId, userId, customerEmail, successUrl, openid } = params;
 
@@ -190,11 +191,18 @@ export class XorPayProvider implements PaymentProvider {
         if (result.status === 'missing_argument' && result.info === 'openid') {
           // XorPay should return a URL for getting openid
           // For now, we'll return an error asking the user to use WeChat browser
-          throw new Error('Please open this payment page in WeChat browser to complete payment');
+          throw new Error(
+            'Please open this payment page in WeChat browser to complete payment'
+          );
         }
 
         // Handle other error statuses
-        const errorInfo = result.missing_argument || result.pay_type_error || result.info || result.status || 'Unknown error';
+        const errorInfo =
+          result.missing_argument ||
+          result.pay_type_error ||
+          result.info ||
+          result.status ||
+          'Unknown error';
         throw new Error(`XorPay checkout failed: ${errorInfo}`);
       }
 
@@ -209,7 +217,9 @@ export class XorPayProvider implements PaymentProvider {
         .limit(1);
 
       if (userRecord.length === 0) {
-        throw new Error(`User not found: ${userId}. Please ensure user is logged in.`);
+        throw new Error(
+          `User not found: ${userId}. Please ensure user is logged in.`
+        );
       }
 
       // Calculate period end based on subscription interval
@@ -249,7 +259,9 @@ export class XorPayProvider implements PaymentProvider {
       const qrCodeUrl = encodeURIComponent(result.info.qr);
       const expiresIn = result.expires_in || 7200;
 
-      const encodedReturnUrl = successUrl ? `&return_url=${encodeURIComponent(successUrl)}` : '';
+      const encodedReturnUrl = successUrl
+        ? `&return_url=${encodeURIComponent(successUrl)}`
+        : '';
 
       return {
         url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/checkout?aoid=${result.aoid}&qr=${qrCodeUrl}&expires=${expiresIn}${encodedReturnUrl}`,
@@ -264,10 +276,13 @@ export class XorPayProvider implements PaymentProvider {
   /**
    * Create customer portal (not supported by XorPay)
    */
-  async createCustomerPortal(params: CreatePortalParams): Promise<PortalResult> {
+  async createCustomerPortal(
+    params: CreatePortalParams
+  ): Promise<PortalResult> {
     // XorPay doesn't have a built-in customer portal
     // Return to billing page
-    const returnUrl = params.returnUrl || `${process.env.NEXT_PUBLIC_BASE_URL}/billing`;
+    const returnUrl =
+      params.returnUrl || `${process.env.NEXT_PUBLIC_BASE_URL}/billing`;
 
     return {
       url: returnUrl,
@@ -277,7 +292,9 @@ export class XorPayProvider implements PaymentProvider {
   /**
    * Get customer subscriptions
    */
-  async getSubscriptions(params: getSubscriptionsParams): Promise<Subscription[]> {
+  async getSubscriptions(
+    params: getSubscriptionsParams
+  ): Promise<Subscription[]> {
     const db = await getDb();
 
     // Get payments from database for this user
@@ -331,7 +348,9 @@ export class XorPayProvider implements PaymentProvider {
           await this.handleRefund(event);
           break;
         default:
-          console.log(`Unhandled XorPay event type: ${event.event_type || event.trade_state}`);
+          console.log(
+            `Unhandled XorPay event type: ${event.event_type || event.trade_state}`
+          );
       }
     } catch (error) {
       console.error('XorPay webhook error:', error);
@@ -361,7 +380,7 @@ export class XorPayProvider implements PaymentProvider {
 
     // Send notification and confirmation email if payment found
     if (updatedPayment.length > 0) {
-      const payAmount = parseFloat(event.pay_price || '0');
+      const payAmount = Number.parseFloat(event.pay_price || '0');
       const paymentRecord = updatedPayment[0];
 
       // Get user email from payment record
@@ -371,7 +390,8 @@ export class XorPayProvider implements PaymentProvider {
         .where(eq(user.id, paymentRecord.userId))
         .limit(1);
 
-      const customerEmail = userRecord.length > 0 ? userRecord[0].email : 'Unknown';
+      const customerEmail =
+        userRecord.length > 0 ? userRecord[0].email : 'Unknown';
 
       // Send notification
       await sendNotification(
@@ -385,19 +405,24 @@ export class XorPayProvider implements PaymentProvider {
       try {
         // Get plan information
         const plan = findPlanByPriceId(paymentRecord.priceId);
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const baseUrl =
+          process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
         if (plan && customerEmail !== 'Unknown') {
           await sendEmail({
             to: customerEmail,
             template: 'paymentSuccess',
             context: {
-              planName: plan.name || '独立沉思录会员',
+              planName: plan.name || 'OneWorkOS 会员',
               interval: paymentRecord.interval || 'month',
               amount: payAmount * 100, // Convert yuan to cents for email template
               currency: 'CNY',
-              periodStart: paymentRecord.periodStart?.toISOString() || new Date().toISOString(),
-              periodEnd: paymentRecord.periodEnd?.toISOString() || new Date().toISOString(),
+              periodStart:
+                paymentRecord.periodStart?.toISOString() ||
+                new Date().toISOString(),
+              periodEnd:
+                paymentRecord.periodEnd?.toISOString() ||
+                new Date().toISOString(),
               dashboardUrl: `${baseUrl}/dashboard`,
             },
             locale: 'zh', // Default to Chinese, could be improved by storing user locale preference

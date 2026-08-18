@@ -51,6 +51,7 @@ type OneWorkDevice = {
 type OneWorkOAuthConnection = {
   clientId: string;
   clientName: string;
+  identity: 'current' | 'legacy' | 'other';
   scopes: string[];
   grantedAt: string;
 };
@@ -68,22 +69,11 @@ type AccessData = {
   };
 };
 
-const MANUAL_PLUGIN_COMMANDS = [
-  '/plugin marketplace add dl-gzz/dlgzz-blog',
-  '/plugin install one-work-os@onework-os-marketplace',
-  '/plugin enable one-work-os@onework-os-marketplace --scope user',
-  '/reload-plugins --force',
-];
-
 const WORKBUDDY_INSTALL_PROMPT = [
-  '请帮我在当前 WorkBuddy 安装并启用 OneWorkOS 插件。请直接执行，不要只解释：',
-  '1. 使用 WorkBuddy 自带的插件管理能力添加市场 dl-gzz/dlgzz-blog。',
-  '2. 安装 one-work-os@onework-os-marketplace。',
-  '3. 启用插件：/plugin enable one-work-os@onework-os-marketplace --scope user。',
-  '4. 重新加载插件：/reload-plugins --force；如果不能热加载，就提醒我重启 WorkBuddy。',
-  '5. 如果发现用户 Skill 目录里有旧版 one-work-os，先将整个目录移动到 .workbuddy/one-work-os-backups 下的时间戳备份目录，不要删除，也不要手工编辑插件注册表。',
-  '6. 安装完成后，带我进入“专家·技能·连接器 → 连接器 → 自定义连接器”，找到 OneWorkOS 并点击连接。',
-  '7. 网页授权由我本人确认；不要向我索要或展示 API Key。',
+  '请在当前 WorkBuddy 安装并连接 one-worker-os。',
+  '请打开并严格执行：https://www.dlgzz.com/one-worker-os-marketplace/workbuddy-install.md',
+  '先自检是首次安装、旧版迁移还是已安装；所有结果必须写入并核验当前用户真实的 .workbuddy，不能使用临时或沙箱 profile；不得降级为独立 Skill、旧安装器或 API Key。除网页授权或必须重启外，请直接完成，并在真实验证成功后再告诉我。',
+  '不要在浏览器直接打开 https://www.dlgzz.com/mcp；授权必须从 WorkBuddy 的“自定义连接器 → 我的 MCP → one-worker-os → 连接/重连”发起。',
 ].join('\n');
 
 const TEST_PROMPT = '查看我的 OneWorkOS 会员权益和剩余次数';
@@ -122,9 +112,10 @@ function oauthScopeName(scope: string) {
 }
 
 function oauthClientName(connection: OneWorkOAuthConnection) {
-  if (/custom-mcp:onework-os/i.test(connection.clientName)) {
+  if (connection.identity === 'current') {
     return 'WorkBuddy · OneWorkOS';
   }
+  if (connection.identity === 'legacy') return 'WorkBuddy · 旧版连接';
   return connection.clientName || 'OneWorkOS 客户端';
 }
 
@@ -196,6 +187,9 @@ export function OneWorkAccessPanel({
   const [revokingClientId, setRevokingClientId] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [installCopyState, setInstallCopyState] = useState<
+    'idle' | 'copying' | 'copied' | 'error'
+  >('idle');
   const [now, setNow] = useState(() => Date.now());
 
   const activeEntitlements = useMemo(
@@ -206,8 +200,10 @@ export function OneWorkAccessPanel({
   );
   const hasValidEntitlement = activeEntitlements.length > 0;
   const oauthConnections = access?.oauthConnections ?? [];
-  const isAuthorized = oauthConnections.length > 0;
-  const canUseOneWorkOS = hasValidEntitlement && isAuthorized;
+  const isAuthorized = oauthConnections.some(
+    (connection) => connection.identity === 'current'
+  );
+  const canUseOneWorkerOs = hasValidEntitlement && isAuthorized;
   const hasHistoricalEntitlement = (access?.entitlements?.length ?? 0) > 0;
 
   const usageLimit =
@@ -265,7 +261,17 @@ export function OneWorkAccessPanel({
       await navigator.clipboard.writeText(value);
       setMessage(successMessage);
     } catch {
-      setError('浏览器没有允许复制，请展开手动步骤后复制。');
+      setError('浏览器没有允许复制，请允许剪贴板权限后重试。');
+    }
+  }
+
+  async function copyInstallPrompt() {
+    setInstallCopyState('copying');
+    try {
+      await navigator.clipboard.writeText(WORKBUDDY_INSTALL_PROMPT);
+      setInstallCopyState('copied');
+    } catch {
+      setInstallCopyState('error');
     }
   }
 
@@ -393,10 +399,10 @@ export function OneWorkAccessPanel({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={canUseOneWorkOS ? 'default' : 'secondary'}>
+                <Badge variant={canUseOneWorkerOs ? 'default' : 'secondary'}>
                   {loadingAccess
                     ? '正在检查'
-                    : canUseOneWorkOS
+                    : canUseOneWorkerOs
                       ? '会员有效 · 已授权'
                       : hasValidEntitlement
                         ? '会员有效 · 待连接'
@@ -407,7 +413,7 @@ export function OneWorkAccessPanel({
                 <Badge variant="outline">Mac / Windows 同一流程</Badge>
               </div>
               <CardTitle className="text-2xl sm:text-3xl">
-                {canUseOneWorkOS
+                {canUseOneWorkerOs
                   ? 'OneWorkOS 已经可以使用'
                   : hasValidEntitlement
                     ? '接下来，把 WorkBuddy 连接进来'
@@ -416,7 +422,7 @@ export function OneWorkAccessPanel({
                       : '先开通会员，再连接 WorkBuddy'}
               </CardTitle>
               <CardDescription className="max-w-2xl text-base leading-7">
-                {canUseOneWorkOS
+                {canUseOneWorkerOs
                   ? '你的会员账号已经授权给 AI 客户端。以后不需要复制 Key，知识库更新也不需要重新安装。'
                   : '统一使用 WorkBuddy 插件和网页 OAuth。无需选择操作系统，无需安装 Node.js，也无需复制 API Key。'}
               </CardDescription>
@@ -461,7 +467,7 @@ export function OneWorkAccessPanel({
               index={4}
               title="直接使用"
               description="用自然语言提问，OneWorkOS 自动选择知识和能力。"
-              done={canUseOneWorkOS}
+              done={canUseOneWorkerOs}
               current={currentStep === 4}
             />
           </div>
@@ -514,7 +520,7 @@ export function OneWorkAccessPanel({
             </div>
           )}
 
-          {hasValidEntitlement && !isAuthorized && (
+          {hasValidEntitlement && (
             <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
                 <div className="flex items-start gap-3">
@@ -523,57 +529,52 @@ export function OneWorkAccessPanel({
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">
-                      第一步：在 WorkBuddy 安装插件
+                      在 WorkBuddy 安装 OneWorkOS
                     </h3>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      复制下面的安装指令，粘贴到 WorkBuddy 新任务中。Mac 和
-                      Windows 使用同一段指令。
+                      点击复制安装指令，粘贴到 WorkBuddy
+                      新任务中并发送，WorkBuddy 会自动完成后续处理。
                     </p>
                   </div>
                 </div>
                 <Button
-                  className="mt-5"
+                  className={`mt-5 w-full sm:w-auto ${
+                    installCopyState === 'copied'
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : ''
+                  }`}
                   size="lg"
-                  onClick={() =>
-                    void copyText(
-                      WORKBUDDY_INSTALL_PROMPT,
-                      '安装指令已复制。现在打开 WorkBuddy，新建任务并粘贴发送。'
-                    )
-                  }
+                  disabled={installCopyState === 'copying'}
+                  aria-describedby="install-copy-feedback"
+                  onClick={() => void copyInstallPrompt()}
                 >
-                  <CopyIcon className="size-4" />
-                  复制 WorkBuddy 安装指令
+                  {installCopyState === 'copying' ? (
+                    <Loader2Icon className="size-4 animate-spin" />
+                  ) : installCopyState === 'copied' ? (
+                    <CheckCircle2Icon className="size-4" />
+                  ) : (
+                    <CopyIcon className="size-4" />
+                  )}
+                  {installCopyState === 'copying'
+                    ? '正在复制…'
+                    : installCopyState === 'copied'
+                      ? '已复制，去 WorkBuddy 粘贴'
+                      : '复制安装指令'}
                 </Button>
-                <details className="mt-4 rounded-lg border bg-background p-4 text-sm">
-                  <summary className="cursor-pointer font-medium">
-                    WorkBuddy 无法代装时，查看手动命令
-                  </summary>
-                  <div className="mt-3 space-y-2">
-                    {MANUAL_PLUGIN_COMMANDS.map((command) => (
-                      <div
-                        key={command}
-                        className="flex items-center gap-2 rounded-md bg-muted p-2"
-                      >
-                        <code className="min-w-0 flex-1 break-all text-xs">
-                          {command}
-                        </code>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`复制命令 ${command}`}
-                          onClick={() =>
-                            void copyText(
-                              command,
-                              '命令已复制，请粘贴到 WorkBuddy。'
-                            )
-                          }
-                        >
-                          <CopyIcon className="size-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </details>
+                <div id="install-copy-feedback" className="mt-3 min-h-6">
+                  {installCopyState === 'copied' ? (
+                    <output
+                      aria-live="polite"
+                      className="block text-sm font-medium text-emerald-700 dark:text-emerald-300"
+                    >
+                      复制成功。下一步：打开 WorkBuddy → 新建任务 → 粘贴并发送。
+                    </output>
+                  ) : installCopyState === 'error' ? (
+                    <p role="alert" className="text-sm text-destructive">
+                      复制失败，请重试；若仍失败，请检查浏览器的剪贴板权限。
+                    </p>
+                  ) : null}
+                </div>
               </div>
 
               <div className="rounded-xl border p-5">
@@ -591,7 +592,8 @@ export function OneWorkAccessPanel({
                   </div>
                 </div>
                 <div className="mt-4 rounded-lg bg-muted p-3 text-sm font-medium leading-6">
-                  专家·技能·连接器 → 连接器 → 自定义连接器 → OneWorkOS → 连接
+                  专家·技能·连接器 → 连接器 → 自定义连接器 → one-worker-os →
+                  连接
                 </div>
                 <ol className="mt-4 space-y-2 text-sm leading-6 text-muted-foreground">
                   <li>1. 浏览器会打开 OneWorkOS 授权页。</li>
@@ -603,7 +605,7 @@ export function OneWorkAccessPanel({
             </div>
           )}
 
-          {canUseOneWorkOS && (
+          {canUseOneWorkerOs && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5 dark:border-emerald-900 dark:bg-emerald-950/20">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="flex items-start gap-3">
@@ -748,7 +750,19 @@ export function OneWorkAccessPanel({
                       <p className="font-medium">
                         {oauthClientName(connection)}
                       </p>
-                      <Badge>已授权</Badge>
+                      <Badge
+                        variant={
+                          connection.identity === 'current'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                      >
+                        {connection.identity === 'current'
+                          ? '当前版本已授权'
+                          : connection.identity === 'legacy'
+                            ? '旧版授权，请撤销'
+                            : '其他客户端授权'}
+                      </Badge>
                     </div>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       {connection.scopes.map(oauthScopeName).join('、')} ·

@@ -145,7 +145,7 @@ const TOOLS = [
   {
     name: 'onework_resolve_capability',
     description:
-      'Resolve a goal to governed OneWorkOS capabilities and an execution route.',
+      'Resolve a goal to governed one-worker-os capabilities and an execution route.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
@@ -169,7 +169,7 @@ const TOOLS = [
   {
     name: 'onework_search_knowledge',
     description:
-      'Search a licensed OneWorkOS knowledge pack using the governed retrieval service.',
+      'Search a licensed one-worker-os knowledge pack using the governed retrieval service.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
@@ -181,7 +181,7 @@ const TOOLS = [
           minLength: 1,
           maxLength: 160,
           description:
-            'Optional licensed pack ID. Omit or pass auto so OneWorkOS routes WorkBuddy and Xiaohongshu automatically.',
+            'Optional licensed pack ID. Omit or pass auto so one-worker-os routes WorkBuddy and Xiaohongshu automatically.',
         },
         context: {
           type: 'string',
@@ -197,7 +197,7 @@ const TOOLS = [
   {
     name: 'onework_query_analytics',
     description:
-      'Validate or execute a governed OneWorkOS semantic analytics query.',
+      'Validate or execute a governed one-worker-os semantic analytics query.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
@@ -219,7 +219,7 @@ const TOOLS = [
   },
   {
     name: 'onework_get_usage',
-    description: 'Get current-month OneWorkOS usage and remaining quota.',
+    description: 'Get current-month one-worker-os usage and remaining quota.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
@@ -390,7 +390,7 @@ function ensureQuota(access: Awaited<ReturnType<typeof listOneWorkAccess>>) {
   if (access.usage.limit < 1 || access.usage.remaining < 1) {
     throw new McpToolError(
       'QUOTA_EXCEEDED',
-      'Monthly OneWorkOS quota exhausted'
+      'Monthly one-worker-os quota exhausted'
     );
   }
 }
@@ -655,7 +655,7 @@ async function callTool(
     if (!reservation) {
       throw new McpToolError(
         'QUOTA_EXCEEDED',
-        'Monthly OneWorkOS quota exhausted'
+        'Monthly one-worker-os quota exhausted'
       );
     }
     try {
@@ -718,7 +718,7 @@ async function callTool(
     if (!reservation) {
       throw new McpToolError(
         'QUOTA_EXCEEDED',
-        'Monthly OneWorkOS quota exhausted'
+        'Monthly one-worker-os quota exhausted'
       );
     }
     try {
@@ -828,9 +828,9 @@ export async function handleOneWorkMcpMessage(
         response: rpcSuccess(id, {
           protocolVersion,
           capabilities: { tools: { listChanged: false } },
-          serverInfo: { name: 'OneWorkOS', version: '1.0.0' },
+          serverInfo: { name: 'one-worker-os', version: '1.0.0' },
           instructions:
-            'Use OneWorkOS tools only within the OAuth scopes granted to this connection.',
+            'Use one-worker-os tools only within the OAuth scopes granted to this connection.',
         }),
         status: 200,
       };
@@ -877,7 +877,7 @@ export async function handleOneWorkMcpMessage(
             asToolError(
               new McpToolError(
                 'TOOL_EXECUTION_FAILED',
-                'The OneWorkOS tool could not complete the request'
+                'The one-worker-os tool could not complete the request'
               )
             )
           ),

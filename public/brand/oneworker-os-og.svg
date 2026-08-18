@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">one-worker-os</title>
+  <desc id="desc">one-worker-os social sharing card</desc>
+  <defs>
+    <linearGradient id="background" x1="80" y1="0" x2="1120" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#07172e" />
+      <stop offset="0.52" stop-color="#0b2450" />
+      <stop offset="1" stop-color="#06142a" />
+    </linearGradient>
+    <radialGradient id="halo" cx="0" cy="0" r="1" gradientTransform="translate(620 0) rotate(90) scale(420 610)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2678ff" stop-opacity="0.48" />
+      <stop offset="1" stop-color="#2678ff" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="grid" width="52" height="52" patternUnits="userSpaceOnUse">
+      <path d="M52 0H0V52" fill="none" stroke="#ffffff" stroke-opacity="0.08" />
+    </pattern>
+    <linearGradient id="brand" x1="112" y1="150" x2="340" y2="390" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22d3ee" />
+      <stop offset="0.5" stop-color="#2678ff" />
+      <stop offset="1" stop-color="#1d4ed8" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#background)" />
+  <rect width="1200" height="630" fill="url(#halo)" />
+  <rect width="1200" height="630" fill="url(#grid)" />
+  <g transform="translate(104 169)">
+    <rect width="248" height="248" rx="62" fill="url(#brand)" />
+    <circle cx="96" cy="124" r="53" fill="none" stroke="#ffffff" stroke-width="25" />
+    <path d="M122 79L150 169L178 105L205 169L233 79" fill="none" stroke="#ffffff" stroke-width="25" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <text x="414" y="257" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="78" font-weight="760" letter-spacing="-2">one-worker-os</text>
+  <text x="418" y="325" fill="#cbd5e1" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="30" font-weight="500">独立工作者的 AI 工作操作系统</text>
+  <g transform="translate(418 371)">
+    <rect width="514" height="58" rx="29" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.12" />
+    <circle cx="31" cy="29" r="7" fill="#67e8f9" />
+    <text x="52" y="38" fill="#dbeafe" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="24">知识 · 工具 · 行动，一句话连接起来</text>
+  </g>
+</svg>

@@ -2,13 +2,7 @@ import { defaultMessages } from '@/i18n/messages';
 import { routing } from '@/i18n/routing';
 import EmailLayout from '@/mail/components/email-layout';
 import type { BaseEmailProps } from '@/mail/types';
-import {
-  Button,
-  Heading,
-  Hr,
-  Section,
-  Text,
-} from '@react-email/components';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import { createTranslator } from 'use-intl/core';
 
 interface PaymentSuccessProps extends BaseEmailProps {
@@ -128,7 +122,7 @@ export default function PaymentSuccess({
 PaymentSuccess.PreviewProps = {
   locale: routing.defaultLocale,
   messages: defaultMessages,
-  planName: '独立沉思录会员',
+  planName: 'OneWorkOS 会员',
   interval: 'month',
   amount: 180,
   currency: 'CNY',

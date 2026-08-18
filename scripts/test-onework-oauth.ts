@@ -1,5 +1,5 @@
 /**
- * OneWorkOS OAuth integration test.
+ * one-worker-os OAuth integration test.
  *
  * The script creates an isolated user/client/token family and removes every
  * row in finally. Remote databases require ONEWORK_ALLOW_REMOTE_E2E=true.
@@ -29,6 +29,7 @@ import {
   issueOneWorkAuthorizationCode,
   issueOneWorkDeviceCode,
   listOneWorkOAuthConnections,
+  oneWorkerOsOAuthClientIdentity,
   pollOneWorkDeviceToken,
   prepareOneWorkAuthorizationRequest,
   registerOneWorkOAuthClient,
@@ -93,10 +94,28 @@ async function main() {
     'redirect fragment must be rejected'
   );
   const realWorkBuddyRedirect =
-    'workbuddy://workbuddy/mcp/config%3A5.3.13-test/oauth/callback';
+    'workbuddy://workbuddy/mcp/custom-mcp%3Aone-worker-os/oauth/callback';
   assert(
     isOneWorkOAuthRedirectUriAllowed(realWorkBuddyRedirect),
     'the exact WorkBuddy 5.3.13 native callback shape should be accepted'
+  );
+  assert(
+    oneWorkerOsOAuthClientIdentity('Generic WorkBuddy', [
+      realWorkBuddyRedirect,
+    ]) === 'current',
+    'the exact one-worker-os redirect must identify the current client'
+  );
+  assert(
+    oneWorkerOsOAuthClientIdentity('one-worker-os MCP Client', [
+      'workbuddy://workbuddy/mcp/custom-mcp%3Aone-work-os/oauth/callback',
+    ]) === 'legacy',
+    'a legacy redirect must override a self-asserted current client name'
+  );
+  assert(
+    oneWorkerOsOAuthClientIdentity('one-worker-os MCP Client', [
+      'http://127.0.0.1:3210/mcp/oauth/callback',
+    ]) === 'other',
+    'a self-asserted client name must not identify an unrelated redirect'
   );
   for (const maliciousRedirect of [
     'workbuddy://evil.example/mcp/config-1/oauth/callback',
@@ -121,7 +140,7 @@ async function main() {
   const suffix = `${Date.now()}-${randomUUID()}`;
   const userId = `oauth_e2e_user_${suffix}`;
   const entitlementId = `oauth_e2e_entitlement_${suffix}`;
-  const encodedConfigId = encodeURIComponent(`config:${suffix}`);
+  const encodedConfigId = encodeURIComponent('custom-mcp:one-worker-os');
   const redirectUri = `workbuddy://workbuddy/mcp/${encodedConfigId}/oauth/callback`;
   const deviceRedirectUri = `http://127.0.0.1/${suffix}/callback`;
   const trustedDeviceClientId = `onework-e2e-device-${suffix}`;
@@ -132,7 +151,7 @@ async function main() {
     const now = new Date();
     await db.insert(user).values({
       id: userId,
-      name: 'OneWorkOS OAuth E2E',
+      name: 'one-worker-os OAuth E2E',
       email: `onework-oauth-${suffix}@invalid.example`,
       emailVerified: true,
       createdAt: now,
@@ -152,7 +171,7 @@ async function main() {
     });
     await db.insert(oneworkOauthClient).values({
       clientId: trustedDeviceClientId,
-      clientName: 'OneWorkOS OAuth E2E Trusted Device Client',
+      clientName: 'one-worker-os OAuth E2E Trusted Device Client',
       redirectUris: [],
       grantTypes: [DEVICE_GRANT_TYPE, 'refresh_token'],
       responseTypes: [],
@@ -167,7 +186,7 @@ async function main() {
 
     const registered = await registerOneWorkOAuthClient({
       clientName: 'OAuth E2E Client',
-      redirectUris: [redirectUri],
+      redirectUris: [redirectUri, deviceRedirectUri],
       // WorkBuddy 5.3.13 的真实 DCR 形状：只声明 authorization_code。
       grantTypes: ['authorization_code'],
       responseTypes: ['code'],
@@ -402,6 +421,12 @@ async function main() {
       'device access token should verify'
     );
     const connections = await listOneWorkOAuthConnections(userId);
+    assert(
+      connections.find(
+        (connection) => connection.clientId === registered.client_id
+      )?.identity === 'current',
+      'the one-worker-os WorkBuddy client must be identified as current'
+    );
     assert(
       connections.some(
         (connection) => connection.clientId === trustedDeviceClientId

@@ -4,4 +4,3 @@ import { redirect } from 'next/navigation';
 export default function ActivateAliasPage() {
   redirect('/onework');
 }
-
