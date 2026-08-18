@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
  *
  * NOTICE: used in client components only
  *
- * one-worker-os 导航：先进入工作入口，再按需探索知识、能力与会员。
+ * OneWorkOS 导航：先进入工作入口，再按需探索知识、能力与会员。
  *
  * @returns The navbar config with translated titles for navigation
  */
@@ -18,11 +18,6 @@ export function getNavbarLinks(): NestedMenuItem[] {
 
   return [
     {
-      title: t('home.title'),
-      href: Routes.Root,
-      external: false,
-    },
-    {
       title: t('aiChat.title'),
       href: Routes.AIChat,
       external: false,
@@ -30,11 +25,6 @@ export function getNavbarLinks(): NestedMenuItem[] {
     {
       title: t('blog.title'),
       href: Routes.Blog,
-      external: false,
-    },
-    {
-      title: t('services.title'),
-      href: Routes.Services,
       external: false,
     },
     {

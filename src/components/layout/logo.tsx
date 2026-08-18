@@ -1,15 +1,23 @@
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 export function Logo({ className }: { className?: string }) {
   return (
     <span
-      aria-label="one-worker-os"
+      aria-label="独立工作者"
       className={cn(
-        'inline-flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 text-[10px] font-black tracking-[-0.08em] text-white shadow-sm shadow-blue-500/40',
+        'relative inline-flex size-10 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm shadow-blue-500/20',
         className
       )}
     >
-      OW
+      <Image
+        src="/brand/one-worker-brand-blue.png"
+        alt="独立工作者"
+        fill
+        sizes="40px"
+        className="object-contain"
+        priority
+      />
     </span>
   );
 }

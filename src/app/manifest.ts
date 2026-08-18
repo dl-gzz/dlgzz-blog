@@ -23,13 +23,13 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: defaultMessages.Metadata.name,
-    short_name: 'one-worker-os',
+    short_name: '独立工作者',
     description: defaultMessages.Metadata.description,
     start_url: '/zh',
     scope: '/',
     display: 'standalone',
-    background_color: '#0f172a',
-    theme_color: '#0f172a',
+    background_color: '#ffffff',
+    theme_color: '#2563eb',
     categories: ['productivity', 'utilities'],
     icons: [
       {

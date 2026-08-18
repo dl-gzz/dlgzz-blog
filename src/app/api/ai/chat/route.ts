@@ -86,7 +86,7 @@ export async function POST(req: Request) {
         JSON.stringify({
           error: 'Trial limit reached',
           code: 'TRIAL_LIMIT',
-          message: `今天的免费体验次数已用完（每天 ${FREE_DAILY_LIMIT} 次）。开通会员即可无限畅查，并获得 API Key 装进你自己的 AI。`,
+          message: `今天的免费体验次数已用完（每天 ${FREE_DAILY_LIMIT} 次）。开通会员后，可通过网页授权把 OneWorkOS 连接到 WorkBuddy。`,
           upgradeUrl: '/pricing',
           limit: quota.limit,
         }),
@@ -188,7 +188,7 @@ export async function POST(req: Request) {
 
     // 6. 构建系统提示词
     const systemPrompt = relevantContext
-      ? `你是「one-worker-os」知识库的问答助手。下方是针对用户问题检索到的知识库内容，请充分利用它来回答。
+      ? `你是「独立工作者」知识库的问答助手。下方是针对用户问题检索到的知识库内容，请充分利用它来回答。
 
 ## 回答规则：
 1. **默认下方内容就是相关的**——检索已按语义匹配，请把它当作对这个问题有用的材料，整合成有条理的答案，不要说"没有直接针对性内容"这类话
@@ -201,7 +201,7 @@ export async function POST(req: Request) {
 ${relevantContext}
 
 现在请综合以上内容，正面回答用户的问题。`
-      : `你是「one-worker-os」知识库的问答助手。这次没有检索到相关的知识库内容。
+      : `你是「独立工作者」知识库的问答助手。这次没有检索到相关的知识库内容。
 
 请诚实告诉用户：知识库里暂时没有匹配到相关内容，可以换个说法再问，或浏览博客了解已收录的主题。语气友好专业，用中文。`;
 

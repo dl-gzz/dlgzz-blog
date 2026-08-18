@@ -52,12 +52,30 @@ export class TencentSESProvider implements MailProvider {
 
     try {
       const mailTemplate = await getTemplate({ template, context, locale });
-      return this.sendRawEmail({
-        to,
-        subject: mailTemplate.subject,
-        html: mailTemplate.html,
-        text: mailTemplate.text,
+      const templateId = this.getTencentTemplateId(template);
+
+      if (!templateId) {
+        return {
+          success: false,
+          error: `Tencent SES template is not configured for ${template}.`,
+        };
+      }
+
+      const response = await this.client.SendEmail({
+        FromEmailAddress: this.from,
+        Destination: [to],
+        Subject: mailTemplate.subject,
+        Template: {
+          TemplateID: templateId,
+          // Tencent SES templates accept a JSON object whose keys correspond
+          // to variables in the reviewed template. Both account flows only
+          // need the one-time URL and therefore never transmit user names.
+          TemplateData: JSON.stringify({ url: context.url }),
+        },
+        TriggerType: 1,
       });
+
+      return { success: true, messageId: response.MessageId };
     } catch (error) {
       console.error('Error sending Tencent SES template email:', error);
       return { success: false, error };
@@ -67,28 +85,34 @@ export class TencentSESProvider implements MailProvider {
   public async sendRawEmail(
     params: SendRawEmailParams
   ): Promise<SendEmailResult> {
-    const { to, subject, html, text } = params;
+    void params;
+    // Tencent SES default accounts reject the legacy `Simple` payload. Keep
+    // this failure explicit so new transactional messages are added as
+    // reviewed SES templates instead of failing remotely and ambiguously.
+    return {
+      success: false,
+      error:
+        'Tencent SES requires a reviewed template. Configure a template before sending this message type.',
+    };
+  }
 
-    if (!this.from || !to || !subject || !html) {
-      return { success: false, error: 'Missing required fields' };
+  private getTencentTemplateId(template: SendTemplateParams['template']) {
+    const value =
+      template === 'forgotPassword'
+        ? process.env.TENCENT_SES_RESET_PASSWORD_TEMPLATE_ID
+        : template === 'verifyEmail'
+          ? process.env.TENCENT_SES_VERIFY_EMAIL_TEMPLATE_ID
+          : undefined;
+
+    if (!value) {
+      return undefined;
     }
 
-    try {
-      const response = await this.client.SendEmail({
-        FromEmailAddress: this.from,
-        Destination: [to],
-        Subject: subject,
-        Simple: {
-          Html: Buffer.from(html, 'utf8').toString('base64'),
-          Text: Buffer.from(text || '', 'utf8').toString('base64'),
-        },
-        TriggerType: 1,
-      });
-
-      return { success: true, messageId: response.MessageId };
-    } catch (error) {
-      console.error('Error sending Tencent SES email:', error);
-      return { success: false, error };
+    const templateId = Number(value);
+    if (!Number.isSafeInteger(templateId) || templateId <= 0) {
+      throw new Error(`Invalid Tencent SES template ID for ${template}.`);
     }
+
+    return templateId;
   }
 }

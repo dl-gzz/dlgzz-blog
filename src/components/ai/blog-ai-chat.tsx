@@ -218,7 +218,7 @@ export function BlogAIChat() {
                 <p className="text-sm font-medium">今天的免费体验次数已用完</p>
                 <p className="mt-1.5 text-sm text-muted-foreground">
                   {trialLimit.message ||
-                    '开通会员即可无限畅查，并获得专属 API Key，把这个知识库装进你自己的 AI。'}
+                    '开通会员即可继续使用，并通过网页授权把 OneWorkOS 连接到 WorkBuddy。'}
                 </p>
                 <Button asChild size="sm" className="mt-3">
                   <a href={trialLimit.upgradeUrl || '/pricing'}>开通会员，无限畅查</a>

@@ -814,7 +814,7 @@ export const oneworkInstallToken = pgTable("onework_install_token", {
 ]);
 
 // ─────────────────────────────────────────────────────────
-// one-worker-os OAuth 2.1：WorkBuddy / MCP 网页授权与设备码兜底。
+// OneWorkOS OAuth 2.1：WorkBuddy / MCP 网页授权与设备码兜底。
 
 /** OAuth 公共客户端注册。本地 AI 客户端必须使用 PKCE，不保存 client secret。 */
 export const oneworkOauthClient = pgTable("onework_oauth_client", {
@@ -951,7 +951,7 @@ export const oneworkOauthRateLimitBucket = pgTable("onework_oauth_rate_limit_buc
 	index('onework_oauth_rate_limit_updated_idx').on(table.updatedAt),
 ]);
 
-// one-worker-os V1：能力注册表 + Skill 映射 + 受控语义层
+// OneWorkOS V1：能力注册表 + Skill 映射 + 受控语义层
 // ─────────────────────────────────────────────────────────
 
 /**

@@ -1,8 +1,8 @@
 {
   "Metadata": {
-    "name": "one-worker-os",
-    "title": "one-worker-os · 独立工作者的 AI 工作操作系统",
-    "description": "one-worker-os 为独立工作者连接知识、工具与行动。只要说出目标，系统会判断下一步并推动任务完成。"
+    "name": "独立工作者",
+    "title": "OneWorkOS · 独立工作者的 AI 工作操作系统",
+    "description": "OneWorkOS 为独立工作者连接知识、工具与行动。只要说出目标，系统会判断下一步并推动任务完成。"
   },
   "Common": {
     "login": "登录",
@@ -80,10 +80,10 @@
       }
     },
     "pro": {
-      "name": "one-worker-os 会员",
+      "name": "OneWorkOS 会员",
       "description": "连接全部知识能力，让 AI 帮你从目标走到行动",
       "features": {
-        "feature-1": "使用全部 one-worker-os 知识库",
+        "feature-1": "使用全部 OneWorkOS 知识库",
         "feature-2": "每月 1000 次知识检索",
         "feature-3": "WorkBuddy 与小红书知识能力",
         "feature-4": "官方图片、资料出处和视频入口",
@@ -118,25 +118,25 @@
   },
   "AboutPage": {
     "title": "关于我",
-    "description": "one-worker-os - 为独立工作者提供知识分享与AI助手服务的平台",
-    "authorName": "one-worker-os",
+    "description": "独立沉思录 - 为独立工作者提供知识分享与AI助手服务的平台",
+    "authorName": "独立沉思录",
     "authorBio": "知识分享与AI问答平台",
-    "introduction": "👋 欢迎来到 one-worker-os！我们致力于为独立工作者提供优质的知识内容和AI问答服务。通过订阅会员，您可以无限制阅读全站文章，并使用AI助手解答您的疑问。有问题吗？我们很乐意为您提供帮助！",
+    "introduction": "👋 欢迎来到独立沉思录！我们致力于为独立工作者提供优质的知识内容和AI问答服务。通过订阅会员，您可以无限制阅读全站文章，并使用AI助手解答您的疑问。有问题吗？我们很乐意为您提供帮助！",
     "talkWithMe": "联系我们",
     "followMe": "关注我们"
   },
   "ChangelogPage": {
     "title": "更新日志",
-    "description": "了解 one-worker-os 的最新功能和改进",
-    "subtitle": "了解 one-worker-os 的最新功能和改进"
+    "description": "了解独立沉思录的最新功能和改进",
+    "subtitle": "了解独立沉思录的最新功能和改进"
   },
   "ContactPage": {
     "title": "联系我们",
-    "description": "联系 one-worker-os 团队",
+    "description": "联系独立沉思录团队",
     "subtitle": "关于内容、知识库或会员服务，欢迎与我们联系",
     "form": {
-      "title": "联系 one-worker-os",
-      "description": "对 one-worker-os 的内容、知识库或会员服务有疑问？请给我们留言。",
+      "title": "联系独立沉思录",
+      "description": "对独立沉思录的内容、知识库或会员服务有疑问？请给我们留言。",
       "name": "姓名",
       "email": "邮箱",
       "message": "消息",
@@ -153,11 +153,11 @@
   },
   "WaitlistPage": {
     "title": "预约体验",
-    "description": "预约抢先体验 one-worker-os",
-    "subtitle": "预约抢先体验 one-worker-os",
+    "description": "预约抢先体验独立沉思录",
+    "subtitle": "预约抢先体验独立沉思录",
     "form": {
-      "title": "加入 one-worker-os 预约名单",
-      "description": "抢先体验 one-worker-os 即将推出的新功能",
+      "title": "加入独立沉思录预约名单",
+      "description": "抢先体验独立沉思录即将推出的新功能",
       "email": "邮箱",
       "subscribe": "加入预约",
       "subscribing": "加入中...",
@@ -168,7 +168,7 @@
   },
   "Newsletter": {
     "title": "邮件订阅",
-    "subtitle": "获取 one-worker-os 最新资讯",
+    "subtitle": "获取独立沉思录最新资讯",
     "description": "订阅邮件，获取最新文章、知识库与产品更新",
     "form": {
       "email": "邮箱",
@@ -182,10 +182,10 @@
   "AuthPage": {
     "login": {
       "title": "登录",
-      "welcomeBack": "欢迎回到 one-worker-os",
-      "signUpHint": "初次使用 one-worker-os？注册账号",
+      "welcomeBack": "欢迎回到独立沉思录",
+      "signUpHint": "初次使用独立沉思录？注册账号",
       "signInWithGoogle": "使用Google登录",
-      "loginWithGoogle": "使用 Google 登录 one-worker-os",
+      "loginWithGoogle": "使用 Google 登录独立沉思录",
       "or": "或者使用社交账号登录",
       "orContinueWith": "或",
       "email": "邮箱",
@@ -199,9 +199,9 @@
     },
     "register": {
       "title": "注册",
-      "createAccount": "创建您的 one-worker-os 账号",
+      "createAccount": "创建您的独立沉思录账号",
       "signInHint": "已有账号？立即登录",
-      "registerWithGoogle": "使用Google创建 one-worker-os 账号开始使用",
+      "registerWithGoogle": "使用Google创建独立沉思录账号开始使用",
       "orContinueWith": "或",
       "name": "姓名",
       "namePlaceholder": "请输入姓名",
@@ -248,7 +248,7 @@
     }
   },
   "BlogPage": {
-    "title": "one-worker-os",
+    "title": "独立沉思录",
     "description": "分享生活感悟、工作经验和个人成长",
     "subtitle": "分享生活感悟、工作经验和个人成长",
     "author": "作者",
@@ -279,7 +279,7 @@
     "previousPage": "上一页",
     "nextPage": "下一页",
     "chooseLanguage": "选择语言",
-    "title": "one-worker-os 文档",
+    "title": "独立沉思录文档",
     "homepage": "首页",
     "blog": "博客"
   },
@@ -291,14 +291,11 @@
       "features": {
         "title": "功能特色"
       },
-      "services": {
-        "title": "能力市场"
-      },
       "bots": {
         "title": "独立陪伴者"
       },
       "blog": {
-        "title": "知识中心"
+        "title": "独博"
       },
       "pricing": {
         "title": "会员"
@@ -317,27 +314,27 @@
         "items": {
           "about": {
             "title": "关于我",
-            "description": "了解 one-worker-os 的内容、产品与使命"
+            "description": "了解独立沉思录的内容、产品与使命"
           },
           "contact": {
             "title": "联系我们",
-            "description": "联系 one-worker-os 团队"
+            "description": "联系独立沉思录团队"
           },
           "waitlist": {
             "title": "预约体验",
-            "description": "抢先体验 one-worker-os 的最新功能"
+            "description": "抢先体验独立沉思录的最新功能"
           },
           "changelog": {
             "title": "更新日志",
-            "description": "查看 one-worker-os 最新更新和新AI功能"
+            "description": "查看独立沉思录最新更新和新AI功能"
           },
           "roadmap": {
             "title": "发展路线",
-            "description": "了解 one-worker-os 的后续产品规划"
+            "description": "了解独立沉思录的后续产品规划"
           },
           "cookiePolicy": {
             "title": "Cookie政策",
-            "description": "我们如何使用Cookie来增强您的 one-worker-os 体验"
+            "description": "我们如何使用Cookie来增强您的独立沉思录体验"
           },
           "privacyPolicy": {
             "title": "隐私政策",
@@ -345,7 +342,7 @@
           },
           "termsOfService": {
             "title": "服务条款",
-            "description": "使用 one-worker-os 服务的法律协议"
+            "description": "使用独立沉思录服务的法律协议"
           }
         }
       },
@@ -410,7 +407,7 @@
       }
     },
     "footer": {
-      "tagline": "独立工作者的 AI 工作操作系统：连接知识、工具与行动。",
+    "tagline": "独立工作者的 AI 工作系统",
       "product": {
         "title": "产品",
         "items": {
@@ -478,7 +475,7 @@
       "title": "系统管理",
       "users": {
         "title": "用户管理",
-        "fakeData": "注：one-worker-os 平台功能演示数据",
+        "fakeData": "注：独立沉思录平台功能演示数据",
         "error": "获取用户失败",
         "search": "搜索用户...",
         "columns": {
@@ -534,7 +531,7 @@
       "title": "设置",
       "profile": {
         "title": "个人资料",
-        "description": "管理您的 one-worker-os 账户信息",
+        "description": "管理您的独立沉思录账户信息",
         "avatar": {
           "title": "头像",
           "description": "上传头像，完善您的个人资料",
@@ -559,7 +556,7 @@
       },
       "billing": {
         "title": "账单",
-        "description": "管理您的 one-worker-os 订阅和账单",
+        "description": "管理您的独立沉思录订阅和账单",
         "status": {
           "active": "已激活",
           "trial": "试用中",
@@ -573,7 +570,7 @@
         },
         "currentPlan": {
           "title": "当前方案",
-          "description": "您当前的 one-worker-os 订阅详情",
+          "description": "您当前的独立沉思录订阅详情",
           "noPlan": "您没有激活的方案"
         },
         "CustomerPortalButton": {
@@ -584,7 +581,7 @@
         "nextBillingDate": "下次账单日期：",
         "trialEnds": "试用结束日期：",
         "freePlanMessage": "您正在使用功能有限的免费版本",
-        "lifetimeMessage": "您拥有 one-worker-os 所有功能的终身使用权",
+        "lifetimeMessage": "您拥有独立沉思录所有功能的终身使用权",
         "manageSubscription": "管理订阅",
         "manageBilling": "管理账单",
         "upgradePlan": "升级方案",
@@ -593,7 +590,7 @@
       },
       "notification": {
         "title": "通知",
-        "description": "管理您的 one-worker-os 通知偏好",
+        "description": "管理您的独立沉思录通知偏好",
         "newsletter": {
           "title": "邮件订阅",
           "description": "获取最新文章、知识库与产品更新",
@@ -609,7 +606,7 @@
       },
       "security": {
         "title": "安全",
-        "description": "管理您的 one-worker-os 账户安全设置",
+        "description": "管理您的独立沉思录账户安全设置",
         "updatePassword": {
           "title": "修改密码",
           "description": "更新密码以保护您的账户安全",
@@ -633,11 +630,11 @@
         },
         "deleteAccount": {
           "title": "删除账号",
-          "description": "永久删除您的 one-worker-os 账号和所有数据",
+          "description": "永久删除您的独立沉思录账号和所有数据",
           "warning": "此操作无法撤销，将删除您所有的AI生成内容",
           "button": "删除账号",
           "confirmTitle": "删除账号",
-          "confirmDescription": "您确定要删除您的 one-worker-os 账号吗？此操作无法撤销。",
+          "confirmDescription": "您确定要删除您的独立沉思录账号吗？此操作无法撤销。",
           "confirm": "删除",
           "cancel": "取消",
           "deleting": "删除中...",
@@ -654,35 +651,35 @@
   },
   "Mail": {
     "common": {
-      "team": "one-worker-os 团队",
-      "copyright": "©️ {year} one-worker-os. 版权所有。"
+      "team": "独立沉思录团队",
+      "copyright": "©️ {year} 独立沉思录. 版权所有。"
     },
     "verifyEmail": {
-      "title": "欢迎来到 one-worker-os，{name}！",
-      "body": "请点击下方链接验证邮箱，开始使用 one-worker-os 。",
+      "title": "欢迎来到独立沉思录，{name}！",
+      "body": "请点击下方链接验证邮箱，开始使用独立沉思录。",
       "confirmEmail": "验证邮箱",
-      "subject": "验证您的 one-worker-os 账号"
+      "subject": "验证您的独立沉思录账号"
     },
     "forgotPassword": {
       "title": "你好，{name}",
-      "body": "请点击下方链接重置您的 one-worker-os 密码。",
+      "body": "请点击下方链接重置您的独立沉思录密码。",
       "resetPassword": "重置密码",
-      "subject": "重置您的 one-worker-os 密码"
+      "subject": "重置您的独立沉思录密码"
     },
     "subscribeNewsletter": {
-      "body": "感谢您订阅 one-worker-os 邮件！我们会向您发送最新文章、知识库与产品更新。",
-      "subject": "欢迎订阅 one-worker-os 邮件"
+      "body": "感谢您订阅独立沉思录邮件！我们会向您发送最新文章、知识库与产品更新。",
+      "subject": "欢迎订阅独立沉思录邮件"
     },
     "contactMessage": {
       "name": "姓名：{name}",
       "email": "邮箱：{email}",
       "message": "消息：{message}",
-      "subject": "新联系消息 - one-worker-os"
+      "subject": "新联系消息 - 独立沉思录"
     },
     "paymentSuccess": {
       "subject": "🎉 订阅成功！",
       "greeting": "您好！",
-      "thankYou": "感谢您订阅 one-worker-os 会员！您的订阅已激活，现在可以享受所有付费内容了。",
+      "thankYou": "感谢您订阅独立沉思录会员！您的订阅已激活，现在可以享受所有付费内容了。",
       "subscriptionDetails": "订阅详情",
       "plan": "套餐",
       "amount": "金额",
@@ -714,7 +711,7 @@
     }
   },
   "HomePage": {
-    "title": "one-worker-os",
+    "title": "独立沉思录",
     "description": "把策展好的知识库装进你的 AI：开通会员即得 API Key，一条命令接入，随时检索。",
     "hero": {
       "title": "把我的知识库，装进你的 AI",
@@ -756,7 +753,7 @@
     },
     "faqs": {
       "title": "常见问题",
-      "subtitle": "关于 one-worker-os 您需要了解的一切",
+      "subtitle": "关于独立沉思录您需要了解的一切",
       "items": {
         "item-1": {
           "question": "AI问答功能的准确度如何？",
@@ -771,8 +768,8 @@
           "answer": "是的，我们使用企业级加密保护您的账号信息，严格遵守隐私政策，不会泄露或滥用您的个人数据。"
         },
         "item-4": {
-          "question": "我可以在移动设备上使用 one-worker-os 吗？",
-          "answer": "当然可以！one-worker-os 平台在手机、平板和电脑上都能完美运行，随时随地阅读学习。"
+          "question": "我可以在移动设备上使用独立沉思录吗？",
+          "answer": "当然可以！独立沉思录平台在手机、平板和电脑上都能完美运行，随时随地阅读学习。"
         },
         "item-5": {
           "question": "需要更多帮助？",

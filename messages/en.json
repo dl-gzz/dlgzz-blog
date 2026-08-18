@@ -1,8 +1,8 @@
 {
   "Metadata": {
-    "name": "one-worker-os",
-    "title": "one-worker-os · The AI work operating system for independent workers",
-    "description": "one-worker-os connects knowledge, tools, and action for independent workers. State your goal and it helps move the work forward."
+    "name": "OneWorkOS",
+    "title": "OneWorkOS · The AI work operating system for independent workers",
+    "description": "OneWorkOS connects knowledge, tools, and action for independent workers. State your goal and it helps move the work forward."
   },
   "Common": {
     "login": "Log in",
@@ -80,10 +80,10 @@
       }
     },
     "pro": {
-      "name": "one-worker-os Membership",
+      "name": "OneWorkOS Membership",
       "description": "Connect all knowledge capabilities and let AI take work from goal to action",
       "features": {
-        "feature-1": "Full access to one-worker-os knowledge bases",
+        "feature-1": "Full access to OneWorkOS knowledge bases",
         "feature-2": "1,000 knowledge searches every month",
         "feature-3": "WorkBuddy and Xiaohongshu knowledge capabilities",
         "feature-4": "Official images, citations, and video entries",
@@ -290,9 +290,6 @@
       },
       "features": {
         "title": "Features"
-      },
-      "services": {
-        "title": "Capabilities"
       },
       "bots": {
         "title": "Companion"

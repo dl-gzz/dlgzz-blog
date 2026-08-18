@@ -1,4 +1,4 @@
-import OneWorkerOsHome from '@/components/marketing/oneworkos-home';
+import OneWorkOSHome from '@/components/marketing/oneworkos-home';
 import { constructMetadata } from '@/lib/metadata';
 import { getUrlWithLocale } from '@/lib/urls/urls';
 import type { Metadata } from 'next';
@@ -30,5 +30,5 @@ interface HomePageProps {
 export default async function HomePage(props: HomePageProps) {
   await props.params;
 
-  return <OneWorkerOsHome />;
+  return <OneWorkOSHome />;
 }

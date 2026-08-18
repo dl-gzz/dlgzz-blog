@@ -31,11 +31,6 @@ export function Footer({ className }: React.HTMLAttributes<HTMLElement>) {
                 </span>
               </div>
 
-              {/* tagline */}
-              <p className="text-muted-foreground text-base py-2 md:pr-12">
-                {t('Marketing.footer.tagline')}
-              </p>
-
               {/* social links */}
               <div className="flex items-center gap-4 py-2">
                 <div className="flex items-center gap-2">

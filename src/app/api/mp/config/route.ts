@@ -4,7 +4,7 @@ export async function GET() {
   return NextResponse.json({
     success: true,
     data: {
-      appName: 'one-worker-os',
+      appName: '独立工作者',
       theme: {
         primaryColor: '#0F172A',
         accentColor: '#D97706',

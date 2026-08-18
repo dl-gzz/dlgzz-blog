@@ -129,7 +129,7 @@ export function OneWorkDeviceActivation() {
           <p className="text-muted-foreground">
             {completed === 'approved'
               ? '请回到 WorkBuddy，它会自动完成连接。你可以关闭本页。'
-              : '没有任何 one-worker-os 数据被授权给该客户端。'}
+              : '没有任何 OneWorkOS 数据被授权给该客户端。'}
           </p>
         </CardContent>
       </Card>
@@ -142,7 +142,7 @@ export function OneWorkDeviceActivation() {
         <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
           <KeyRound className="size-6" />
         </div>
-        <CardTitle className="text-2xl">连接 one-worker-os</CardTitle>
+        <CardTitle className="text-2xl">连接 OneWorkOS</CardTitle>
         <CardDescription>
           输入 WorkBuddy 中显示的授权码。不需要复制 API Key。
         </CardDescription>
@@ -177,7 +177,7 @@ export function OneWorkDeviceActivation() {
               <div>
                 <p className="font-semibold">{authorization.clientName}</p>
                 <p className="text-xs text-muted-foreground">
-                  正在请求连接你的 one-worker-os
+                  正在请求连接你的 OneWorkOS
                 </p>
               </div>
               <Badge variant="secondary">

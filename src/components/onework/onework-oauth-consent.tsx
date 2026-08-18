@@ -33,16 +33,15 @@ type ConsentData = {
 const SCOPE_LABELS: Record<string, { title: string; description: string }> = {
   'onework:resolve': {
     title: '理解任务并选择能力',
-    description: '判断你想做什么，并选择合适的 one-worker-os 路径。',
+    description: '判断你想做什么，并选择合适的 OneWorkOS 路径。',
   },
   'onework:knowledge': {
-    title: '检索 one-worker-os 知识库',
+    title: '检索 OneWorkOS 知识库',
     description: '查找 WorkBuddy、小红书等图文教程、官方出处与视频资源。',
   },
   'onework:analytics': {
     title: '查询受控数据指标',
-    description:
-      '根据 one-worker-os 已注册的语义模型查询数据，不执行任意 SQL。',
+    description: '根据 OneWorkOS 已注册的语义模型查询数据，不执行任意 SQL。',
   },
   'onework:account': {
     title: '查看权益与用量',
@@ -135,7 +134,7 @@ export function OneWorkOAuthConsent() {
     return (
       <Alert variant="destructive" className="mx-auto max-w-xl">
         <XCircle className="size-4" />
-        <AlertTitle>无法连接 one-worker-os</AlertTitle>
+        <AlertTitle>无法连接 OneWorkOS</AlertTitle>
         <AlertDescription>{error || '授权请求无效或已过期。'}</AlertDescription>
       </Alert>
     );
@@ -151,7 +150,7 @@ export function OneWorkOAuthConsent() {
         <CardDescription>
           使用{' '}
           <span className="font-medium text-foreground">{data.user.email}</span>{' '}
-          连接 one-worker-os。你可以随时在账号中撤销授权。
+          连接 OneWorkOS。你可以随时在账号中撤销授权。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5 pt-6">
@@ -159,7 +158,7 @@ export function OneWorkOAuthConsent() {
           <Alert variant="destructive">
             <AlertTitle>当前账号没有有效权益</AlertTitle>
             <AlertDescription>
-              请先兑换或续费 one-worker-os，然后回到本页继续。{' '}
+              请先兑换或续费 OneWorkOS，然后回到本页继续。{' '}
               <Link className="underline underline-offset-4" href="/onework">
                 前往权益页
               </Link>
@@ -175,7 +174,7 @@ export function OneWorkOAuthConsent() {
             <ShieldAlert className="size-4" />
             <AlertTitle>未验证的动态客户端</AlertTitle>
             <AlertDescription>
-              one-worker-os 没有审核这个客户端的发布者。只有在你主动发起连接，
+              OneWorkOS 没有审核这个客户端的发布者。只有在你主动发起连接，
               并确认下方返回地址属于你正在使用的应用时才允许。
             </AlertDescription>
           </Alert>
@@ -190,7 +189,7 @@ export function OneWorkOAuthConsent() {
             {data.scopes.map((scope) => {
               const label = SCOPE_LABELS[scope] ?? {
                 title: scope,
-                description: '由 one-worker-os 管理的授权范围。',
+                description: '由 OneWorkOS 管理的授权范围。',
               };
               return (
                 <div
