@@ -70,15 +70,28 @@ type AccessData = {
 };
 
 const WORKBUDDY_INSTALL_PROMPT = [
-  '请帮我在当前 WorkBuddy 安装并启用 one-worker-os 插件。请直接执行，不要只解释：',
-  '1. 先检查是否存在旧市场 onework-os-marketplace、旧插件 one-work-os@onework-os-marketplace 或旧独立 Skill；此时不要移除、停用或移动任何旧项。',
-  '2. 如果存在旧市场，不能先移除它，也不要再次用同一个 GitHub source 添加市场。请下载 https://www.dlgzz.com/one-worker-os-marketplace/one-worker-os-marketplace-1.0.0.zip，解压到持久目录（macOS/Linux：~/.workbuddy/one-worker-os-marketplace-source/1.0.0；Windows：%USERPROFILE%\\.workbuddy\\one-worker-os-marketplace-source\\1.0.0），再把其中包含 .codebuddy-plugin 的 one-worker-os-marketplace 子目录作为本地 marketplace 添加。',
-  '3. 如果完全没有旧市场，可直接添加 Git 市场 dl-gzz/dlgzz-blog；若 Windows 提示找不到 git，则改用上一步的免 Git ZIP 方式，不要求我安装 Git。',
-  '4. 安装并启用 one-worker-os@one-worker-os-marketplace，然后执行 /reload-plugins --force。只有确认新版 one-worker-os 已加载成功后，才继续清理旧版；若失败，保留旧版并告诉我具体错误。',
-  '5. 新版成功后，如果旧插件仍存在，依次禁用并使用 --keep-data 卸载，再移除旧市场 onework-os-marketplace。旧市场不存在就跳过。',
-  '6. 新版成功后，如果旧独立 Skill 目录仍存在（macOS/Linux：~/.workbuddy/skills/one-work-os；Windows：%USERPROFILE%\\.workbuddy\\skills\\one-work-os），把整个目录移动到 skills 之外的 .workbuddy/one-worker-os-backups/<时间戳>/one-work-os，保留备份，不要删除凭据文件。',
-  '7. 再执行一次 /reload-plugins --force；如果不能热加载，就提醒我完整重启 WorkBuddy。验证“我安装的”中只剩一个 one-worker-os，自定义连接器中也只有一个 one-worker-os。',
-  '8. 带我进入“专家·技能·连接器 → 连接器 → 自定义连接器”，找到 one-worker-os 并点击连接。网页授权由我本人确认；不要向我索要或展示 API Key。',
+  '请在当前 WorkBuddy 中安装并连接 one-worker-os 正式插件。请直接执行；只有浏览器中的账号授权需要我本人确认。',
+  '',
+  '重要：one-worker-os 是同时包含 Skill 和 MCP 的完整 WorkBuddy 插件，不是独立 Skill。唯一正确的安装对象是 one-worker-os@one-worker-os-marketplace。',
+  '',
+  '请先读取 https://www.dlgzz.com/one-worker-os-marketplace/release.json，下载其中列出的 one-worker-os-marketplace ZIP，并严格核对 SHA-256。把 ZIP 解压到当前用户 .workbuddy 下的持久目录，找到直接包含 .codebuddy-plugin/marketplace.json 的 one-worker-os-marketplace 根目录。不要使用临时目录，也不要依赖 Git。',
+  '',
+  '不要把 /plugin 或 /reload-plugins 当作聊天框指令。请优先调用 WorkBuddy 原生插件管理能力；如果当前对话没有这个工具，就在终端中定位 WorkBuddy 应用自带的 codebuddy CLI，不要因为它没有加入 PATH 就判定不支持插件。macOS 可从 /Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/bin/codebuddy 定位；Windows 请从正在运行的 WorkBuddy.exe 位置动态定位 resources\\app.asar.unpacked\\cli\\bin\\codebuddy，不要硬编码用户安装目录。',
+  '',
+  '使用终端中无前导斜杠的 CLI 子命令完成操作：先用 plugin marketplace list 检查新市场；未注册时执行 plugin marketplace add <上述本地市场根目录> --name one-worker-os-marketplace，已注册时则更新该市场；然后执行 plugin install one-worker-os@one-worker-os-marketplace --scope user 和 plugin enable one-worker-os@one-worker-os-marketplace --scope user。必要时用 WorkBuddy 自带的 Electron/WorkBuddy.exe 配合 ELECTRON_RUN_AS_NODE=1 运行该 CLI，不要要求我另行安装 Node.js、Git 或 PowerShell 模块。',
+  '',
+  '严禁把 GitHub 仓库中的 skills/one-worker-os 单独复制到 ~/.workbuddy/skills；严禁使用只安装 Skill 的推荐市场工具作为替代；严禁改用旧版安装器；严禁创建、索要或展示 ONEWORK_API_KEY、ONEWORK_DEVICE_ID。完整插件无法安装时必须停止并报告准确的阻塞原因，不得降级成独立 Skill。',
+  '',
+  '安装后请使用 WorkBuddy 真实支持的方式重新加载插件；如果当前版本无法热加载，就清楚地提醒我完整退出并重启 WorkBuddy。在重启前不要声称已完成连接。',
+  '',
+  '只有同时满足以下条件才能告诉我“安装成功”：',
+  '1. 插件列表真实显示 one-worker-os@one-worker-os-marketplace，作用域为 user，状态为已启用；',
+  '2. 实际安装目录属于 WorkBuddy 插件缓存，并且同时包含 .codebuddy-plugin/plugin.json、skills/one-worker-os/SKILL.md 和 .mcp.json；',
+  '3. MCP/自定义连接器列表出现 one-worker-os，地址为 https://www.dlgzz.com/mcp；',
+  '4. 发起 one-worker-os 的 OAuth 网页授权，由我点击允许；不要让我粘贴 Key 或 Token；',
+  '5. 授权后成功调用 onework_get_entitlements，并成功调用一次 onework_search_knowledge。',
+  '',
+  '如果网页提示没有会员权益，请停下来提醒我开通或兑换会员，不得切换到 API Key。如果发现旧版，只能在新版通过上述验收后再停用并备份旧版，不要提前删除旧版或用户数据。',
 ].join('\n');
 
 const TEST_PROMPT = '查看我的 one-worker-os 会员权益和剩余次数';
