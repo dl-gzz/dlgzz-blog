@@ -24,7 +24,7 @@ one-worker-os 是同时包含 Skill 和 MCP 的完整 WorkBuddy 插件，不是�
 1. 读取 `https://www.dlgzz.com/one-worker-os-marketplace/release.json`。
 2. 下载其中列出的 `one-worker-os-marketplace-*.zip`。
 3. 将下载文件的 SHA-256 与 `release.json` 严格比对；不一致必须停止。
-4. 解压到当前用户 `.workbuddy` 下的持久目录，使用直接包含 `.codebuddy-plugin/marketplace.json` 的 `one-worker-os-marketplace` 根目录。不要使用临时目录，也不要依赖 Git。
+4. 首次安装时，将通过校验的 ZIP 原文件保存为当前用户 `.workbuddy/plugins/packages/one-worker-os-marketplace.zip`。更新已有 `zip` 市场时，先读取它已登记的持久 ZIP 源路径；下载到同目录的旁路文件，校验成功后再原子替换该源文件。不要先解压，不要在校验前覆盖旧包，不要使用临时目录，也不要依赖 Git。
 
 SHA-256 在这里用于检查下载完整性，不是数字签名。
 
@@ -32,16 +32,30 @@ SHA-256 在这里用于检查下载完整性，不是数字签名。
 
 优先使用 WorkBuddy 原生插件管理能力。如果当前对话没有该工具，使用终端动态定位 WorkBuddy 应用自带的 `codebuddy` CLI；它没有加入 PATH 不代表 WorkBuddy 不支持插件。
 
-- macOS 可从 `/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/bin/codebuddy` 定位。
+使用终端 CLI 时，**所有命令都必须显式将 `CODEBUDDY_CONFIG_DIR` 指向当前用户真实的 WorkBuddy 配置目录**：macOS/Linux 为 `$HOME/.workbuddy`，Windows 为 `$env:USERPROFILE\.workbuddy`。可同时设置 `WORKBUDDY_CONFIG_DIR` 为同一路径以兼容宿主。严禁使用临时目录、聊天沙箱 profile 或默认的 `~/.codebuddy`；如果当前终端没有权限写入真实 `.workbuddy`，应请求用户批准该写入，无法获批则报告阻塞并停止，不能在其它 profile 中假装安装成功。
+
+- macOS 可从 `/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/bin/codebuddy` 定位；调用每条命令时都带上 `CODEBUDDY_CONFIG_DIR="$HOME/.workbuddy"`。
 - Windows 从正在运行的 `WorkBuddy.exe` 位置动态定位 `resources\app.asar.unpacked\cli\bin\codebuddy`；不要硬编码用户安装目录。
-- 必要时用 WorkBuddy 自带的 Electron/`WorkBuddy.exe` 配合 `ELECTRON_RUN_AS_NODE=1` 运行 CLI。不要要求用户另行安装 Node.js、Git 或 PowerShell 模块。
+- Windows 调用前先设置 `$env:CODEBUDDY_CONFIG_DIR = Join-Path $env:USERPROFILE '.workbuddy'`；再将 `$env:WORKBUDDY_CONFIG_DIR` 设为相同值。
+- 优先使用 WorkBuddy 原生插件管理能力或当前系统已有、版本符合 CLI 要求的 Node.js 执行 `cli/bin/codebuddy`。不要要求用户为了本次安装另行安装 Node.js、Git 或 PowerShell 模块；如果宿主没有原生插件管理能力，系统也没有可用运行时，则准确报告阻塞，不得把安装写到临时 profile。
 
 `/plugin` 和 `/reload-plugins` 不是 WorkBuddy 桌面聊天中可依赖的安装 API，不要把它们当作聊天框命令。在终端中使用无前导斜杠的 CLI 子命令：
 
 1. `plugin marketplace list` 检查新市场。
-2. 未注册时执行 `plugin marketplace add <本地市场根目录> --name one-worker-os-marketplace`；已注册时更新该市场。
-3. 执行 `plugin install one-worker-os@one-worker-os-marketplace --scope user`。
-4. 执行 `plugin enable one-worker-os@one-worker-os-marketplace --scope user`。
+2. 未注册时执行 `plugin marketplace add <已校验的持久 ZIP 文件> --name one-worker-os-marketplace`。不得把解压后的目录作为市场源，那是不生成正式安装缓存的开发模式。
+3. 已注册且类型为 `zip` 时，先确认已登记的源是当前用户 `.workbuddy` 下可写的本地 ZIP；将已校验的新包原子替换到该源路径，然后执行 `plugin marketplace update one-worker-os-marketplace`。不得仅用同名 `marketplace add`，因为它不会覆盖已存在的市场源。若历史源是 URL 或其它不可安全替换的位置，报告需要迁移并停止，不得擅自移除一个已授权的正式市场。
+4. 如果发现是之前失败安装留下的 `directory` 类型，先移除**这个新 ID 的半安装市场**，再用已校验的持久 ZIP 重新添加；不得动旧 ID 或旧用户数据。
+5. 首次安装执行 `plugin install one-worker-os@one-worker-os-marketplace --scope user`；已有新版执行 `plugin update one-worker-os@one-worker-os-marketplace --scope user`。
+6. 执行 `plugin enable one-worker-os@one-worker-os-marketplace --scope user`。
+
+不能只依据 CLI 打印的 `installed` 或 `enabled` 判断成功。命令完成后必须直接核验当前用户真实目录中的以下状态：
+
+- `$HOME/.workbuddy/plugins/known_marketplaces.json` 包含 `one-worker-os-marketplace`，且市场类型为 `zip`；
+- `$HOME/.workbuddy/plugins/installed_plugins.json` 包含 user scope 的 `one-worker-os@one-worker-os-marketplace`；
+- `$HOME/.workbuddy/settings.json` 的 `enabledPlugins` 对该完整插件 ID 为 `true`；
+- 安装缓存真实位于 `$HOME/.workbuddy/plugins/cache/one-worker-os-marketplace/one-worker-os/<version>`，且三件套齐全。
+
+Windows 使用对应的 `$env:USERPROFILE\.workbuddy\...` 路径。任一真实状态缺失都属于安装失败，不得要求用户靠重启修复，也不得声称已经安装。
 
 如果 WorkBuddy 当前版本无法热加载，清楚地提醒用户完整退出并重启 WorkBuddy。重启前不得声称已完成连接。
 

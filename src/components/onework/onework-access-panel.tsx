@@ -72,7 +72,7 @@ type AccessData = {
 const WORKBUDDY_INSTALL_PROMPT = [
   '请在当前 WorkBuddy 安装并连接 one-worker-os。',
   '请打开并严格执行：https://www.dlgzz.com/one-worker-os-marketplace/workbuddy-install.md',
-  '先自检是首次安装、旧版迁移还是已安装；不得降级为独立 Skill、旧安装器或 API Key。除网页授权或必须重启外，请直接完成，并在真实验证成功后再告诉我。',
+  '先自检是首次安装、旧版迁移还是已安装；所有结果必须写入并核验当前用户真实的 .workbuddy，不能使用临时或沙箱 profile；不得降级为独立 Skill、旧安装器或 API Key。除网页授权或必须重启外，请直接完成，并在真实验证成功后再告诉我。',
   '不要在浏览器直接打开 https://www.dlgzz.com/mcp；授权必须从 WorkBuddy 的“自定义连接器 → 我的 MCP → one-worker-os → 连接/重连”发起。',
 ].join('\n');
 
