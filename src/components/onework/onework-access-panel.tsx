@@ -51,6 +51,7 @@ type OneWorkDevice = {
 type OneWorkOAuthConnection = {
   clientId: string;
   clientName: string;
+  identity: 'current' | 'legacy' | 'other';
   scopes: string[];
   grantedAt: string;
 };
@@ -68,22 +69,52 @@ type AccessData = {
   };
 };
 
-const MANUAL_PLUGIN_COMMANDS = [
+const FRESH_INSTALL_COMMANDS = [
   '/plugin marketplace add dl-gzz/dlgzz-blog',
-  '/plugin install one-work-os@onework-os-marketplace',
-  '/plugin enable one-work-os@onework-os-marketplace --scope user',
+  '/plugin install one-worker-os@one-worker-os-marketplace',
+  '/plugin enable one-worker-os@one-worker-os-marketplace --scope user',
   '/reload-plugins --force',
 ];
 
+const NO_GIT_INSTALL_COMMANDS = [
+  '/plugin marketplace add <持久解压目录>/one-worker-os-marketplace',
+  '/plugin install one-worker-os@one-worker-os-marketplace',
+  '/plugin enable one-worker-os@one-worker-os-marketplace --scope user',
+  '/reload-plugins --force',
+];
+
+const UPGRADE_COMMANDS = [
+  ...NO_GIT_INSTALL_COMMANDS,
+  '/plugin disable one-work-os@onework-os-marketplace --scope user',
+  '/plugin uninstall one-work-os@onework-os-marketplace --scope user --keep-data',
+  '/plugin marketplace remove onework-os-marketplace',
+];
+
+const LEGACY_SKILL_BACKUP_COMMANDS = [
+  {
+    label: 'macOS / Linux',
+    command:
+      'backup="$HOME/.workbuddy/one-worker-os-backups/manual-$(date +%Y%m%d-%H%M%S)"; mkdir -p "$backup"; if [ -d "$HOME/.workbuddy/skills/one-work-os" ]; then mv "$HOME/.workbuddy/skills/one-work-os" "$backup/one-work-os"; fi',
+  },
+  {
+    label: 'Windows PowerShell',
+    command:
+      "$src=Join-Path $env:USERPROFILE '.workbuddy\\skills\\one-work-os'; if(Test-Path $src){$dst=Join-Path $env:USERPROFILE ('.workbuddy\\one-worker-os-backups\\manual-'+(Get-Date -Format 'yyyyMMdd-HHmmss')); New-Item -ItemType Directory -Path $dst -Force|Out-Null; Move-Item $src (Join-Path $dst 'one-work-os')}",
+  },
+];
+
+const FINAL_RELOAD_COMMAND = '/reload-plugins --force';
+
 const WORKBUDDY_INSTALL_PROMPT = [
   '请帮我在当前 WorkBuddy 安装并启用 one-worker-os 插件。请直接执行，不要只解释：',
-  '1. 使用 WorkBuddy 自带的插件管理能力添加市场 dl-gzz/dlgzz-blog。',
-  '2. 安装 one-work-os@onework-os-marketplace。',
-  '3. 启用插件：/plugin enable one-work-os@onework-os-marketplace --scope user。',
-  '4. 重新加载插件：/reload-plugins --force；如果不能热加载，就提醒我重启 WorkBuddy。',
-  '5. 如果发现用户 Skill 目录里有旧版 one-work-os，先将整个目录移动到 .workbuddy/one-work-os-backups 下的时间戳备份目录，不要删除，也不要手工编辑插件注册表。',
-  '6. 安装完成后，带我进入“专家·技能·连接器 → 连接器 → 自定义连接器”，找到 one-worker-os 并点击连接。',
-  '7. 网页授权由我本人确认；不要向我索要或展示 API Key。',
+  '1. 先检查是否存在旧市场 onework-os-marketplace、旧插件 one-work-os@onework-os-marketplace 或旧独立 Skill；此时不要移除、停用或移动任何旧项。',
+  '2. 如果存在旧市场，不能先移除它，也不要再次用同一个 GitHub source 添加市场。请下载 https://www.dlgzz.com/one-worker-os-marketplace/one-worker-os-marketplace-1.0.0.zip，解压到持久目录（macOS/Linux：~/.workbuddy/one-worker-os-marketplace-source/1.0.0；Windows：%USERPROFILE%\\.workbuddy\\one-worker-os-marketplace-source\\1.0.0），再把其中包含 .codebuddy-plugin 的 one-worker-os-marketplace 子目录作为本地 marketplace 添加。',
+  '3. 如果完全没有旧市场，可直接添加 Git 市场 dl-gzz/dlgzz-blog；若 Windows 提示找不到 git，则改用上一步的免 Git ZIP 方式，不要求我安装 Git。',
+  '4. 安装并启用 one-worker-os@one-worker-os-marketplace，然后执行 /reload-plugins --force。只有确认新版 one-worker-os 已加载成功后，才继续清理旧版；若失败，保留旧版并告诉我具体错误。',
+  '5. 新版成功后，如果旧插件仍存在，依次禁用并使用 --keep-data 卸载，再移除旧市场 onework-os-marketplace。旧市场不存在就跳过。',
+  '6. 新版成功后，如果旧独立 Skill 目录仍存在（macOS/Linux：~/.workbuddy/skills/one-work-os；Windows：%USERPROFILE%\\.workbuddy\\skills\\one-work-os），把整个目录移动到 skills 之外的 .workbuddy/one-worker-os-backups/<时间戳>/one-work-os，保留备份，不要删除凭据文件。',
+  '7. 再执行一次 /reload-plugins --force；如果不能热加载，就提醒我完整重启 WorkBuddy。验证“我安装的”中只剩一个 one-worker-os，自定义连接器中也只有一个 one-worker-os。',
+  '8. 带我进入“专家·技能·连接器 → 连接器 → 自定义连接器”，找到 one-worker-os 并点击连接。网页授权由我本人确认；不要向我索要或展示 API Key。',
 ].join('\n');
 
 const TEST_PROMPT = '查看我的 one-worker-os 会员权益和剩余次数';
@@ -122,9 +153,10 @@ function oauthScopeName(scope: string) {
 }
 
 function oauthClientName(connection: OneWorkOAuthConnection) {
-  if (/custom-mcp:onework-os/i.test(connection.clientName)) {
+  if (connection.identity === 'current') {
     return 'WorkBuddy · one-worker-os';
   }
+  if (connection.identity === 'legacy') return 'WorkBuddy · 旧版连接';
   return connection.clientName || 'one-worker-os 客户端';
 }
 
@@ -206,7 +238,9 @@ export function OneWorkAccessPanel({
   );
   const hasValidEntitlement = activeEntitlements.length > 0;
   const oauthConnections = access?.oauthConnections ?? [];
-  const isAuthorized = oauthConnections.length > 0;
+  const isAuthorized = oauthConnections.some(
+    (connection) => connection.identity === 'current'
+  );
   const canUseOneWorkerOs = hasValidEntitlement && isAuthorized;
   const hasHistoricalEntitlement = (access?.entitlements?.length ?? 0) > 0;
 
@@ -514,7 +548,7 @@ export function OneWorkAccessPanel({
             </div>
           )}
 
-          {hasValidEntitlement && !isAuthorized && (
+          {hasValidEntitlement && (
             <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
                 <div className="flex items-start gap-3">
@@ -523,11 +557,14 @@ export function OneWorkAccessPanel({
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">
-                      第一步：在 WorkBuddy 安装插件
+                      {isAuthorized
+                        ? '在新电脑安装或重新安装'
+                        : '第一步：在 WorkBuddy 安装插件'}
                     </h3>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       复制下面的安装指令，粘贴到 WorkBuddy 新任务中。Mac 和
-                      Windows 使用同一段指令。
+                      Windows 使用同一段指令；它会清理旧身份后只保留
+                      one-worker-os。
                     </p>
                   </div>
                 </div>
@@ -548,8 +585,9 @@ export function OneWorkAccessPanel({
                   <summary className="cursor-pointer font-medium">
                     WorkBuddy 无法代装时，查看手动命令
                   </summary>
-                  <div className="mt-3 space-y-2">
-                    {MANUAL_PLUGIN_COMMANDS.map((command) => (
+                  <p className="mt-3 font-medium">首次安装</p>
+                  <div className="mt-2 space-y-2">
+                    {FRESH_INSTALL_COMMANDS.map((command) => (
                       <div
                         key={command}
                         className="flex items-center gap-2 rounded-md bg-muted p-2"
@@ -572,6 +610,126 @@ export function OneWorkAccessPanel({
                         </Button>
                       </div>
                     ))}
+                  </div>
+                  <p className="mt-4 font-medium">免 Git 市场包</p>
+                  <p className="mt-2 leading-6 text-muted-foreground">
+                    先
+                    <a
+                      className="mx-1 font-medium text-primary underline underline-offset-4"
+                      href="/one-worker-os-marketplace/one-worker-os-marketplace-1.0.0.zip"
+                    >
+                      下载免 Git 市场包
+                    </a>
+                    到持久目录并解压。
+                  </p>
+                  <p className="mt-3 font-medium">
+                    Windows 没有 Git（首次安装）
+                  </p>
+                  <div className="mt-2 space-y-2">
+                    {NO_GIT_INSTALL_COMMANDS.map((command) => (
+                      <div
+                        key={command}
+                        className="flex items-center gap-2 rounded-md bg-muted p-2"
+                      >
+                        <code className="min-w-0 flex-1 break-all text-xs">
+                          {command}
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`复制命令 ${command}`}
+                          onClick={() =>
+                            void copyText(
+                              command,
+                              '命令已复制，请粘贴到 WorkBuddy。'
+                            )
+                          }
+                        >
+                          <CopyIcon className="size-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-4 font-medium">从旧版迁移</p>
+                  <p className="mt-2 leading-6 text-muted-foreground">
+                    按顺序执行；只有确认新版加载成功后，才执行旧版清理命令。
+                  </p>
+                  <div className="mt-2 space-y-2">
+                    {UPGRADE_COMMANDS.map((command) => (
+                      <div
+                        key={command}
+                        className="flex items-center gap-2 rounded-md bg-muted p-2"
+                      >
+                        <code className="min-w-0 flex-1 break-all text-xs">
+                          {command}
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`复制命令 ${command}`}
+                          onClick={() =>
+                            void copyText(
+                              command,
+                              '命令已复制，请粘贴到 WorkBuddy。'
+                            )
+                          }
+                        >
+                          <CopyIcon className="size-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 leading-6 text-muted-foreground">
+                    如果使用过早期独立 Skill，选择自己的系统执行一条备份命令：
+                  </p>
+                  <div className="mt-2 space-y-2">
+                    {LEGACY_SKILL_BACKUP_COMMANDS.map((item) => (
+                      <div
+                        key={item.label}
+                        className="rounded-md border bg-muted/50 p-2"
+                      >
+                        <p className="mb-2 text-xs font-medium">{item.label}</p>
+                        <div className="flex items-center gap-2">
+                          <code className="min-w-0 flex-1 break-all text-xs">
+                            {item.command}
+                          </code>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`复制 ${item.label} 备份命令`}
+                            onClick={() =>
+                              void copyText(
+                                item.command,
+                                '备份命令已复制，请在对应系统终端运行。'
+                              )
+                            }
+                          >
+                            <CopyIcon className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 leading-6 text-muted-foreground">
+                    最后重新加载插件：
+                  </p>
+                  <div className="mt-2 flex items-center gap-2 rounded-md bg-muted p-2">
+                    <code className="min-w-0 flex-1 break-all text-xs">
+                      {FINAL_RELOAD_COMMAND}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`复制命令 ${FINAL_RELOAD_COMMAND}`}
+                      onClick={() =>
+                        void copyText(
+                          FINAL_RELOAD_COMMAND,
+                          '命令已复制，请粘贴到 WorkBuddy。'
+                        )
+                      }
+                    >
+                      <CopyIcon className="size-4" />
+                    </Button>
                   </div>
                 </details>
               </div>
@@ -749,7 +907,19 @@ export function OneWorkAccessPanel({
                       <p className="font-medium">
                         {oauthClientName(connection)}
                       </p>
-                      <Badge>已授权</Badge>
+                      <Badge
+                        variant={
+                          connection.identity === 'current'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                      >
+                        {connection.identity === 'current'
+                          ? '当前版本已授权'
+                          : connection.identity === 'legacy'
+                            ? '旧版授权，请撤销'
+                            : '其他客户端授权'}
+                      </Badge>
                     </div>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       {connection.scopes.map(oauthScopeName).join('、')} ·

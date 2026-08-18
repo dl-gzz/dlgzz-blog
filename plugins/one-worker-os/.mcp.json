@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "one-worker-os": {
+      "type": "http",
+      "url": "https://www.dlgzz.com/mcp",
+      "description": "one-worker-os live knowledge, analytics, entitlement, usage, and capability routing"
+    }
+  }
+}

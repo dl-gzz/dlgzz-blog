@@ -1,0 +1,73 @@
+{
+  "schema": "one-worker-os.skill-release.v1",
+  "name": "one-worker-os",
+  "version": "1.0.0",
+  "artifact": {
+    "url": "/downloads/one-worker-os-workbuddy-skill-1.0.0.zip",
+    "latestUrl": "/downloads/one-worker-os-workbuddy-skill-latest.zip",
+    "size": 36288,
+    "sha256": "bd7ed8a10a62fe03e8a2d1a094a93f78b10eb22d51ce1dfc0eda7cc71af23cd7"
+  },
+  "files": [
+    {
+      "path": "SKILL.md",
+      "size": 15626,
+      "sha256": "929d7cb628e90a57dc781e4bd1ce9115c05cb017c88d8f7aaa6c38fdd86a9ed6"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "size": 669,
+      "sha256": "d36c3f6fa34de362830730ba957b5e8bb2da8b429fccc2e6332299efb7b4f4cf"
+    },
+    {
+      "path": "manifest.yaml",
+      "size": 234,
+      "sha256": "eabd9ad7e4fb4bde15043c56951c9568bc79953d03aa5675e8ec0ccd6c177ac4"
+    },
+    {
+      "path": "references/api-schema.md",
+      "size": 7081,
+      "sha256": "ec34d852f72e9c804f63a0efbe8988a03723f0e430ca200e6dece0d664f10347"
+    },
+    {
+      "path": "references/dispatch-protocol.md",
+      "size": 5016,
+      "sha256": "29804eec4fbb8fe8fe84a0ae62f2c7b00b7c03f733def9e11fe1e236c2c91f1d"
+    },
+    {
+      "path": "references/semantic-query-contract.md",
+      "size": 4623,
+      "sha256": "ed96c7e5df47d5a37712b2f7ad9a8ddc43ce25c604600d883cf4ebcbe4d4f20f"
+    },
+    {
+      "path": "references/workbuddy-test-cases.md",
+      "size": 4109,
+      "sha256": "e82b18d1d5fb0762d17947913b6bf0ef04d583a3c262acadc8a3cbcae012e40a"
+    },
+    {
+      "path": "scripts/one-worker-os-credentials.mjs",
+      "size": 4250,
+      "sha256": "76a85c82640efd8cca48c05398bb956237f3df1f34d4a3111a20d33c25b75a0c"
+    },
+    {
+      "path": "scripts/query-analytics.mjs",
+      "size": 7892,
+      "sha256": "0f4a3d2577f6cbbce0c3ed80172a83e4b0d2583c605ad51878974d9d1cc29d76"
+    },
+    {
+      "path": "scripts/query-knowledge.mjs",
+      "size": 17530,
+      "sha256": "78bfe1d3bf3dc3ed9ac6a0e6c3b538378b8c4203e4788e340722ccff7fc209f7"
+    },
+    {
+      "path": "scripts/resolve-capability.mjs",
+      "size": 7424,
+      "sha256": "19b385de4887a6ec546dd15e3416163d6ae149b939b69eae2f7553e926304129"
+    },
+    {
+      "path": "scripts/update-one-worker-os-skill.mjs",
+      "size": 13631,
+      "sha256": "78d1a9cefd1b304ad8be114ee197c8844b9ef948a11790419b4b072c2e023ddd"
+    }
+  ]
+}

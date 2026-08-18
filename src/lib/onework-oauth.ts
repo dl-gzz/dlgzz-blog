@@ -219,9 +219,38 @@ export type OneWorkOAuthVerifyResult =
 export type OneWorkOAuthConnection = {
   clientId: string;
   clientName: string;
+  identity: 'current' | 'legacy' | 'other';
   scopes: OneWorkOAuthScope[];
   grantedAt: Date;
 };
+
+export function oneWorkerOsOAuthClientIdentity(
+  clientName: string | null | undefined,
+  redirectUris: readonly string[]
+): OneWorkOAuthConnection['identity'] {
+  const name = clientName?.trim() || '';
+  if (
+    redirectUris.some((uri) =>
+      /workbuddy:\/\/workbuddy\/mcp\/custom-mcp%3Aone-worker-os(?:\/|%|$)/i.test(
+        uri
+      )
+    )
+  ) {
+    return 'current';
+  }
+  if (
+    redirectUris.some((uri) =>
+      /workbuddy:\/\/workbuddy\/mcp\/custom-mcp%3A(?:onework-os|one-work-os)(?:\/|%|$)/i.test(
+        uri
+      )
+    ) ||
+    /custom-mcp:(?:onework-os|one-work-os)/i.test(name) ||
+    /OneWorkOS|OneWorkerOS/.test(name)
+  ) {
+    return 'legacy';
+  }
+  return 'other';
+}
 
 function boundedInteger(
   value: string | undefined,
@@ -1414,6 +1443,7 @@ export async function listOneWorkOAuthConnections(
     .select({
       clientId: oauthConsent.clientId,
       clientName: oauthClient.clientName,
+      redirectUris: oauthClient.redirectUris,
       scope: oauthConsent.scope,
       grantedAt: oauthConsent.grantedAt,
     })
@@ -1440,6 +1470,10 @@ export async function listOneWorkOAuthConnections(
       connections.set(row.clientId, {
         clientId: row.clientId,
         clientName: oauthClientDisplayName(row.clientName),
+        identity: oneWorkerOsOAuthClientIdentity(
+          row.clientName,
+          row.redirectUris
+        ),
         scopes: [...new Set(scopes)],
         grantedAt: row.grantedAt,
       });
