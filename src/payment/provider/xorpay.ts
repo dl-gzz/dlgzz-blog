@@ -141,7 +141,7 @@ export class XorPayProvider implements PaymentProvider {
       const payType = openid ? 'jsapi' : 'alipay';
 
       const requestParams: Record<string, string> = {
-        name: plan.name || 'OneWorkerOS 会员',
+        name: plan.name || 'one-worker-os 会员',
         pay_type: payType,
         price: (price.amount / 100).toFixed(2), // Convert cents to yuan, format like "1.80"
         order_id: orderNo,
@@ -413,7 +413,7 @@ export class XorPayProvider implements PaymentProvider {
             to: customerEmail,
             template: 'paymentSuccess',
             context: {
-              planName: plan.name || 'OneWorkerOS 会员',
+              planName: plan.name || 'one-worker-os 会员',
               interval: paymentRecord.interval || 'month',
               amount: payAmount * 100, // Convert yuan to cents for email template
               currency: 'CNY',

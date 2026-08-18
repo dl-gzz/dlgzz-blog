@@ -1,4 +1,4 @@
-/** Apply the additive OneWorkerOS device de-duplication migration. */
+/** Apply the additive one-worker-os device de-duplication migration. */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as dotenv from 'dotenv';
@@ -53,7 +53,7 @@ async function main() {
       ) grouped
     `;
     console.log(
-      `OneWorkerOS device de-duplication ready: ${summary.devices} device rows, ${summary.duplicate_groups} duplicate groups`
+      `one-worker-os device de-duplication ready: ${summary.devices} device rows, ${summary.duplicate_groups} duplicate groups`
     );
   } finally {
     await sql.end();

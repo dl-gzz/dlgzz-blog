@@ -23,7 +23,7 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: defaultMessages.Metadata.name,
-    short_name: 'OneWorkerOS',
+    short_name: 'one-worker-os',
     description: defaultMessages.Metadata.description,
     start_url: '/zh',
     scope: '/',

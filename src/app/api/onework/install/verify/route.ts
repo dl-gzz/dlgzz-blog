@@ -7,7 +7,7 @@ const DENY_MESSAGE: Record<string, { status: number; error: string }> = {
   missing: { status: 401, error: '缺少 API Key' },
   invalid: { status: 401, error: 'API Key 无效' },
   revoked: { status: 403, error: 'API Key 或设备已被撤销' },
-  entitlement_expired: { status: 403, error: 'OneWorkerOS 权益已过期' },
+  entitlement_expired: { status: 403, error: 'one-worker-os 权益已过期' },
   device_mismatch: { status: 403, error: '设备绑定校验失败' },
   quota_exceeded: { status: 429, error: '本月调用额度已用完' },
 };

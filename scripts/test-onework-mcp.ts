@@ -324,7 +324,7 @@ async function main() {
   assert.equal(calls.reservations, 2);
   assert.equal(calls.completions, 2);
 
-  console.log('OneWorkerOS MCP protocol tests passed');
+  console.log('one-worker-os MCP protocol tests passed');
 }
 
 main().catch((error) => {

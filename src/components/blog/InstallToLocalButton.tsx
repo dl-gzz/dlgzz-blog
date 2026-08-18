@@ -263,7 +263,7 @@ export function InstallToLocalButton({
       ) : null}
       <button
         onClick={handleClick}
-        title="需要本地运行 One Worker OS"
+        title="需要本地运行 one-worker-os"
         className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-100"
       >
         <span>{serviceManifest ? '⬇' : '🪄'}</span>

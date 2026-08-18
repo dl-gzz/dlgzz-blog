@@ -1,5 +1,5 @@
 /**
- * Isolated OneWorkerOS public/local API E2E test.
+ * Isolated one-worker-os public/local API E2E test.
  *
  * The target app must use the same DATABASE_URL as this process. Remote API
  * calls or remote database writes are refused unless the operator explicitly
@@ -206,7 +206,7 @@ async function main() {
           id, name, email, email_verified, created_at, updated_at
         ) values (
           ${userId},
-          'OneWorkerOS Public API E2E',
+          'one-worker-os Public API E2E',
           ${`onework-public-api-e2e-${suffix}@invalid.example`},
           true,
           now(),
@@ -230,7 +230,7 @@ async function main() {
           id, user_id, name, key_hash, key_prefix, status, monthly_quota,
           created_at, updated_at
         ) values (
-          ${apiKeyId}, ${userId}, 'OneWorkerOS Public API E2E',
+          ${apiKeyId}, ${userId}, 'one-worker-os Public API E2E',
           ${hashKey(rawKey)}, 'dk_live_e2e…', 'active', 20, now(), now()
         )
       `;
@@ -241,7 +241,7 @@ async function main() {
           status, created_at, updated_at
         ) values (
           ${deviceRecordId}, ${userId}, ${apiKeyId}, ${hashDeviceId(rawDeviceId)},
-          'OneWorkerOS Public API E2E', 'test', 'active', now(), now()
+          'one-worker-os Public API E2E', 'test', 'active', now(), now()
         )
       `;
 
@@ -393,7 +393,7 @@ async function main() {
       );
     }
 
-    console.log('✅ OneWorkerOS public API E2E passed', {
+    console.log('✅ one-worker-os public API E2E passed', {
       resolverRoute: resolution.route,
       resolverCapabilities: resolvedCapabilities.length,
       knowledgeResults: knowledge.results.length,

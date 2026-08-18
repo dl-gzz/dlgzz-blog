@@ -1,4 +1,4 @@
-# OneWorkerOS Dispatch Protocol
+# one-worker-os Dispatch Protocol
 
 Read this reference before routing composite, mutating, external, or ambiguous work.
 
@@ -14,7 +14,7 @@ Read this reference before routing composite, mutating, external, or ambiguous w
 
 ## Roles
 
-- Treat OneWorkerOS as the control plane: resolve intent, select capabilities, order work, enforce policy, and verify completion.
+- Treat one-worker-os as the control plane: resolve intent, select capabilities, order work, enforce policy, and verify completion.
 - Treat `knowledge.search` as governed unstructured memory. WorkBuddy is one searchable pack with ID `onework-workbuddy-v1`.
 - Treat `analytics.query` as a governed semantic query engine over structured data.
 - Treat `workbuddy.execute` and `presentation.create` as action capabilities that still require an available host tool.
@@ -124,11 +124,11 @@ Use a registry record shaped like:
 }
 ```
 
-Keep registry state on the OneWorkerOS service. Keep provider credentials and runtime tool grants in the user's host environment.
+Keep registry state on the one-worker-os service. Keep provider credentials and runtime tool grants in the user's host environment.
 
 ## Failure handling
 
-- On `401`, request valid OneWorkerOS credentials without asking the user to paste the secret into chat.
+- On `401`, request valid one-worker-os credentials without asking the user to paste the secret into chat.
 - On `403`, report the missing license or permission.
 - On `404` or `CAPABILITY_NOT_FOUND`, fall back only to an actually installed equivalent and disclose the substitution.
 - On `409`, refresh the capability record and resolve once more.

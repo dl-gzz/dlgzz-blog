@@ -76,17 +76,17 @@ const MANUAL_PLUGIN_COMMANDS = [
 ];
 
 const WORKBUDDY_INSTALL_PROMPT = [
-  '请帮我在当前 WorkBuddy 安装并启用 OneWorkerOS 插件。请直接执行，不要只解释：',
+  '请帮我在当前 WorkBuddy 安装并启用 one-worker-os 插件。请直接执行，不要只解释：',
   '1. 使用 WorkBuddy 自带的插件管理能力添加市场 dl-gzz/dlgzz-blog。',
   '2. 安装 one-work-os@onework-os-marketplace。',
   '3. 启用插件：/plugin enable one-work-os@onework-os-marketplace --scope user。',
   '4. 重新加载插件：/reload-plugins --force；如果不能热加载，就提醒我重启 WorkBuddy。',
   '5. 如果发现用户 Skill 目录里有旧版 one-work-os，先将整个目录移动到 .workbuddy/one-work-os-backups 下的时间戳备份目录，不要删除，也不要手工编辑插件注册表。',
-  '6. 安装完成后，带我进入“专家·技能·连接器 → 连接器 → 自定义连接器”，找到 OneWorkerOS 并点击连接。',
+  '6. 安装完成后，带我进入“专家·技能·连接器 → 连接器 → 自定义连接器”，找到 one-worker-os 并点击连接。',
   '7. 网页授权由我本人确认；不要向我索要或展示 API Key。',
 ].join('\n');
 
-const TEST_PROMPT = '查看我的 OneWorkerOS 会员权益和剩余次数';
+const TEST_PROMPT = '查看我的 one-worker-os 会员权益和剩余次数';
 
 function formatDate(value: string | null | undefined) {
   if (!value) return '长期有效';
@@ -106,7 +106,7 @@ function formatDateTime(value: string | null | undefined) {
 }
 
 function packName(packId: string) {
-  if (packId === ALL_PACKS_GRANT) return '全部 OneWorkerOS 知识库';
+  if (packId === ALL_PACKS_GRANT) return '全部 one-worker-os 知识库';
   if (packId === 'onework-workbuddy-v1') return 'WorkBuddy 办公助手';
   if (packId === 'xhs-open-shop-v1') return '小红书开店助手';
   if (packId === 'xhs-operations-v1') return '小红书运营助手';
@@ -123,9 +123,9 @@ function oauthScopeName(scope: string) {
 
 function oauthClientName(connection: OneWorkOAuthConnection) {
   if (/custom-mcp:onework-os/i.test(connection.clientName)) {
-    return 'WorkBuddy · OneWorkerOS';
+    return 'WorkBuddy · one-worker-os';
   }
-  return connection.clientName || 'OneWorkerOS 客户端';
+  return connection.clientName || 'one-worker-os 客户端';
 }
 
 function entitlementIsActive(item: Entitlement, now: number) {
@@ -207,7 +207,7 @@ export function OneWorkAccessPanel({
   const hasValidEntitlement = activeEntitlements.length > 0;
   const oauthConnections = access?.oauthConnections ?? [];
   const isAuthorized = oauthConnections.length > 0;
-  const canUseOneWorkerOS = hasValidEntitlement && isAuthorized;
+  const canUseOneWorkerOs = hasValidEntitlement && isAuthorized;
   const hasHistoricalEntitlement = (access?.entitlements?.length ?? 0) > 0;
 
   const usageLimit =
@@ -233,12 +233,12 @@ export function OneWorkAccessPanel({
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) {
-        throw new Error(data.error || '读取 OneWorkerOS 权益失败');
+        throw new Error(data.error || '读取 one-worker-os 权益失败');
       }
       setAccess(data as AccessData);
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : '读取 OneWorkerOS 权益失败'
+        reason instanceof Error ? reason.message : '读取 one-worker-os 权益失败'
       );
     } finally {
       setLoadingAccess(false);
@@ -393,10 +393,10 @@ export function OneWorkAccessPanel({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={canUseOneWorkerOS ? 'default' : 'secondary'}>
+                <Badge variant={canUseOneWorkerOs ? 'default' : 'secondary'}>
                   {loadingAccess
                     ? '正在检查'
-                    : canUseOneWorkerOS
+                    : canUseOneWorkerOs
                       ? '会员有效 · 已授权'
                       : hasValidEntitlement
                         ? '会员有效 · 待连接'
@@ -407,8 +407,8 @@ export function OneWorkAccessPanel({
                 <Badge variant="outline">Mac / Windows 同一流程</Badge>
               </div>
               <CardTitle className="text-2xl sm:text-3xl">
-                {canUseOneWorkerOS
-                  ? 'OneWorkerOS 已经可以使用'
+                {canUseOneWorkerOs
+                  ? 'one-worker-os 已经可以使用'
                   : hasValidEntitlement
                     ? '接下来，把 WorkBuddy 连接进来'
                     : hasHistoricalEntitlement
@@ -416,7 +416,7 @@ export function OneWorkAccessPanel({
                       : '先开通会员，再连接 WorkBuddy'}
               </CardTitle>
               <CardDescription className="max-w-2xl text-base leading-7">
-                {canUseOneWorkerOS
+                {canUseOneWorkerOs
                   ? '你的会员账号已经授权给 AI 客户端。以后不需要复制 Key，知识库更新也不需要重新安装。'
                   : '统一使用 WorkBuddy 插件和网页 OAuth。无需选择操作系统，无需安装 Node.js，也无需复制 API Key。'}
               </CardDescription>
@@ -446,7 +446,7 @@ export function OneWorkAccessPanel({
             <SetupStep
               index={2}
               title="安装插件"
-              description="在 WorkBuddy 内安装并启用 OneWorkerOS 插件。"
+              description="在 WorkBuddy 内安装并启用 one-worker-os 插件。"
               done={isAuthorized}
               current={currentStep === 2}
             />
@@ -460,8 +460,8 @@ export function OneWorkAccessPanel({
             <SetupStep
               index={4}
               title="直接使用"
-              description="用自然语言提问，OneWorkerOS 自动选择知识和能力。"
-              done={canUseOneWorkerOS}
+              description="用自然语言提问，one-worker-os 自动选择知识和能力。"
+              done={canUseOneWorkerOs}
               current={currentStep === 4}
             />
           </div>
@@ -591,10 +591,11 @@ export function OneWorkAccessPanel({
                   </div>
                 </div>
                 <div className="mt-4 rounded-lg bg-muted p-3 text-sm font-medium leading-6">
-                  专家·技能·连接器 → 连接器 → 自定义连接器 → OneWorkerOS → 连接
+                  专家·技能·连接器 → 连接器 → 自定义连接器 → one-worker-os →
+                  连接
                 </div>
                 <ol className="mt-4 space-y-2 text-sm leading-6 text-muted-foreground">
-                  <li>1. 浏览器会打开 OneWorkerOS 授权页。</li>
+                  <li>1. 浏览器会打开 one-worker-os 授权页。</li>
                   <li>2. 核对会员账号和四项权限。</li>
                   <li>3. 由你本人点击「允许连接」。</li>
                   <li>4. 返回本页点击「刷新状态」。</li>
@@ -603,7 +604,7 @@ export function OneWorkAccessPanel({
             </div>
           )}
 
-          {canUseOneWorkerOS && (
+          {canUseOneWorkerOs && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5 dark:border-emerald-900 dark:bg-emerald-950/20">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="flex items-start gap-3">
@@ -827,7 +828,7 @@ export function OneWorkAccessPanel({
         <div className="flex items-start gap-2 text-muted-foreground">
           <ShieldCheckIcon className="mt-0.5 size-4 shrink-0 text-primary" />
           <p>
-            OneWorkerOS
+            one-worker-os
             只在你授权的范围内工作。图片、官方出处和知识检索都由云端统一更新。
           </p>
         </div>

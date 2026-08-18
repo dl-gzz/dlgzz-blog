@@ -28,7 +28,7 @@ function usage(stream = process.stderr) {
       '  ONEWORK_API_KEY       Required bearer key',
       '  ONEWORK_DEVICE_ID     Required bound device ID',
       '  ONEWORK_KNOWLEDGE_URL Optional full knowledge endpoint',
-      '  ONEWORK_API_URL       Optional OneWorkerOS URL; its origin is used',
+      '  ONEWORK_API_URL       Optional one-worker-os URL; its origin is used',
       '',
     ].join('\n')
   );
@@ -117,7 +117,7 @@ async function fetchWithTimeout(url, init, timeoutMs = 20_000) {
   } catch (error) {
     if (error?.name === 'AbortError') {
       throw new Error(
-        `OneWorkerOS 知识检索超时（${Math.round(timeoutMs / 1000)} 秒），请检查网络后重试。`
+        `one-worker-os 知识检索超时（${Math.round(timeoutMs / 1000)} 秒），请检查网络后重试。`
       );
     }
     throw error;
@@ -134,16 +134,16 @@ function resolveEndpoint() {
   try {
     parsed = new URL(base);
   } catch {
-    throw new Error('OneWorkerOS endpoint is not a valid URL');
+    throw new Error('one-worker-os endpoint is not a valid URL');
   }
   if (!['http:', 'https:'].includes(parsed.protocol)) {
-    throw new Error('OneWorkerOS endpoint must use HTTP or HTTPS');
+    throw new Error('one-worker-os endpoint must use HTTP or HTTPS');
   }
   if (
     parsed.protocol === 'http:' &&
     !['127.0.0.1', 'localhost', '::1'].includes(parsed.hostname)
   ) {
-    throw new Error('远程 OneWorkerOS endpoint 必须使用 HTTPS');
+    throw new Error('远程 one-worker-os endpoint 必须使用 HTTPS');
   }
   return explicit
     ? parsed.toString()

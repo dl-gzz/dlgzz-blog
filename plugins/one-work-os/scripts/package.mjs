@@ -126,7 +126,7 @@ function validateSource() {
     marketplace.plugins[0]?.source !== './plugins/one-work-os'
   ) {
     throw new Error(
-      'marketplace must contain the local OneWorkerOS plugin source'
+      'marketplace must contain the local one-worker-os plugin source'
     );
   }
 

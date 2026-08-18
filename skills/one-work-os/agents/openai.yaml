@@ -1,4 +1,4 @@
 interface:
-  display_name: "OneWorkerOS"
+  display_name: "one-worker-os"
   short_description: "为独立工作者自动路由 WorkBuddy、小红书知识与工具，完成并验证真实工作目标"
-  default_prompt: "使用 $one-work-os 时，先运行每日缓存的更新检查，再调度并检索受治理的 OneWorkerOS 知识；自动判断 WorkBuddy、小红书开店或小红书运营知识包。短追问必须携带最近一次明确主题。检索成功后只使用返回的 results、assets、resources、sourceUrl，禁止混入网络答案。操作问题必须返回相关截图、视频链接和可点击出处；不要先凭记忆回答，失败时如实报告具体阶段。"
+  default_prompt: "使用 $one-work-os 时，先运行每日缓存的更新检查，再调度并检索受治理的 one-worker-os 知识；自动判断 WorkBuddy、小红书开店或小红书运营知识包。短追问必须携带最近一次明确主题。检索成功后只使用返回的 results、assets、resources、sourceUrl，禁止混入网络答案。操作问题必须返回相关截图、视频链接和可点击出处；不要先凭记忆回答，失败时如实报告具体阶段。"

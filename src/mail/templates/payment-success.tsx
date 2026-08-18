@@ -122,7 +122,7 @@ export default function PaymentSuccess({
 PaymentSuccess.PreviewProps = {
   locale: routing.defaultLocale,
   messages: defaultMessages,
-  planName: 'OneWorkerOS 会员',
+  planName: 'one-worker-os 会员',
   interval: 'month',
   amount: 180,
   currency: 'CNY',

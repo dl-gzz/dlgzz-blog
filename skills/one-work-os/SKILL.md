@@ -1,17 +1,17 @@
 ---
 name: one-work-os
-description: Orchestrate OneWorkerOS capabilities across WorkBuddy and Xiaohongshu knowledge packs to answer questions, retrieve governed knowledge, query governed business metrics, and execute authorized work through tools available in the user's AI host. Use when an independent worker states a goal without knowing which product, Skill, connector, workflow, or next step to use; when a task combines OneWorkerOS knowledge, structured analytics, screenshots, or actions; or when an agent must resolve, sequence, execute, and verify capabilities safely.
+description: Orchestrate one-worker-os capabilities across WorkBuddy and Xiaohongshu knowledge packs to answer questions, retrieve governed knowledge, query governed business metrics, and execute authorized work through tools available in the user's AI host. Use when an independent worker states a goal without knowing which product, Skill, connector, workflow, or next step to use; when a task combines one-worker-os knowledge, structured analytics, screenshots, or actions; or when an agent must resolve, sequence, execute, and verify capabilities safely.
 ---
 
-# OneWorkerOS
+# one-worker-os
 
-Act as the control plane. Use OneWorkerOS memory and semantic services for governed evidence. Use only the user's available model, Skills, connectors, and tools for reasoning or execution.
+Act as the control plane. Use one-worker-os memory and semantic services for governed evidence. Use only the user's available model, Skills, connectors, and tools for reasoning or execution.
 
 ## Managed updates
 
-Before the first governed OneWorkerOS call in a conversation, run `scripts/update-onework-skill.mjs --json`. The updater caches a successful check for 24 hours, so this does not download on every question. Handle its result as follows:
+Before the first governed one-worker-os call in a conversation, run `scripts/update-onework-skill.mjs --json`. The updater caches a successful check for 24 hours, so this does not download on every question. Handle its result as follows:
 
-- `updated: true`: tell the user that OneWorkerOS was updated and WorkBuddy must be restarted, then stop this dispatch. Do not mix code from two Skill versions in one answer.
+- `updated: true`: tell the user that one-worker-os was updated and WorkBuddy must be restarted, then stop this dispatch. Do not mix code from two Skill versions in one answer.
 - `updated: false`: continue normally.
 - update-check failure: state briefly that the update check failed and continue with the installed version. A release-service outage must not erase working local credentials or silently trigger a reinstall.
 
@@ -19,7 +19,7 @@ Use `--force --check-only --json` only for explicit diagnostics. Updates are sta
 
 ## What `/api/capabilities/resolve` does
 
-`/api/capabilities/resolve` is the OneWorkerOS **capability resolver**, not a knowledge query endpoint and not a browser executor. The Skill sends it a compact dispatch frame (`goal`, optional context, installed capability IDs, and whether execution was requested); it returns a JSON recommendation describing:
+`/api/capabilities/resolve` is the one-worker-os **capability resolver**, not a knowledge query endpoint and not a browser executor. The Skill sends it a compact dispatch frame (`goal`, optional context, installed capability IDs, and whether execution was requested); it returns a JSON recommendation describing:
 
 - `route`: `knowledge`, `analytics`, `action`, `composite`, or `human_required`;
 - `capabilities`: the registered capabilities to call and their operation/reason;
@@ -33,11 +33,11 @@ The endpoint is called by `scripts/resolve-capability.mjs` with `POST` and a Bea
 
 When this Skill is explicitly invoked (including `@skill:one-work-os`), do not answer the user's goal from model memory before dispatching it.
 
-### OneWorkerOS source boundary (hard rule)
+### one-worker-os source boundary (hard rule)
 
 - For any WorkBuddy or Xiaohongshu product, UI, setup, operation, or “下一步怎么做” question, `query-knowledge.mjs` is the source of truth. Do not call `WebSearch` or `WebFetch` before the governed query.
-- When the governed query returns `success: true` with at least one relevant result, do not call `WebSearch` or `WebFetch` afterward. Compose the answer only from the returned `results[]`, `assets[]`, `resources[]`, and `sourceUrl` values. This keeps the answer inside the user's OneWorkerOS knowledge asset.
-- If the user explicitly asks for internet research or the latest information, first run the governed query, then clearly label any separately requested web evidence as external. Do not silently mix it into a OneWorkerOS answer.
+- When the governed query returns `success: true` with at least one relevant result, do not call `WebSearch` or `WebFetch` afterward. Compose the answer only from the returned `results[]`, `assets[]`, `resources[]`, and `sourceUrl` values. This keeps the answer inside the user's one-worker-os knowledge asset.
+- If the user explicitly asks for internet research or the latest information, first run the governed query, then clearly label any separately requested web evidence as external. Do not silently mix it into a one-worker-os answer.
 - If the governed query fails, stop and report the exact failed stage and error. Do not silently replace it with a generic model answer or web search.
 
 - For every WorkBuddy or Xiaohongshu product, UI, setup, or “下一步怎么做” question, **must** run `scripts/query-knowledge.mjs` with `--pack auto`, `includeAssets: true`, and `--json` before drafting the answer. The script routes WorkBuddy to `onework-workbuddy-v1`, Xiaohongshu store-entry questions to `xhs-open-shop-v1`, and other Xiaohongshu operation questions to `xhs-operations-v1`. The final answer must be grounded in the returned result, not a generic explanation.
@@ -49,7 +49,7 @@ When this Skill is explicitly invoked (including `@skill:one-work-os`), do not a
 
 ## Orchestrate the goal
 
-1. Restate the outcome in one sentence. Extract the current state, constraints, requested action, and observable success signal. Inspect attached images with the host model and retain only task-relevant visible facts; never upload a live screenshot to OneWorkerOS.
+1. Restate the outcome in one sentence. Extract the current state, constraints, requested action, and observable success signal. Inspect attached images with the host model and retain only task-relevant visible facts; never upload a live screenshot to one-worker-os.
    - For a short follow-up such as “下一步呢”“然后呢”“这个怎么做”, carry forward only the most recent explicit product and task as compact context. Pass that text with `query-knowledge.mjs --context "..."`; never default an ambiguous follow-up to WorkBuddy merely because it is the default pack.
 2. Build a dispatch frame: `goal`, optional `intentHint`, relevant context, installed capability IDs, whether execution was requested, risk, and success criteria.
 3. Resolve the route with `scripts/resolve-capability.mjs`. Read [dispatch-protocol.md](references/dispatch-protocol.md) before handling composite, mutating, external, or ambiguous work.
@@ -75,7 +75,7 @@ Call the bundled query script with `--pack auto` for natural-language requests. 
 
 ## WorkBuddy knowledge and media
 
-Use `onework-workbuddy-v1` for WorkBuddy product facts and independent-worker guidance. The media index stores each image's title, caption, source, role, and embedding; the current official WorkBuddy screenshots are referenced from the official documentation CDN and served through the OneWorkerOS asset URL when available. Do not assume that an image binary is bundled in this Skill or copied to COS.
+Use `onework-workbuddy-v1` for WorkBuddy product facts and independent-worker guidance. The media index stores each image's title, caption, source, role, and embedding; the current official WorkBuddy screenshots are referenced from the official documentation CDN and served through the one-worker-os asset URL when available. Do not assume that an image binary is bundled in this Skill or copied to COS.
 
 For UI instructions, prefer the returned `official_product_screenshot` asset. Use a `user_uploaded_screenshot` only to diagnose the user's current screen. Use `owned_course_illustration` for concepts or method explanations, never as proof of the current WorkBuddy interface. If the asset URL cannot be fetched, keep the official source link and describe the step in text; do not replace it with a blue-cat or unrelated image.
 
@@ -107,7 +107,7 @@ node "${CODEBUDDY_SKILL_DIR}/scripts/query-analytics.mjs" \
   --json
 ```
 
-The installer stores the user's credential and stable device binding at `~/.workbuddy/one-work-os.local.env` (Windows: `%USERPROFILE%\\.workbuddy\\one-work-os.local.env`) as `ONEWORK_API_KEY` and `ONEWORK_DEVICE_ID`; the bundled scripts load both automatically and send the device header. Never ask a customer to paste either value into chat. Environment variables may still override the local file for diagnostics. If the script says the Key or device binding is missing or invalid, direct the user to the OneWorkerOS account page to rerun the managed installation, then restart WorkBuddy. Set endpoint-specific variables when needed: `ONEWORK_CAPABILITY_URL`, `ONEWORK_ANALYTICS_URL`, `ONEWORK_KNOWLEDGE_URL`, or `ONEWORK_API_URL` for the shared OneWorkerOS origin. Read [api-schema.md](references/api-schema.md) for knowledge query responses and errors.
+The installer stores the user's credential and stable device binding at `~/.workbuddy/one-work-os.local.env` (Windows: `%USERPROFILE%\\.workbuddy\\one-work-os.local.env`) as `ONEWORK_API_KEY` and `ONEWORK_DEVICE_ID`; the bundled scripts load both automatically and send the device header. Never ask a customer to paste either value into chat. Environment variables may still override the local file for diagnostics. If the script says the Key or device binding is missing or invalid, direct the user to the one-worker-os account page to rerun the managed installation, then restart WorkBuddy. Set endpoint-specific variables when needed: `ONEWORK_CAPABILITY_URL`, `ONEWORK_ANALYTICS_URL`, `ONEWORK_KNOWLEDGE_URL`, or `ONEWORK_API_URL` for the shared one-worker-os origin. Read [api-schema.md](references/api-schema.md) for knowledge query responses and errors.
 
 After installation or a release update, use the acceptance prompts in [workbuddy-test-cases.md](references/workbuddy-test-cases.md). They verify routing, short follow-ups, screenshots, videos, sources, and authorization errors without performing an unconfirmed mutation.
 

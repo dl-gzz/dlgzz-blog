@@ -1,5 +1,5 @@
 /**
- * OneWorkerOS OAuth integration test.
+ * one-worker-os OAuth integration test.
  *
  * The script creates an isolated user/client/token family and removes every
  * row in finally. Remote databases require ONEWORK_ALLOW_REMOTE_E2E=true.
@@ -132,7 +132,7 @@ async function main() {
     const now = new Date();
     await db.insert(user).values({
       id: userId,
-      name: 'OneWorkerOS OAuth E2E',
+      name: 'one-worker-os OAuth E2E',
       email: `onework-oauth-${suffix}@invalid.example`,
       emailVerified: true,
       createdAt: now,
@@ -152,7 +152,7 @@ async function main() {
     });
     await db.insert(oneworkOauthClient).values({
       clientId: trustedDeviceClientId,
-      clientName: 'OneWorkerOS OAuth E2E Trusted Device Client',
+      clientName: 'one-worker-os OAuth E2E Trusted Device Client',
       redirectUris: [],
       grantTypes: [DEVICE_GRANT_TYPE, 'refresh_token'],
       responseTypes: [],

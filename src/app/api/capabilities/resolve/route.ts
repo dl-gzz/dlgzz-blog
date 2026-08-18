@@ -13,11 +13,11 @@ const DENY_MESSAGE: Record<string, { status: number; error: string }> = {
   revoked: { status: 403, error: 'API Key 已被吊销' },
   entitlement_expired: {
     status: 403,
-    error: 'OneWorkerOS 权益已过期，请续费后重试',
+    error: 'one-worker-os 权益已过期，请续费后重试',
   },
   device_mismatch: {
     status: 403,
-    error: '这把 Key 不属于当前电脑，请在 OneWorkerOS 网站重新生成安装授权',
+    error: '这把 Key 不属于当前电脑，请在 one-worker-os 网站重新生成安装授权',
   },
   quota_exceeded: { status: 429, error: '本月调用额度已用完' },
 };
@@ -60,7 +60,7 @@ function resolverRateLimitPerMinute() {
 }
 
 /**
- * Resolve a user's goal against the governed OneWorkerOS capability registry.
+ * Resolve a user's goal against the governed one-worker-os capability registry.
  * This is intentionally a JSON API because the Skill invokes it directly
  * from a local terminal; an unknown route must never fall through to HTML.
  */

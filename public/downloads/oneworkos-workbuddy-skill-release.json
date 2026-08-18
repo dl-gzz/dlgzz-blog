@@ -1,38 +1,38 @@
 {
   "schema": "onework.skill-release.v1",
   "name": "one-work-os",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "artifact": {
-    "url": "/downloads/oneworkos-workbuddy-skill-0.2.1.zip",
+    "url": "/downloads/oneworkos-workbuddy-skill-0.2.2.zip",
     "latestUrl": "/downloads/oneworkos-workbuddy-skill-latest.zip",
-    "size": 36237,
-    "sha256": "f7b5bc608b43eb2f8a94b029aae692c4efc8090a10ef8f93e7e1622218472b25"
+    "size": 36230,
+    "sha256": "4289515b239b1a511be45e7d941e5c9f3c1690ca2d8aed7850af8c9a256c5b77"
   },
   "files": [
     {
       "path": "SKILL.md",
-      "size": 15578,
-      "sha256": "538ede61f300495d4bd7ae5bd24e2f0c35bd0a8638b93131bba2a55e3b0f8ba2"
+      "size": 15606,
+      "sha256": "e4d60f22c06a4397db5cd42498172f6656495dbc0385dc91c572058223df4deb"
     },
     {
       "path": "agents/openai.yaml",
-      "size": 663,
-      "sha256": "220d8ec466b38915ad8f564d03b2078b4d5d2a1928f8f1e15297c093ce7494ee"
+      "size": 667,
+      "sha256": "b323dccb2f2349e00e27b54792d0188c56c3e2bbe051e2e3dbcb6274315ef373"
     },
     {
       "path": "manifest.yaml",
-      "size": 230,
-      "sha256": "d9c82afe119efefaa884dec7410de0c3145f3ab6af56a2acfa8886a2a03aa9a7"
+      "size": 232,
+      "sha256": "18a1a0a41645c4baddb121d7850f9619e83212477af73991bf269d72d3185aa2"
     },
     {
       "path": "references/api-schema.md",
-      "size": 7077,
-      "sha256": "e6944d12b6f7edf9940dd02cd54909a735e36c61d30339fe28c2ceb0349e18bb"
+      "size": 7081,
+      "sha256": "ec34d852f72e9c804f63a0efbe8988a03723f0e430ca200e6dece0d664f10347"
     },
     {
       "path": "references/dispatch-protocol.md",
-      "size": 5008,
-      "sha256": "24c487bee0724c9e3d10ba691056df453f042e489c28cf529216b7e6006f8ee1"
+      "size": 5016,
+      "sha256": "29804eec4fbb8fe8fe84a0ae62f2c7b00b7c03f733def9e11fe1e236c2c91f1d"
     },
     {
       "path": "references/semantic-query-contract.md",
@@ -41,33 +41,33 @@
     },
     {
       "path": "references/workbuddy-test-cases.md",
-      "size": 4101,
-      "sha256": "51d9801e27d83cd03244f0857ded37d39ee8bb2033acf73f08eddee710ed6e13"
+      "size": 4103,
+      "sha256": "9f56aa3d924500144020f28627f819a6713c716742082879f8f585a703dccd8a"
     },
     {
       "path": "scripts/onework-credentials.mjs",
-      "size": 4228,
-      "sha256": "abcc8c5e9ea4c37e4837a7917a1139bbfbff66acfeca5dabab6c217e35f66a64"
+      "size": 4248,
+      "sha256": "56d348a0f973b19d188c20d11bb1dfa24639310591d13c77694fc1d34e66377e"
     },
     {
       "path": "scripts/query-analytics.mjs",
-      "size": 7872,
-      "sha256": "e446357ffd0785815011b1b99910ef6e36ba50c80cf0b619ee03715bddc0f65c"
+      "size": 7886,
+      "sha256": "062e8656dad9955e5553ffd180b5bf214e5b13c9a8b851eb87bf6992081e7ebe"
     },
     {
       "path": "scripts/query-knowledge.mjs",
-      "size": 17514,
-      "sha256": "0a5f74b83a6193e6e7698dd0e59e0976f71ec865ea919ff7f3568b57dd225419"
+      "size": 17524,
+      "sha256": "722f007938e9e7e3206722cc2c3e12223432b5e4197dbd1ecac31f0545edf23e"
     },
     {
       "path": "scripts/resolve-capability.mjs",
-      "size": 7402,
-      "sha256": "d91a57c29c7a2f3c25d47caba38efcaffbc54e3a40196f4aaff7df9a66cace53"
+      "size": 7418,
+      "sha256": "45da5bf7ce7c3e0b6fcc9b63d134b1212b63d0793c649513dfeee7bcdf83aa9c"
     },
     {
       "path": "scripts/update-onework-skill.mjs",
-      "size": 13575,
-      "sha256": "26737d62479db9a4eacf11cba50612e7ed23f31d44ff5c59629a17889d370e2c"
+      "size": 13593,
+      "sha256": "4d86aaae3d3db831063e879734ea1816cf6e412bd0b7d73d70f6834304ab87dc"
     }
   ]
 }

@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: OneWorkerOS Support
+  - name: one-worker-os Support
     url: https://www.dlgzz.com/contact
-    about: Ask the OneWorkerOS team for help.
-  - name: OneWorkerOS Documentation
+    about: Ask the one-worker-os team for help.
+  - name: one-worker-os Documentation
     url: https://www.dlgzz.com/docs
-    about: Read the OneWorkerOS documentation.
+    about: Read the one-worker-os documentation.

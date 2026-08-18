@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import * as dotenv from 'dotenv';
 /**
- * 幂等创建 OneWorkerOS 会员授权层。
+ * 幂等创建 one-worker-os 会员授权层。
  *
  * 这组表不修改现有知识向量数据，只负责：兑换码、用户权益、设备 Key、安装会话。
  * Run: pnpm db:apply-onework-access
@@ -113,7 +113,7 @@ async function main() {
       order by table_name
     `;
     console.log(
-      '✅ OneWorkerOS 授权层已就绪:',
+      '✅ one-worker-os 授权层已就绪:',
       tables.map((t) => t.table_name).join(', ')
     );
   } finally {

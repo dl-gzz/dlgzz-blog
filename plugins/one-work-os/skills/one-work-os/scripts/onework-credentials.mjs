@@ -66,7 +66,7 @@ export function requireOneWorkCredentials() {
   const deviceId = getOneWorkDeviceId();
   if (!apiKey) {
     throw new Error(
-      '尚未连接 OneWorkerOS。请登录 https://www.dlgzz.com/onework，复制“AI 安装指令”完成安装，然后重启 WorkBuddy。'
+      '尚未连接 one-worker-os。请登录 https://www.dlgzz.com/onework，复制“AI 安装指令”完成安装，然后重启 WorkBuddy。'
     );
   }
   // Device IDs are mandatory for newly managed installs. Keep an empty value
@@ -87,19 +87,19 @@ export function getOneWorkAuthHeaders({ json = true } = {}) {
 export function oneWorkApiErrorMessage(data, status) {
   const code = typeof data?.code === 'string' ? data.code.toUpperCase() : '';
   if (code === 'DEVICE_ID_REQUIRED' || code === 'DEVICE_NOT_BOUND') {
-    return 'OneWorkerOS 设备绑定信息缺失。请在 https://www.dlgzz.com/onework 重新运行安装指令。';
+    return 'one-worker-os 设备绑定信息缺失。请在 https://www.dlgzz.com/onework 重新运行安装指令。';
   }
   if (code === 'DEVICE_MISMATCH' || code === 'DEVICE_REVOKED') {
-    return 'OneWorkerOS 当前电脑的授权已失效。请登录 https://www.dlgzz.com/onework 为这台电脑重新生成安装授权。';
+    return 'one-worker-os 当前电脑的授权已失效。请登录 https://www.dlgzz.com/onework 为这台电脑重新生成安装授权。';
   }
   if (code === 'ENTITLEMENT_EXPIRED') {
-    return 'OneWorkerOS 会员权益已到期，请在 https://www.dlgzz.com/onework 续费后重试。';
+    return 'one-worker-os 会员权益已到期，请在 https://www.dlgzz.com/onework 续费后重试。';
   }
   if (code === 'PACK_NOT_LICENSED') {
-    return '当前 OneWorkerOS 权益尚未开放这个知识包，请在 https://www.dlgzz.com/onework 查看已开通权益。';
+    return '当前 one-worker-os 权益尚未开放这个知识包，请在 https://www.dlgzz.com/onework 查看已开通权益。';
   }
   if (code === 'RATE_LIMITED') {
-    return 'OneWorkerOS 能力路由请求过于频繁，请稍等一分钟后再试。';
+    return 'one-worker-os 能力路由请求过于频繁，请稍等一分钟后再试。';
   }
   if (
     code === 'REVOKED' ||
@@ -107,18 +107,18 @@ export function oneWorkApiErrorMessage(data, status) {
     code === 'MISSING' ||
     status === 401
   ) {
-    return 'OneWorkerOS 授权无效或已被替换。请在 https://www.dlgzz.com/onework 重新运行安装指令，然后重启 WorkBuddy。';
+    return 'one-worker-os 授权无效或已被替换。请在 https://www.dlgzz.com/onework 重新运行安装指令，然后重启 WorkBuddy。';
   }
   if (code === 'QUOTA_EXCEEDED') {
-    return 'OneWorkerOS 本月调用额度已用完，可在 https://www.dlgzz.com/onework 查看当前权益。';
+    return 'one-worker-os 本月调用额度已用完，可在 https://www.dlgzz.com/onework 查看当前权益。';
   }
   if (status === 429) {
-    return data?.error || 'OneWorkerOS 请求过于频繁，请稍后重试。';
+    return data?.error || 'one-worker-os 请求过于频繁，请稍后重试。';
   }
   return (
     data?.error ||
     (status === 403
-      ? 'OneWorkerOS 拒绝了当前请求，请在账号页检查权益和设备授权。'
+      ? 'one-worker-os 拒绝了当前请求，请在账号页检查权益和设备授权。'
       : `HTTP ${status}`)
   );
 }

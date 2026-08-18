@@ -18,7 +18,7 @@ Page({
       {
         id: 'thinking',
         icon: '思',
-        title: 'OneWorkerOS',
+        title: 'one-worker-os',
         description: '关于自由职业、长期主义、个人产品和独立生活的观察。',
         meta: '文章阅读 · 独立思考',
       },

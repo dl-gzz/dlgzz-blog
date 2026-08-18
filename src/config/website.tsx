@@ -69,7 +69,7 @@ export const websiteConfig: WebsiteConfig = {
   },
   mail: {
     provider: 'tencent-ses',
-    fromEmail: 'OneWorkerOS <noreply@notify.dlgzz.com>',
+    fromEmail: 'one-worker-os <noreply@notify.dlgzz.com>',
     supportEmail: '395887347@qq.com',
   },
   newsletter: {
@@ -90,11 +90,11 @@ export const websiteConfig: WebsiteConfig = {
         isFree: true,
         isLifetime: false,
       },
-      // XorPay 采用单次扣款；月付订单会授予一个月的 OneWorkerOS 访问权限。
+      // XorPay 采用单次扣款；月付订单会授予一个月的 one-worker-os 访问权限。
       // 保留旧年付价格配置，确保已有订单、会员和安装授权仍可被正确识别。
       pro: {
         id: 'pro',
-        name: 'OneWorkerOS 会员',
+        name: 'one-worker-os 会员',
         prices: [
           {
             type: PaymentTypes.SUBSCRIPTION,

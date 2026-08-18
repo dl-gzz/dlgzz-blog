@@ -13,7 +13,7 @@ export default function BuiltWithButton() {
       )}
     >
       <Logo className="size-5 rounded-md" />
-      <span className="font-semibold">OneWorkerOS</span>
+      <span className="font-semibold">one-worker-os</span>
     </Link>
   );
 }

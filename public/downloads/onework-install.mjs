@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * OneWorkerOS managed installer. Compatible with Node.js 18/20/22 both as a
+ * one-worker-os managed installer. Compatible with Node.js 18/20/22 both as a
  * downloaded .mjs file and through `node -` (no static ESM imports).
  *
  * Preferred:
@@ -99,7 +99,7 @@ async function main() {
       !Array.isArray(value?.files) ||
       value.files.length < 1
     ) {
-      throw new Error('OneWorkerOS release 清单格式无效');
+      throw new Error('one-worker-os release 清单格式无效');
     }
     const seen = new Set();
     for (const file of value.files) {
@@ -120,7 +120,7 @@ async function main() {
         !/^[a-f0-9]{64}$/.test(file.sha256 || '')
       ) {
         throw new Error(
-          `OneWorkerOS release 文件清单无效：${file?.path || 'unknown'}`
+          `one-worker-os release 文件清单无效：${file?.path || 'unknown'}`
         );
       }
       seen.add(file.path);
@@ -266,7 +266,7 @@ async function main() {
   if (!['http:', 'https:'].includes(serverUrl.protocol))
     throw new Error('安装服务器地址必须使用 HTTP(S)');
   if (serverUrl.protocol === 'http:' && !isLocalhost(serverUrl))
-    throw new Error('远程 OneWorkerOS 安装必须使用 HTTPS');
+    throw new Error('远程 one-worker-os 安装必须使用 HTTPS');
   const serverOrigin = serverUrl.origin;
   const token = required('--token');
   const deviceName = arg('--device-name', hostname());
@@ -314,7 +314,7 @@ async function main() {
     }
   }
   if (!/^[A-Za-z0-9._:-]{16,200}$/.test(deviceId)) {
-    throw new Error('OneWorkerOS 设备标识无效');
+    throw new Error('one-worker-os 设备标识无效');
   }
 
   let releaseManifest = null;
@@ -333,7 +333,7 @@ async function main() {
       !/^[a-f0-9]{64}$/.test(expectedReleaseHash) ||
       sha256(releaseBuffer) !== expectedReleaseHash
     ) {
-      throw new Error('OneWorkerOS release 清单 SHA256 校验失败');
+      throw new Error('one-worker-os release 清单 SHA256 校验失败');
     }
     try {
       releaseManifest = validateRelease(
@@ -341,7 +341,7 @@ async function main() {
       );
     } catch (error) {
       if (error instanceof SyntaxError)
-        throw new Error('OneWorkerOS release 清单不是有效 JSON');
+        throw new Error('one-worker-os release 清单不是有效 JSON');
       throw error;
     }
     const artifactUrl = new URL(releaseManifest.artifact.url, releaseUrl);
@@ -355,7 +355,7 @@ async function main() {
       archive.length !== releaseManifest.artifact.size ||
       sha256(archive) !== releaseManifest.artifact.sha256
     ) {
-      throw new Error('OneWorkerOS Skill ZIP 大小或 SHA256 校验失败');
+      throw new Error('one-worker-os Skill ZIP 大小或 SHA256 校验失败');
     }
     const archivePath = join(stagingRoot, 'onework-skill.zip');
     const extractedRoot = join(stagingRoot, 'extracted');
@@ -390,13 +390,13 @@ async function main() {
     );
   }
   if (!/^[A-Za-z0-9._~-]{20,500}$/.test(claimData.key.rawKey)) {
-    throw new Error('安装服务器返回了无效的 OneWorkerOS Key');
+    throw new Error('安装服务器返回了无效的 one-worker-os Key');
   }
 
   const credentialTemp = join(stagingRoot, 'one-work-os.local.env');
   writeFileSync(
     credentialTemp,
-    `# OneWorkerOS managed credential\nONEWORK_API_KEY=${claimData.key.rawKey}\nONEWORK_DEVICE_ID=${deviceId}\n`,
+    `# one-worker-os managed credential\nONEWORK_API_KEY=${claimData.key.rawKey}\nONEWORK_DEVICE_ID=${deviceId}\n`,
     { encoding: 'utf8', mode: 0o600 }
   );
   try {
@@ -450,7 +450,7 @@ async function main() {
   const verifyData = await verifyResponse.json().catch(() => ({}));
   if (!verifyResponse.ok || !verifyData.success) {
     throw new Error(
-      `OneWorkerOS 文件已安装，但设备授权验证失败（HTTP ${verifyResponse.status}）：${verifyData.error || '请重启 WorkBuddy 后重试'}`
+      `one-worker-os 文件已安装，但设备授权验证失败（HTTP ${verifyResponse.status}）：${verifyData.error || '请重启 WorkBuddy 后重试'}`
     );
   }
 
@@ -458,7 +458,7 @@ async function main() {
     rmSync(backupSession, { recursive: true, force: true });
   cleanupBackups(backupRoot);
   console.log(`Skill 版本：${releaseManifest?.version || '保持现有版本'}`);
-  console.log(`OneWorkerOS 已连接：${claimData.key.keyPrefix}`);
+  console.log(`one-worker-os 已连接：${claimData.key.keyPrefix}`);
   console.log(`知识包：${(claimData.packs || []).join(', ')}`);
   console.log(`凭据已写入：${targetFile}`);
   if (verifyData.ready === false && verifyData.notice) {

@@ -12,7 +12,7 @@ import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import * as dotenv from 'dotenv';
 import postgres from 'postgres';
 
-// OneWorkerOS 授权闭环的临时用户冒烟测试：签发 → 兑换 → 安装领取 → 清理。
+// one-worker-os 授权闭环的临时用户冒烟测试：签发 → 兑换 → 安装领取 → 清理。
 
 dotenv.config({ path: join(process.cwd(), '.env') });
 dotenv.config({ path: join(process.cwd(), '.env.local'), override: true });
@@ -58,7 +58,7 @@ async function main() {
 			insert into "user" (
 				id, name, email, email_verified, created_at, updated_at
 			) values (
-				${testUserId}, 'OneWorkerOS E2E', ${testEmail}, true, now(), now()
+				${testUserId}, 'one-worker-os E2E', ${testEmail}, true, now(), now()
 			)
 		`;
 
@@ -167,12 +167,12 @@ async function main() {
     const install = await createOneWorkInstallToken({
       userId: testUserId,
       platform: 'test',
-      deviceName: 'OneWorkerOS E2E 2',
+      deviceName: 'one-worker-os E2E 2',
     });
     const claimed = await claimOneWorkInstallToken({
       token: install.rawToken,
       deviceId: secondDeviceId,
-      deviceName: 'OneWorkerOS E2E 2',
+      deviceName: 'one-worker-os E2E 2',
       platform: 'test',
     });
     const claimedWildcard = await sql<{ id: string }[]>`

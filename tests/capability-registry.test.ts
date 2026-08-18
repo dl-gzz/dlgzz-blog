@@ -23,9 +23,9 @@ const capabilities = [
   },
   {
     id: 'knowledge.search',
-    name: 'OneWorkerOS 知识检索',
+    name: 'one-worker-os 知识检索',
     description:
-      '检索已授权的 OneWorkerOS 知识包，返回文本、出处和相关媒体资产。',
+      '检索已授权的 one-worker-os 知识包，返回文本、出处和相关媒体资产。',
     intents: [
       '查找教程',
       '检索知识',

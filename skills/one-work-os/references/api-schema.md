@@ -15,8 +15,8 @@ Read this reference when configuring access, debugging a query, or adapting the 
 
 - `ONEWORK_API_KEY`: required bearer key. Never commit or print it.
 - `ONEWORK_DEVICE_ID`: stable device binding written by every managed installer. Pre-0.2 unbound API keys may omit it only during migration; newly issued device-bound keys require it. Never invent or copy it between customers.
-- `ONEWORK_KNOWLEDGE_URL`: optional full endpoint. Defaults to `/api/knowledge/query` on the OneWorkerOS origin.
-- `ONEWORK_API_URL`: optional OneWorkerOS URL. The script uses its origin, so an existing full knowledge URL remains compatible.
+- `ONEWORK_KNOWLEDGE_URL`: optional full endpoint. Defaults to `/api/knowledge/query` on the one-worker-os origin.
+- `ONEWORK_API_URL`: optional one-worker-os URL. The script uses its origin, so an existing full knowledge URL remains compatible.
 - Default pack: `onework-workbuddy-v1`.
 
 ## Article source metadata
