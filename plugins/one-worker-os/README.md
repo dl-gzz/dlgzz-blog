@@ -22,7 +22,7 @@ This repository already has the supported layout: its root contains `.codebuddy-
 
 Run `/reload-plugins --force` after installation to activate the Skill and MCP server without restarting WorkBuddy. If the host does not support hot reload, restart WorkBuddy. Then verify `one-worker-os` is shown as enabled under **专家·技能·连接器 → 技能 → 我安装的**; an entry in the installed-plugin registry alone is not enough.
 
-Open `/mcp`, select `one-worker-os`, and complete the browser authorization if WorkBuddy asks. A successful connection exposes these tools:
+In WorkBuddy, open **自定义连接器 → 我的 MCP → one-worker-os** and choose **连接/重连**. WorkBuddy then opens the OAuth page with the required client parameters. Do not open `https://www.dlgzz.com/mcp` directly in a browser: it is the machine JSON-RPC endpoint, so a browser GET correctly returns a `-32600` / POST-only message. A successful connection exposes these tools:
 
 - `onework_resolve_capability`
 - `onework_search_knowledge`

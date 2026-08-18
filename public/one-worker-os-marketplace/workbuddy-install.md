@@ -10,6 +10,8 @@
 
 one-worker-os 是同时包含 Skill 和 MCP 的完整 WorkBuddy 插件，不是独立 Skill。
 
+`https://www.dlgzz.com/mcp` 是 MCP 协议地址，不是网页或授权地址。严禁直接用浏览器打开；如果看到 `-32600` 或“仅支持 POST/JSON-RPC”，只说明打开方式错误，不代表服务故障。
+
 ## 2. 先识别当前状态
 
 - **首次安装**：当前没有 `one-worker-os@one-worker-os-marketplace`，也没有旧版。直接安装新版。
@@ -56,7 +58,7 @@ SHA-256 在这里用于检查下载完整性，不是数字签名。
 1. 插件列表显示 `one-worker-os@one-worker-os-marketplace`，作用域为 `user`，状态为已启用。
 2. 实际安装目录属于 WorkBuddy 插件缓存，并同时包含 `.codebuddy-plugin/plugin.json`、`skills/one-worker-os/SKILL.md` 和 `.mcp.json`。
 3. MCP/自定义连接器出现 `one-worker-os`，地址为 `https://www.dlgzz.com/mcp`。
-4. 发起 one-worker-os 的 OAuth 网页授权，由用户本人点击允许。如果没有会员权益，只提醒用户开通或兑换，不得改用 API Key。
+4. 在 WorkBuddy 的“自定义连接器 → 我的 MCP → one-worker-os”中点击“连接/重连”，由 WorkBuddy 自动打开带完整参数的 OAuth 授权页。不得直接浏览 `/mcp`，也不得手工拼接 OAuth 地址。授权页只由用户本人点击允许；如果没有会员权益，只提醒用户开通或兑换，不得改用 API Key。
 5. 授权后成功调用 `onework_get_entitlements`，并成功调用一次 `onework_search_knowledge`。
 
 上述五项全部通过后，才能告诉用户“安装成功”。

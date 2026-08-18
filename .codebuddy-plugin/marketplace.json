@@ -4,13 +4,13 @@
     "name": "one-worker-os"
   },
   "description": "one-worker-os plugins for independent workers using WorkBuddy.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "plugins": [
     {
       "name": "one-worker-os",
       "source": "./plugins/one-worker-os",
       "description": "Live one-worker-os knowledge and governed work orchestration through OAuth-protected MCP.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "one-worker-os"
       },
