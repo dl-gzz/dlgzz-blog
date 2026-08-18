@@ -1,8 +1,8 @@
 {
   "Metadata": {
-    "name": "独立沉思录",
-    "title": "独立沉思录 · 文章即服务",
-    "description": "独立沉思录：文章即服务。每篇文章既写给人读，也能装进你的 AI 被随时调用。"
+    "name": "独立工作者",
+    "title": "OneWorkOS · 独立工作者的 AI 工作操作系统",
+    "description": "OneWorkOS 为独立工作者连接知识、工具与行动。只要说出目标，系统会判断下一步并推动任务完成。"
   },
   "Common": {
     "login": "登录",
@@ -80,15 +80,15 @@
       }
     },
     "pro": {
-      "name": "独立沉思录会员",
-      "description": "开通即得 API Key，你的 AI 直接调用我的知识库",
+      "name": "OneWorkOS 会员",
+      "description": "连接全部知识能力，让 AI 帮你从目标走到行动",
       "features": {
-        "feature-1": "全部知识包畅查（含 724 篇小红书官方经营知识库）",
-        "feature-2": "专属 API Key，装进你自己的 Hermes 一条命令搞定",
-        "feature-3": "知识库每日更新，会员自动同步最新内容",
-        "feature-4": "全部付费文章无限制阅读",
-        "feature-5": "全部会员组件解锁安装",
-        "feature-6": "后续新增知识包，会员自动包含"
+        "feature-1": "使用全部 OneWorkOS 知识库",
+        "feature-2": "每月 1000 次知识检索",
+        "feature-3": "WorkBuddy 与小红书知识能力",
+        "feature-4": "官方图片、资料出处和视频入口",
+        "feature-5": "云端知识持续更新",
+        "feature-6": "新增知识包自动开放"
       },
       "limits": {}
     },
@@ -291,14 +291,11 @@
       "features": {
         "title": "功能特色"
       },
-      "services": {
-        "title": "组件商店"
-      },
       "bots": {
         "title": "独立陪伴者"
       },
       "blog": {
-        "title": "博客"
+        "title": "独博"
       },
       "pricing": {
         "title": "会员"
@@ -307,7 +304,7 @@
         "title": "文档"
       },
       "aiChat": {
-        "title": "试用知识库"
+        "title": "立即使用"
       },
       "whiteboard": {
         "title": "白板"
@@ -410,7 +407,7 @@
       }
     },
     "footer": {
-      "tagline": "文章即服务：写给人读，也供你的 AI 调用",
+    "tagline": "独立工作者的 AI 工作系统",
       "product": {
         "title": "产品",
         "items": {

@@ -68,9 +68,9 @@ export const websiteConfig: WebsiteConfig = {
     relatedPostsSize: 3,
   },
   mail: {
-    provider: 'smtp',
-    fromEmail: '独立沉思录 <395887347@qq.com>',
-    supportEmail: '独立沉思录 <395887347@qq.com>',
+    provider: 'tencent-ses',
+    fromEmail: 'OneWorkOS <noreply@notify.dlgzz.com>',
+    supportEmail: '395887347@qq.com',
   },
   newsletter: {
     provider: 'resend',
@@ -89,53 +89,42 @@ export const websiteConfig: WebsiteConfig = {
         prices: [],
         isFree: true,
         isLifetime: false,
+        // 保留免费方案标识，避免影响现有用户权限；不在会员页提供免费体验入口。
+        disabled: true,
       },
-      // 会员只做年费：XorPay 是单次扣款、无自动续费，月费会导致用户每月手动重买。
-      // 早鸟 ¥99/年，正价 ¥199/年。金额单位为「分」，可用 env 覆盖，不必改代码。
+      // XorPay 采用单次扣款；月付订单会授予一个月的 OneWorkOS 访问权限。
+      // 保留旧年付价格配置，确保已有订单、会员和安装授权仍可被正确识别。
       pro: {
         id: 'pro',
+        name: 'OneWorkOS 会员',
         prices: [
           {
             type: PaymentTypes.SUBSCRIPTION,
-            priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'xorpay_pro_yearly',
-            amount: Number(process.env.NEXT_PUBLIC_PRO_YEARLY_AMOUNT_CENTS || 9900),
+            priceId:
+              process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY ||
+              'xorpay_pro_monthly',
+            amount: Number(
+              process.env.NEXT_PUBLIC_PRO_MONTHLY_AMOUNT_CENTS || 1990
+            ),
+            currency: 'CNY',
+            interval: PlanIntervals.MONTH,
+          },
+          {
+            type: PaymentTypes.SUBSCRIPTION,
+            priceId:
+              process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY ||
+              'xorpay_pro_yearly',
+            amount: Number(
+              process.env.NEXT_PUBLIC_PRO_YEARLY_AMOUNT_CENTS || 9900
+            ),
             currency: 'CNY',
             interval: PlanIntervals.YEAR,
+            disabled: true,
           },
         ],
         isFree: false,
         isLifetime: false,
         recommended: true,
-      },
-      text2imageStudio: {
-        id: 'text2imageStudio',
-        prices: [
-          {
-            type: PaymentTypes.ONE_TIME,
-            priceId:
-              process.env.NEXT_PUBLIC_STRIPE_PRICE_TEXT2IMAGE_STUDIO_ONE_TIME ||
-              'price_text2image_studio_one_time',
-            amount: 180, // 180 分 = 1.80 元 (test amount)
-            currency: 'CNY',
-          },
-        ],
-        isFree: false,
-        isLifetime: false,
-      },
-      ideaSecretaryLite: {
-        id: 'ideaSecretaryLite',
-        prices: [
-          {
-            type: PaymentTypes.ONE_TIME,
-            priceId:
-              process.env.NEXT_PUBLIC_STRIPE_PRICE_IDEA_SECRETARY_LITE_ONE_TIME ||
-              'price_idea_secretary_lite_one_time',
-            amount: 100, // 100 分 = 1.00 元 (install verification)
-            currency: 'CNY',
-          },
-        ],
-        isFree: false,
-        isLifetime: false,
       },
     },
   },

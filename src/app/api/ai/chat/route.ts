@@ -83,7 +83,7 @@ export async function POST(req: Request) {
         JSON.stringify({
           error: 'Trial limit reached',
           code: 'TRIAL_LIMIT',
-          message: `今天的免费体验次数已用完（每天 ${FREE_DAILY_LIMIT} 次）。开通会员即可无限畅查，并获得 API Key 装进你自己的 AI。`,
+          message: `今天的免费体验次数已用完（每天 ${FREE_DAILY_LIMIT} 次）。开通会员后，可通过网页授权把 OneWorkOS 连接到 WorkBuddy。`,
           upgradeUrl: '/pricing',
           limit: quota.limit,
         }),

@@ -14,15 +14,19 @@ import { authClient } from '@/lib/auth-client';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { Routes } from '@/routes';
 import {
+  ArrowRightIcon,
+  CheckCircle2Icon,
+  CircleIcon,
   CopyIcon,
-  DownloadIcon,
   ExternalLinkIcon,
   KeyRoundIcon,
-  MonitorDownIcon,
+  Link2Icon,
+  Loader2Icon,
+  LogInIcon,
   PlugZapIcon,
   RefreshCwIcon,
   ShieldCheckIcon,
-  SmartphoneIcon,
+  SparklesIcon,
   Trash2Icon,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -54,15 +58,7 @@ type OneWorkOAuthConnection = {
 type AccessData = {
   entitlements: Entitlement[];
   devices: OneWorkDevice[];
-  oauthConnections?: OneWorkOAuthConnection[];
-  keys: Array<{
-    id: string;
-    keyPrefix: string;
-    status: string;
-    monthlyQuota: number;
-    lastUsedAt: string | null;
-    createdAt: string;
-  }>;
+  oauthConnections: OneWorkOAuthConnection[];
   usage?: {
     usedThisMonth?: number;
     used?: number;
@@ -72,8 +68,28 @@ type AccessData = {
   };
 };
 
+const MANUAL_PLUGIN_COMMANDS = [
+  '/plugin marketplace add dl-gzz/dlgzz-blog',
+  '/plugin install one-work-os@onework-os-marketplace',
+  '/plugin enable one-work-os@onework-os-marketplace --scope user',
+  '/reload-plugins --force',
+];
+
+const WORKBUDDY_INSTALL_PROMPT = [
+  '请帮我在当前 WorkBuddy 安装并启用 OneWorkOS 插件。请直接执行，不要只解释：',
+  '1. 使用 WorkBuddy 自带的插件管理能力添加市场 dl-gzz/dlgzz-blog。',
+  '2. 安装 one-work-os@onework-os-marketplace。',
+  '3. 启用插件：/plugin enable one-work-os@onework-os-marketplace --scope user。',
+  '4. 重新加载插件：/reload-plugins --force；如果不能热加载，就提醒我重启 WorkBuddy。',
+  '5. 如果发现用户 Skill 目录里有旧版 one-work-os，先将整个目录移动到 .workbuddy/one-work-os-backups 下的时间戳备份目录，不要删除，也不要手工编辑插件注册表。',
+  '6. 安装完成后，带我进入“专家·技能·连接器 → 连接器 → 自定义连接器”，找到 OneWorkOS 并点击连接。',
+  '7. 网页授权由我本人确认；不要向我索要或展示 API Key。',
+].join('\n');
+
+const TEST_PROMPT = '查看我的 OneWorkOS 会员权益和剩余次数';
+
 function formatDate(value: string | null | undefined) {
-  if (!value) return '不过期';
+  if (!value) return '长期有效';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '未知';
   return new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium' }).format(date);
@@ -87,13 +103,6 @@ function formatDateTime(value: string | null | undefined) {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date);
-}
-
-function formatCountdown(seconds: number) {
-  const safeSeconds = Math.max(0, seconds);
-  const minutes = Math.floor(safeSeconds / 60);
-  const rest = safeSeconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`;
 }
 
 function packName(packId: string) {
@@ -112,31 +121,11 @@ function oauthScopeName(scope: string) {
   return scope;
 }
 
-function detectPlatform() {
-  const userAgent = navigator.userAgent;
-  if (/Windows/i.test(userAgent)) return 'Windows';
-  if (/Macintosh|Mac OS X/i.test(userAgent)) return 'macOS';
-  if (/Linux/i.test(userAgent)) return 'Linux';
-  return 'other';
-}
-
-function normalizeDeviceName(value: string, platform: string) {
-  const trimmed = value.trim().slice(0, 80);
-  return trimmed || `${platform === 'other' ? '当前' : platform} 设备`;
-}
-
-function commandSafeDeviceName(value: string, platform: string) {
-  return normalizeDeviceName(value, platform)
-    .replace(/[^\w\u3400-\u9fff .()-]/g, '-')
-    .slice(0, 80);
-}
-
-function shellQuote(value: string) {
-  return `'${value.replaceAll("'", "'\\''")}'`;
-}
-
-function powershellQuote(value: string) {
-  return `'${value.replaceAll("'", "''")}'`;
+function oauthClientName(connection: OneWorkOAuthConnection) {
+  if (/custom-mcp:onework-os/i.test(connection.clientName)) {
+    return 'WorkBuddy · OneWorkOS';
+  }
+  return connection.clientName || 'OneWorkOS 客户端';
 }
 
 function entitlementIsActive(item: Entitlement, now: number) {
@@ -147,33 +136,67 @@ function entitlementIsActive(item: Entitlement, now: number) {
 }
 
 function entitlementStatus(item: Entitlement, now: number) {
-  if (item.status === 'active' && !entitlementIsActive(item, now))
-    return '已过期';
-  if (item.status === 'active') return '有效';
+  if (item.status === 'active' && entitlementIsActive(item, now)) return '有效';
   if (item.status === 'revoked') return '已撤销';
-  if (item.status === 'expired') return '已过期';
-  return item.status;
+  return '已过期';
+}
+
+function SetupStep({
+  index,
+  title,
+  description,
+  done,
+  current,
+}: {
+  index: number;
+  title: string;
+  description: string;
+  done: boolean;
+  current: boolean;
+}) {
+  return (
+    <div
+      className={`relative flex gap-3 rounded-xl border p-4 transition-colors ${
+        done
+          ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20'
+          : current
+            ? 'border-primary/40 bg-primary/5'
+            : 'bg-muted/20'
+      }`}
+    >
+      {done ? (
+        <CheckCircle2Icon className="mt-0.5 size-5 shrink-0 text-emerald-600" />
+      ) : current ? (
+        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+          {index}
+        </span>
+      ) : (
+        <CircleIcon className="mt-0.5 size-5 shrink-0 text-muted-foreground/50" />
+      )}
+      <div className="min-w-0">
+        <p className="font-medium">{title}</p>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export function OneWorkAccessPanel({
   showRedeem = true,
 }: { showRedeem?: boolean }) {
   const { data: session, isPending } = authClient.useSession();
+  const [mounted, setMounted] = useState(false);
   const [code, setCode] = useState('');
-  const [deviceName, setDeviceName] = useState('');
-  const [platform, setPlatform] = useState('macOS');
-  const [isMobile, setIsMobile] = useState(false);
   const [access, setAccess] = useState<AccessData | null>(null);
   const [loadingAccess, setLoadingAccess] = useState(false);
-  const [installToken, setInstallToken] = useState('');
-  const [installExpiresAt, setInstallExpiresAt] = useState<string | null>(null);
-  const [installPrompt, setInstallPrompt] = useState('');
-  const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const [revokingDeviceId, setRevokingDeviceId] = useState('');
   const [revokingClientId, setRevokingClientId] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [now, setNow] = useState(() => Date.now());
 
   const activeEntitlements = useMemo(
     () =>
@@ -182,6 +205,10 @@ export function OneWorkAccessPanel({
     [access?.entitlements, now]
   );
   const hasValidEntitlement = activeEntitlements.length > 0;
+  const oauthConnections = access?.oauthConnections ?? [];
+  const isAuthorized = oauthConnections.length > 0;
+  const canUseOneWorkOS = hasValidEntitlement && isAuthorized;
+  const hasHistoricalEntitlement = (access?.entitlements?.length ?? 0) > 0;
 
   const usageLimit =
     access?.usage?.limit ??
@@ -196,16 +223,10 @@ export function OneWorkAccessPanel({
       ? Math.max(0, usageLimit - usageUsed)
       : null);
 
-  const installSecondsRemaining = installExpiresAt
-    ? Math.max(
-        0,
-        Math.ceil((new Date(installExpiresAt).getTime() - now) / 1000)
-      )
-    : 0;
-
   const loadAccess = useCallback(async () => {
     if (!session?.user?.id) return;
     setLoadingAccess(true);
+    setError('');
     try {
       const response = await fetch('/api/onework/entitlements', {
         cache: 'no-store',
@@ -225,9 +246,7 @@ export function OneWorkAccessPanel({
   }, [session?.user?.id]);
 
   useEffect(() => {
-    const detectedPlatform = detectPlatform();
-    setPlatform(detectedPlatform);
-    setIsMobile(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -235,11 +254,20 @@ export function OneWorkAccessPanel({
   }, [loadAccess]);
 
   useEffect(() => {
-    if (!installExpiresAt) return;
-    setNow(Date.now());
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(timer);
-  }, [installExpiresAt]);
+  }, []);
+
+  async function copyText(value: string, successMessage: string) {
+    setError('');
+    setMessage('');
+    try {
+      await navigator.clipboard.writeText(value);
+      setMessage(successMessage);
+    } catch {
+      setError('浏览器没有允许复制，请展开手动步骤后复制。');
+    }
+  }
 
   async function redeem() {
     setBusy(true);
@@ -252,8 +280,9 @@ export function OneWorkAccessPanel({
         body: JSON.stringify({ code: code.trim() }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.success)
+      if (!response.ok || !data.success) {
         throw new Error(data.error || '兑换失败');
+      }
       setMessage(`兑换成功，已开通：${data.packs.map(packName).join('、')}`);
       setCode('');
       await loadAccess();
@@ -264,189 +293,15 @@ export function OneWorkAccessPanel({
     }
   }
 
-  async function copyPluginInstallPrompt() {
-    const prompt = [
-      '请直接帮我把 OneWorkOS 安装到当前 WorkBuddy，不要只解释步骤：',
-      '1. 先检查用户 Skill 目录中是否存在旧版 one-work-os。如果存在，将整个目录移到 .workbuddy/one-work-os-backups 下的时间戳备份目录，不要删除，并保留 one-work-os.local.env；完成后告诉我备份位置。',
-      '2. 添加插件市场：dl-gzz/dlgzz-blog',
-      '3. 安装插件：one-work-os@onework-os-marketplace',
-      '4. 重新加载插件：/reload-plugins',
-      '5. 确认只加载一个 one-work-os，然后连接 https://www.dlgzz.com/mcp，打开网页授权；不要让我复制或输入 API Key。',
-      '6. 我在网页点击「允许连接」后，调用 onework_get_usage 验收。',
-      '如果当前版本不允许你代为执行插件命令，请直接打开「插件」页面，并只告诉我下一个必须点击的位置。',
-    ].join('\n');
-    setError('');
-    setMessage('');
-    try {
-      await navigator.clipboard.writeText(prompt);
-      setMessage('新版安装话术已复制，直接粘贴给 WorkBuddy 即可。');
-    } catch {
-      setError('浏览器没有允许复制，请在下方展开后手动复制。');
-    }
-  }
-
-  async function fetchInstallSession() {
-    if (!hasValidEntitlement) {
-      throw new Error('当前账号没有有效权益，请先兑换或续费。');
-    }
-    if (isMobile) {
-      throw new Error(
-        '请在准备安装 WorkBuddy 的电脑上打开本页并生成安装授权。'
-      );
-    }
-
-    const selectedDeviceName = commandSafeDeviceName(deviceName, platform);
-    const response = await fetch('/api/onework/install/session', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ deviceName: selectedDeviceName, platform }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.success || typeof data.token !== 'string') {
-      throw new Error(data.error || '生成安装授权失败');
-    }
-    setDeviceName(selectedDeviceName);
-    setInstallToken(data.token);
-    setInstallExpiresAt(data.expiresAt || null);
-    setNow(Date.now());
-    return {
-      token: data.token as string,
-      expiresAt: data.expiresAt as string | null,
-    };
-  }
-
-  async function createInstallSession() {
-    setBusy(true);
-    setError('');
-    setMessage('');
-    try {
-      await fetchInstallSession();
-      setMessage('安装授权已生成，请在下方倒计时结束前使用一次。');
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '生成安装授权失败');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function copyAiInstallPrompt() {
-    setBusy(true);
-    setError('');
-    setMessage('');
-    try {
-      const { token } = await fetchInstallSession();
-      const server = window.location.origin;
-      const selectedDeviceName = commandSafeDeviceName(deviceName, platform);
-      const installerUrl = `${server}/downloads/onework-install.mjs`;
-      const unixCommand = [
-        `tmpdir="$(mktemp -d "\${TMPDIR:-/tmp}/onework-install.XXXXXX")" || exit 1`,
-        'tmp="$tmpdir/onework-install.mjs"',
-        `curl -fsSL ${shellQuote(installerUrl)} -o "$tmp" || { rm -rf "$tmpdir"; exit 1; }`,
-        `node "$tmp" --server ${shellQuote(server)} --token ${shellQuote(token)} --device-name ${shellQuote(selectedDeviceName)}`,
-        'status=$?',
-        'rm -rf "$tmpdir"',
-        'exit "$status"',
-      ].join('; ');
-      const windowsCommand =
-        `$tmp = Join-Path $env:TEMP ('onework-install-' + [guid]::NewGuid() + '.mjs'); ` +
-        'try { ' +
-        `Invoke-WebRequest -UseBasicParsing -Uri ${powershellQuote(installerUrl)} -OutFile $tmp -ErrorAction Stop; ` +
-        `& node $tmp --server ${powershellQuote(server)} --token ${powershellQuote(token)} --device-name ${powershellQuote(selectedDeviceName)}; ` +
-        'if ($LASTEXITCODE -ne 0) { throw "OneWorkOS 安装失败，退出码：$LASTEXITCODE" } ' +
-        '} finally { Remove-Item $tmp -Force -ErrorAction SilentlyContinue }';
-      const prompt = [
-        '请直接在当前电脑的终端安装 OneWorkOS，不要只解释步骤，也不要回显授权内容：',
-        '1. 识别操作系统并确认 Node.js 主版本不低于 18；检查失败时停止并明确告诉我原因；',
-        `2. macOS/Linux：先把安装程序下载为临时 .mjs 文件，再执行：${unixCommand}`,
-        `3. Windows PowerShell：先把安装程序下载为临时 .mjs 文件，再执行：${windowsCommand}`,
-        '4. 每一步都检查退出状态；失败时停止，不要宣称安装成功；',
-        '5. 成功后检查 WorkBuddy Skill 目录和授权文件，并提醒我重启 WorkBuddy。',
-      ].join('\n');
-      setInstallPrompt(prompt);
-      try {
-        await navigator.clipboard.writeText(prompt);
-        setMessage('AI 安装指令已复制，请粘贴到当前电脑上的 WorkBuddy。');
-      } catch {
-        setMessage('AI 安装指令已生成，请展开下方内容并手动复制。');
-      }
-    } catch (reason) {
-      setError(
-        reason instanceof Error ? reason.message : '生成 AI 安装指令失败'
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function downloadInstaller() {
-    setBusy(true);
-    setError('');
-    setMessage('');
-    try {
-      const { token } = await fetchInstallSession();
-      const server = window.location.origin;
-      const selectedDeviceName = commandSafeDeviceName(deviceName, platform);
-      const isWindows = platform === 'Windows';
-      const filename = isWindows ? 'onework-install.cmd' : 'onework-install.sh';
-      const script = isWindows
-        ? `@echo off\r\nsetlocal\r\nset "SERVER=${server}"\r\nset "TOKEN=${token}"\r\nset "DEVICE_NAME=${selectedDeviceName}"\r\nwhere node >nul 2>nul\r\nif errorlevel 1 goto :node_missing\r\nfor /f "delims=" %%V in ('node -p "process.versions.node.split('.')[0]" 2^>nul') do set "NODE_MAJOR=%%V"\r\nif not defined NODE_MAJOR goto :node_missing\r\nif %NODE_MAJOR% LSS 18 goto :node_old\r\nset "INSTALLER=%TEMP%\\onework-install-%RANDOM%-%RANDOM%.mjs"\r\npowershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing -Uri '%SERVER%/downloads/onework-install.mjs' -OutFile '%INSTALLER%' -ErrorAction Stop"\r\nif errorlevel 1 goto :download_failed\r\nif not exist "%INSTALLER%" goto :download_failed\r\nnode "%INSTALLER%" --server "%SERVER%" --token "%TOKEN%" --device-name "%DEVICE_NAME%"\r\nset "INSTALL_STATUS=%ERRORLEVEL%"\r\ndel /q "%INSTALLER%" >nul 2>nul\r\nif not "%INSTALL_STATUS%"=="0" goto :install_failed\r\necho.\r\necho OneWorkOS installation completed. Restart WorkBuddy now.\r\npause\r\nexit /b 0\r\n:node_missing\r\necho Node.js was not found. Install Node.js 18 or later: https://nodejs.org/\r\npause\r\nexit /b 1\r\n:node_old\r\necho Node.js 18 or later is required. Current major version: %NODE_MAJOR%\r\npause\r\nexit /b 1\r\n:download_failed\r\necho Failed to download the OneWorkOS installer. Check the network and try again.\r\nif exist "%INSTALLER%" del /q "%INSTALLER%" >nul 2>nul\r\npause\r\nexit /b 1\r\n:install_failed\r\necho OneWorkOS installation failed. Exit code: %INSTALL_STATUS%\r\npause\r\nexit /b %INSTALL_STATUS%\r\n`
-        : `#!/bin/bash\nset -euo pipefail\nSERVER=${shellQuote(server)}\nTOKEN=${shellQuote(token)}\nDEVICE_NAME=${shellQuote(selectedDeviceName)}\nif ! command -v node >/dev/null 2>&1; then\n  echo '未检测到 Node.js，请先安装 Node.js 18 或更高版本：https://nodejs.org/'\n  exit 1\nfi\nNODE_MAJOR="$(node -p "process.versions.node.split('.')[0]" 2>/dev/null || true)"\nif ! [[ "$NODE_MAJOR" =~ ^[0-9]+$ ]] || (( NODE_MAJOR < 18 )); then\n  echo "需要 Node.js 18 或更高版本，当前主版本：\${NODE_MAJOR:-未知}"\n  exit 1\nfi\nif ! command -v curl >/dev/null 2>&1; then\n  echo '未检测到 curl，无法下载安装程序。'\n  exit 1\nfi\nINSTALL_DIR="$(mktemp -d "\${TMPDIR:-/tmp}/onework-install.XXXXXX")"\nINSTALLER="$INSTALL_DIR/onework-install.mjs"\ntrap 'rm -rf "$INSTALL_DIR"' EXIT\ncurl -fsSL "$SERVER/downloads/onework-install.mjs" -o "$INSTALLER"\nnode "$INSTALLER" --server "$SERVER" --token "$TOKEN" --device-name "$DEVICE_NAME"\necho ''\necho 'OneWorkOS 安装完成，请立即重启 WorkBuddy。'\n`;
-
-      const blob = new Blob([script], { type: 'text/plain;charset=utf-8' });
-      const href = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = href;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(href);
-
-      setMessage(
-        isWindows
-          ? `已下载 ${filename}。双击运行；若任一步失败，窗口会保留具体错误。`
-          : `已下载 ${filename}。macOS 请打开终端执行：bash ~/Downloads/${filename}`
-      );
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '下载安装脚本失败');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function revokeDevice(device: OneWorkDevice) {
-    const displayName = device.deviceName || device.platform || '未命名设备';
-    if (!window.confirm(`确定撤销「${displayName}」的 OneWorkOS 授权吗？`))
-      return;
-
-    setRevokingDeviceId(device.id);
-    setError('');
-    setMessage('');
-    try {
-      const response = await fetch(
-        `/api/onework/devices/${encodeURIComponent(device.id)}`,
-        { method: 'DELETE' }
-      );
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || '撤销设备失败');
-      }
-      setMessage(`已撤销设备：${displayName}`);
-      await loadAccess();
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '撤销设备失败');
-    } finally {
-      setRevokingDeviceId('');
-    }
-  }
-
   async function revokeOAuthConnection(connection: OneWorkOAuthConnection) {
+    const displayName = oauthClientName(connection);
     if (
       !window.confirm(
-        `确定断开「${connection.clientName || 'OneWorkOS 客户端'}」吗？断开后，它需要重新进行网页授权才能继续使用。`
+        `确定断开「${displayName}」吗？断开后，需要重新进行网页授权才能继续使用。`
       )
-    )
+    ) {
       return;
+    }
 
     setRevokingClientId(connection.clientId);
     setError('');
@@ -460,7 +315,7 @@ export function OneWorkAccessPanel({
       if (!response.ok || !data.success) {
         throw new Error(data.error || '断开连接失败');
       }
-      setMessage(`已断开：${connection.clientName || 'OneWorkOS 客户端'}`);
+      setMessage(`已断开：${displayName}`);
       await loadAccess();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : '断开连接失败');
@@ -469,9 +324,35 @@ export function OneWorkAccessPanel({
     }
   }
 
-  if (isPending) {
+  async function revokeDevice(device: OneWorkDevice) {
+    const displayName = device.deviceName || device.platform || '未命名设备';
+    if (!window.confirm(`确定撤销旧版设备「${displayName}」吗？`)) return;
+
+    setRevokingDeviceId(device.id);
+    setError('');
+    setMessage('');
+    try {
+      const response = await fetch(
+        `/api/onework/devices/${encodeURIComponent(device.id)}`,
+        { method: 'DELETE' }
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || '撤销设备失败');
+      }
+      setMessage(`已撤销旧版设备：${displayName}`);
+      await loadAccess();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '撤销设备失败');
+    } finally {
+      setRevokingDeviceId('');
+    }
+  }
+
+  if (!mounted || isPending) {
     return (
-      <div className="py-12 text-center text-muted-foreground">
+      <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
+        <Loader2Icon className="size-4 animate-spin" />
         正在检查登录状态…
       </div>
     );
@@ -479,19 +360,23 @@ export function OneWorkAccessPanel({
 
   if (!session?.user?.id) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>先登录 OneWorkOS</CardTitle>
-          <CardDescription>
-            兑换码会绑定到你的账号，换电脑时仍可以重新生成设备授权。
+      <Card className="overflow-hidden border-primary/25 shadow-lg shadow-primary/5">
+        <CardHeader className="bg-gradient-to-br from-primary/10 via-background to-background">
+          <div className="mb-2 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <LogInIcon className="size-5" />
+          </div>
+          <CardTitle className="text-2xl">登录后开始连接</CardTitle>
+          <CardDescription className="max-w-xl text-base leading-7">
+            会员权益和 WorkBuddy 授权都属于你的账号。登录一次，即可在 Mac 或
+            Windows 上使用同一套连接流程。
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button asChild>
+        <CardContent className="pt-6">
+          <Button asChild size="lg">
             <Link
               href={`${Routes.Login}?callbackUrl=${encodeURIComponent(Routes.OneWork)}`}
             >
-              登录 / 注册
+              登录 / 注册 <ArrowRightIcon className="size-4" />
             </Link>
           </Button>
         </CardContent>
@@ -499,315 +384,373 @@ export function OneWorkAccessPanel({
     );
   }
 
+  const currentStep = !hasValidEntitlement ? 1 : isAuthorized ? 4 : 2;
+
   return (
     <div className="space-y-6">
-      {showRedeem && (
+      <Card className="overflow-hidden border-primary/25 shadow-xl shadow-primary/5">
+        <CardHeader className="bg-gradient-to-br from-primary/10 via-background to-cyan-500/5 pb-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={canUseOneWorkOS ? 'default' : 'secondary'}>
+                  {loadingAccess
+                    ? '正在检查'
+                    : canUseOneWorkOS
+                      ? '会员有效 · 已授权'
+                      : hasValidEntitlement
+                        ? '会员有效 · 待连接'
+                        : hasHistoricalEntitlement
+                          ? '会员已过期'
+                          : '尚未开通'}
+                </Badge>
+                <Badge variant="outline">Mac / Windows 同一流程</Badge>
+              </div>
+              <CardTitle className="text-2xl sm:text-3xl">
+                {canUseOneWorkOS
+                  ? 'OneWorkOS 已经可以使用'
+                  : hasValidEntitlement
+                    ? '接下来，把 WorkBuddy 连接进来'
+                    : hasHistoricalEntitlement
+                      ? '续费后即可继续使用'
+                      : '先开通会员，再连接 WorkBuddy'}
+              </CardTitle>
+              <CardDescription className="max-w-2xl text-base leading-7">
+                {canUseOneWorkOS
+                  ? '你的会员账号已经授权给 AI 客户端。以后不需要复制 Key，知识库更新也不需要重新安装。'
+                  : '统一使用 WorkBuddy 插件和网页 OAuth。无需选择操作系统，无需安装 Node.js，也无需复制 API Key。'}
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void loadAccess()}
+              disabled={loadingAccess}
+            >
+              <RefreshCwIcon
+                className={`size-4 ${loadingAccess ? 'animate-spin' : ''}`}
+              />
+              刷新状态
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6 pt-6">
+          <div className="grid gap-3 lg:grid-cols-4">
+            <SetupStep
+              index={1}
+              title="开通会员"
+              description="购买后自动开通，或输入兑换码绑定到账号。"
+              done={hasValidEntitlement}
+              current={currentStep === 1}
+            />
+            <SetupStep
+              index={2}
+              title="安装插件"
+              description="在 WorkBuddy 内安装并启用 OneWorkOS 插件。"
+              done={isAuthorized}
+              current={currentStep === 2}
+            />
+            <SetupStep
+              index={3}
+              title="网页授权"
+              description="点击连接，在网页确认会员账号和授权范围。"
+              done={isAuthorized}
+              current={currentStep === 2}
+            />
+            <SetupStep
+              index={4}
+              title="直接使用"
+              description="用自然语言提问，OneWorkOS 自动选择知识和能力。"
+              done={canUseOneWorkOS}
+              current={currentStep === 4}
+            />
+          </div>
+
+          {message && (
+            <output className="block rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
+              {message}
+            </output>
+          )}
+          {error && (
+            <div
+              role="alert"
+              className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+            >
+              {error}
+            </div>
+          )}
+
+          {!hasValidEntitlement && !loadingAccess && showRedeem && (
+            <div className="rounded-xl border bg-muted/20 p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <KeyRoundIcon className="size-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold">输入兑换码开通会员</h3>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    网站购买会自动开通；通过小红书、抖音或人工购买时，在这里输入收到的兑换码。
+                  </p>
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                    <Input
+                      value={code}
+                      onChange={(event) => setCode(event.target.value)}
+                      placeholder="例如 OWOS-XXXX-XXXX"
+                      autoComplete="off"
+                      className="sm:max-w-sm"
+                    />
+                    <Button
+                      onClick={() => void redeem()}
+                      disabled={busy || !code.trim()}
+                    >
+                      {busy ? '兑换中…' : '兑换会员'}
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link href={Routes.Pricing}>查看会员方案</Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {hasValidEntitlement && !isAuthorized && (
+            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+                <div className="flex items-start gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                    <PlugZapIcon className="size-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      第一步：在 WorkBuddy 安装插件
+                    </h3>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      复制下面的安装指令，粘贴到 WorkBuddy 新任务中。Mac 和
+                      Windows 使用同一段指令。
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  className="mt-5"
+                  size="lg"
+                  onClick={() =>
+                    void copyText(
+                      WORKBUDDY_INSTALL_PROMPT,
+                      '安装指令已复制。现在打开 WorkBuddy，新建任务并粘贴发送。'
+                    )
+                  }
+                >
+                  <CopyIcon className="size-4" />
+                  复制 WorkBuddy 安装指令
+                </Button>
+                <details className="mt-4 rounded-lg border bg-background p-4 text-sm">
+                  <summary className="cursor-pointer font-medium">
+                    WorkBuddy 无法代装时，查看手动命令
+                  </summary>
+                  <div className="mt-3 space-y-2">
+                    {MANUAL_PLUGIN_COMMANDS.map((command) => (
+                      <div
+                        key={command}
+                        className="flex items-center gap-2 rounded-md bg-muted p-2"
+                      >
+                        <code className="min-w-0 flex-1 break-all text-xs">
+                          {command}
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`复制命令 ${command}`}
+                          onClick={() =>
+                            void copyText(
+                              command,
+                              '命令已复制，请粘贴到 WorkBuddy。'
+                            )
+                          }
+                        >
+                          <CopyIcon className="size-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </div>
+
+              <div className="rounded-xl border p-5">
+                <div className="flex items-start gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-300">
+                    <Link2Icon className="size-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      第二步：点击连接并授权
+                    </h3>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      安装完成后，进入：
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 rounded-lg bg-muted p-3 text-sm font-medium leading-6">
+                  专家·技能·连接器 → 连接器 → 自定义连接器 → OneWorkOS → 连接
+                </div>
+                <ol className="mt-4 space-y-2 text-sm leading-6 text-muted-foreground">
+                  <li>1. 浏览器会打开 OneWorkOS 授权页。</li>
+                  <li>2. 核对会员账号和四项权限。</li>
+                  <li>3. 由你本人点击「允许连接」。</li>
+                  <li>4. 返回本页点击「刷新状态」。</li>
+                </ol>
+              </div>
+            </div>
+          )}
+
+          {canUseOneWorkOS && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5 dark:border-emerald-900 dark:bg-emerald-950/20">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2Icon className="mt-0.5 size-6 shrink-0 text-emerald-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold">授权已经完成</h3>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      打开
+                      WorkBuddy，新建任务并直接说出需求即可。第一次可以用下面这句话验收。
+                    </p>
+                    <code className="mt-3 block rounded-lg border bg-background px-3 py-2 text-sm">
+                      {TEST_PROMPT}
+                    </code>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    void copyText(
+                      TEST_PROMPT,
+                      '测试问题已复制，请粘贴到 WorkBuddy。'
+                    )
+                  }
+                >
+                  <CopyIcon className="size-4" />
+                  复制测试问题
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <KeyRoundIcon className="size-5" />
-              兑换 OneWorkOS
+              <ShieldCheckIcon className="size-5 text-primary" />
+              会员与用量
             </CardTitle>
-            <CardDescription>
-              输入购买后收到的兑换码。兑换只开通账号权益，设备授权会在安装时自动领取。
-            </CardDescription>
+            <CardDescription>权益属于账号，不属于某一台电脑。</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Input
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-              placeholder="例如 OWOS-XXXX-XXXX"
-              autoComplete="off"
-            />
-            <Button
-              onClick={() => void redeem()}
-              disabled={busy || !code.trim()}
-            >
-              {busy ? '处理中…' : '兑换权益'}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="overflow-hidden border-primary/30 shadow-lg shadow-primary/5">
-        <CardHeader className="bg-gradient-to-br from-primary/10 via-background to-background">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <Badge>推荐</Badge>
-            <Badge variant="secondary">Mac / Windows 同一流程</Badge>
-          </div>
-          <CardTitle className="flex items-center gap-2">
-            <PlugZapIcon className="size-5" />用 WorkBuddy 插件连接
-          </CardTitle>
-          <CardDescription>
-            安装一个很薄的插件，然后在网页登录并点击一次授权。不需要
-            Node.js、设备 Key 或手动配置路径。旧版安装用户会先由 WorkBuddy
-            可恢复地备份旧 Skill。
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <div className="grid gap-3 text-sm sm:grid-cols-2">
-            {[
-              '无需复制 API Key',
-              '网页 OAuth 授权',
-              '知识库在云端实时更新',
-              '插件可由 WorkBuddy 管理升级',
-            ].map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3"
-              >
-                <ShieldCheckIcon className="size-4 shrink-0 text-primary" />
-                {item}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">本月已用</p>
+                <p className="mt-1 text-xl font-semibold">{usageUsed ?? '—'}</p>
               </div>
-            ))}
-          </div>
-          {!hasValidEntitlement && !loadingAccess && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-              可以先安装插件，但连接前需要先兑换或开通 OneWorkOS 权益。
-            </div>
-          )}
-          <Button onClick={() => void copyPluginInstallPrompt()}>
-            <CopyIcon className="size-4" />
-            复制 WorkBuddy 安装话术
-          </Button>
-          <details className="rounded-lg border p-4 text-sm">
-            <summary className="cursor-pointer font-medium">
-              我想手动安装
-            </summary>
-            <div className="mt-3 space-y-2 text-muted-foreground">
-              <code className="block break-all rounded bg-muted p-2 text-xs">
-                /plugin marketplace add dl-gzz/dlgzz-blog
-              </code>
-              <code className="block break-all rounded bg-muted p-2 text-xs">
-                /plugin install one-work-os@onework-os-marketplace
-              </code>
-              <code className="block break-all rounded bg-muted p-2 text-xs">
-                /reload-plugins
-              </code>
-              <p>
-                首次调用时 WorkBuddy 会打开 OneWorkOS
-                网页，登录后点击「允许连接」即可。
-              </p>
-              <p className="font-medium text-amber-700 dark:text-amber-300">
-                如果以前安装过旧版，请先把用户 Skill 目录中的 one-work-os 移到
-                .workbuddy/one-work-os-backups 再安装；保留
-                one-work-os.local.env，不要直接删除。
-              </p>
-            </div>
-          </details>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MonitorDownIcon className="size-5" />
-            旧版兼容安装
-          </CardTitle>
-          <CardDescription>
-            仅在旧版 WorkBuddy 不支持远程 MCP / OAuth 时使用。 旧版 Skill
-            与新插件不能同时启用；准备升级时请使用上方的推荐安装话术。
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {loadingAccess ? (
-            <p className="text-sm text-muted-foreground">正在确认账号权益…</p>
-          ) : !hasValidEntitlement ? (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-              当前账号没有有效权益。请先兑换或续费，安装功能才会启用。
-            </div>
-          ) : isMobile ? (
-            <div className="flex gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
-              <SmartphoneIcon className="mt-0.5 size-5 shrink-0" />
-              <p>
-                当前正在使用手机。请在目标 Mac、Windows 或 Linux
-                电脑上打开本页并登录同一账号，再生成安装授权。
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Input
-                  value={deviceName}
-                  onChange={(event) => setDeviceName(event.target.value)}
-                  placeholder={`${platform === 'other' ? '当前' : platform} 设备（可修改）`}
-                  maxLength={80}
-                />
-                <select
-                  value={platform}
-                  onChange={(event) => setPlatform(event.target.value)}
-                  className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-                  aria-label="设备操作系统"
-                >
-                  <option value="macOS">macOS</option>
-                  <option value="Windows">Windows</option>
-                  <option value="Linux">Linux</option>
-                  <option value="other">其他</option>
-                </select>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">本月剩余</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {usageRemaining ?? '—'}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                已自动识别当前系统；如识别不准，可以手动修改。设备名称会写入安装授权和设备列表。
-              </p>
-              <Button
-                onClick={() => void copyAiInstallPrompt()}
-                disabled={busy}
-              >
-                <CopyIcon className="size-4" />
-                复制 AI 安装指令
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                把指令粘贴到当前电脑上的 WorkBuddy。它会先下载 .mjs
-                安装程序，再执行并逐步检查结果。
-              </p>
-              {installPrompt && (
-                <details className="rounded-lg border p-4 text-sm">
-                  <summary className="cursor-pointer font-medium">
-                    查看 AI 安装指令
-                  </summary>
-                  <textarea
-                    className="mt-3 min-h-44 w-full rounded border bg-muted p-3 font-mono text-xs"
-                    value={installPrompt}
-                    readOnly
-                  />
-                </details>
-              )}
-              <details className="rounded-lg border p-4 text-sm">
-                <summary className="cursor-pointer font-medium">
-                  高级：备用安装方式
-                </summary>
-                <div className="mt-3 space-y-3">
-                  <Button
-                    onClick={() => void downloadInstaller()}
-                    disabled={busy}
-                  >
-                    <DownloadIcon className="size-4" />
-                    下载备用安装脚本
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Windows 可运行下载的 .cmd；macOS/Linux 下载的是
-                    .sh，需要在终端用 bash 执行，不能直接双击安装。
-                  </p>
-                  <Button
-                    variant="outline"
-                    onClick={() => void createInstallSession()}
-                    disabled={busy}
-                  >
-                    <RefreshCwIcon className="size-4" />
-                    只生成安装授权
-                  </Button>
-                  {installToken && (
-                    <>
-                      {installSecondsRemaining > 0 ? (
-                        <p className="font-medium text-amber-700 dark:text-amber-300">
-                          剩余有效时间：
-                          {formatCountdown(installSecondsRemaining)}
-                        </p>
-                      ) : (
-                        <p className="font-medium text-destructive">
-                          这份安装授权已过期，请重新生成。
-                        </p>
-                      )}
-                      <code className="block break-all rounded bg-muted p-2">
-                        {installToken}
-                      </code>
-                      <p className="text-muted-foreground">
-                        这是一次性短时授权，不是长期 API
-                        Key；使用一次或倒计时结束后失效。
-                      </p>
-                    </>
-                  )}
-                </div>
-              </details>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {message && <p className="text-sm text-emerald-600">{message}</p>}
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>我的 OneWorkOS 权益</CardTitle>
-          <CardDescription>
-            这里展示账号当前有效状态、本月检索用量和已绑定设备。
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">本月已用</p>
-              <p className="mt-1 text-xl font-semibold">{usageUsed ?? '—'}</p>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">每月额度</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {usageLimit ?? '—'}
+                </p>
+              </div>
             </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">本月剩余</p>
-              <p className="mt-1 text-xl font-semibold">
-                {usageRemaining ?? '—'}
-              </p>
-            </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">每月额度</p>
-              <p className="mt-1 text-xl font-semibold">{usageLimit ?? '—'}</p>
-            </div>
-          </div>
-          {usageUsed === null && (
-            <p className="text-xs text-muted-foreground">
-              用量统计正在同步；不会把未知用量显示为 0。
-            </p>
-          )}
 
-          {!access?.entitlements?.length ? (
-            <p className="text-sm text-muted-foreground">暂无已激活知识包。</p>
-          ) : (
-            access.entitlements.map((item) => {
-              const active = entitlementIsActive(item, now);
-              return (
-                <div
-                  key={item.knowledgePackId}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {packName(item.knowledgePackId)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      每月 {item.monthlyQuota} 次 · 到期：
-                      {formatDate(item.expiresAt)}
-                    </p>
-                  </div>
-                  <Badge variant={active ? 'default' : 'secondary'}>
-                    {entitlementStatus(item, now)}
-                  </Badge>
-                </div>
-              );
-            })
-          )}
-
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="font-medium">已连接的 AI 客户端</h3>
-              <span className="text-xs text-muted-foreground">
-                {access?.oauthConnections?.length ?? 0} 个
-              </span>
-            </div>
-            {!access?.oauthConnections?.length ? (
+            {!access?.entitlements?.length ? (
               <p className="text-sm text-muted-foreground">
-                尚未通过网页授权连接 WorkBuddy 或其他 AI 客户端。
+                暂无有效会员权益。
               </p>
             ) : (
-              access.oauthConnections.map((connection) => (
+              access.entitlements.map((item) => {
+                const active = entitlementIsActive(item, now);
+                return (
+                  <div
+                    key={item.knowledgePackId}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {packName(item.knowledgePackId)}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        到期：{formatDate(item.expiresAt)}
+                      </p>
+                    </div>
+                    <Badge variant={active ? 'default' : 'secondary'}>
+                      {entitlementStatus(item, now)}
+                    </Badge>
+                  </div>
+                );
+              })
+            )}
+
+            {hasValidEntitlement && showRedeem && (
+              <details className="rounded-lg border p-3 text-sm">
+                <summary className="cursor-pointer font-medium">
+                  我有新的兑换码或续费码
+                </summary>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    value={code}
+                    onChange={(event) => setCode(event.target.value)}
+                    placeholder="输入兑换码"
+                    autoComplete="off"
+                  />
+                  <Button
+                    onClick={() => void redeem()}
+                    disabled={busy || !code.trim()}
+                  >
+                    {busy ? '处理中…' : '兑换'}
+                  </Button>
+                </div>
+              </details>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <SparklesIcon className="size-5 text-primary" />
+              已授权的 AI 客户端
+            </CardTitle>
+            <CardDescription>
+              在这里查看和撤销 WorkBuddy 等客户端的网页授权。
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!oauthConnections.length ? (
+              <div className="rounded-lg border border-dashed p-5 text-center">
+                <Link2Icon className="mx-auto size-6 text-muted-foreground" />
+                <p className="mt-2 font-medium">尚未授权 AI 客户端</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  完成上方插件安装和网页授权后，会自动显示在这里。
+                </p>
+              </div>
+            ) : (
+              oauthConnections.map((connection) => (
                 <div
                   key={connection.clientId}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium">
-                        {connection.clientName || 'OneWorkOS 客户端'}
+                        {oauthClientName(connection)}
                       </p>
-                      <Badge>已连接</Badge>
+                      <Badge>已授权</Badge>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       {connection.scopes.map(oauthScopeName).join('、')} ·
                       授权于 {formatDateTime(connection.grantedAt)}
                     </p>
@@ -821,85 +764,82 @@ export function OneWorkAccessPanel({
                     <Trash2Icon className="size-4" />
                     {revokingClientId === connection.clientId
                       ? '断开中…'
-                      : '断开连接'}
+                      : '撤销授权'}
                   </Button>
                 </div>
               ))
             )}
-          </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="font-medium">旧版安装设备</h3>
-              <span className="text-xs text-muted-foreground">
-                有效{' '}
-                {access?.devices?.filter((device) => device.status === 'active')
-                  .length ?? 0}{' '}
-                台
-              </span>
-            </div>
-            {!access?.devices?.length ? (
-              <p className="text-sm text-muted-foreground">
-                尚未绑定旧版设备。新版 OAuth 插件不需要绑定电脑。
-              </p>
-            ) : (
-              access.devices.map((device) => (
-                <div
-                  key={device.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">
-                        {device.deviceName || '未命名设备'}
-                      </p>
-                      <Badge
-                        variant={
-                          device.status === 'active' ? 'default' : 'secondary'
-                        }
-                      >
-                        {device.status === 'active'
-                          ? '有效'
-                          : device.status === 'revoked'
-                            ? '已撤销'
-                            : device.status}
-                      </Badge>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {device.platform || '未知系统'} · 首次绑定{' '}
-                      {formatDateTime(device.createdAt)} · 最近使用{' '}
-                      {formatDateTime(device.lastSeenAt)}
-                    </p>
-                  </div>
+      {!!access?.devices?.length && (
+        <details className="rounded-xl border bg-muted/15 p-4 text-sm">
+          <summary className="cursor-pointer font-medium">
+            管理旧版安装设备（{access.devices.length}）
+          </summary>
+          <p className="mt-2 text-muted-foreground">
+            这些记录来自旧版 Key
+            安装方式。新版插件不再绑定电脑，也不需要生成设备授权。
+          </p>
+          <div className="mt-4 space-y-2">
+            {access.devices.map((device) => (
+              <div
+                key={device.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background p-3"
+              >
+                <div>
+                  <p className="font-medium">
+                    {device.deviceName || '未命名设备'}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {device.platform || '未知系统'} · 最近使用{' '}
+                    {formatDateTime(device.lastSeenAt)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant={
+                      device.status === 'active' ? 'secondary' : 'outline'
+                    }
+                  >
+                    {device.status === 'active' ? '旧版有效' : '已撤销'}
+                  </Badge>
                   {device.status === 'active' && (
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => void revokeDevice(device)}
                       disabled={revokingDeviceId === device.id}
                     >
                       <Trash2Icon className="size-4" />
-                      {revokingDeviceId === device.id ? '撤销中…' : '撤销授权'}
+                      {revokingDeviceId === device.id ? '撤销中…' : '撤销'}
                     </Button>
                   )}
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </details>
+      )}
 
-      <p className="text-sm text-muted-foreground">
-        需要查看图片和官方出处时，Skill 仍会回到 OneWorkOS
-        受治理知识库检索，不会把兑换码当作知识内容。
+      <div className="flex flex-col justify-between gap-3 rounded-xl border bg-muted/20 p-4 text-sm sm:flex-row sm:items-center">
+        <div className="flex items-start gap-2 text-muted-foreground">
+          <ShieldCheckIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+          <p>
+            OneWorkOS
+            只在你授权的范围内工作。图片、官方出处和知识检索都由云端统一更新。
+          </p>
+        </div>
         <Link
-          className="ml-1 inline-flex items-center gap-1 text-primary underline"
-          href="https://www.dlgzz.com"
+          className="inline-flex shrink-0 items-center gap-1 font-medium text-primary hover:underline"
+          href="https://github.com/dl-gzz/dlgzz-blog"
           target="_blank"
+          rel="noreferrer"
         >
-          dlgzz.com <ExternalLinkIcon className="size-3" />
+          查看插件来源 <ExternalLinkIcon className="size-3" />
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

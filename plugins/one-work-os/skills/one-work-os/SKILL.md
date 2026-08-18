@@ -45,6 +45,8 @@ The MCP resolver recommends and orders capabilities; it does not itself search k
 
 Use the bundled scripts only when the `onework-os` MCP server is unavailable because the host lacks compatible MCP/OAuth support or the user explicitly requests legacy diagnostics. Do not fall back after an OAuth denial, missing entitlement, or MCP authorization error; report that exact state instead.
 
+Treat `connecting`, `unauthorized`, `authentication required`, and `需要认证` as the normal OAuth connection path, not as MCP unavailability. In those states, direct the user to WorkBuddy's **自定义连接器 → 我的 MCP → OneWorkOS → 连接** flow. Never run legacy scripts, request a local API key, or tell the user to reinstall the managed legacy Skill while OAuth is pending or unauthorized. Only enter legacy mode after the host has explicitly established that its version cannot use remote HTTP MCP with OAuth, or the user explicitly asks to diagnose the old API-key installation.
+
 Run legacy scripts from this Skill directory:
 
 ```bash
@@ -53,6 +55,6 @@ node scripts/query-knowledge.mjs --query "<query>" --context "<latest explicit t
 node scripts/query-analytics.mjs --request '<semantic JSON request>' --json
 ```
 
-The scripts read `ONEWORK_API_KEY` and `ONEWORK_DEVICE_ID` from the existing managed local credential file. Never ask the user to paste either value into chat. If credentials are absent or invalid, direct the user to `https://www.dlgzz.com/onework` to rerun the managed installation, then restart WorkBuddy.
+The scripts read `ONEWORK_API_KEY` and `ONEWORK_DEVICE_ID` from the existing managed local credential file. Never ask the user to paste either value into chat. The credential-file recovery instructions apply only after legacy mode has been explicitly selected. In legacy mode, if credentials are absent or invalid, direct the user to `https://www.dlgzz.com/onework` to rerun the managed installation, then restart WorkBuddy.
 
 Read the bundled references only for legacy response schemas, dispatch details, semantic analytics contracts, or acceptance prompts. Do not run `update-onework-skill.mjs` from the plugin path: plugin and marketplace updates are managed by WorkBuddy, while cloud knowledge is already live.

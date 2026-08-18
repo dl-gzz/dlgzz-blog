@@ -797,9 +797,14 @@ export async function listOneWorkAccess(userId: string) {
   const db = await getDb();
   const now = new Date();
   const pendingSince = new Date(now.getTime() - 10 * 60 * 1000);
-  const [rawEntitlements, devices, keys, usageRows] = await Promise.all([
+  const [rawEntitlements, devices, usageRows] = await Promise.all([
     db
-      .select()
+      .select({
+        knowledgePackId: oneworkEntitlement.knowledgePackId,
+        status: oneworkEntitlement.status,
+        monthlyQuota: oneworkEntitlement.monthlyQuota,
+        expiresAt: oneworkEntitlement.expiresAt,
+      })
       .from(oneworkEntitlement)
       .where(eq(oneworkEntitlement.userId, userId))
       .orderBy(desc(oneworkEntitlement.createdAt)),
@@ -815,19 +820,6 @@ export async function listOneWorkAccess(userId: string) {
       .from(oneworkDevice)
       .where(eq(oneworkDevice.userId, userId))
       .orderBy(desc(oneworkDevice.createdAt)),
-    db
-      .select({
-        id: apiKey.id,
-        name: apiKey.name,
-        keyPrefix: apiKey.keyPrefix,
-        status: apiKey.status,
-        monthlyQuota: apiKey.monthlyQuota,
-        lastUsedAt: apiKey.lastUsedAt,
-        createdAt: apiKey.createdAt,
-      })
-      .from(apiKey)
-      .where(eq(apiKey.userId, userId))
-      .orderBy(desc(apiKey.createdAt)),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(apiUsageEvent)
@@ -867,7 +859,6 @@ export async function listOneWorkAccess(userId: string) {
   return {
     entitlements,
     devices,
-    keys,
     usage: {
       usedThisMonth,
       limit,

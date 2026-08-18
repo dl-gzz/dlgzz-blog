@@ -85,7 +85,9 @@ export function NavbarMobile({
         {/* navbar left shows logo */}
         <LocaleLink href={Routes.Root} className="flex items-center gap-2">
           <Logo />
-          <span className="text-xl font-semibold">{t('Metadata.name')}</span>
+          <span className="text-xl font-semibold text-blue-700">
+            {t('Metadata.name')}
+          </span>
         </LocaleLink>
 
         {/* navbar right shows menu icon and user button */}
@@ -101,7 +103,7 @@ export function NavbarMobile({
             variant="ghost"
             size="icon"
             aria-expanded={open}
-            aria-label="Toggle Mobile Menu"
+            aria-label={open ? '关闭移动端菜单' : '打开移动端菜单'}
             onClick={handleToggleMobileMenu}
             className="size-8 flex aspect-square h-fit select-none items-center
               justify-center rounded-md border cursor-pointer"

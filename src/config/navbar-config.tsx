@@ -9,10 +9,7 @@ import { useTranslations } from 'next-intl';
  *
  * NOTICE: used in client components only
  *
- * 主线导航：内容（博客）→ 试用（AI 问答，知识库试吃）→ 商品（组件商店）
- * → 白板（组件的承接物）→ 会员。
- * 已冻结但保留代码的入口（教育课件、健康管家、托管数字员工 /bots）
- * 不再出现在导航，仍可通过直链访问。
+ * OneWorkOS 导航：先进入工作入口，再按需探索知识、能力与会员。
  *
  * @returns The navbar config with translated titles for navigation
  */
@@ -21,29 +18,13 @@ export function getNavbarLinks(): NestedMenuItem[] {
 
   return [
     {
-      title: t('home.title'),
-      href: Routes.Root,
-      external: false,
-    },
-    {
-      title: t('blog.title'),
-      href: Routes.Blog,
-      external: false,
-    },
-    {
-      // 知识库试吃入口：游客可直接体验，是主要转化钩子
       title: t('aiChat.title'),
       href: Routes.AIChat,
       external: false,
     },
     {
-      title: t('services.title'),
-      href: Routes.Services,
-      external: false,
-    },
-    {
-      title: t('whiteboard.title'),
-      href: Routes.Whiteboard,
+      title: t('blog.title'),
+      href: Routes.Blog,
       external: false,
     },
     {

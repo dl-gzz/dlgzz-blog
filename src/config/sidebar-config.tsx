@@ -59,7 +59,7 @@ export function getSidebarLinks(): NestedMenuItem[] {
           external: false,
         },
         {
-          title: 'OneWorkOS 授权',
+          title: 'OneWorkOS 兑换码管理',
           icon: <NetworkIcon className="size-4 shrink-0" />,
           href: Routes.AdminOneWork,
           external: false,
@@ -95,7 +95,7 @@ export function getSidebarLinks(): NestedMenuItem[] {
           external: false,
         },
         {
-          title: 'OneWorkOS',
+          title: 'OneWorkOS 会员与连接',
           icon: <NetworkIcon className="size-4 shrink-0" />,
           href: Routes.SettingsOneWork,
           external: false,

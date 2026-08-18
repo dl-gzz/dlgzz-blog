@@ -17,9 +17,10 @@ This repository already has the supported layout: its root contains `.codebuddy-
 ```text
 /plugin marketplace add dl-gzz/dlgzz-blog
 /plugin install one-work-os@onework-os-marketplace
+/plugin enable one-work-os@onework-os-marketplace --scope user
 ```
 
-Run `/reload-plugins` after installation to activate the Skill and MCP server without restarting WorkBuddy.
+Run `/reload-plugins --force` after installation to activate the Skill and MCP server without restarting WorkBuddy. If the host does not support hot reload, restart WorkBuddy. Then verify `one-work-os` is shown as enabled under **专家·技能·连接器 → 技能 → 我安装的**; an entry in the installed-plugin registry alone is not enough.
 
 Open `/mcp`, select `onework-os`, and complete the browser authorization if WorkBuddy asks. A successful connection exposes these tools:
 
@@ -42,7 +43,8 @@ Extract `public/onework-marketplace/onework-os-marketplace-<version>.zip`, then 
 ```text
 /plugin marketplace add /absolute/path/to/onework-marketplace
 /plugin install one-work-os@onework-os-marketplace
-/reload-plugins
+/plugin enable one-work-os@onework-os-marketplace --scope user
+/reload-plugins --force
 ```
 
 Try `WorkBuddy 如何开启完全访问？`, followed by `下一步呢？`. The second query must keep the prior WorkBuddy topic and call live knowledge search again.

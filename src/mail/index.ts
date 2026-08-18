@@ -5,6 +5,7 @@ import { render } from '@react-email/render';
 import type { Locale, Messages } from 'next-intl';
 import { ResendProvider } from './provider/resend';
 import { SMTPProvider } from './provider/smtp';
+import { TencentSESProvider } from './provider/tencent-ses';
 import {
   type EmailTemplate,
   EmailTemplates,
@@ -40,6 +41,8 @@ export const initializeMailProvider = (): MailProvider => {
       mailProvider = new ResendProvider();
     } else if (websiteConfig.mail.provider === 'smtp') {
       mailProvider = new SMTPProvider();
+    } else if (websiteConfig.mail.provider === 'tencent-ses') {
+      mailProvider = new TencentSESProvider();
     } else {
       throw new Error(
         `Unsupported mail provider: ${websiteConfig.mail.provider}`
