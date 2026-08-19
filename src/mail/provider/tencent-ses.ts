@@ -7,6 +7,7 @@ import type {
   SendTemplateParams,
 } from '@/mail/types';
 import { ses } from 'tencentcloud-sdk-nodejs';
+import { getTencentSesTemplateUrlValue } from './tencent-ses-url';
 
 /**
  * Tencent Cloud SES API provider.
@@ -51,6 +52,13 @@ export class TencentSESProvider implements MailProvider {
     const { to, template, context, locale } = params;
 
     try {
+      if (template !== 'forgotPassword' && template !== 'verifyEmail') {
+        return {
+          success: false,
+          error: `Tencent SES template is not configured for ${template}.`,
+        };
+      }
+
       const mailTemplate = await getTemplate({ template, context, locale });
       const templateId = this.getTencentTemplateId(template);
 
@@ -68,9 +76,11 @@ export class TencentSESProvider implements MailProvider {
         Template: {
           TemplateID: templateId,
           // Tencent SES templates accept a JSON object whose keys correspond
-          // to variables in the reviewed template. Both account flows only
-          // need the one-time URL and therefore never transmit user names.
-          TemplateData: JSON.stringify({ url: context.url }),
+          // to variables in the reviewed template. The template pins
+          // `https://www.dlgzz.com/`, so only a relative path is transmitted.
+          TemplateData: JSON.stringify({
+            url: getTencentSesTemplateUrlValue(context.url, template),
+          }),
         },
         TriggerType: 1,
       });

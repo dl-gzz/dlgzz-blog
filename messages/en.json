@@ -653,20 +653,20 @@
   },
   "Mail": {
     "common": {
-      "team": "Independent Meditations Team",
-      "copyright": "©️ {year} Independent Meditations. All Rights Reserved."
+      "team": "OneWorkOS Team",
+      "copyright": "©️ {year} OneWorkOS. All Rights Reserved."
     },
     "verifyEmail": {
-      "title": "Welcome to Independent Meditations, {name}!",
-      "body": "Please click the link below to verify your email and start using Independent Meditations.",
+      "title": "Welcome to OneWorkOS, {name}!",
+      "body": "Please click the link below to verify your email and start using OneWorkOS.",
       "confirmEmail": "Verify Email",
-      "subject": "Verify your Independent Meditations account"
+      "subject": "Verify your OneWorkOS account"
     },
     "forgotPassword": {
       "title": "Hi {name},",
-      "body": "Please click the link below to reset your Independent Meditations password.",
+      "body": "Please click the link below to reset your OneWorkOS password.",
       "resetPassword": "Reset Password",
-      "subject": "Reset your Independent Meditations password"
+      "subject": "Reset your OneWorkOS password"
     },
     "subscribeNewsletter": {
       "body": "Thanks for subscribing to Independent Meditations. We will send you new articles, knowledge-base updates, and product news.",

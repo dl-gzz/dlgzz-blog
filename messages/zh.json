@@ -651,20 +651,20 @@
   },
   "Mail": {
     "common": {
-      "team": "独立沉思录团队",
-      "copyright": "©️ {year} 独立沉思录. 版权所有。"
+      "team": "OneWorkOS 团队",
+      "copyright": "©️ {year} OneWorkOS. 版权所有。"
     },
     "verifyEmail": {
-      "title": "欢迎来到独立沉思录，{name}！",
-      "body": "请点击下方链接验证邮箱，开始使用独立沉思录。",
+      "title": "欢迎使用 OneWorkOS，{name}！",
+      "body": "请点击下方链接验证邮箱，开始使用 OneWorkOS。",
       "confirmEmail": "验证邮箱",
-      "subject": "验证您的独立沉思录账号"
+      "subject": "验证您的 OneWorkOS 账号"
     },
     "forgotPassword": {
       "title": "你好，{name}",
-      "body": "请点击下方链接重置您的独立沉思录密码。",
+      "body": "请点击下方链接重置您的 OneWorkOS 密码。",
       "resetPassword": "重置密码",
-      "subject": "重置您的独立沉思录密码"
+      "subject": "重置您的 OneWorkOS 密码"
     },
     "subscribeNewsletter": {
       "body": "感谢您订阅独立沉思录邮件！我们会向您发送最新文章、知识库与产品更新。",
