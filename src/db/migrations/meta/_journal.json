@@ -141,6 +141,27 @@
       "when": 1781481600000,
       "tag": "0021_onework_oauth_mcp",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1787153138000,
+      "tag": "0022_activate_one_worker_os_knowledge_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1787158222000,
+      "tag": "0023_sync_one_worker_os_display_names",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1787158437000,
+      "tag": "0024_sync_one_worker_os_semantic_labels",
+      "breakpoints": true
     }
   ]
 }
