@@ -1,28 +1,28 @@
 {
   "schema": "one-worker-os.skill-release.v1",
   "name": "one-worker-os",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "artifact": {
-    "url": "/downloads/one-worker-os-workbuddy-skill-1.0.0.zip",
+    "url": "/downloads/one-worker-os-workbuddy-skill-1.0.3.zip",
     "latestUrl": "/downloads/one-worker-os-workbuddy-skill-latest.zip",
-    "size": 36288,
-    "sha256": "bd7ed8a10a62fe03e8a2d1a094a93f78b10eb22d51ce1dfc0eda7cc71af23cd7"
+    "size": 33146,
+    "sha256": "dcdcace19da5f19ca6233755129554c8a36e20ddc3581f3afb9633d5157f1c18"
   },
   "files": [
     {
       "path": "SKILL.md",
-      "size": 15626,
-      "sha256": "929d7cb628e90a57dc781e4bd1ce9115c05cb017c88d8f7aaa6c38fdd86a9ed6"
+      "size": 7855,
+      "sha256": "3eef548df52bf0ac7c9da7ab603823aa781124c0501745fc0f6831eedffee7d0"
     },
     {
       "path": "agents/openai.yaml",
-      "size": 669,
-      "sha256": "d36c3f6fa34de362830730ba957b5e8bb2da8b429fccc2e6332299efb7b4f4cf"
+      "size": 383,
+      "sha256": "3acfffaf1510b19e242b903a244eed03ab8b7fd104807224750b2f6dbd7820d3"
     },
     {
       "path": "manifest.yaml",
-      "size": 234,
-      "sha256": "eabd9ad7e4fb4bde15043c56951c9568bc79953d03aa5675e8ec0ccd6c177ac4"
+      "size": 254,
+      "sha256": "4c4a4884567dcfd07f11c4005848b27b9fd051229e04eb383cf9b31bc467822b"
     },
     {
       "path": "references/api-schema.md",

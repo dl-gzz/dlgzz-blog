@@ -1,14 +1,20 @@
 {
   "name": "one-worker-os",
-  "version": "1.0.1",
-  "description": "Connect WorkBuddy to live one-worker-os knowledge, analytics, entitlements, and capability routing over OAuth-protected MCP.",
+  "version": "1.0.3",
+  "description": "Connect WorkBuddy to one-worker-os knowledge catalogs, cross-pack search, paged full sources, analytics, entitlements, and capability routing over OAuth-protected MCP.",
   "author": {
     "name": "one-worker-os",
     "url": "https://www.dlgzz.com"
   },
   "homepage": "https://www.dlgzz.com/onework",
   "repository": "https://github.com/dl-gzz/dlgzz-blog",
-  "keywords": ["one-worker-os", "workbuddy", "knowledge", "analytics"],
+  "keywords": [
+    "one-worker-os",
+    "workbuddy",
+    "knowledge",
+    "source",
+    "analytics"
+  ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json"
 }

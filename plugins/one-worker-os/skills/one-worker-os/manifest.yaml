@@ -1,5 +1,5 @@
 name: one-worker-os
-version: 1.0.0
-description: "为独立工作者强制先检索 one-worker-os 知识，自动路由 WorkBuddy 与小红书知识包，再调度截图和工具能力"
+version: 1.0.3
+description: "为独立工作者发现已授权知识合集、跨知识包检索并读取完整来源，再按具体需求生成可编辑 Skill 或调度已授权工具"
 category: productivity
 author: "独立工作者"

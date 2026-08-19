@@ -18,6 +18,7 @@
     "db:studio": "drizzle-kit studio",
     "list-contacts": "tsx scripts/list-contacts.ts",
     "hermes:bridge": "tsx scripts/hermes-bridge.ts",
+    "knowledge:import": "tsx scripts/import-knowledge-pack.ts",
     "knowledge:xhs:import": "tsx scripts/import-xhs-open-shop-knowledge.ts",
     "knowledge:xhs:search": "tsx scripts/search-xhs-knowledge.ts",
     "worker:xhs:seed": "tsx scripts/seed-xhs-open-shop-worker.ts",

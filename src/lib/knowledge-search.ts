@@ -48,10 +48,14 @@ export interface KnowledgeSearchResult {
   heading: string | null;
   content: string;
   filePath: string;
+  contentHash: string;
+  updatedAt: Date;
   score: number;
   metadata: Record<string, unknown>;
   /** 官方原文链接（采集时的 source_url），用于答案溯源 */
   sourceUrl: string | null;
+  /** 当前检索范围内，实际关联到该文档的 active 知识包。 */
+  packIds: string[];
   /** 仅在 includeAssets=true 时填充；默认检索路径不会增加资产查询。 */
   assets?: KnowledgeAssetResult[];
 }
@@ -147,8 +151,11 @@ async function keywordSearch(
         heading: string | null;
         content: string;
         file_path: string;
+        content_hash: string;
+        updated_at: Date;
         source_url: string | null;
         metadata: Record<string, unknown>;
+        matched_pack_ids: string[];
         keyword_score: number;
       }>
     >`
@@ -161,16 +168,31 @@ async function keywordSearch(
 				kc.heading,
 				kc.content,
 				kd.file_path,
-				coalesce(kd.metadata->>'sourceUrl', kd.metadata->>'source_url') as source_url,
-				kc.metadata,
-				(${rankExpression})::int as keyword_score
-			from knowledge_chunks kc
-			join knowledge_documents kd on kd.id = kc.document_id
-			where exists (
-				select 1 from knowledge_pack_documents kpd
-				where kpd.document_id = kd.id
-					and kpd.knowledge_pack_id in ${sql(packIds)}
-			)
+				kd.content_hash,
+				kd.updated_at,
+					coalesce(kd.metadata->>'sourceUrl', kd.metadata->>'source_url') as source_url,
+					kc.metadata,
+					array(
+						select kpd.knowledge_pack_id
+						from knowledge_pack_documents kpd
+						join knowledge_packs kp on kp.id = kpd.knowledge_pack_id
+						where kpd.document_id = kd.id
+							and kpd.knowledge_pack_id in ${sql(packIds)}
+							and kp.status = 'active'
+						order by kpd.knowledge_pack_id
+					) as matched_pack_ids,
+					(${rankExpression})::int as keyword_score
+				from knowledge_chunks kc
+				join knowledge_documents kd on kd.id = kc.document_id
+				where kd.status = 'active'
+					and exists (
+					select 1
+					from knowledge_pack_documents kpd
+					join knowledge_packs kp on kp.id = kpd.knowledge_pack_id
+					where kpd.document_id = kd.id
+						and kpd.knowledge_pack_id in ${sql(packIds)}
+						and kp.status = 'active'
+				)
 				and ${condition}
 			order by keyword_score desc,
 				case when kd.source = 'xhs_official' then 1 else 0 end desc,
@@ -187,12 +209,15 @@ async function keywordSearch(
       heading: row.heading,
       content: row.content,
       filePath: row.file_path,
+      contentHash: row.content_hash,
+      updatedAt: row.updated_at,
       sourceUrl: row.source_url ?? null,
       score:
         0.55 +
         Math.min(row.keyword_score, 6) * 0.04 +
         getRetrievalBoost(row.metadata),
       metadata: row.metadata,
+      packIds: row.matched_pack_ids,
     }));
   } finally {
     // 连接为模块级单例，这里不再销毁（销毁会让下次调用重新 TLS 握手）
@@ -399,8 +424,11 @@ async function searchKnowledgeAssetVectors(
         heading: string | null;
         content: string;
         file_path: string;
+        content_hash: string;
+        updated_at: Date;
         source_url: string | null;
         metadata: Record<string, unknown>;
+        matched_pack_ids: string[];
         similarity: number;
       }>
     >`
@@ -428,8 +456,10 @@ async function searchKnowledgeAssetVectors(
 					from knowledge_asset_links kal
 					join knowledge_pack_documents kpd
 						on kpd.document_id = kal.document_id
+					join knowledge_packs kp on kp.id = kpd.knowledge_pack_id
 					where kal.asset_id = n.asset_id
 						and kpd.knowledge_pack_id in ${sql(packIds)}
+						and kp.status = 'active'
 				)
 				limit ${Math.max(limit * 10, 30)}
 			)
@@ -443,9 +473,20 @@ async function searchKnowledgeAssetVectors(
 				kc.heading,
 				kc.content,
 				kd.file_path,
-				coalesce(kd.metadata->>'sourceUrl', kd.metadata->>'source_url') as source_url,
-				kc.metadata,
-				1 - (ka.embedding <=> ${vector}::vector(2048)) as similarity
+				kd.content_hash,
+				kd.updated_at,
+					coalesce(kd.metadata->>'sourceUrl', kd.metadata->>'source_url') as source_url,
+					kc.metadata,
+					array(
+						select kpd.knowledge_pack_id
+						from knowledge_pack_documents kpd
+						join knowledge_packs kp on kp.id = kpd.knowledge_pack_id
+						where kpd.document_id = kc.document_id
+							and kpd.knowledge_pack_id in ${sql(packIds)}
+							and kp.status = 'active'
+						order by kpd.knowledge_pack_id
+					) as matched_pack_ids,
+					1 - (ka.embedding <=> ${vector}::vector(2048)) as similarity
 			from scoped s
 			join knowledge_assets ka on ka.id = s.asset_id
 			join lateral (
@@ -466,8 +507,10 @@ async function searchKnowledgeAssetVectors(
 					and exists (
 						select 1
 						from knowledge_pack_documents kpd
+						join knowledge_packs kp on kp.id = kpd.knowledge_pack_id
 						where kpd.document_id = kal.document_id
 							and kpd.knowledge_pack_id in ${sql(packIds)}
+							and kp.status = 'active'
 					)
 				order by
 					case when kal.chunk_id is not null then 0 else 1 end,
@@ -477,7 +520,8 @@ async function searchKnowledgeAssetVectors(
 			) selected_link on selected_link.chunk_id is not null
 			join knowledge_chunks kc on kc.id = selected_link.chunk_id
 			join knowledge_documents kd on kd.id = kc.document_id
-			where 1 - (ka.embedding <=> ${vector}::vector(2048)) >= ${ASSET_MIN_SCORE}
+				where kd.status = 'active'
+					and 1 - (ka.embedding <=> ${vector}::vector(2048)) >= ${ASSET_MIN_SCORE}
 			order by similarity desc
 			limit ${limit}
 		`;
@@ -491,6 +535,8 @@ async function searchKnowledgeAssetVectors(
       heading: row.heading,
       content: row.content,
       filePath: row.file_path,
+      contentHash: row.content_hash,
+      updatedAt: row.updated_at,
       sourceUrl: row.source_url ?? null,
       score: Math.min(1, Number(row.similarity) + visualIntentBoost),
       metadata: {
@@ -498,6 +544,7 @@ async function searchKnowledgeAssetVectors(
         matchedAssetId: row.asset_id,
         assetSemanticScore: Number(row.similarity),
       },
+      packIds: row.matched_pack_ids,
     }));
   } catch (error) {
     console.error('Knowledge asset vector search failed:', error);
@@ -803,8 +850,11 @@ export async function searchKnowledgeChunks(
           heading: string | null;
           content: string;
           file_path: string;
+          content_hash: string;
+          updated_at: Date;
           source_url: string | null;
           metadata: Record<string, unknown>;
+          matched_pack_ids: string[];
           similarity: number;
           rank_score: number;
         }>
@@ -832,9 +882,12 @@ export async function searchKnowledgeChunks(
 					select n.*
 					from nearest n
 					where exists (
-						select 1 from knowledge_pack_documents kpd
+						select 1
+						from knowledge_pack_documents kpd
+						join knowledge_packs kp on kp.id = kpd.knowledge_pack_id
 						where kpd.document_id = n.document_id
 							and kpd.knowledge_pack_id in ${sql(packIds)}
+							and kp.status = 'active'
 					)
 					limit ${Math.max(limit * 6, 30)}
 				)
@@ -849,8 +902,19 @@ export async function searchKnowledgeChunks(
 					c.content,
 					coalesce(kd.metadata->>'sourceUrl', kd.metadata->>'source_url') as source_url,
 					kd.file_path,
-					c.metadata,
-					1 - c.distance as similarity,
+					kd.content_hash,
+					kd.updated_at,
+						c.metadata,
+						array(
+							select kpd.knowledge_pack_id
+							from knowledge_pack_documents kpd
+							join knowledge_packs kp on kp.id = kpd.knowledge_pack_id
+							where kpd.document_id = c.document_id
+								and kpd.knowledge_pack_id in ${sql(packIds)}
+								and kp.status = 'active'
+							order by kpd.knowledge_pack_id
+						) as matched_pack_ids,
+						1 - c.distance as similarity,
 					1 - c.distance
 						+ case
 							when kd.source = 'xhs_official' then 0.04
@@ -864,7 +928,8 @@ export async function searchKnowledgeChunks(
 						end as rank_score
 				from candidates c
 				join knowledge_documents kd on kd.id = c.document_id
-				where 1 - c.distance >= ${minScore}
+				where kd.status = 'active'
+					and 1 - c.distance >= ${minScore}
 				order by rank_score desc
 				limit ${limit}
 			`;
@@ -878,9 +943,12 @@ export async function searchKnowledgeChunks(
         heading: row.heading,
         content: row.content,
         filePath: row.file_path,
+        contentHash: row.content_hash,
+        updatedAt: row.updated_at,
         sourceUrl: row.source_url ?? null,
         score: row.rank_score,
         metadata: row.metadata,
+        packIds: row.matched_pack_ids,
       }));
       // 向量已足量命中时跳过关键词兜底：36 个 ilike 全表扫要花数秒，
       // 只在向量召回不足（<limit 一半）时才值得补充。

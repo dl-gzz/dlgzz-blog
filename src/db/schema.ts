@@ -407,6 +407,18 @@ export const knowledgeUnit = pgTable("knowledge_units", {
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+export const knowledgeCollection = pgTable("knowledge_collections", {
+	id: text("id").primaryKey(),
+	name: text('name').notNull(),
+	description: text('description').notNull(),
+	status: text('status').notNull().default('draft'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	index('knowledge_collections_status_idx').on(table.status),
+]);
+
 export const knowledgePack = pgTable("knowledge_packs", {
 	id: text("id").primaryKey(),
 	name: text('name').notNull(),
@@ -417,6 +429,21 @@ export const knowledgePack = pgTable("knowledge_packs", {
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+export const knowledgeCollectionPack = pgTable("knowledge_collection_packs", {
+	id: text("id").primaryKey(),
+	collectionId: text('collection_id').notNull().references(() => knowledgeCollection.id, { onDelete: 'cascade' }),
+	knowledgePackId: text('knowledge_pack_id').notNull().references(() => knowledgePack.id, { onDelete: 'cascade' }),
+	sortOrder: integer('sort_order').notNull().default(100),
+	status: text('status').notNull().default('active'),
+	metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('knowledge_collection_packs_unique_idx').on(table.collectionId, table.knowledgePackId),
+	index('knowledge_collection_packs_collection_sort_idx').on(table.collectionId, table.status, table.sortOrder),
+	index('knowledge_collection_packs_pack_idx').on(table.knowledgePackId, table.status),
+]);
 
 export const knowledgePackDocument = pgTable("knowledge_pack_documents", {
 	id: text("id").primaryKey(),

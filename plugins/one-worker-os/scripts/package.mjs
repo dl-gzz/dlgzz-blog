@@ -36,6 +36,7 @@ const checkOnly = process.argv.includes('--check');
 const syncLegacy = process.argv.includes('--sync-legacy');
 
 const legacyFiles = [
+  'SKILL.md',
   'manifest.yaml',
   'references/api-schema.md',
   'references/dispatch-protocol.md',
@@ -145,14 +146,24 @@ function validateSource() {
   }
 
   const skill = readFileSync(join(pluginSkill, 'SKILL.md'), 'utf8');
+  const skillManifest = readFileSync(
+    join(pluginSkill, 'manifest.yaml'),
+    'utf8'
+  );
   if (!skill.startsWith('---\nname: one-worker-os\ndescription:')) {
     throw new Error(
       'Plugin Skill must have valid name and description frontmatter'
     );
   }
+  const skillVersion = skillManifest.match(/^version:\s*([^\s#]+)\s*$/m)?.[1];
+  if (skillVersion !== plugin.version) {
+    throw new Error('Plugin Skill manifest version must match plugin.json');
+  }
   for (const tool of [
     'onework_resolve_capability',
+    'onework_list_knowledge_catalog',
     'onework_search_knowledge',
+    'onework_get_knowledge_source',
     'onework_query_analytics',
     'onework_get_entitlements',
     'onework_get_usage',
@@ -287,8 +298,30 @@ function buildOnce(version) {
 
 function publishArtifact(artifact) {
   const path = join(outputRoot, artifact.name);
-  writeAtomic(path, artifact.content);
-  writeAtomic(`${path}.sha256`, `${artifact.sha256}  ${artifact.name}\n`);
+  const hashPath = `${path}.sha256`;
+  const expectedHashFile = `${artifact.sha256}  ${artifact.name}\n`;
+
+  if (existsSync(path)) {
+    const existingHash = sha256(readFileSync(path));
+    if (existingHash !== artifact.sha256) {
+      throw new Error(
+        `Refusing to overwrite immutable release artifact ${artifact.name}; bump the plugin version`
+      );
+    }
+  } else {
+    writeAtomic(path, artifact.content);
+  }
+
+  if (existsSync(hashPath)) {
+    if (readFileSync(hashPath, 'utf8') !== expectedHashFile) {
+      throw new Error(
+        `Refusing to overwrite immutable release checksum ${artifact.name}.sha256`
+      );
+    }
+  } else {
+    writeAtomic(hashPath, expectedHashFile);
+  }
+
   if (
     statSync(path).size !== artifact.size ||
     sha256(readFileSync(path)) !== artifact.sha256

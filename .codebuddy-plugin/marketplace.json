@@ -3,20 +3,26 @@
   "owner": {
     "name": "one-worker-os"
   },
-  "description": "one-worker-os plugins for independent workers using WorkBuddy.",
-  "version": "1.0.1",
+  "description": "one-worker-os for independent workers: discover licensed knowledge, search across packs, inspect full sources, and orchestrate authorized work in WorkBuddy.",
+  "version": "1.0.3",
   "plugins": [
     {
       "name": "one-worker-os",
       "source": "./plugins/one-worker-os",
-      "description": "Live one-worker-os knowledge and governed work orchestration through OAuth-protected MCP.",
-      "version": "1.0.1",
+      "description": "Live knowledge catalogs, cross-pack search, paged source retrieval, analytics, and governed work orchestration through OAuth-protected MCP.",
+      "version": "1.0.3",
       "author": {
         "name": "one-worker-os"
       },
       "homepage": "https://www.dlgzz.com/onework",
       "repository": "https://github.com/dl-gzz/dlgzz-blog",
-      "keywords": ["one-worker-os", "workbuddy", "knowledge", "analytics"],
+      "keywords": [
+        "one-worker-os",
+        "workbuddy",
+        "knowledge",
+        "source",
+        "analytics"
+      ],
       "category": "productivity"
     }
   ]
