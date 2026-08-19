@@ -1,0 +1,51 @@
+---
+title: 安装授权与设备管理
+description: 安装 OneWorkOS、完成网页授权并管理已连接应用和旧版设备
+icon: Laptop
+---
+
+## 当前推荐方式
+
+OneWorkOS 当前通过 **WorkBuddy 插件 + 网页授权**连接。会员权益属于账号，新版插件不再绑定某一台电脑，也不需要手动复制 API Key。
+
+## 安装与授权流程
+
+<Steps>
+
+### 登录并确认会员
+
+打开 [OneWorkOS 设置](/settings/onework)，确认会员状态有效。
+
+### 复制安装指令
+
+在账号页面复制当前安装指令，打开 WorkBuddy 新任务并粘贴发送。WorkBuddy 会完成插件安装和必要检查。
+
+### 从 WorkBuddy 发起连接
+
+进入 WorkBuddy 的自定义连接器，找到 `one-worker-os`，点击“连接”或“重连”。
+
+### 在网页确认授权
+
+浏览器会打开 OneWorkOS 授权页。确认登录账号和授权范围后，由你本人点击“允许连接”。
+
+### 返回 WorkBuddy 验收
+
+授权完成后回到 WorkBuddy，用一个真实问题测试知识检索。
+
+</Steps>
+
+<Callout type="warn">
+不要直接在浏览器打开 `/mcp`。授权必须从 WorkBuddy 的连接器页面发起，否则系统无法确认正确的客户端和回调地址。
+</Callout>
+
+## 已授权应用
+
+在 [OneWorkOS 设置](/settings/onework)可以查看已授权的 AI 客户端。如果设备不再使用、授权来源不明或需要重新连接，可以先撤销对应授权，再从 WorkBuddy 重新发起连接。
+
+## 旧版设备管理
+
+账号页面中的“旧版安装设备”只用于兼容早期安装方式。新版 WorkBuddy 插件不再绑定电脑。确认旧设备不再使用后，可以撤销旧版设备授权。
+
+## 更换电脑
+
+在新电脑上安装 WorkBuddy，登录同一个 OneWorkOS 账号，然后重复“安装插件 → 从 WorkBuddy 连接 → 网页授权”即可。会员权益和云端知识不会因为换电脑而消失。

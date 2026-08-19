@@ -97,7 +97,7 @@ export default async function DocPage({ params }: DocPageProps) {
         style: 'clerk',
       }}
     >
-      <DocsTitle>{page.data.title}</DocsTitle>
+      <DocsTitle>{page.data.heading ?? page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         {/* Preview Rendered Component */}

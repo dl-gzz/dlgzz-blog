@@ -420,7 +420,7 @@ export default function OneWorkOSHome() {
           <div>
             <SectionEyebrow>产品理念</SectionEyebrow>
             <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-5xl">
-              建立属于独立工作者的数智资产
+              独立工作者的数智资产
             </h2>
             <p className="mt-6 text-lg leading-8 text-slate-600">
               每天学习的知识、验证过的方法、完成过的案例，都不应该随着时间被遗忘。
