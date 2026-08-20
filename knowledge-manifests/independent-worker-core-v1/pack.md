@@ -13,13 +13,15 @@ embeddingPolicy: manual
 collection:
   id: independent-worker
   name: 独立工作者
-  description: 白杨面向独立工作者整理的第一方方法、案例和 AI 可执行资料合集。
+  description: one-worker-os 面向独立工作者的第一方方法、案例和 AI 可读资料合集。
   status: active
   sortOrder: 10
   metadata:
-    audience:
-      - 已有真实工作经验、希望把经验产品化的人
     authority: first_party_collection
+    contentKinds:
+      - methodology
+      - article
+      - code
 
 metadata:
   seriesId: independent-worker-core

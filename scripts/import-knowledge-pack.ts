@@ -1725,7 +1725,7 @@ async function main() {
       }
 
       if (manifest.collection) {
-        await tx`
+        const collectionRows = await tx<{ id: string }[]>`
           insert into knowledge_collections (id, name, description, status, metadata, updated_at)
           values (
             ${manifest.collection.id},
@@ -1736,12 +1736,18 @@ async function main() {
             now()
           )
           on conflict (id) do update set
-            name = excluded.name,
-            description = excluded.description,
-            status = excluded.status,
-            metadata = excluded.metadata,
-            updated_at = now()
+            updated_at = knowledge_collections.updated_at
+          where knowledge_collections.name is not distinct from excluded.name
+            and knowledge_collections.description is not distinct from excluded.description
+            and knowledge_collections.status is not distinct from excluded.status
+            and knowledge_collections.metadata is not distinct from excluded.metadata
+          returning id
         `;
+        if (collectionRows.length !== 1) {
+          throw new Error(
+            `共享 collection ${manifest.collection.id} 的定义与数据库不一致；拒绝静默覆盖`
+          );
+        }
       }
 
       await tx`
@@ -1987,8 +1993,8 @@ async function main() {
         console.log(`Imported: ${doc.title} (${preparedChunks.length} chunks)`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        errors.push(`${doc.filePath}: ${message}`);
-        console.error(`Failed: ${doc.filePath}`);
+        errors.push(`${doc.relativePath}: ${message}`);
+        console.error(`Failed: ${doc.relativePath}`);
         console.error(message);
       }
     }

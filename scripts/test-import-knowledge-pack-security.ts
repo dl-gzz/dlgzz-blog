@@ -1,8 +1,15 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import matter from 'gray-matter';
 
 const repositoryRoot = resolve(process.cwd());
 const importerPath = join(repositoryRoot, 'scripts/import-knowledge-pack.ts');
@@ -284,5 +291,38 @@ expectReject(
   }),
   /immutableVersioned=false 不能覆盖 immutable 策略/
 );
+
+function collectionDefinition(manifestPath: string) {
+  const parsed = matter(readFileSync(manifestPath, 'utf8'));
+  const collection = parsed.data.collection as Record<string, unknown>;
+  const { sortOrder: _sortOrder, ...definition } = collection;
+  return definition;
+}
+
+const coreCollection = collectionDefinition(
+  join(repositoryRoot, 'knowledge-manifests/independent-worker-core-v1/pack.md')
+);
+const cliCollection = collectionDefinition(
+  join(
+    repositoryRoot,
+    'knowledge-manifests/independent-worker-cli-library-v1/pack.md'
+  )
+);
+assert.deepEqual(
+  cliCollection,
+  coreCollection,
+  'manifests sharing a collection id must use one canonical definition'
+);
+assert.deepEqual(cliCollection, {
+  id: 'independent-worker',
+  name: '独立工作者',
+  description:
+    'one-worker-os 面向独立工作者的第一方方法、案例和 AI 可读资料合集。',
+  status: 'active',
+  metadata: {
+    authority: 'first_party_collection',
+    contentKinds: ['methodology', 'article', 'code'],
+  },
+});
 
 console.log('Knowledge importer synthetic security fixtures passed');
