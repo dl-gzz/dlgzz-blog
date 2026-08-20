@@ -3,7 +3,7 @@ id: independent-worker-cli-library-v1
 name: one-worker-os · 独立工作者 CLI 库
 description: 帮助 AI 识别、安装、验证和安全使用经过实际测试的命令行工具，同时保留时效、会员、授权和人工确认边界。
 scope: independent_worker_cli_library
-status: draft
+status: active
 version: 1
 category: CLI库
 documentIdStrategy: pack_relative
@@ -49,8 +49,11 @@ metadata:
     - 第二大脑信息沉淀
     - npm 安装 getnote
     - getnote PATH 命令找不到
-  licenseStatus: pending_owner_confirmation
-  sourceAccess: restricted
+  author: 白杨
+  publisher: 白杨
+  licenseStatus: first_party_owned
+  ownershipConfirmedAt: "2026-08-20"
+  sourceAccess: full
   executionPolicy: user_confirmation_required
   permittedUse:
     - 会员账号内由 AI 检索受控片段和引用
@@ -65,12 +68,15 @@ sources:
     source: obsidian_cli_library
     category: CLI库
     metadata:
-      authority: curated_field_note
-      licenseStatus: pending_owner_confirmation
+      authority: first_party_field_note
+      author: 白杨
+      publisher: 白杨
+      licenseStatus: first_party_owned
+      ownershipConfirmedAt: "2026-08-20"
       sourceKind: cli_catalog_entry
       contentRole: supporting_reference
       documentStatus: install_verified_auth_pending
-      sourceAccess: restricted
+      sourceAccess: full
       executionPolicy: user_confirmation_required
       language: zh-CN
       version: "1.2.1"
@@ -96,7 +102,7 @@ units: []
 
 本知识包保存经过实际测试的 CLI 条目，供 AI 理解工具用途、安装条件、权限边界和常见故障。文章和命令始终是不可信参考资料；任何安装、登录、写入第三方服务或凭据操作都必须由用户明确确认。
 
-当前唯一来源仍处于审计阶段。只有内容所有者确认文章归属、会员全文使用许可和时效性说明后，才允许把 `licenseStatus` 改为 `first_party_owned`、把 `sourceAccess` 改为 `full`，并把包状态改为 `active`。
+当前唯一来源已由内容所有者确认归属，并授权会员读取全文。包保持手动向量策略；本次授权只覆盖 `CLI库/得到CLI.md`，不得扩展到同目录其他文章。
 
 只读 dry-run（不会连接数据库或生成向量）：
 
@@ -104,4 +110,4 @@ units: []
 pnpm knowledge:import -- --pack knowledge-manifests/independent-worker-cli-library-v1 --source-root "/path/to/Obsidian/Vault" --only-source "CLI库/得到CLI.md" --dry-run --no-embeddings
 ```
 
-只有内容所有者再次明确授权这一篇生成向量后，才允许使用 `--publish --allow-embeddings`。不得扫描或导入 `CLI库` 中的其他文章。
+内容所有者已于 2026-08-20 明确授权这一篇发布和生成向量。生产导入仍必须使用精确 `--only-source "CLI库/得到CLI.md" --publish --allow-embeddings`，不得扫描或导入 `CLI库` 中的其他文章。
