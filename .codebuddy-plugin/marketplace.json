@@ -4,13 +4,13 @@
     "name": "one-worker-os"
   },
   "description": "one-worker-os for independent workers: discover licensed knowledge, search across packs, inspect full sources, and orchestrate authorized work in WorkBuddy.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "plugins": [
     {
       "name": "one-worker-os",
       "source": "./plugins/one-worker-os",
       "description": "Live knowledge catalogs, cross-pack search, paged source retrieval, analytics, and governed work orchestration through OAuth-protected MCP.",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": {
         "name": "one-worker-os"
       },

@@ -18,7 +18,7 @@ Use the smallest sufficient tool:
 - `onework_get_knowledge_source` reads a selected document's complete Markdown or text source page by page.
 - `onework_resolve_capability` routes goals that may require knowledge, analytics, an installed host capability, or a human step.
 - `onework_query_analytics` answers governed metric, ranking, trend, and comparison questions. Never send raw SQL.
-- `onework_get_entitlements` reports current access and licensed knowledge packs.
+- `onework_get_entitlements` reports current access, licensed knowledge packs, and the active OAuth connection policy.
 - `onework_get_usage` reports current one-worker-os usage or quota.
 
 For a direct catalog, source, entitlement, or usage request, call that tool without adding an unnecessary resolver call. For a mixed or ambiguous goal, resolve first and then run the smallest route. A resolver result is a recommendation, not proof that knowledge was searched or an action was performed.
@@ -64,6 +64,10 @@ For returned media, render only a directly relevant structured asset. A caption 
 ## OAuth and legacy boundary
 
 Treat `connecting`, `unauthorized`, `authentication required`, and `需要认证` as the normal OAuth connection path. Direct the user to WorkBuddy's **自定义连接器 → 我的 MCP → one-worker-os → 连接** flow. Never request or display an API key, device ID, token, or secret. Do not switch to a legacy key path after OAuth denial, missing membership entitlement, or an MCP authorization error.
+
+The current OAuth policy is a single active one-worker-os connection per member account. A later connection replaces the earlier connection only after the later authorization and token exchange succeed; a denial or failed connection must not disconnect the working connection. The replaced connection is rejected on its next server request, although its host UI may not show the change until then. This replacement affects only the one-worker-os OAuth connection. It does not sign the user out of the website, cancel membership, remove entitlements, or delete knowledge.
+
+When asked how many computers can be bound, do not report the legacy three-device limit for OAuth. Explain that the plugin may be installed again, but only one one-worker-os connection can be active for the account at a time; the latest successful authorization wins. Read the `authorizationPolicy` returned by `onework_get_entitlements` when confirming the live rule.
 
 Use the bundled scripts only when the host genuinely cannot use remote HTTP MCP with OAuth, or when the user explicitly requests diagnostics for an existing standalone legacy installation:
 

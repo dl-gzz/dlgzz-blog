@@ -504,14 +504,14 @@ export default function OneWorkOSHome() {
                   </LocaleLink>
                 </Button>
                 <p className="mt-4 text-xs leading-5 text-blue-100">
-                  权益属于账号。更换电脑后，重新安装插件并登录网页授权即可。
+                  权益属于账号。同一时间仅保留 1 个 one-worker-os
+                  连接；在新位置授权成功后，旧连接自动失效。
                 </p>
               </div>
             </div>
           </div>
         </div>
       </section>
-
     </div>
   );
 }

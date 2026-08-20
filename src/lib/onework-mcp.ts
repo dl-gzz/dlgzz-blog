@@ -273,7 +273,8 @@ const TOOLS = [
   },
   {
     name: 'onework_get_entitlements',
-    description: 'Get the current account entitlements and device allowance.',
+    description:
+      'Get the current account entitlements and OAuth connection policy.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
@@ -1293,7 +1294,11 @@ async function callTool(
     return asToolResult({
       success: true,
       entitlements: access.entitlements,
-      deviceLimit: access.deviceLimit,
+      authorizationPolicy: {
+        mode: 'single_active_connection',
+        maxActiveConnections: 1,
+        replacementRule: 'latest_successful_authorization_wins',
+      },
     });
   }
   return asToolResult({ success: true, usage: access.usage });

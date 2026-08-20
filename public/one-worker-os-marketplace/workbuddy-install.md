@@ -73,6 +73,7 @@ Windows 使用对应的 `$env:USERPROFILE\.workbuddy\...` 路径。任一真实�
 2. 实际安装目录属于 WorkBuddy 插件缓存，并同时包含 `.codebuddy-plugin/plugin.json`、`skills/one-worker-os/SKILL.md` 和 `.mcp.json`。
 3. MCP/自定义连接器出现 `one-worker-os`，地址为 `https://www.dlgzz.com/mcp`。
 4. 在 WorkBuddy 的“自定义连接器 → 我的 MCP → one-worker-os”中点击“连接/重连”，由 WorkBuddy 自动打开带完整参数的 OAuth 授权页。不得直接浏览 `/mcp`，也不得手工拼接 OAuth 地址。授权页只由用户本人点击允许；如果没有会员权益，只提醒用户开通或兑换，不得改用 API Key。
-5. 授权后成功调用 `onework_get_entitlements`，并成功调用一次 `onework_search_knowledge`。
+5. OAuth 同一会员账号同一时间只保留 1 个有效的 one-worker-os 连接。新位置只有在授权和令牌交换都成功后才会替换旧连接；拒绝、取消或连接失败不得让原连接掉线。替换只影响 one-worker-os，不影响网站登录和会员权益。
+6. 授权后成功调用 `onework_get_entitlements`，确认 `authorizationPolicy.mode` 为 `single_active_connection`、`maxActiveConnections` 为 `1`，且响应不再返回旧版 `deviceLimit`；再成功调用一次 `onework_search_knowledge`。
 
-上述五项全部通过后，才能告诉用户“安装成功”。
+上述六项全部通过后，才能告诉用户“安装成功”。

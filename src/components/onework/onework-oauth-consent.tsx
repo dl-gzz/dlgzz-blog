@@ -23,6 +23,12 @@ import { useEffect, useState } from 'react';
 
 type ConsentData = {
   eligible: boolean;
+  hasActiveConnection: boolean;
+  authorizationPolicy: {
+    mode: 'single_active_connection';
+    maxActiveConnections: 1;
+    replacementRule: 'latest_successful_authorization_wins';
+  };
   client: { id: string; name: string; dynamicallyRegistered: boolean };
   scopes: string[];
   redirectUri: string;
@@ -180,6 +186,21 @@ export function OneWorkOAuthConsent() {
           </Alert>
         )}
 
+        <Alert className="border-blue-500/40 bg-blue-500/5">
+          <ShieldCheck className="size-4 text-blue-600" />
+          <AlertTitle>
+            {data.hasActiveConnection
+              ? '将替换现有 one-worker-os 连接'
+              : `同一时间仅保留 ${data.authorizationPolicy.maxActiveConnections} 个 one-worker-os 连接`}
+          </AlertTitle>
+          <AlertDescription>
+            {data.hasActiveConnection
+              ? '本次连接成功后，其他位置的 one-worker-os 连接将自动失效。'
+              : '以后在其他位置授权成功时，当前 one-worker-os 连接会自动失效。'}
+            这只影响 one-worker-os 连接，不会退出网站，也不会取消会员权益。
+          </AlertDescription>
+        </Alert>
+
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-semibold">将允许以下能力</h2>
@@ -230,7 +251,7 @@ export function OneWorkOAuthConsent() {
           {busy === 'approve' && (
             <Loader2 className="mr-2 size-4 animate-spin" />
           )}
-          允许连接
+          {data.hasActiveConnection ? '允许并替换' : '允许连接'}
         </Button>
       </CardFooter>
     </Card>

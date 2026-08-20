@@ -303,7 +303,7 @@ export function OneWorkAccessPanel({
     const displayName = oauthClientName(connection);
     if (
       !window.confirm(
-        `确定断开「${displayName}」吗？断开后，需要重新进行网页授权才能继续使用。`
+        `确定断开「${displayName}」吗？断开后，需要重新进行网页授权才能继续使用 one-worker-os；网站登录和会员权益不受影响。`
       )
     ) {
       return;
@@ -724,17 +724,18 @@ export function OneWorkAccessPanel({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <SparklesIcon className="size-5 text-primary" />
-              已授权的 AI 客户端
+              当前 one-worker-os 连接
             </CardTitle>
             <CardDescription>
-              在这里查看和撤销 WorkBuddy 等客户端的网页授权。
+              同一会员账号同一时间只保留 1 个有效的 one-worker-os
+              连接。在新位置授权成功后，旧连接会自动失效；网站登录和会员权益不受影响。
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {!oauthConnections.length ? (
               <div className="rounded-lg border border-dashed p-5 text-center">
                 <Link2Icon className="mx-auto size-6 text-muted-foreground" />
-                <p className="mt-2 font-medium">尚未授权 AI 客户端</p>
+                <p className="mt-2 font-medium">尚未连接 one-worker-os</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   完成上方插件安装和网页授权后，会自动显示在这里。
                 </p>
@@ -758,7 +759,7 @@ export function OneWorkAccessPanel({
                         }
                       >
                         {connection.identity === 'current'
-                          ? '当前版本已授权'
+                          ? '当前有效连接'
                           : connection.identity === 'legacy'
                             ? '旧版授权，请撤销'
                             : '其他客户端授权'}
@@ -778,7 +779,7 @@ export function OneWorkAccessPanel({
                     <Trash2Icon className="size-4" />
                     {revokingClientId === connection.clientId
                       ? '断开中…'
-                      : '撤销授权'}
+                      : '断开连接'}
                   </Button>
                 </div>
               ))
@@ -841,8 +842,8 @@ export function OneWorkAccessPanel({
         <div className="flex items-start gap-2 text-muted-foreground">
           <ShieldCheckIcon className="mt-0.5 size-4 shrink-0 text-primary" />
           <p>
-            OneWorkOS
-            只在你授权的范围内工作。图片、官方出处和知识检索都由云端统一更新。
+            one-worker-os
+            只在你授权的范围内工作。新连接授权成功后会替换旧连接，不影响网站会员权益。
           </p>
         </div>
         <Link

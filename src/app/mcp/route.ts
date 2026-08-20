@@ -125,7 +125,8 @@ function authStatus(reason: string) {
   return reason === 'missing' ||
     reason === 'invalid' ||
     reason === 'expired' ||
-    reason === 'revoked'
+    reason === 'revoked' ||
+    reason === 'replaced'
     ? 401
     : 403;
 }

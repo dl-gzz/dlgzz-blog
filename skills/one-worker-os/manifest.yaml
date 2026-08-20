@@ -1,5 +1,5 @@
 name: one-worker-os
-version: 1.0.3
+version: 1.0.4
 description: "为独立工作者发现已授权知识合集、跨知识包检索并读取完整来源，再按具体需求生成可编辑 Skill 或调度已授权工具"
 category: productivity
 author: "独立工作者"

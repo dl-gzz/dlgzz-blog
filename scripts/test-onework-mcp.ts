@@ -53,7 +53,7 @@ function accountAccess(packIds = ['pack.test']) {
     devices: [],
     keys: [],
     usage: { usedThisMonth: 2, limit: 100, remaining: 98 },
-    deviceLimit: 3,
+    legacyDeviceLimit: 3,
   };
 }
 
@@ -719,12 +719,19 @@ async function main() {
     name: 'onework_get_entitlements',
     arguments: {},
   });
+  const entitlementPayload = asRecord(
+    successResult(entitlements.response).structuredContent
+  );
+  assert.equal((entitlementPayload.entitlements as unknown[]).length, 1);
+  assert.deepEqual(entitlementPayload.authorizationPolicy, {
+    mode: 'single_active_connection',
+    maxActiveConnections: 1,
+    replacementRule: 'latest_successful_authorization_wins',
+  });
   assert.equal(
-    (
-      asRecord(successResult(entitlements.response).structuredContent)
-        .entitlements as unknown[]
-    ).length,
-    1
+    Object.prototype.hasOwnProperty.call(entitlementPayload, 'deviceLimit'),
+    false,
+    'MCP must not describe the retired three-device policy'
   );
 
   const usage = await request(9, 'tools/call', {

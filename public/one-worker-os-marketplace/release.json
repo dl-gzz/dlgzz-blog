@@ -1,17 +1,17 @@
 {
   "schema": "one-worker-os.plugin-release.v1",
   "name": "one-worker-os",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "artifacts": [
     {
-      "name": "one-worker-os-plugin-1.0.3.zip",
-      "size": 37091,
-      "sha256": "97fa1c7a223c365ff5db282be112b647b62f86a2fb83fbd39bd05e99f9808a10"
+      "name": "one-worker-os-plugin-1.0.4.zip",
+      "size": 37608,
+      "sha256": "6d4ad065c2275764a945cd8279e7764ebbcd617decd6f5fb967399082eb5015b"
     },
     {
-      "name": "one-worker-os-marketplace-1.0.3.zip",
-      "size": 38721,
-      "sha256": "e797256f626df60fa0ba6b9e010c0e616041f3ee4cae1a8701ad48663edd8b18"
+      "name": "one-worker-os-marketplace-1.0.4.zip",
+      "size": 39238,
+      "sha256": "6f7d657cc2b60e4dc316c5e342a513cee13190ad93c046e9ce649c753194b8c0"
     }
   ]
 }

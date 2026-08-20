@@ -908,7 +908,7 @@ export async function listOneWorkAccess(userId: string) {
       limit,
       remaining: Math.max(0, limit - usedThisMonth),
     },
-    deviceLimit: oneWorkDeviceLimit(),
+    legacyDeviceLimit: oneWorkDeviceLimit(),
   };
 }
 

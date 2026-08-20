@@ -3,6 +3,7 @@ import {
   OneWorkOAuthError,
   buildOneWorkOAuthRedirect,
   issueOneWorkAuthorizationCode,
+  listOneWorkOAuthConnections,
   prepareOneWorkAuthorizationRequest,
   readOneWorkOAuthJsonObject,
   userHasActiveOneWorkEntitlement,
@@ -47,13 +48,20 @@ export async function GET(request: NextRequest) {
     const prepared = await prepareOneWorkAuthorizationRequest(
       request.nextUrl.searchParams
     );
-    const eligible = await userHasActiveOneWorkEntitlement(
-      auth.session.user.id
-    );
+    const [eligible, connections] = await Promise.all([
+      userHasActiveOneWorkEntitlement(auth.session.user.id),
+      listOneWorkOAuthConnections(auth.session.user.id),
+    ]);
     return NextResponse.json(
       {
         success: true,
         eligible,
+        hasActiveConnection: connections.length > 0,
+        authorizationPolicy: {
+          mode: 'single_active_connection',
+          maxActiveConnections: 1,
+          replacementRule: 'latest_successful_authorization_wins',
+        },
         client: {
           id: prepared.client.clientId,
           name: prepared.client.clientName,

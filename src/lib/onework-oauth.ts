@@ -9,6 +9,7 @@ import {
 import { getDb } from '@/db';
 import {
   oneworkOauthAccessToken as oauthAccessToken,
+  oneworkOauthActiveSession as oauthActiveSession,
   oneworkOauthAuthorizationCode as oauthAuthorizationCode,
   oneworkOauthClient as oauthClient,
   oneworkOauthConsent as oauthConsent,
@@ -18,7 +19,7 @@ import {
   oneworkEntitlement,
 } from '@/db/schema';
 import { getBaseUrl } from '@/lib/urls/urls';
-import { and, desc, eq, gt, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull, lt, lte, ne, or, sql } from 'drizzle-orm';
 
 export const ONEWORK_OAUTH_SCOPES = [
   'onework:resolve',
@@ -201,6 +202,7 @@ export type OneWorkOAuthVerifyFailureReason =
   | 'invalid'
   | 'expired'
   | 'revoked'
+  | 'replaced'
   | 'entitlement_expired';
 
 export type OneWorkOAuthAccessPrincipal = {
@@ -450,6 +452,24 @@ async function lockOAuthConnection(tx: any, userId: string, clientId: string) {
     sql`select pg_advisory_xact_lock(
       hashtext('onework-oauth-connection'),
       hashtext(${`${userId}:${clientId}`})
+    )`
+  );
+}
+
+/**
+ * Serialize every operation that can replace or consume the account's current
+ * OAuth session. This lock must always be acquired before the narrower
+ * connection and token-family locks.
+ */
+async function lockOAuthActiveSession(
+  tx: any,
+  userId: string,
+  resource: string
+) {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(
+      hashtext('onework-oauth-active-session'),
+      hashtext(${`${userId}:${resource}`})
     )`
   );
 }
@@ -1126,6 +1146,84 @@ async function insertTokenPair(
   });
 }
 
+async function replaceActiveOAuthSession(
+  tx: any,
+  input: ReturnType<typeof tokenPairValues>
+) {
+  const now = input.now;
+  await tx
+    .update(oauthAccessToken)
+    .set({ revokedAt: now })
+    .where(
+      and(
+        eq(oauthAccessToken.userId, input.userId),
+        eq(oauthAccessToken.resource, input.resource),
+        isNull(oauthAccessToken.revokedAt),
+        or(
+          isNull(oauthAccessToken.familyId),
+          ne(oauthAccessToken.familyId, input.familyId)
+        )
+      )
+    );
+  await tx
+    .update(oauthRefreshToken)
+    .set({ revokedAt: now })
+    .where(
+      and(
+        eq(oauthRefreshToken.userId, input.userId),
+        eq(oauthRefreshToken.resource, input.resource),
+        ne(oauthRefreshToken.familyId, input.familyId),
+        isNull(oauthRefreshToken.revokedAt)
+      )
+    );
+  await tx
+    .insert(oauthActiveSession)
+    .values({
+      userId: input.userId,
+      resource: input.resource,
+      clientId: input.clientId,
+      familyId: input.familyId,
+      activatedAt: now,
+      lastSeenAt: now,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [oauthActiveSession.userId, oauthActiveSession.resource],
+      set: {
+        clientId: input.clientId,
+        familyId: input.familyId,
+        activatedAt: now,
+        lastSeenAt: now,
+        updatedAt: now,
+      },
+    });
+}
+
+async function activeOAuthSessionMatches(
+  tx: any,
+  input: {
+    userId: string;
+    resource: string;
+    clientId: string;
+    familyId: string;
+  }
+) {
+  const [active] = await tx
+    .select({ familyId: oauthActiveSession.familyId })
+    .from(oauthActiveSession)
+    .where(
+      and(
+        eq(oauthActiveSession.userId, input.userId),
+        eq(oauthActiveSession.resource, input.resource),
+        eq(oauthActiveSession.clientId, input.clientId),
+        eq(oauthActiveSession.familyId, input.familyId)
+      )
+    )
+    .limit(1);
+  return Boolean(active);
+}
+
 function publicTokenResponse(
   pair: ReturnType<typeof tokenPairValues>
 ): OneWorkOAuthTokenResponse {
@@ -1173,7 +1271,9 @@ export async function exchangeOneWorkAuthorizationCode(input: {
     throw new OneWorkOAuthError('invalid_grant', '授权码无效或已经过期');
   }
   return db.transaction(async (tx) => {
-    // 连接锁必须先于行锁；否则会与账号页的连接撤销死锁。
+    // Account/resource session lock is the outermost lock. It guarantees that
+    // concurrent computers cannot both finish token exchange as active.
+    await lockOAuthActiveSession(tx, candidate.userId, resource);
     await lockOAuthConnection(tx, candidate.userId, candidate.clientId);
     const [row] = await tx
       .select()
@@ -1213,7 +1313,31 @@ export async function exchangeOneWorkAuthorizationCode(input: {
       .update(oauthAuthorizationCode)
       .set({ consumedAt: now })
       .where(eq(oauthAuthorizationCode.id, row.id));
+    await tx
+      .update(oauthAuthorizationCode)
+      .set({ consumedAt: now })
+      .where(
+        and(
+          eq(oauthAuthorizationCode.userId, row.userId),
+          eq(oauthAuthorizationCode.resource, row.resource),
+          ne(oauthAuthorizationCode.id, row.id),
+          isNull(oauthAuthorizationCode.consumedAt),
+          lte(oauthAuthorizationCode.createdAt, row.createdAt)
+        )
+      );
+    await tx
+      .update(oauthDeviceCode)
+      .set({ status: 'denied', updatedAt: now })
+      .where(
+        and(
+          eq(oauthDeviceCode.userId, row.userId),
+          eq(oauthDeviceCode.resource, row.resource),
+          eq(oauthDeviceCode.status, 'approved'),
+          lte(oauthDeviceCode.createdAt, row.createdAt)
+        )
+      );
     await insertTokenPair(tx, pair);
+    await replaceActiveOAuthSession(tx, pair);
     return publicTokenResponse(pair);
   });
 }
@@ -1242,6 +1366,7 @@ export async function rotateOneWorkRefreshToken(input: {
       userId: oauthRefreshToken.userId,
       clientId: oauthRefreshToken.clientId,
       familyId: oauthRefreshToken.familyId,
+      resource: oauthRefreshToken.resource,
     })
     .from(oauthRefreshToken)
     .where(
@@ -1258,6 +1383,7 @@ export async function rotateOneWorkRefreshToken(input: {
     );
   }
   const result = await db.transaction(async (tx) => {
+    await lockOAuthActiveSession(tx, candidate.userId, candidate.resource);
     await lockOAuthConnection(tx, candidate.userId, candidate.clientId);
     await lockOAuthTokenFamily(
       tx,
@@ -1289,6 +1415,15 @@ export async function rotateOneWorkRefreshToken(input: {
         .update(oauthAccessToken)
         .set({ revokedAt: now })
         .where(eq(oauthAccessToken.familyId, row.familyId));
+      await tx
+        .delete(oauthActiveSession)
+        .where(
+          and(
+            eq(oauthActiveSession.userId, row.userId),
+            eq(oauthActiveSession.resource, row.resource),
+            eq(oauthActiveSession.familyId, row.familyId)
+          )
+        );
       return { error: 'replayed' as const };
     }
     if (
@@ -1297,6 +1432,16 @@ export async function rotateOneWorkRefreshToken(input: {
       row.resource !== requestedResource
     ) {
       return { error: 'invalid' as const };
+    }
+    if (
+      !(await activeOAuthSessionMatches(tx, {
+        userId: row.userId,
+        resource: row.resource,
+        clientId: row.clientId,
+        familyId: row.familyId,
+      }))
+    ) {
+      return { error: 'replaced' as const };
     }
     if (
       !(await hasActiveOAuthConsent(tx, row.userId, row.clientId, row.scope))
@@ -1325,6 +1470,16 @@ export async function rotateOneWorkRefreshToken(input: {
       })
       .where(eq(oauthRefreshToken.id, row.id));
     await insertTokenPair(tx, pair);
+    await tx
+      .update(oauthActiveSession)
+      .set({ lastSeenAt: now, updatedAt: now })
+      .where(
+        and(
+          eq(oauthActiveSession.userId, row.userId),
+          eq(oauthActiveSession.resource, row.resource),
+          eq(oauthActiveSession.familyId, row.familyId)
+        )
+      );
     return { token: publicTokenResponse(pair) };
   });
 
@@ -1333,7 +1488,9 @@ export async function rotateOneWorkRefreshToken(input: {
       'invalid_grant',
       result.error === 'replayed'
         ? '检测到 refresh token 重放，令牌族已撤销'
-        : 'refresh token 无效或已经过期'
+        : result.error === 'replaced'
+          ? '该授权已被其他位置的新连接替换，请重新连接'
+          : 'refresh token 无效或已经过期'
     );
   }
   return result.token;
@@ -1353,6 +1510,7 @@ export async function revokeOneWorkOAuthToken(input: {
         userId: oauthRefreshToken.userId,
         clientId: oauthRefreshToken.clientId,
         familyId: oauthRefreshToken.familyId,
+        resource: oauthRefreshToken.resource,
       })
       .from(oauthRefreshToken)
       .where(
@@ -1364,6 +1522,7 @@ export async function revokeOneWorkOAuthToken(input: {
       .limit(1);
     if (!candidate) return;
     await db.transaction(async (tx) => {
+      await lockOAuthActiveSession(tx, candidate.userId, candidate.resource);
       await lockOAuthConnection(tx, candidate.userId, candidate.clientId);
       await lockOAuthTokenFamily(
         tx,
@@ -1394,6 +1553,15 @@ export async function revokeOneWorkOAuthToken(input: {
         .update(oauthAccessToken)
         .set({ revokedAt: now })
         .where(eq(oauthAccessToken.familyId, row.familyId));
+      await tx
+        .delete(oauthActiveSession)
+        .where(
+          and(
+            eq(oauthActiveSession.userId, candidate.userId),
+            eq(oauthActiveSession.resource, candidate.resource),
+            eq(oauthActiveSession.familyId, row.familyId)
+          )
+        );
     });
     return;
   }
@@ -1403,6 +1571,7 @@ export async function revokeOneWorkOAuthToken(input: {
       userId: oauthAccessToken.userId,
       clientId: oauthAccessToken.clientId,
       familyId: oauthAccessToken.familyId,
+      resource: oauthAccessToken.resource,
     })
     .from(oauthAccessToken)
     .where(
@@ -1414,6 +1583,7 @@ export async function revokeOneWorkOAuthToken(input: {
     .limit(1);
   if (!candidate) return;
   await db.transaction(async (tx) => {
+    await lockOAuthActiveSession(tx, candidate.userId, candidate.resource);
     await lockOAuthConnection(tx, candidate.userId, candidate.clientId);
     if (candidate.familyId) {
       await lockOAuthTokenFamily(
@@ -1423,9 +1593,30 @@ export async function revokeOneWorkOAuthToken(input: {
         candidate.familyId
       );
     }
+    const now = new Date();
+    if (candidate.familyId) {
+      await tx
+        .update(oauthAccessToken)
+        .set({ revokedAt: now })
+        .where(eq(oauthAccessToken.familyId, candidate.familyId));
+      await tx
+        .update(oauthRefreshToken)
+        .set({ revokedAt: now })
+        .where(eq(oauthRefreshToken.familyId, candidate.familyId));
+      await tx
+        .delete(oauthActiveSession)
+        .where(
+          and(
+            eq(oauthActiveSession.userId, candidate.userId),
+            eq(oauthActiveSession.resource, candidate.resource),
+            eq(oauthActiveSession.familyId, candidate.familyId)
+          )
+        );
+      return;
+    }
     await tx
       .update(oauthAccessToken)
-      .set({ revokedAt: new Date() })
+      .set({ revokedAt: now })
       .where(
         and(
           eq(oauthAccessToken.tokenHash, tokenHash),
@@ -1441,22 +1632,44 @@ export async function listOneWorkOAuthConnections(
   const db = await getDb();
   const rows = await db
     .select({
-      clientId: oauthConsent.clientId,
+      clientId: oauthActiveSession.clientId,
       clientName: oauthClient.clientName,
       redirectUris: oauthClient.redirectUris,
       scope: oauthConsent.scope,
-      grantedAt: oauthConsent.grantedAt,
+      grantedAt: oauthActiveSession.activatedAt,
     })
-    .from(oauthConsent)
-    .innerJoin(oauthClient, eq(oauthConsent.clientId, oauthClient.clientId))
+    .from(oauthActiveSession)
+    .innerJoin(
+      oauthClient,
+      eq(oauthActiveSession.clientId, oauthClient.clientId)
+    )
+    .innerJoin(
+      oauthRefreshToken,
+      and(
+        eq(oauthRefreshToken.userId, oauthActiveSession.userId),
+        eq(oauthRefreshToken.resource, oauthActiveSession.resource),
+        eq(oauthRefreshToken.clientId, oauthActiveSession.clientId),
+        eq(oauthRefreshToken.familyId, oauthActiveSession.familyId),
+        isNull(oauthRefreshToken.revokedAt),
+        isNull(oauthRefreshToken.consumedAt),
+        gt(oauthRefreshToken.expiresAt, new Date())
+      )
+    )
+    .innerJoin(
+      oauthConsent,
+      and(
+        eq(oauthConsent.userId, oauthActiveSession.userId),
+        eq(oauthConsent.clientId, oauthActiveSession.clientId),
+        isNull(oauthConsent.revokedAt)
+      )
+    )
     .where(
       and(
-        eq(oauthConsent.userId, userId),
-        isNull(oauthConsent.revokedAt),
+        eq(oauthActiveSession.userId, userId),
         eq(oauthClient.status, 'active')
       )
     )
-    .orderBy(desc(oauthConsent.grantedAt));
+    .orderBy(desc(oauthActiveSession.activatedAt));
 
   const connections = new Map<string, OneWorkOAuthConnection>();
   for (const row of rows) {
@@ -1494,6 +1707,7 @@ export async function revokeOneWorkOAuthConnection(input: {
   if (!input.clientId || input.clientId.length > 200) return false;
   const db = await getDb();
   return db.transaction(async (tx) => {
+    await lockOAuthActiveSession(tx, input.userId, getOneWorkOAuthResource());
     await lockOAuthConnection(tx, input.userId, input.clientId);
     const [connection] = await tx
       .select({ id: oauthConsent.id })
@@ -1575,6 +1789,15 @@ export async function revokeOneWorkOAuthConnection(input: {
             eq(oauthDeviceCode.status, 'pending'),
             eq(oauthDeviceCode.status, 'approved')
           )
+        )
+      );
+    await tx
+      .delete(oauthActiveSession)
+      .where(
+        and(
+          eq(oauthActiveSession.userId, input.userId),
+          eq(oauthActiveSession.clientId, input.clientId),
+          eq(oauthActiveSession.resource, getOneWorkOAuthResource())
         )
       );
     return true;
@@ -1825,6 +2048,7 @@ export async function pollOneWorkDeviceToken(input: {
       clientId: oauthDeviceCode.clientId,
       userId: oauthDeviceCode.userId,
       status: oauthDeviceCode.status,
+      resource: oauthDeviceCode.resource,
     })
     .from(oauthDeviceCode)
     .where(eq(oauthDeviceCode.deviceCodeHash, deviceCodeHash))
@@ -1835,6 +2059,7 @@ export async function pollOneWorkDeviceToken(input: {
       candidate.userId &&
       candidate.clientId === input.clientId;
     if (lockedConnection) {
+      await lockOAuthActiveSession(tx, candidate.userId!, candidate.resource);
       await lockOAuthConnection(tx, candidate.userId!, candidate.clientId);
     }
     const [row] = await tx
@@ -1905,7 +2130,31 @@ export async function pollOneWorkDeviceToken(input: {
         updatedAt: now,
       })
       .where(eq(oauthDeviceCode.id, row.id));
+    await tx
+      .update(oauthAuthorizationCode)
+      .set({ consumedAt: now })
+      .where(
+        and(
+          eq(oauthAuthorizationCode.userId, row.userId),
+          eq(oauthAuthorizationCode.resource, row.resource),
+          isNull(oauthAuthorizationCode.consumedAt),
+          lte(oauthAuthorizationCode.createdAt, row.createdAt)
+        )
+      );
+    await tx
+      .update(oauthDeviceCode)
+      .set({ status: 'denied', updatedAt: now })
+      .where(
+        and(
+          eq(oauthDeviceCode.userId, row.userId),
+          eq(oauthDeviceCode.resource, row.resource),
+          ne(oauthDeviceCode.id, row.id),
+          eq(oauthDeviceCode.status, 'approved'),
+          lte(oauthDeviceCode.createdAt, row.createdAt)
+        )
+      );
     await insertTokenPair(tx, pair);
+    await replaceActiveOAuthSession(tx, pair);
     return { token: publicTokenResponse(pair) };
   });
 
@@ -1940,13 +2189,42 @@ export async function verifyOneWorkOAuthAccessToken(
     .where(eq(oauthAccessToken.tokenHash, hashSecret('access_token', rawToken)))
     .limit(1);
   if (!row) return { ok: false, reason: 'invalid' };
+  const [active] = await db
+    .select({ familyId: oauthActiveSession.familyId })
+    .from(oauthActiveSession)
+    .where(
+      and(
+        eq(oauthActiveSession.userId, row.userId),
+        eq(oauthActiveSession.resource, row.resource)
+      )
+    )
+    .limit(1);
+  if (active && active.familyId !== row.familyId) {
+    return { ok: false, reason: 'replaced' };
+  }
   if (row.revokedAt) return { ok: false, reason: 'revoked' };
+  if (!active || !row.familyId) return { ok: false, reason: 'revoked' };
   if (row.expiresAt.getTime() <= Date.now()) {
     return { ok: false, reason: 'expired' };
   }
   if (!(await userHasActiveOneWorkEntitlement(row.userId))) {
     return { ok: false, reason: 'entitlement_expired' };
   }
+  const now = new Date();
+  await db
+    .update(oauthActiveSession)
+    .set({ lastSeenAt: now, updatedAt: now })
+    .where(
+      and(
+        eq(oauthActiveSession.userId, row.userId),
+        eq(oauthActiveSession.resource, row.resource),
+        eq(oauthActiveSession.familyId, row.familyId),
+        lt(
+          oauthActiveSession.lastSeenAt,
+          new Date(now.getTime() - 5 * 60 * 1000)
+        )
+      )
+    );
   return {
     ok: true,
     principal: {

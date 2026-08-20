@@ -925,6 +925,25 @@ export const oneworkOauthRefreshToken = pgTable("onework_oauth_refresh_token", {
 	index('onework_oauth_refresh_token_expires_idx').on(table.expiresAt),
 ]);
 
+/**
+ * 每个用户在每个 MCP resource 上只保留一个当前 OAuth 令牌族。
+ * 新会话激活后，runtime 会撤销同用户/资源的旧令牌族。
+ */
+export const oneworkOauthActiveSession = pgTable("onework_oauth_active_session", {
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	resource: text('resource').notNull(),
+	clientId: text('client_id').notNull().references(() => oneworkOauthClient.clientId, { onDelete: 'cascade' }),
+	familyId: text('family_id').notNull(),
+	activatedAt: timestamp('activated_at').notNull().defaultNow(),
+	lastSeenAt: timestamp('last_seen_at').notNull().defaultNow(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('onework_oauth_active_session_user_resource_unique_idx').on(table.userId, table.resource),
+	uniqueIndex('onework_oauth_active_session_family_unique_idx').on(table.familyId),
+	index('onework_oauth_active_session_client_idx').on(table.clientId),
+]);
+
 /** 用户对指定 OAuth 客户端和 scope 的显式授权记录。 */
 export const oneworkOauthConsent = pgTable("onework_oauth_consent", {
 	id: text('id').primaryKey(),

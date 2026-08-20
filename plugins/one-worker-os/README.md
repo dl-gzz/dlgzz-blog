@@ -6,6 +6,8 @@ This is the complete WorkBuddy/CodeBuddy plugin. It installs the `one-worker-os`
 
 The MCP entry intentionally contains only the documented `type`, `url`, and `description` fields. A current WorkBuddy build follows the MCP OAuth 2.1 challenge from the server and opens the authorization flow. No client secret or API key belongs in the plugin.
 
+Each member account has one active one-worker-os OAuth connection at a time. A new connection replaces the previous one only after authorization and token exchange succeed. The previous connection is then rejected on its next MCP request. This replacement does not sign the user out of the website, cancel membership, or remove entitlements. `onework_get_entitlements` exposes this as `authorizationPolicy`; it does not advertise the legacy device limit.
+
 Knowledge, source documents, and account data are read from the remote MCP server when a tool is called. Updating or adding cloud knowledge therefore does not require reinstalling the plugin. A plugin update is needed only when the client-side orchestration contract changes.
 
 The bundled Node.js scripts remain available only as a legacy fallback for hosts that cannot connect to MCP. They use `ONEWORK_API_KEY` and `ONEWORK_DEVICE_ID` from the existing managed installation file; never paste those values into a conversation or commit them.
