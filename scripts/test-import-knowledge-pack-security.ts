@@ -13,6 +13,14 @@ import matter from 'gray-matter';
 
 const repositoryRoot = resolve(process.cwd());
 const importerPath = join(repositoryRoot, 'scripts/import-knowledge-pack.ts');
+const importerSource = readFileSync(importerPath, 'utf8');
+
+assert.doesNotMatch(
+  importerSource,
+  /JSON\.stringify\((?:\[\]|errors)\).*::jsonb/,
+  'JSONB ingest errors must use postgres.js sql.json instead of a double-encoded string'
+);
+assert.match(importerSource, /errors = \$\{sql\.json\(errors as never\)\}/);
 
 type FixtureOptions = {
   id?: string;

@@ -1824,7 +1824,7 @@ async function main() {
           ${'running'},
           ${docs.length},
           ${0},
-          ${JSON.stringify([])}::jsonb
+          ${tx.json([] as never)}
         )
       `;
     });
@@ -2181,7 +2181,7 @@ async function main() {
         total_chunks = ${totalChunks},
         embedded_chunks = ${embeddedChunks},
         total_units = ${totalUnits},
-        errors = ${JSON.stringify(errors)}::jsonb,
+        errors = ${sql.json(errors as never)},
         completed_at = now()
       where id = ${ingestRunId}
     `;
