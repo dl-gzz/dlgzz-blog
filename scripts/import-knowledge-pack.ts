@@ -122,7 +122,9 @@ type PackManifest = {
   category: string;
   metadata: Record<string, unknown>;
   collection?: ManifestCollection;
-  documentIdStrategy: 'absolute_path' | 'pack_relative';
+  documentIdStrategy: 'pack_relative';
+  immutableVersioned: boolean;
+  seriesId: string | null;
   embeddingPolicy: 'automatic' | 'manual';
   sources: ManifestSource[];
   units: ManifestUnitRule[];
@@ -195,6 +197,10 @@ type CliOptions = {
 
 function parseArgs(): CliOptions {
   const args = process.argv.slice(2);
+  // pnpm forwards the conventional command separator to this script in some
+  // versions. Accept it only in the leading position; every other unknown
+  // argument must continue to fail closed.
+  if (args[0] === '--') args.shift();
   const options: CliOptions = {
     packDir: '',
     dryRun: false,
@@ -327,13 +333,80 @@ function loadManifest(
     throw new Error(`找不到 manifest：${manifestPath}`);
   }
 
-  const parsed = matter(readFileSync(manifestPath, 'utf8'));
+  const manifestContent = readFileSync(manifestPath, 'utf8');
+  assertSafeTextContent(manifestPath, manifestContent);
+  const parsed = matter(manifestContent);
   const data = parsed.data as Record<string, unknown>;
+  assertSafeStructuredContent(`${manifestPath} frontmatter`, data);
 
   const id = readString(data.id);
   const name = readString(data.name);
   if (!id || !name) {
     throw new Error('pack.md frontmatter 必须包含 id 和 name');
+  }
+  if (id.length > 160 || !/^[a-z0-9][a-z0-9._-]*$/.test(id)) {
+    throw new Error(
+      'pack.md id 必须是长度不超过 160 的小写字母、数字、点、下划线或连字符'
+    );
+  }
+  const version = data.version;
+  if (
+    typeof version !== 'number' ||
+    !Number.isSafeInteger(version) ||
+    version < 1
+  ) {
+    throw new Error('pack.md version 必须是显式声明的大于 0 的安全整数');
+  }
+  if (
+    data.immutableVersioned !== undefined &&
+    typeof data.immutableVersioned !== 'boolean'
+  ) {
+    throw new Error('pack.md immutableVersioned 必须是 boolean');
+  }
+  const manifestMetadata = readRecord(data.metadata);
+  const immutableByPolicy = manifestMetadata.versionPolicy === 'immutable';
+  const immutableByNamespace = /^independent-worker(?:-|$)/.test(id);
+  if (
+    data.immutableVersioned === false &&
+    (immutableByPolicy || immutableByNamespace)
+  ) {
+    throw new Error(
+      'pack.md immutableVersioned=false 不能覆盖 immutable 策略或独立工作者命名空间'
+    );
+  }
+  const immutableVersioned =
+    data.immutableVersioned === true ||
+    immutableByPolicy ||
+    immutableByNamespace;
+  if (immutableVersioned && !id.endsWith(`-v${version}`)) {
+    throw new Error(
+      `不可变版本知识包 id 必须以 -v${version} 结尾，当前为 ${id}`
+    );
+  }
+  const expectedSeriesId = immutableVersioned ? id.replace(/-v\d+$/, '') : null;
+  const declaredSeriesId = readString(manifestMetadata.seriesId);
+  if (
+    immutableVersioned &&
+    declaredSeriesId &&
+    declaredSeriesId !== expectedSeriesId
+  ) {
+    throw new Error(
+      `不可变版本知识包 metadata.seriesId 必须是 ${expectedSeriesId}，当前为 ${declaredSeriesId}`
+    );
+  }
+  if (
+    immutableVersioned &&
+    manifestMetadata.versionPolicy !== undefined &&
+    manifestMetadata.versionPolicy !== 'immutable'
+  ) {
+    throw new Error('不可变版本知识包 metadata.versionPolicy 必须是 immutable');
+  }
+
+  const documentIdStrategy = readString(data.documentIdStrategy);
+  if (documentIdStrategy !== 'pack_relative') {
+    throw new Error(
+      'pack.md documentIdStrategy 必须显式设为 pack_relative；拒绝绝对路径或隐式默认值'
+    );
   }
 
   const rawSources = Array.isArray(data.sources) ? data.sources : [];
@@ -402,14 +475,13 @@ function loadManifest(
     description: readString(data.description),
     scope: readString(data.scope, id),
     status: readString(data.status, 'active'),
-    version: Number(data.version) || 1,
+    version,
     category: readString(data.category, name),
-    metadata: readRecord(data.metadata),
+    metadata: manifestMetadata,
     collection,
-    documentIdStrategy:
-      readString(data.documentIdStrategy) === 'pack_relative'
-        ? 'pack_relative'
-        : 'absolute_path',
+    documentIdStrategy,
+    immutableVersioned,
+    seriesId: expectedSeriesId,
     embeddingPolicy:
       readString(data.embeddingPolicy) === 'automatic' ? 'automatic' : 'manual',
     sources,
@@ -425,6 +497,84 @@ function sha1(input: string) {
 
 function stableId(prefix: string, value: string) {
   return `${prefix}-${sha1(value).slice(0, 16)}`;
+}
+
+function canonicalJsonValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalJsonValue);
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
+      throw new Error('不可变版本元数据包含无效日期');
+    }
+    return value.toISOString();
+  }
+  if (typeof value === 'number' && !Number.isFinite(value)) {
+    throw new Error('不可变版本元数据包含非有限数字');
+  }
+  if (typeof value === 'bigint') {
+    throw new Error('不可变版本元数据不能包含 bigint');
+  }
+  if (value && typeof value === 'object') {
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) {
+      throw new Error('不可变版本元数据只能包含 JSON 对象、数组和日期');
+    }
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, nested]) => nested !== undefined)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, nested]) => [key, canonicalJsonValue(nested)])
+    );
+  }
+  return value;
+}
+
+function sha256CanonicalJson(value: unknown) {
+  return createHash('sha256')
+    .update(JSON.stringify(canonicalJsonValue(value)))
+    .digest('hex');
+}
+
+function immutableManifestFingerprint(manifest: PackManifest) {
+  return sha256CanonicalJson({
+    id: manifest.id,
+    version: manifest.version,
+    immutableVersioned: manifest.immutableVersioned,
+    seriesId: manifest.seriesId,
+    name: manifest.name,
+    description: manifest.description,
+    scope: manifest.scope,
+    category: manifest.category,
+    documentIdStrategy: manifest.documentIdStrategy,
+    metadata: manifest.metadata,
+    collection: manifest.collection || null,
+    embeddingPolicy: manifest.embeddingPolicy,
+    sources: manifest.sources,
+    units: manifest.units,
+  });
+}
+
+function immutableReleaseFingerprint(
+  manifestFingerprint: string,
+  docs: PreparedDoc[]
+) {
+  return sha256CanonicalJson({
+    manifestFingerprint,
+    documents: docs
+      .map((doc) => ({
+        id: doc.id,
+        relativePath: doc.relativePath.split(sep).join('/'),
+        source: doc.source,
+        category: doc.category,
+        contentType: doc.contentType,
+        language: doc.language,
+        contentHash: doc.contentHash,
+        contentSha256: createHash('sha256')
+          .update(doc.rawContent)
+          .digest('hex'),
+        metadata: doc.metadata,
+      }))
+      .sort((left, right) => left.id.localeCompare(right.id)),
+  });
 }
 
 function haveSameValues(left: ReadonlySet<string>, right: ReadonlySet<string>) {
@@ -532,23 +682,156 @@ function isObviousSecretPlaceholder(value: string) {
   const normalized = value
     .trim()
     .replace(/^["'`]+|["'`,;]+$/g, '')
+    .replace(/^(?:bearer|basic)\s+/i, '')
     .trim();
   if (!normalized) return true;
   const nestedAssignment = normalized.match(/^[A-Za-z0-9_.-]+=([^;,]+)$/)?.[1];
   if (nestedAssignment) return isObviousSecretPlaceholder(nestedAssignment);
-  return /^(?:your(?:[-_ ][a-z0-9]+)*|replace(?:[-_ ]+me)?|example(?:[-_ ][a-z0-9]+)*|sample(?:[-_ ][a-z0-9]+)*|dummy(?:[-_ ][a-z0-9]+)*|test(?:[-_ ][a-z0-9]+)*|placeholder(?:[-_ ][a-z0-9]+)*|change(?:[-_ ]+me)?|changeme|redacted|user(?:name)?|password|pass|value|x{3,}|\*{3,}|\.{3,}|<[^>]+>|\$\{[^}]+\}|\{\{[^}]+\}\}|%[A-Za-z0-9_]+%|(?:process\.)?env(?:\.[A-Za-z0-9_]+)?|os\.environ(?:\[[^\]]+\])?)$/i.test(
+  return /^(?:your(?:[-_ ][a-z0-9]+)*|replace(?:[-_ ]+me)?|example(?:[-_ ][a-z0-9]+)*|sample(?:[-_ ][a-z0-9]+)*|dummy(?:[-_ ][a-z0-9]+)*|test(?:[-_ ][a-z0-9]+)*|placeholder(?:[-_ ][a-z0-9]+)*|fake(?:[-_ ][a-z0-9]+)*|mock(?:[-_ ][a-z0-9]+)*|demo(?:[-_ ][a-z0-9]+)*|authorization[-_ ]?code|access[-_ ]?token|api[-_ ]?key|client[-_ ]?secret|callback|redirect|authorize|authorization|code|exchange|refresh|revoke|verify|status|introspect|endpoint|route|login|logout|start|complete|finish|docs?|reference|change(?:[-_ ]+me)?|changeme|redacted|user(?:name)?|password|pass|value|x{3,}|\*{3,}|\.{3,}|<[^>]+>|\$\{[^}]+\}|\{\{[^}]+\}\}|%[A-Za-z0-9_]+%|(?:process\.)?env(?:\.[A-Za-z0-9_]+)?|os\.environ(?:\[[^\]]+\])?)$/i.test(
     normalized
   );
 }
 
-function assertNoSensitiveUrls(filePath: string, content: string) {
-  const sensitiveParameter =
-    /(?:^|[-_.])(?:access[-_]?token|api[-_]?key|auth(?:orization)?|code|credential|key|password|passwd|secret|session(?:id)?|sig(?:nature)?|token|q[-_]?ak|q[-_]?signature|x[-_]?amz[-_]?(?:credential|signature|security[-_]?token))(?:$|[-_.])/i;
-  const urls = content.match(/https?:\/\/[^\s<>"'`)\]]+/gi) ?? [];
+function isSensitiveFieldName(value: string) {
+  const normalized = value
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/^x[-_.]?/, '')
+    .toLowerCase();
+  return /^(?:access[-_.]?token|api[-_.]?key|auth(?:orization)?|client[-_.]?secret|code|cookie|credential|key|password|passwd|private[-_.]?key|proxy[-_.]?authorization|q[-_.]?ak|q[-_.]?signature|secret(?:[-_.]?key)?|session(?:[-_.]?id)?|set[-_.]?cookie|sig(?:nature)?|token|amz[-_.]?(?:credential|signature|security[-_.]?token))$/.test(
+    normalized
+  );
+}
 
-  for (const rawUrl of urls) {
+function assertSafeStructuredContent(
+  filePath: string,
+  value: unknown,
+  valuePath = '$',
+  inheritedSensitiveField = false,
+  seen = new WeakSet<object>()
+) {
+  if (typeof value === 'string') {
+    assertSafeTextContent(`${filePath}:${valuePath}`, value);
+    if (inheritedSensitiveField && !isObviousSecretPlaceholder(value)) {
+      throw new Error(
+        `Potential configured secret found in ${filePath}:${valuePath}`
+      );
+    }
+    return;
+  }
+  if (
+    inheritedSensitiveField &&
+    (typeof value === 'number' || typeof value === 'bigint')
+  ) {
+    throw new Error(
+      `Potential configured secret found in ${filePath}:${valuePath}`
+    );
+  }
+  if (!value || typeof value !== 'object') return;
+  if (seen.has(value)) {
+    throw new Error(
+      `Recursive metadata is not allowed in ${filePath}:${valuePath}`
+    );
+  }
+  seen.add(value);
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) =>
+      assertSafeStructuredContent(
+        filePath,
+        item,
+        `${valuePath}[${index}]`,
+        inheritedSensitiveField,
+        seen
+      )
+    );
+  } else {
+    for (const [key, nestedValue] of Object.entries(value)) {
+      assertSafeStructuredContent(
+        filePath,
+        nestedValue,
+        `${valuePath}.${key}`,
+        inheritedSensitiveField || isSensitiveFieldName(key),
+        seen
+      );
+    }
+  }
+
+  seen.delete(value);
+}
+
+function assertNoSensitiveUrls(filePath: string, content: string) {
+  const inspectParameter = (name: string, value: string, location: string) => {
+    if (
+      isSensitiveFieldName(name) &&
+      value &&
+      !isObviousSecretPlaceholder(value)
+    ) {
+      throw new Error(
+        `Potential secret URL ${location} "${name}" found in ${filePath}`
+      );
+    }
+  };
+  const inspectPath = (rawPath: string, location: string) => {
+    let decodedPath: string;
     try {
-      const url = new URL(rawUrl.replaceAll('&amp;', '&'));
+      decodedPath = decodeURIComponent(rawPath);
+    } catch {
+      const rawSegments = rawPath.split(/[/:]/).filter(Boolean);
+      for (let index = 0; index < rawSegments.length; index++) {
+        if (!isSensitiveFieldName(rawSegments[index])) continue;
+        const next = rawSegments[index + 1];
+        if (next && !isObviousSecretPlaceholder(next)) {
+          throw new Error(
+            `Malformed sensitive URL ${location} found in ${filePath}`
+          );
+        }
+      }
+      return;
+    }
+    const segments = decodedPath.split(/[/:]/).filter(Boolean);
+    for (let index = 0; index < segments.length; index++) {
+      const segment = segments[index];
+      const assignment = segment.match(/^([^=]+)=(.*)$/);
+      if (assignment) {
+        inspectParameter(assignment[1], assignment[2], location);
+        continue;
+      }
+      if (!isSensitiveFieldName(segment)) continue;
+      const next = segments[index + 1];
+      if (next && !isObviousSecretPlaceholder(next)) {
+        throw new Error(
+          `Potential secret URL ${location} value after "${segment}" found in ${filePath}`
+        );
+      }
+    }
+  };
+
+  const candidates = new Set<string>();
+  for (const rawToken of content.split(/\s+/)) {
+    for (const part of rawToken.split(/[()[\]<>"'`]/)) {
+      const candidate = part
+        .replaceAll('&amp;', '&')
+        .replace(/^[,;]+|[,;.]+$/g, '')
+        .trim();
+      if (!candidate) continue;
+      const looksUrlLike =
+        candidate.includes('://') ||
+        candidate.startsWith('//') ||
+        candidate.includes('?') ||
+        candidate.includes('#') ||
+        candidate
+          .split('/')
+          .filter(Boolean)
+          .some((segment) => isSensitiveFieldName(segment.split(/[=:]/)[0]));
+      if (looksUrlLike) candidates.add(candidate);
+    }
+  }
+
+  for (const rawUrl of candidates) {
+    try {
+      const url = rawUrl.startsWith('//')
+        ? new URL(`https:${rawUrl}`)
+        : new URL(rawUrl, 'https://manifest.invalid/');
       const userInfo = [url.username, url.password].filter(Boolean);
       if (
         userInfo.length > 0 &&
@@ -558,14 +841,21 @@ function assertNoSensitiveUrls(filePath: string, content: string) {
       }
 
       for (const [name, value] of url.searchParams) {
-        if (
-          sensitiveParameter.test(name) &&
-          value &&
-          !isObviousSecretPlaceholder(value)
-        ) {
-          throw new Error(
-            `Potential secret URL parameter "${name}" found in ${filePath}`
-          );
+        inspectParameter(name, value, 'query parameter');
+      }
+      inspectPath(url.pathname, 'path');
+
+      const fragment = url.hash.replace(/^#/, '');
+      if (fragment) {
+        const fragmentParts = fragment.split('?');
+        inspectPath(fragmentParts[0], 'fragment path');
+        const fragmentParameters = new URLSearchParams(
+          fragmentParts.length > 1
+            ? fragmentParts.slice(1).join('?')
+            : fragmentParts[0]
+        );
+        for (const [name, value] of fragmentParameters) {
+          inspectParameter(name, value, 'fragment parameter');
         }
       }
     } catch (error) {
@@ -575,6 +865,20 @@ function assertNoSensitiveUrls(filePath: string, content: string) {
       // Malformed example URLs are not imported as links. Other scanners below
       // still inspect their literal text for configured credentials.
     }
+  }
+
+  // Catch query/fragment pairs embedded in otherwise malformed or bare
+  // relative URLs, for example `callback?token=...` and `#code=...`.
+  const inlineParameterPattern =
+    /(?:^|[?#&])([A-Za-z][A-Za-z0-9_.-]{0,80})=([^&#\s<>"'`)\]]+)/gim;
+  for (const match of content.matchAll(inlineParameterPattern)) {
+    let value = match[2];
+    try {
+      value = decodeURIComponent(value);
+    } catch {
+      // The undecoded value is still checked fail-closed below.
+    }
+    inspectParameter(match[1], value, 'relative/fragment parameter');
   }
 }
 
@@ -969,11 +1273,7 @@ function safeFrontmatterMetadata(data: Record<string, unknown>) {
 }
 
 function documentIdForSource(doc: SourceDoc, manifest: PackManifest) {
-  const idInput =
-    manifest.documentIdStrategy === 'pack_relative'
-      ? `${manifest.id}:${doc.relativePath}`
-      : doc.filePath;
-  return stableId('knowledge-doc', idInput);
+  return stableId('knowledge-doc', `${manifest.id}:${doc.relativePath}`);
 }
 
 function prepareDoc(doc: SourceDoc, manifest: PackManifest): PreparedDoc {
@@ -983,6 +1283,10 @@ function prepareDoc(doc: SourceDoc, manifest: PackManifest): PreparedDoc {
     doc.contentType === 'markdown'
       ? matter(rawContent)
       : { data: {}, content: rawContent };
+  assertSafeStructuredContent(
+    `${doc.filePath} frontmatter`,
+    parsed.data as Record<string, unknown>
+  );
   const frontmatter = safeFrontmatterMetadata(
     parsed.data as Record<string, unknown>
   );
@@ -999,6 +1303,7 @@ function prepareDoc(doc: SourceDoc, manifest: PackManifest): PreparedDoc {
     packId: manifest.id,
     packVersion: manifest.version,
   };
+  assertSafeStructuredContent(`${doc.filePath} prepared metadata`, metadata);
   return {
     ...doc,
     metadata,
@@ -1007,10 +1312,7 @@ function prepareDoc(doc: SourceDoc, manifest: PackManifest): PreparedDoc {
     rawContent,
     bodyContent: parsed.content.trim(),
     contentHash: sha1(rawContent),
-    storedPath:
-      manifest.documentIdStrategy === 'pack_relative'
-        ? `knowledge://${manifest.id}/${doc.relativePath.split(sep).join('/')}`
-        : doc.filePath,
+    storedPath: `knowledge://${manifest.id}/${doc.relativePath.split(sep).join('/')}`,
   };
 }
 
@@ -1078,10 +1380,16 @@ async function main() {
       `拒绝发布：pack.md status 必须是 active，当前为 ${manifest.status || '(empty)'}`
     );
   }
+  if (options.allowEmbeddings && !options.onlySource) {
+    throw new Error('生成内容向量必须显式提供 --only-source 精确文章路径');
+  }
   const sourceDocs = collectSourceDocs(manifest);
   const manifestDocumentIds = new Set(
     sourceDocs.map((doc) => documentIdForSource(doc, manifest))
   );
+  if (manifestDocumentIds.size !== sourceDocs.length) {
+    throw new Error('拒绝导入：manifest 来源生成了重复 document id');
+  }
   const selectedDocs = sourceDocs.filter((doc) => {
     if (!options.onlySource) return true;
     return doc.relativePath.split(sep).join('/') === options.onlySource;
@@ -1091,10 +1399,23 @@ async function main() {
       `--only-source 必须精确命中一篇已声明来源，当前命中 ${selectedDocs.length} 篇`
     );
   }
+  // An exact --only-source still counts as a complete first publication when
+  // the manifest declares exactly that one document. This preserves the
+  // single-article embedding approval gate without requiring a preliminary
+  // non-vector publication solely to make the pack active.
+  const fullPublish =
+    options.limit === undefined && selectedDocs.length === sourceDocs.length;
   const docs = selectedDocs
     .slice(0, options.limit || undefined)
     .map((doc) => prepareDoc(doc, manifest));
-  if (options.allowEmbeddings && (!options.onlySource || docs.length !== 1)) {
+  const manifestFingerprint = manifest.immutableVersioned
+    ? immutableManifestFingerprint(manifest)
+    : null;
+  const releaseFingerprint =
+    manifest.immutableVersioned && fullPublish && manifestFingerprint
+      ? immutableReleaseFingerprint(manifestFingerprint, docs)
+      : null;
+  if (options.allowEmbeddings && docs.length !== 1) {
     throw new Error(
       '生成内容向量必须同时提供 --only-source，并且只能精确选择一篇文章'
     );
@@ -1109,13 +1430,23 @@ async function main() {
   const unitFileSet = new Map<string, ManifestUnitRule>();
   for (const rule of manifest.units) {
     if (rule.file) {
-      unitFileSet.set(resolve(join(manifest.sourceRoot, rule.file)), rule);
+      const unitFilePath = assertSafePathWithinRoot(
+        manifest.sourceRoot,
+        resolve(manifest.sourceRoot, rule.file)
+      ).candidateReal;
+      unitFileSet.set(unitFilePath, rule);
     }
     if (rule.dir) {
-      for (const filePath of listSourceFiles(
-        join(manifest.sourceRoot, rule.dir)
-      )) {
-        unitFileSet.set(resolve(filePath), rule);
+      const unitDirPath = assertSafePathWithinRoot(
+        manifest.sourceRoot,
+        resolve(manifest.sourceRoot, rule.dir)
+      ).candidateReal;
+      for (const filePath of listSourceFiles(unitDirPath)) {
+        const unitFilePath = assertSafePathWithinRoot(
+          manifest.sourceRoot,
+          filePath
+        ).candidateReal;
+        unitFileSet.set(unitFilePath, rule);
       }
     }
   }
@@ -1147,10 +1478,13 @@ async function main() {
   const sql = getSql();
   const ingestRunId = randomUUID();
   const errors: string[] = [];
-  const fullPublish = options.limit === undefined && !options.onlySource;
   const selectedDocumentIds = new Set(docs.map((doc) => doc.id));
+  if (selectedDocumentIds.size !== docs.length) {
+    throw new Error('拒绝导入：选中文档生成了重复 document id');
+  }
   const publishLockName = `knowledge-pack-publish:${manifest.id}`;
   let publishLockAcquired = false;
+  const documentLocksAcquired: string[] = [];
   let importedDocuments = 0;
   let skippedDocuments = 0;
   let totalChunks = 0;
@@ -1164,12 +1498,98 @@ async function main() {
     `;
     publishLockAcquired = true;
 
-    const existingPack = await sql<{ status: string }[]>`
-      select status
+    // Different packs use different pack locks. Lock every prepared document
+    // in a stable order as well, so two compliant importers cannot both pass
+    // an empty ownership check and then map the same document id.
+    for (const documentId of [...selectedDocumentIds].sort()) {
+      const documentLockName = `knowledge-document-publish:${documentId}`;
+      await sql`
+        select pg_advisory_lock(hashtext(${documentLockName})::bigint)
+      `;
+      documentLocksAcquired.push(documentLockName);
+    }
+
+    const conflictingMappings = await sql<
+      { document_id: string; knowledge_pack_id: string }[]
+    >`
+      select document_id, knowledge_pack_id
+      from knowledge_pack_documents
+      where document_id in ${sql([...selectedDocumentIds])}
+      and knowledge_pack_id <> ${manifest.id}
+    `;
+    if (conflictingMappings.length > 0) {
+      const preview = conflictingMappings
+        .slice(0, 10)
+        .map((row) => `${row.document_id}->${row.knowledge_pack_id}`)
+        .join(', ');
+      throw new Error(
+        `拒绝发布：${conflictingMappings.length} 个 prepared document id 已映射到其他知识包（${preview}${conflictingMappings.length > 10 ? ', ...' : ''}）`
+      );
+    }
+
+    const existingPack = await sql<
+      { status: string; metadata: Record<string, unknown> | null }[]
+    >`
+      select status, metadata
       from knowledge_packs
       where id = ${manifest.id}
     `;
     const originalPackStatus = existingPack[0]?.status ?? null;
+    const originalPackMetadata = readRecord(existingPack[0]?.metadata);
+    const storedManifestFingerprint = readString(
+      originalPackMetadata.manifestFingerprint
+    );
+    const storedReleaseFingerprint = readString(
+      originalPackMetadata.releaseFingerprint
+    );
+    const storedImmutablePublishedAt = readString(
+      originalPackMetadata.immutablePublishedAt
+    );
+    const storedImmutableVersioned =
+      originalPackMetadata.immutableVersioned === true ||
+      originalPackMetadata.versionPolicy === 'immutable' ||
+      Boolean(storedManifestFingerprint || storedReleaseFingerprint);
+    const immutableEverPublished =
+      Boolean(storedImmutablePublishedAt) ||
+      (originalPackStatus === 'active' && storedImmutableVersioned);
+    if (immutableEverPublished && !manifest.immutableVersioned) {
+      throw new Error(
+        `拒绝把已发布的不可变知识包 ${manifest.id} 降级为可变知识包；请创建下一个 -vN 版本`
+      );
+    }
+    if (
+      immutableEverPublished ||
+      (originalPackStatus === 'active' && manifest.immutableVersioned)
+    ) {
+      if (
+        !manifestFingerprint ||
+        !storedManifestFingerprint ||
+        storedManifestFingerprint !== manifestFingerprint
+      ) {
+        throw new Error(
+          `拒绝修改已发布的不可变知识包 ${manifest.id}：manifest 已变化或缺少发布指纹；请创建下一个 -vN 版本`
+        );
+      }
+      if (
+        fullPublish &&
+        (!releaseFingerprint ||
+          !storedReleaseFingerprint ||
+          storedReleaseFingerprint !== releaseFingerprint)
+      ) {
+        throw new Error(
+          `拒绝修改已发布的不可变知识包 ${manifest.id}：来源清单或正文已变化；请创建下一个 -vN 版本`
+        );
+      }
+    }
+    const effectiveReleaseFingerprint = manifest.immutableVersioned
+      ? releaseFingerprint || storedReleaseFingerprint
+      : null;
+    const effectiveImmutablePublishedAt = immutableEverPublished
+      ? storedImmutablePublishedAt || new Date().toISOString()
+      : null;
+    const finalImmutablePublishedAt = manifest.immutableVersioned
+      ? effectiveImmutablePublishedAt || new Date().toISOString()
+      : null;
     if (!fullPublish && originalPackStatus !== 'active') {
       throw new Error(
         `拒绝定向发布：partial/--only-source 只能更新原本 active 的 pack，当前为 ${originalPackStatus || '(missing)'}`
@@ -1225,6 +1645,14 @@ async function main() {
         from knowledge_documents
         where id = ${doc.id}
       `;
+      if (
+        immutableEverPublished &&
+        existing[0]?.content_hash !== doc.contentHash
+      ) {
+        throw new Error(
+          `拒绝修改已发布的不可变知识包 ${manifest.id}：${doc.relativePath} 正文已变化；请创建下一个 -vN 版本`
+        );
+      }
       const unchanged =
         existing[0]?.content_hash === doc.contentHash &&
         existing[0]?.status === 'active' &&
@@ -1329,6 +1757,20 @@ async function main() {
             version: manifest.version,
             embeddingModel: EMBEDDING_MODEL,
             embeddingDimensions: EMBEDDING_DIMENSIONS,
+            ...(manifest.immutableVersioned
+              ? {
+                  immutableVersioned: true,
+                  seriesId: manifest.seriesId,
+                  versionPolicy: 'immutable',
+                  manifestFingerprint,
+                  releaseFingerprint: effectiveReleaseFingerprint,
+                  ...(effectiveImmutablePublishedAt
+                    ? {
+                        immutablePublishedAt: effectiveImmutablePublishedAt,
+                      }
+                    : {}),
+                }
+              : {}),
             ...(manifest.collection
               ? { collectionId: manifest.collection.id }
               : {}),
@@ -1386,6 +1828,20 @@ async function main() {
       try {
         if (plan.unchanged) {
           await sql.begin(async (tx) => {
+            const ownershipConflicts = await tx<
+              { knowledge_pack_id: string }[]
+            >`
+              select knowledge_pack_id
+              from knowledge_pack_documents
+              where document_id = ${doc.id}
+              and knowledge_pack_id <> ${manifest.id}
+              for update
+            `;
+            if (ownershipConflicts.length > 0) {
+              throw new Error(
+                `document id ${doc.id} 已映射到其他知识包，拒绝复用`
+              );
+            }
             await tx`
               insert into knowledge_pack_documents (id, knowledge_pack_id, document_id)
               values (${`${manifest.id}-${doc.id}`}, ${manifest.id}, ${doc.id})
@@ -1400,6 +1856,19 @@ async function main() {
         // The whole plan (including embeddings) was prepared before the pack
         // entered draft. This transaction atomically swaps one document.
         await sql.begin(async (tx) => {
+          const ownershipConflicts = await tx<{ knowledge_pack_id: string }[]>`
+            select knowledge_pack_id
+            from knowledge_pack_documents
+            where document_id = ${doc.id}
+            and knowledge_pack_id <> ${manifest.id}
+            for update
+          `;
+          if (ownershipConflicts.length > 0) {
+            throw new Error(
+              `document id ${doc.id} 已映射到其他知识包，拒绝覆盖`
+            );
+          }
+
           await tx`
             insert into knowledge_documents (
               id, source, category, title, file_path, content_hash, raw_content, status, metadata, updated_at
@@ -1504,11 +1973,9 @@ async function main() {
             `;
           }
 
-          await tx`
-            update knowledge_documents
-            set status = ${'active'}, updated_at = now()
-            where id = ${doc.id}
-          `;
+          // Keep changed documents pending. The finalize transaction verifies
+          // ownership, exact hashes, mappings and statuses before activating
+          // every prepared document together with the pack.
         });
 
         importedDocuments++;
@@ -1538,24 +2005,69 @@ async function main() {
           `;
 
           const currentMappings = await tx<
-            { document_id: string; document_status: string }[]
+            {
+              document_id: string;
+              document_status: string;
+              content_hash: string;
+            }[]
           >`
-            select kpd.document_id, kd.status as document_status
+            select
+              kpd.document_id,
+              kd.status as document_status,
+              kd.content_hash
             from knowledge_pack_documents kpd
             inner join knowledge_documents kd on kd.id = kpd.document_id
             where kpd.knowledge_pack_id = ${manifest.id}
             for update
           `;
-          const inactiveMappingIds = currentMappings
-            .filter(
-              (row) =>
-                expectedFinalMappingIds.has(row.document_id) &&
-                row.document_status !== 'active'
-            )
+          const planByDocumentId = new Map(
+            documentPlans.map((plan) => [plan.doc.id, plan] as const)
+          );
+          const invalidStatusMappingIds = currentMappings
+            .filter((row) => {
+              if (!expectedFinalMappingIds.has(row.document_id)) return false;
+              const plan = planByDocumentId.get(row.document_id);
+              const expectedStatus = plan?.unchanged
+                ? 'active'
+                : plan
+                  ? 'pending'
+                  : 'active';
+              return row.document_status !== expectedStatus;
+            })
             .map((row) => row.document_id);
-          if (inactiveMappingIds.length > 0) {
+          if (invalidStatusMappingIds.length > 0) {
             throw new Error(
-              `发布收尾 mapping 含 ${inactiveMappingIds.length} 篇非 active 文档；已拒绝激活`
+              `发布收尾 mapping 含 ${invalidStatusMappingIds.length} 篇状态不符合 publication plan 的文档；已拒绝激活`
+            );
+          }
+
+          const currentMappingById = new Map(
+            currentMappings.map((row) => [row.document_id, row] as const)
+          );
+          const hashMismatches = documentPlans
+            .filter(
+              ({ doc }) =>
+                currentMappingById.get(doc.id)?.content_hash !== doc.contentHash
+            )
+            .map(({ doc }) => doc.id);
+          if (hashMismatches.length > 0) {
+            throw new Error(
+              `发布收尾 content_hash 校验失败：${hashMismatches.length} 篇 prepared 文档与预期不一致；已拒绝激活`
+            );
+          }
+
+          const finalizeOwnershipConflicts = await tx<
+            { document_id: string; knowledge_pack_id: string }[]
+          >`
+            select document_id, knowledge_pack_id
+            from knowledge_pack_documents
+            where document_id in ${tx([...selectedDocumentIds])}
+            and knowledge_pack_id <> ${manifest.id}
+            for update
+          `;
+          if (finalizeOwnershipConflicts.length > 0) {
+            throw new Error(
+              `发布收尾发现 ${finalizeOwnershipConflicts.length} 个 prepared document id 已映射到其他知识包；已拒绝激活`
             );
           }
           const actualMappingIds = new Set(
@@ -1594,11 +2106,52 @@ async function main() {
             );
           }
 
-          await tx`
-            update knowledge_packs
-            set status = ${'active'}, updated_at = now()
-            where id = ${manifest.id}
-          `;
+          const pendingDocumentIds = documentPlans
+            .filter((plan) => !plan.unchanged)
+            .map((plan) => plan.doc.id);
+          if (pendingDocumentIds.length > 0) {
+            const activatedDocuments = await tx<{ id: string }[]>`
+              update knowledge_documents
+              set status = ${'active'}, updated_at = now()
+              where id in ${tx(pendingDocumentIds)}
+              returning id
+            `;
+            const activatedDocumentIds = new Set(
+              activatedDocuments.map((row) => row.id)
+            );
+            if (
+              activatedDocumentIds.size !== pendingDocumentIds.length ||
+              pendingDocumentIds.some(
+                (documentId) => !activatedDocumentIds.has(documentId)
+              )
+            ) {
+              throw new Error(
+                '发布收尾无法完整激活 prepared 文档；已回滚并拒绝激活 pack'
+              );
+            }
+          }
+
+          if (manifest.immutableVersioned && finalImmutablePublishedAt) {
+            await tx`
+              update knowledge_packs
+              set
+                status = ${'active'},
+                metadata = jsonb_set(
+                  coalesce(metadata, '{}'::jsonb),
+                  '{immutablePublishedAt}',
+                  to_jsonb(${finalImmutablePublishedAt}::text),
+                  true
+                ),
+                updated_at = now()
+              where id = ${manifest.id}
+            `;
+          } else {
+            await tx`
+              update knowledge_packs
+              set status = ${'active'}, updated_at = now()
+              where id = ${manifest.id}
+            `;
+          }
           return options.reconcile ? transactionReconciledMappings : 0;
         });
         reconciledMappings = reconciledCount;
@@ -1643,6 +2196,17 @@ async function main() {
       );
     }
   } finally {
+    for (const documentLockName of documentLocksAcquired.reverse()) {
+      try {
+        await sql`
+          select pg_advisory_unlock(hashtext(${documentLockName})::bigint)
+        `;
+      } catch (error) {
+        console.error(
+          `Failed to release document publish lock: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    }
     if (publishLockAcquired) {
       try {
         await sql`

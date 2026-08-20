@@ -1,10 +1,18 @@
 import assert from 'node:assert/strict';
 import {
+  type KnowledgeCatalog,
+  type KnowledgePackCatalogItem,
+  normalizeKnowledgeCatalogGrants,
+  selectCurrentKnowledgePackVersions,
+  selectKnowledgePacksForGrants,
+} from '@/lib/knowledge-catalog';
+import {
   type OneWorkMcpDependencies,
   type OneWorkMcpResponse,
   handleOneWorkMcpMessage,
   isSupportedOneWorkMcpProtocolVersion,
   resolveKnowledgeSearchPackIds,
+  routeKnowledgeSearchPackIds,
 } from '@/lib/onework-mcp';
 
 const principal = {
@@ -225,6 +233,28 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function routingPack(
+  id: string,
+  name: string,
+  description: string,
+  metadata: Record<string, unknown>
+): KnowledgePackCatalogItem {
+  return {
+    id,
+    name,
+    description,
+    scope: 'test',
+    metadata,
+    documentCount: 1,
+    collectionIds: [],
+    updatedAt: '2026-08-20T00:00:00.000Z',
+  };
+}
+
+function routingCatalog(packs: KnowledgePackCatalogItem[]): KnowledgeCatalog {
+  return { collections: [], ungroupedPacks: packs, packs };
+}
+
 function successResult(response: OneWorkMcpResponse | null) {
   assert(
     response && 'result' in response,
@@ -261,6 +291,235 @@ async function main() {
   );
   assert.throws(() =>
     resolveKnowledgeSearchPackIds({ packId: 'pack.denied' }, catalog)
+  );
+
+  const licensedRoutingCatalog = routingCatalog([
+    routingPack(
+      'independent-worker-core-v1',
+      'one-worker-os · 独立工作者系统',
+      '帮助工作者把真实经验变成可验证的个人业务。',
+      {
+        routingKeywords: ['独立工作者', '一人公司', '个人经验产品化'],
+        topics: ['最小服务', '内容获客'],
+        intents: ['我能卖什么'],
+      }
+    ),
+    routingPack(
+      'onework-workbuddy-v1',
+      'WorkBuddy 办公助手',
+      'WorkBuddy 插件的安装、连接和排障知识。',
+      { routingKeywords: ['WorkBuddy', 'MCP 授权'] }
+    ),
+    routingPack(
+      'xhs-open-shop-v1',
+      '小红书开店助手',
+      '小红书店铺入驻和开店流程。',
+      { routingKeywords: ['小红书开店', '店铺入驻'] }
+    ),
+    routingPack(
+      'xhs-operations-v1',
+      '小红书运营助手',
+      '小红书内容运营与获客。',
+      {
+        topics: ['小红书运营', '内容获客'],
+        intents: ['笔记选题'],
+      }
+    ),
+  ]);
+  const versionedCatalogPacks = [
+    routingPack('independent-worker-core-v1', '独立工作者 v1', '', {
+      seriesId: 'independent-worker-core',
+      version: 1,
+      versionPolicy: 'immutable',
+    }),
+    routingPack('independent-worker-core-v2', '独立工作者 v2', '', {
+      seriesId: 'independent-worker-core',
+      version: 2,
+      versionPolicy: 'immutable',
+    }),
+    routingPack('legacy-unversioned', '兼容知识包', '', {}),
+    routingPack('malformed-release', '损坏的版本元数据', '', {
+      seriesId: 'independent-worker-core',
+      version: 999,
+      versionPolicy: 'immutable',
+    }),
+  ];
+  assert.deepEqual(
+    selectCurrentKnowledgePackVersions(versionedCatalogPacks).map(
+      (pack) => pack.id
+    ),
+    ['independent-worker-core-v2', 'legacy-unversioned']
+  );
+  assert.deepEqual(
+    selectCurrentKnowledgePackVersions(versionedCatalogPacks, [
+      'independent-worker-core-v1',
+    ]).map((pack) => pack.id),
+    [
+      'independent-worker-core-v1',
+      'independent-worker-core-v2',
+      'legacy-unversioned',
+    ]
+  );
+  assert.deepEqual(
+    selectCurrentKnowledgePackVersions(versionedCatalogPacks, [
+      'malformed-release',
+    ]).map((pack) => pack.id),
+    ['independent-worker-core-v2', 'legacy-unversioned', 'malformed-release']
+  );
+  assert.deepEqual(
+    normalizeKnowledgeCatalogGrants([
+      '*',
+      ' independent-worker-core-v1 ',
+      'independent-worker-core-v1',
+    ]),
+    {
+      allPacks: true,
+      explicitPackIds: ['independent-worker-core-v1'],
+    }
+  );
+  assert.deepEqual(
+    selectKnowledgePacksForGrants(versionedCatalogPacks, []).map(
+      (pack) => pack.id
+    ),
+    []
+  );
+  assert.deepEqual(
+    selectKnowledgePacksForGrants(versionedCatalogPacks, [
+      'independent-worker-core-v1',
+    ]).map((pack) => pack.id),
+    ['independent-worker-core-v1']
+  );
+  assert.deepEqual(
+    selectKnowledgePacksForGrants(versionedCatalogPacks, ['*']).map(
+      (pack) => pack.id
+    ),
+    ['independent-worker-core-v2', 'legacy-unversioned']
+  );
+  assert.deepEqual(
+    selectKnowledgePacksForGrants(versionedCatalogPacks, [
+      '*',
+      'independent-worker-core-v1',
+    ]).map((pack) => pack.id),
+    [
+      'independent-worker-core-v1',
+      'independent-worker-core-v2',
+      'legacy-unversioned',
+    ]
+  );
+  const unorderedSeriesPacks = [
+    routingPack('series-b-v2', 'B v2', '', {
+      seriesId: 'series-b',
+      version: 2,
+      versionPolicy: 'immutable',
+    }),
+    routingPack('series-a-v10', 'A v10', '', {
+      seriesId: 'series-a',
+      version: 10,
+      versionPolicy: 'immutable',
+    }),
+    routingPack('series-a-v2', 'A v2', '', {
+      seriesId: 'series-a',
+      version: 2,
+      versionPolicy: 'immutable',
+    }),
+    routingPack('series-b-v1', 'B v1', '', {
+      seriesId: 'series-b',
+      version: 1,
+      versionPolicy: 'immutable',
+    }),
+  ];
+  assert.deepEqual(
+    selectKnowledgePacksForGrants(unorderedSeriesPacks, ['*']).map(
+      (pack) => pack.id
+    ),
+    ['series-b-v2', 'series-a-v10']
+  );
+  const mixedVersionRoutingCatalog = routingCatalog([
+    routingPack('independent-worker-core-v1', '独立工作者 v1', '', {
+      seriesId: 'independent-worker-core',
+      version: 1,
+      versionPolicy: 'immutable',
+      routingKeywords: ['个人经验产品化'],
+    }),
+    routingPack('independent-worker-core-v2', '独立工作者 v2', '', {
+      seriesId: 'independent-worker-core',
+      version: 2,
+      versionPolicy: 'immutable',
+      routingKeywords: ['个人经验产品化'],
+    }),
+    routingPack('onework-workbuddy-v1', 'WorkBuddy 办公助手', '', {
+      routingKeywords: ['WorkBuddy'],
+    }),
+  ]);
+  assert.deepEqual(
+    routeKnowledgeSearchPackIds(
+      { query: '我想把个人经验产品化' },
+      mixedVersionRoutingCatalog
+    ),
+    ['independent-worker-core-v2']
+  );
+  assert.deepEqual(
+    resolveKnowledgeSearchPackIds(
+      {
+        query: '我想回看旧版本',
+        packId: 'independent-worker-core-v1',
+      },
+      mixedVersionRoutingCatalog
+    ),
+    ['independent-worker-core-v1']
+  );
+  assert.deepEqual(
+    routeKnowledgeSearchPackIds(
+      { query: '我想把个人经验产品化，开始做一人公司' },
+      licensedRoutingCatalog
+    ),
+    ['independent-worker-core-v1']
+  );
+  assert.deepEqual(
+    resolveKnowledgeSearchPackIds(
+      {
+        query: '我用 WorkBuddy 处理小红书开店，接下来呢？',
+        context: '还要规划小红书运营的笔记选题',
+      },
+      licensedRoutingCatalog
+    ),
+    ['onework-workbuddy-v1', 'xhs-open-shop-v1', 'xhs-operations-v1']
+  );
+  assert.deepEqual(
+    routeKnowledgeSearchPackIds(
+      { query: '内容获客该怎么做？' },
+      licensedRoutingCatalog
+    ),
+    licensedRoutingCatalog.packs.map((pack) => pack.id)
+  );
+  assert.deepEqual(
+    routeKnowledgeSearchPackIds(
+      { query: '一人公司如何做好内容获客？' },
+      licensedRoutingCatalog
+    ),
+    ['independent-worker-core-v1']
+  );
+  assert.deepEqual(
+    routeKnowledgeSearchPackIds(
+      { query: 'one-worker-os 怎么用？' },
+      licensedRoutingCatalog
+    ),
+    licensedRoutingCatalog.packs.map((pack) => pack.id)
+  );
+  assert.throws(() =>
+    resolveKnowledgeSearchPackIds(
+      {
+        packId: 'private-unlicensed-pack',
+        query: '独立工作者',
+      },
+      licensedRoutingCatalog
+    )
+  );
+  assert(
+    !resolveKnowledgeSearchPackIds(
+      { query: '没有可靠路由的问题' },
+      routingCatalog([licensedRoutingCatalog.packs[0]])
+    ).includes('private-unlicensed-pack')
   );
   process.env.KNOWLEDGE_PUBLIC_ORIGIN = 'https://www.dlgzz.com';
   const initialized = await request(1, 'initialize', {
@@ -319,6 +578,51 @@ async function main() {
   );
   assert.deepEqual(calls.catalogAllowedPackIds, ['pack.test']);
 
+  let automaticallySearchedPackIds: string[] = [];
+  const automaticRoutingDependencies = {
+    ...dependencies,
+    async getAccountAccess() {
+      return accountAccess(licensedRoutingCatalog.packs.map((pack) => pack.id));
+    },
+    async listKnowledgeCatalog() {
+      return licensedRoutingCatalog;
+    },
+    async searchKnowledge(
+      _query: string,
+      options: Parameters<OneWorkMcpDependencies['searchKnowledge']>[1]
+    ) {
+      automaticallySearchedPackIds = options?.packIds ?? [];
+      return [];
+    },
+    async reserveUsage() {
+      return { eventId: 'usage_automatic_route', usedThisMonth: 2 };
+    },
+    async completeUsage() {},
+  } as OneWorkMcpDependencies;
+  const automaticallyRouted = await request(
+    41,
+    'tools/call',
+    {
+      name: 'onework_search_knowledge',
+      arguments: {
+        query: 'WorkBuddy 里怎么做小红书开店？',
+        context: '后面还要做小红书运营',
+      },
+    },
+    principal,
+    automaticRoutingDependencies
+  );
+  assert.deepEqual(automaticallySearchedPackIds, [
+    'onework-workbuddy-v1',
+    'xhs-open-shop-v1',
+    'xhs-operations-v1',
+  ]);
+  assert.deepEqual(
+    asRecord(successResult(automaticallyRouted.response).structuredContent)
+      .searchedPackIds,
+    automaticallySearchedPackIds
+  );
+
   const searched = await request(5, 'tools/call', {
     name: 'onework_search_knowledge',
     arguments: { query: 'test question', collectionId: 'collection.test' },
@@ -359,6 +663,47 @@ async function main() {
   assert.equal(sourceResult.relativePath, 'docs/test.md');
   assert.equal(sourceResult.untrustedReference, true);
   assert.deepEqual(calls.sourceAllowedPackIds, ['pack.test']);
+
+  let wildcardSourceAllowedPackIds: string[] = [];
+  const newestImmutablePack = versionedCatalogPacks.find(
+    (pack) => pack.id === 'independent-worker-core-v2'
+  );
+  assert(newestImmutablePack, 'newest immutable fixture is missing');
+  const wildcardSource = await request(
+    42,
+    'tools/call',
+    {
+      name: 'onework_get_knowledge_source',
+      arguments: { documentId: 'document_from_latest_release' },
+    },
+    principal,
+    {
+      ...dependencies,
+      async getAccountAccess() {
+        return accountAccess(['*']);
+      },
+      async listKnowledgeCatalog() {
+        return routingCatalog([newestImmutablePack]);
+      },
+      async getKnowledgeSource(options) {
+        wildcardSourceAllowedPackIds = options.allowedPackIds;
+        const value = await dependencies.getKnowledgeSource(options);
+        assert(value, 'latest source fixture is missing');
+        return {
+          ...value,
+          documentId: 'document_from_latest_release',
+          packIds: ['independent-worker-core-v2'],
+        };
+      },
+    }
+  );
+  assert.equal(
+    asRecord(successResult(wildcardSource.response).structuredContent).success,
+    true
+  );
+  assert.deepEqual(wildcardSourceAllowedPackIds, [
+    'independent-worker-core-v2',
+  ]);
 
   const analytics = await request(7, 'tools/call', {
     name: 'onework_query_analytics',
@@ -544,8 +889,8 @@ async function main() {
   const malformed = await handleOneWorkMcpMessage([], principal, dependencies);
   assert(malformed.response && 'error' in malformed.response);
   assert.equal(malformed.response.error.code, -32600);
-  assert.equal(calls.reservations, 3);
-  assert.equal(calls.completions, 3);
+  assert.equal(calls.reservations, 4);
+  assert.equal(calls.completions, 4);
 
   console.log('one-worker-os MCP protocol tests passed');
 }

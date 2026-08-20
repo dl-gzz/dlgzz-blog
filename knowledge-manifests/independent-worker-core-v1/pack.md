@@ -7,6 +7,7 @@ status: draft
 version: 1
 category: 独立工作者
 documentIdStrategy: pack_relative
+immutableVersioned: true
 embeddingPolicy: manual
 
 collection:
@@ -21,6 +22,8 @@ collection:
     authority: first_party_collection
 
 metadata:
+  seriesId: independent-worker-core
+  versionPolicy: immutable
   authority: first_party_author
   author: 白杨
   contentKinds:
@@ -79,4 +82,4 @@ units: []
 pnpm knowledge:import -- --pack knowledge-manifests/independent-worker-core-v1 --source-root "/path/to/Obsidian/Vault" --only-source "选定文章.md" --dry-run --no-embeddings
 ```
 
-只有内容所有者再次明确授权该篇生成向量后，才允许把 `--no-embeddings` 换成 `--allow-embeddings`。导入器会拒绝未指定 `--only-source` 或一次命中多篇文章的向量化请求。
+只有内容所有者再次明确授权该篇生成向量后，才允许把 manifest 改为 `status: active`，并在同一个精确 `--only-source` 命令中使用 `--publish --allow-embeddings`。当 manifest 只声明这一篇时，它可以作为 v1 的完整首次发布；导入器会拒绝未指定 `--only-source` 或一次命中多篇文章的向量化请求。

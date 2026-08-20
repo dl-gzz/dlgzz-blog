@@ -31,6 +31,10 @@ const SAFE_CATALOG_METADATA_KEYS = new Set([
   'permittedUse',
   'prohibitedUse',
   'publisher',
+  'releaseChannel',
+  'seriesId',
+  'supersedes',
+  'versionPolicy',
 ]);
 
 export interface KnowledgePackCatalogItem {
@@ -64,8 +68,10 @@ export interface ListKnowledgeCatalogOptions {
   allowedPackIds: string[];
 }
 
-function normalizeAllowedPackIds(allowedPackIds?: string[]) {
-  if (allowedPackIds === undefined) return [];
+export function normalizeKnowledgeCatalogGrants(allowedPackIds?: string[]) {
+  if (allowedPackIds === undefined) {
+    return { allPacks: false, explicitPackIds: [] as string[] };
+  }
 
   const normalized = [
     ...new Set(
@@ -75,7 +81,10 @@ function normalizeAllowedPackIds(allowedPackIds?: string[]) {
         .filter(Boolean)
     ),
   ];
-  return normalized.includes(ALL_PACKS_GRANT) ? null : normalized;
+  return {
+    allPacks: normalized.includes(ALL_PACKS_GRANT),
+    explicitPackIds: normalized.filter((id) => id !== ALL_PACKS_GRANT),
+  };
 }
 
 function isSafeMetadataValue(value: unknown, depth = 0): boolean {
@@ -120,6 +129,69 @@ function safeCatalogMetadata(value: Record<string, unknown>) {
 }
 
 /**
+ * Wildcard subscribers see the newest active immutable release in each
+ * series. Explicit per-pack entitlements keep their exact requested versions.
+ * Malformed immutable metadata fails closed for wildcard access while an
+ * explicit grant can still preserve a legacy customer's exact pack.
+ */
+export function selectCurrentKnowledgePackVersions<
+  T extends { id: string; metadata: Record<string, unknown> },
+>(packs: T[], explicitPackIds: readonly string[] = []) {
+  const releaseInfo = (pack: T) => {
+    if (pack.metadata.versionPolicy !== 'immutable') {
+      return { kind: 'legacy' as const };
+    }
+    const seriesId = pack.metadata.seriesId;
+    const version = pack.metadata.version;
+    if (
+      typeof seriesId !== 'string' ||
+      !/^[a-z0-9][a-z0-9._-]{0,159}$/.test(seriesId) ||
+      typeof version !== 'number' ||
+      !Number.isSafeInteger(version) ||
+      version < 1 ||
+      pack.id !== `${seriesId}-v${version}`
+    ) {
+      return { kind: 'invalid' as const };
+    }
+    return { kind: 'release' as const, seriesId, version };
+  };
+
+  const latestBySeries = new Map<string, number>();
+  for (const pack of packs) {
+    const release = releaseInfo(pack);
+    if (release.kind !== 'release') continue;
+    latestBySeries.set(
+      release.seriesId,
+      Math.max(latestBySeries.get(release.seriesId) || 0, release.version)
+    );
+  }
+  const explicit = new Set(explicitPackIds);
+  return packs.filter((pack) => {
+    if (explicit.has(pack.id)) return true;
+    const release = releaseInfo(pack);
+    if (release.kind === 'legacy') return true;
+    if (release.kind === 'invalid') return false;
+    return latestBySeries.get(release.seriesId) === release.version;
+  });
+}
+
+export function selectKnowledgePacksForGrants<
+  T extends { id: string; metadata: Record<string, unknown> },
+>(packs: T[], allowedPackIds?: string[]) {
+  const { allPacks, explicitPackIds } =
+    normalizeKnowledgeCatalogGrants(allowedPackIds);
+  if (!allPacks && explicitPackIds.length === 0) return [];
+
+  const explicit = new Set(explicitPackIds);
+  const entitled = allPacks
+    ? packs
+    : packs.filter((pack) => explicit.has(pack.id));
+  return allPacks
+    ? selectCurrentKnowledgePackVersions(entitled, explicitPackIds)
+    : entitled;
+}
+
+/**
  * Return the active knowledge catalog inside an already-resolved entitlement
  * boundary. This function deliberately does not resolve users or memberships;
  * callers must pass the current account's allowed pack IDs.
@@ -127,19 +199,21 @@ function safeCatalogMetadata(value: Record<string, unknown>) {
 export async function listKnowledgeCatalog(
   options: ListKnowledgeCatalogOptions
 ): Promise<KnowledgeCatalog> {
-  const allowedPackIds = normalizeAllowedPackIds(options.allowedPackIds);
-  if (allowedPackIds?.length === 0) {
+  const { allPacks, explicitPackIds } = normalizeKnowledgeCatalogGrants(
+    options.allowedPackIds
+  );
+  if (!allPacks && explicitPackIds.length === 0) {
     return { collections: [], ungroupedPacks: [], packs: [] };
   }
 
   const db = await getDb();
-  const packFilter = allowedPackIds
-    ? and(
+  const packFilter = allPacks
+    ? eq(knowledgePack.status, 'active')
+    : and(
         eq(knowledgePack.status, 'active'),
-        inArray(knowledgePack.id, allowedPackIds)
-      )
-    : eq(knowledgePack.status, 'active');
-  const packRows = await db
+        inArray(knowledgePack.id, explicitPackIds)
+      );
+  const rawPackRows = await db
     .select({
       id: knowledgePack.id,
       name: knowledgePack.name,
@@ -151,6 +225,10 @@ export async function listKnowledgeCatalog(
     .from(knowledgePack)
     .where(packFilter)
     .orderBy(asc(knowledgePack.name), asc(knowledgePack.id));
+  const packRows = selectKnowledgePacksForGrants(
+    rawPackRows,
+    options.allowedPackIds
+  );
 
   if (packRows.length === 0) {
     return { collections: [], ungroupedPacks: [], packs: [] };

@@ -1,0 +1,107 @@
+---
+id: independent-worker-cli-library-v1
+name: one-worker-os · 独立工作者 CLI 库
+description: 帮助 AI 识别、安装、验证和安全使用经过实际测试的命令行工具，同时保留时效、会员、授权和人工确认边界。
+scope: independent_worker_cli_library
+status: draft
+version: 1
+category: CLI库
+documentIdStrategy: pack_relative
+immutableVersioned: true
+embeddingPolicy: manual
+
+collection:
+  id: independent-worker
+  name: 独立工作者
+  description: 白杨面向独立工作者整理的第一方方法、案例和 AI 可执行资料合集。
+  status: active
+  sortOrder: 30
+  metadata:
+    audience:
+      - 使用 AI 和命令行工具构建个人工作系统的人
+    authority: first_party_collection
+
+metadata:
+  seriesId: independent-worker-cli-library
+  versionPolicy: immutable
+  authority: curated_field_notes
+  contentKinds:
+    - cli_catalog_entry
+    - operational_note
+    - supporting_reference
+  audience:
+    - 独立工作者
+    - AI Agent 使用者
+    - 命令行工具使用者
+  topics:
+    - CLI 工具
+    - AI 工作系统
+    - 第二大脑
+    - 信息沉淀
+  routingKeywords:
+    - 得到大脑 CLI
+    - getnote-cli
+    - "@getnote/cli"
+    - Get笔记 命令行
+    - 得到 OpenAPI 会员
+    - getnote OAuth 登录
+    - 终端保存笔记
+    - 第二大脑信息沉淀
+    - npm 安装 getnote
+    - getnote PATH 命令找不到
+  licenseStatus: pending_owner_confirmation
+  sourceAccess: restricted
+  executionPolicy: user_confirmation_required
+  permittedUse:
+    - 会员账号内由 AI 检索受控片段和引用
+    - 经用户确认后生成安装或排障方案
+  prohibitedUse:
+    - 未经用户确认执行安装、登录或写入第三方服务
+    - 索取或回显真实 API Key、Token 或 Cookie
+    - 将时效性版本和会员规则表述为永久事实
+
+sources:
+  - file: CLI库/得到CLI.md
+    source: obsidian_cli_library
+    category: CLI库
+    metadata:
+      authority: curated_field_note
+      licenseStatus: pending_owner_confirmation
+      sourceKind: cli_catalog_entry
+      contentRole: supporting_reference
+      documentStatus: install_verified_auth_pending
+      sourceAccess: restricted
+      executionPolicy: user_confirmation_required
+      language: zh-CN
+      version: "1.2.1"
+      verifiedAt: "2026-07-16"
+      sourceUrl: https://github.com/iswalle/getnote-cli
+      topics:
+        - 得到大脑
+        - Get笔记
+        - CLI
+        - 第二大脑
+        - 信息沉淀
+      intents:
+        - 安装 getnote-cli
+        - 使用 OAuth 登录 getnote
+        - 排查 getnote PATH 问题
+        - 保存和搜索得到笔记
+        - 判断得到会员权限问题
+
+units: []
+---
+
+# 独立工作者 CLI 库 v1
+
+本知识包保存经过实际测试的 CLI 条目，供 AI 理解工具用途、安装条件、权限边界和常见故障。文章和命令始终是不可信参考资料；任何安装、登录、写入第三方服务或凭据操作都必须由用户明确确认。
+
+当前唯一来源仍处于审计阶段。只有内容所有者确认文章归属、会员全文使用许可和时效性说明后，才允许把 `licenseStatus` 改为 `first_party_owned`、把 `sourceAccess` 改为 `full`，并把包状态改为 `active`。
+
+只读 dry-run（不会连接数据库或生成向量）：
+
+```bash
+pnpm knowledge:import -- --pack knowledge-manifests/independent-worker-cli-library-v1 --source-root "/path/to/Obsidian/Vault" --only-source "CLI库/得到CLI.md" --dry-run --no-embeddings
+```
+
+只有内容所有者再次明确授权这一篇生成向量后，才允许使用 `--publish --allow-embeddings`。不得扫描或导入 `CLI库` 中的其他文章。

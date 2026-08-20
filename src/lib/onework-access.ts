@@ -4,6 +4,7 @@ import {
   apiKey,
   apiKeyPackGrant,
   apiUsageEvent,
+  knowledgePack,
   oneworkActivationCode,
   oneworkDevice,
   oneworkEntitlement,
@@ -66,25 +67,66 @@ function oneWorkDeviceLimit() {
     : 3;
 }
 
-function normalizePackIds(packIds: string[]) {
-  if (packIds.some((packId) => packId.trim() === ALL_PACKS_GRANT)) {
+export async function validateOneWorkPackIds(
+  packIds: string[],
+  findActivePackIds: (packIds: readonly string[]) => Promise<readonly string[]>
+) {
+  const normalized = [
+    ...new Set(packIds.map((packId) => packId.trim()).filter(Boolean)),
+  ];
+  if (normalized.length === 0 || normalized.length > 100) {
+    throw new OneWorkAccessError(
+      '至少选择一个有效的 one-worker-os 知识包',
+      'INVALID_PACKS'
+    );
+  }
+  if (normalized.includes(ALL_PACKS_GRANT)) {
+    if (normalized.length !== 1) {
+      throw new OneWorkAccessError(
+        '全量权益不能与单独知识包混合选择',
+        'INVALID_PACKS'
+      );
+    }
     return [ALL_PACKS_GRANT];
   }
-  const allowed = new Set<string>(ONEWORK_PUBLIC_PACKS);
-  const normalized = [
-    ...new Set(
-      packIds
-        .map((packId) => packId.trim())
-        .filter((packId) => allowed.has(packId))
-    ),
-  ];
-  if (normalized.length === 0) {
+  if (
+    normalized.some(
+      (packId) => packId.length > 160 || !/^[a-z0-9][a-z0-9._-]*$/.test(packId)
+    )
+  ) {
     throw new OneWorkAccessError(
-      '至少选择一个有效的 OneWorkOS 知识包',
+      '至少选择一个有效的 one-worker-os 知识包',
+      'INVALID_PACKS'
+    );
+  }
+
+  const activeIds = new Set(await findActivePackIds(normalized));
+  if (
+    activeIds.size !== normalized.length ||
+    normalized.some((packId) => !activeIds.has(packId))
+  ) {
+    throw new OneWorkAccessError(
+      '所选知识包不存在、尚未发布或已经停用',
       'INVALID_PACKS'
     );
   }
   return normalized;
+}
+
+async function normalizePackIds(packIds: string[], database?: any) {
+  const db = database || (await getDb());
+  return validateOneWorkPackIds(packIds, async (normalized) => {
+    const activeRows = await db
+      .select({ id: knowledgePack.id })
+      .from(knowledgePack)
+      .where(
+        and(
+          eq(knowledgePack.status, 'active'),
+          inArray(knowledgePack.id, [...normalized])
+        )
+      );
+    return activeRows.map((row: { id: string }) => row.id);
+  });
 }
 
 function makeActivationCode() {
@@ -295,7 +337,8 @@ export async function issueOneWorkActivationCode({
   expiresAt?: Date | null;
   createdByUserId?: string | null;
 }) {
-  const safePackIds = normalizePackIds(packIds);
+  const db = await getDb();
+  const safePackIds = await normalizePackIds(packIds, db);
   const safeTrialDays = positiveInteger(trialDays, '权益天数', 3650);
   const safeMonthlyQuota = positiveInteger(
     monthlyQuota,
@@ -310,8 +353,6 @@ export async function issueOneWorkActivationCode({
   }
   const rawCode = makeActivationCode();
   const codePrefix = `${rawCode.slice(0, 13)}…`;
-  const db = await getDb();
-
   await db.insert(oneworkActivationCode).values({
     id: `activation_${randomUUID()}`,
     codeHash: hashSecret(rawCode),
@@ -331,7 +372,7 @@ export async function issueOneWorkActivationCode({
 
 /**
  * 给网站内购成功的账号直接授予权益。外部平台成交仍使用兑换码；
- * 网站 OneWorkOS 会员成交后直接授予全量知识库权益。
+ * 网站 one-worker-os 会员成交后直接授予全量知识库权益。
  */
 export async function grantOneWorkEntitlements({
   userId,
@@ -348,14 +389,14 @@ export async function grantOneWorkEntitlements({
   source?: string;
   externalOrderId?: string | null;
 }) {
-  const safePackIds = normalizePackIds(packIds);
+  const db = await getDb();
+  const safePackIds = await normalizePackIds(packIds, db);
   const safeTrialDays = positiveInteger(trialDays, '权益天数', 3650);
   const safeMonthlyQuota = positiveInteger(
     monthlyQuota,
     '每月额度',
     10_000_000
   );
-  const db = await getDb();
   const now = new Date();
   const requestedExpiresAt = addDays(now, safeTrialDays);
 
@@ -462,7 +503,7 @@ export function shouldGrantOneWorkForPrice(priceId: string) {
 }
 
 export function getOneWorkPaymentPacks() {
-  // 一次购买即授予全部 OneWorkOS 知识库；后续新增知识包无需改环境变量。
+  // 一次购买即授予全部 one-worker-os 知识库；后续新增知识包无需改环境变量。
   return [ALL_PACKS_GRANT];
 }
 
@@ -525,7 +566,7 @@ export async function redeemOneWorkActivation({
       );
     }
 
-    const packIds = normalizePackIds(activation.packIds);
+    const packIds = await normalizePackIds(activation.packIds, tx);
     const trialDays = positiveInteger(activation.trialDays, '权益天数', 3650);
     const monthlyQuota = positiveInteger(
       activation.monthlyQuota,
@@ -640,7 +681,7 @@ export async function createOneWorkInstallToken({
       entitlements.every((item) => (item.monthlyQuota || 0) < 1)
     ) {
       throw new OneWorkAccessError(
-        '当前账号没有有效的 OneWorkOS 权益，请先兑换或续费',
+        '当前账号没有有效的 one-worker-os 权益，请先兑换或续费',
         'NO_ACTIVE_ENTITLEMENT',
         403
       );
@@ -742,7 +783,7 @@ export async function claimOneWorkInstallToken({
       effectiveEntitlements.every((item) => (item.monthlyQuota || 0) < 1)
     ) {
       throw new OneWorkAccessError(
-        '当前账号没有有效的 OneWorkOS 权益，请先兑换或续费',
+        '当前账号没有有效的 one-worker-os 权益，请先兑换或续费',
         'NO_ACTIVE_ENTITLEMENT',
         403
       );
@@ -750,7 +791,10 @@ export async function claimOneWorkInstallToken({
     const packIds =
       allAccessEntitlements.length > 0
         ? [ALL_PACKS_GRANT]
-        : normalizePackIds(entitlements.map((item) => item.knowledgePackId));
+        : await normalizePackIds(
+            entitlements.map((item) => item.knowledgePackId),
+            tx
+          );
     const packExpiries = Object.fromEntries(
       effectiveEntitlements.map((item) => [
         item.knowledgePackId,
@@ -777,7 +821,7 @@ export async function claimOneWorkInstallToken({
       monthlyQuota,
       expiresAt: earliestExpiry,
       packExpiries,
-      name: `${deviceName || install.deviceName || 'OneWorkOS'} · ${platform || install.platform}`,
+      name: `${deviceName || install.deviceName || 'one-worker-os'} · ${platform || install.platform}`,
       source: 'install',
       deviceId: deviceId.trim(),
       deviceName: deviceName || install.deviceName,
