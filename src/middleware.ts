@@ -9,6 +9,8 @@ import {
 } from './routes';
 
 const intlMiddleware = createMiddleware(routing);
+const CANONICAL_HOSTNAME = 'www.dlgzz.com';
+const LEGACY_HOSTNAME = 'dlgzz.com';
 
 /**
  * 1. Next.js middleware
@@ -22,6 +24,17 @@ const intlMiddleware = createMiddleware(routing);
  */
 export default async function middleware(req: NextRequest) {
   const { nextUrl } = req;
+
+  // Keep browser navigation, Better Auth, and its host-only session cookie on
+  // one origin. API, OAuth, MCP, and static asset routes are excluded by the
+  // matcher below so existing payment and integration callbacks are unchanged.
+  if (getRequestHostname(req) === LEGACY_HOSTNAME) {
+    const canonicalUrl = nextUrl.clone();
+    canonicalUrl.protocol = 'https:';
+    canonicalUrl.hostname = CANONICAL_HOSTNAME;
+    canonicalUrl.port = '';
+    return NextResponse.redirect(canonicalUrl, 308);
+  }
 
   // Middleware only performs an optimistic cookie check for redirects. API routes
   // and server components must still validate the full session and permissions.
@@ -63,6 +76,13 @@ export default async function middleware(req: NextRequest) {
 
   // Apply intlMiddleware for all routes
   return intlMiddleware(req);
+}
+
+function getRequestHostname(req: NextRequest): string {
+  const forwardedHost = req.headers.get('x-forwarded-host')?.split(',')[0];
+  const host = forwardedHost ?? req.headers.get('host') ?? '';
+
+  return host.trim().toLowerCase().replace(/:\d+$/, '');
 }
 
 /**
