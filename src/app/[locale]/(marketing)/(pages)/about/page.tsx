@@ -38,9 +38,9 @@ export default async function AboutPage() {
         <div className="flex flex-col items-center text-center">
           <Avatar className="size-32">
             <AvatarImage
-              className="rounded-full border-4 border-background"
-              src="/images/avatars/yihui.png"
-              alt="Avatar"
+              className="rounded-full border-4 border-background object-cover object-[center_42%]"
+              src="/images/avatars/xiaobai.png"
+              alt="小白"
             />
             <AvatarFallback>
               <div className="size-32 text-muted-foreground" />
@@ -54,10 +54,16 @@ export default async function AboutPage() {
         </div>
 
         {/* Introduction */}
-        <div className="mt-12 prose prose-neutral dark:prose-invert mx-auto">
-          <p className="text-base leading-relaxed text-muted-foreground">
-            {t('introduction')}
-          </p>
+        <div className="mt-12">
+          <div className="relative rounded-2xl border border-stone-200 bg-stone-50/70 px-6 py-7 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+            <span
+              aria-hidden="true"
+              className="absolute left-0 top-7 h-12 w-1 rounded-r-full bg-blue-600"
+            />
+            <p className="whitespace-pre-line pl-4 font-serif text-base leading-8 text-slate-700">
+              {t('introduction')}
+            </p>
+          </div>
         </div>
 
         {/* Action buttons */}
@@ -65,7 +71,7 @@ export default async function AboutPage() {
           {websiteConfig.mail.supportEmail && (
             <a
               href={`mailto:${websiteConfig.mail.supportEmail}`}
-              className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
             >
               <MailIcon className="size-4" />
               {t('talkWithMe')}

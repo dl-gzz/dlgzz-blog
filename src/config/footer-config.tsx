@@ -31,11 +31,6 @@ export function getFooterLinks(): NestedMenuItem[] {
           href: Routes.Pricing,
           external: false,
         },
-        {
-          title: t('product.items.faq'),
-          href: Routes.FAQ,
-          external: false,
-        },
       ],
     },
     {
@@ -51,11 +46,6 @@ export function getFooterLinks(): NestedMenuItem[] {
           href: Routes.Docs,
           external: false,
         },
-        {
-          title: t('resources.items.changelog'),
-          href: Routes.Changelog,
-          external: false,
-        },
       ],
     },
     {
@@ -69,26 +59,6 @@ export function getFooterLinks(): NestedMenuItem[] {
         {
           title: t('company.items.contact'),
           href: Routes.Contact,
-          external: false,
-        },
-      ],
-    },
-    {
-      title: t('legal.title'),
-      items: [
-        {
-          title: t('legal.items.cookiePolicy'),
-          href: Routes.CookiePolicy,
-          external: false,
-        },
-        {
-          title: t('legal.items.privacyPolicy'),
-          href: Routes.PrivacyPolicy,
-          external: false,
-        },
-        {
-          title: t('legal.items.termsOfService'),
-          href: Routes.TermsOfService,
           external: false,
         },
       ],
