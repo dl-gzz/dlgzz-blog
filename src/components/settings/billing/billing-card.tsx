@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPricePlans } from '@/config/price-config';
+import { useOneWorkEntitlement } from '@/hooks/use-onework-entitlement';
 import { usePayment } from '@/hooks/use-payment';
 import { LocaleLink } from '@/i18n/navigation';
 import { authClient } from '@/lib/auth-client';
@@ -38,6 +39,10 @@ export default function BillingCard() {
   const { data: session, isPending: isLoadingSession } =
     authClient.useSession();
   const currentUser = session?.user;
+  const {
+    hasActiveOneWorkEntitlement,
+    isLoading: isLoadingOneWorkEntitlement,
+  } = useOneWorkEntitlement();
 
   // Get price plans with translations - must be called here to maintain hook order
   const pricePlans = getPricePlans();
@@ -63,7 +68,8 @@ export default function BillingCard() {
     : null;
 
   // Determine if we are in a loading state
-  const isPageLoading = isLoadingPayment || isLoadingSession;
+  const isPageLoading =
+    isLoadingPayment || isLoadingSession || isLoadingOneWorkEntitlement;
 
   // Render loading skeleton
   if (isPageLoading) {
@@ -118,6 +124,30 @@ export default function BillingCard() {
 
   // currentPlanFromStore maybe null, so we need to check if it is null
   if (!currentPlanFromStore) {
+    if (hasActiveOneWorkEntitlement) {
+      return (
+        <div className="grid gap-8 md:grid-cols-2">
+          <Card
+            className={cn(
+              'w-full max-w-lg md:max-w-xl overflow-hidden pt-6 pb-0 flex flex-col'
+            )}
+          >
+            <CardHeader>
+              <CardTitle>{t('currentPlan.title')}</CardTitle>
+              <CardDescription>
+                {t('currentPlan.oneWorkActiveDescription')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-muted-foreground">
+                {t('currentPlan.oneWorkActiveMessage')}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <div className="grid gap-8 md:grid-cols-2">
         <Card

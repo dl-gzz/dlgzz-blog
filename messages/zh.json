@@ -571,7 +571,9 @@
         "currentPlan": {
           "title": "当前方案",
           "description": "您当前的独立沉思录订阅详情",
-          "noPlan": "您没有激活的方案"
+          "noPlan": "您没有激活的方案",
+          "oneWorkActiveDescription": "OneWork 会员权益已激活，当前无需重复升级。",
+          "oneWorkActiveMessage": "您可以继续使用 one-worker-os 的会员额度。"
         },
         "CustomerPortalButton": {
           "loading": "加载中...",

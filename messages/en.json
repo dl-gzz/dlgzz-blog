@@ -573,7 +573,9 @@
         "currentPlan": {
           "title": "Current Plan",
           "description": "Your current Independent Meditations subscription details",
-          "noPlan": "You have no active plan"
+          "noPlan": "You have no active plan",
+          "oneWorkActiveDescription": "Your OneWork membership is active; you do not need to upgrade again.",
+          "oneWorkActiveMessage": "You can continue using your one-worker-os membership quota."
         },
         "CustomerPortalButton": {
           "loading": "Loading...",

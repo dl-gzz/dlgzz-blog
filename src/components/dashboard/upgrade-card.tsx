@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { websiteConfig } from '@/config/website';
+import { useOneWorkEntitlement } from '@/hooks/use-onework-entitlement';
 import { usePayment } from '@/hooks/use-payment';
 import { LocaleLink } from '@/i18n/navigation';
 import { Routes } from '@/routes';
@@ -24,6 +25,10 @@ export function UpgradeCard() {
   const t = useTranslations('Dashboard.upgrade');
   const [mounted, setMounted] = useState(false);
   const { isLoading, currentPlan, subscription } = usePayment();
+  const {
+    hasActiveOneWorkEntitlement,
+    isLoading: isLoadingOneWorkEntitlement,
+  } = useOneWorkEntitlement();
 
   useEffect(() => {
     setMounted(true);
@@ -32,7 +37,13 @@ export function UpgradeCard() {
   // Don't show the upgrade card if the user has a lifetime membership or a subscription
   const isMember = currentPlan?.isLifetime || !!subscription;
 
-  if (!mounted || isLoading || isMember) {
+  if (
+    !mounted ||
+    isLoading ||
+    isLoadingOneWorkEntitlement ||
+    isMember ||
+    hasActiveOneWorkEntitlement
+  ) {
     return null;
   }
 
