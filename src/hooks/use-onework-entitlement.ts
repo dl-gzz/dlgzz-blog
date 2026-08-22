@@ -18,6 +18,7 @@ function hasActiveEntitlement(entitlements: Entitlement[]) {
 
 /**
  * Reads the canonical OneWork membership state for UI decisions.
+ * A failed lookup stays conservative and leaves the legacy billing prompt available.
  * This is intentionally separate from the legacy website payment store.
  */
 export function useOneWorkEntitlement() {
