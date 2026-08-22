@@ -2,6 +2,7 @@
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { getPricePlans } from '@/config/price-config';
+import { useOneWorkEntitlement } from '@/hooks/use-onework-entitlement';
 import { cn } from '@/lib/utils';
 import {
   PaymentTypes,
@@ -34,13 +35,23 @@ export function PricingTable({
 }: PricingTableProps) {
   const t = useTranslations('PricingPage');
   const [interval, setInterval] = useState<PlanInterval>(PlanIntervals.MONTH);
+  const {
+    hasActiveOneWorkEntitlement,
+    isLoading: isLoadingOneWorkEntitlement,
+  } = useOneWorkEntitlement();
 
   // Get price plans with translations
   const pricePlans = getPricePlans();
   const plans = Object.values(pricePlans);
 
-  // Current plan ID for comparison
-  const currentPlanId = currentPlan?.id || null;
+  // Treat an active OneWork entitlement as the current plan so members do not
+  // see a second upgrade path or accidentally purchase the same access again.
+  const currentPlanId =
+    currentPlan?.id || (hasActiveOneWorkEntitlement ? 'pro' : null);
+
+  if (isLoadingOneWorkEntitlement) {
+    return <div className="min-h-48" aria-busy="true" />;
+  }
 
   // Filter plans into free, subscription and one-time plans
   const freePlans = plans.filter((plan) => plan.isFree && !plan.disabled);

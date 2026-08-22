@@ -122,32 +122,32 @@ export default function BillingCard() {
     );
   }
 
-  // currentPlanFromStore maybe null, so we need to check if it is null
-  if (!currentPlanFromStore) {
-    if (hasActiveOneWorkEntitlement) {
-      return (
-        <div className="grid gap-8 md:grid-cols-2">
-          <Card
-            className={cn(
-              'w-full max-w-lg md:max-w-xl overflow-hidden pt-6 pb-0 flex flex-col'
-            )}
-          >
-            <CardHeader>
-              <CardTitle>{t('currentPlan.title')}</CardTitle>
-              <CardDescription>
-                {t('currentPlan.oneWorkActiveDescription')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm text-muted-foreground">
-                {t('currentPlan.oneWorkActiveMessage')}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
+  if (hasActiveOneWorkEntitlement) {
+    return (
+      <div className="grid gap-8 md:grid-cols-2">
+        <Card
+          className={cn(
+            'w-full max-w-lg md:max-w-xl overflow-hidden pt-6 pb-0 flex flex-col'
+          )}
+        >
+          <CardHeader>
+            <CardTitle>{t('currentPlan.title')}</CardTitle>
+            <CardDescription>
+              {t('currentPlan.oneWorkActiveDescription')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-muted-foreground">
+              {t('currentPlan.oneWorkActiveMessage')}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
+  // currentPlanFromStore may be null, so we need to check if it is null
+  if (!currentPlanFromStore) {
     return (
       <div className="grid gap-8 md:grid-cols-2">
         <Card
