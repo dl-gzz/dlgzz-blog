@@ -1,0 +1,19 @@
+{
+  "schema": "one-worker-os.universal-release.v1",
+  "name": "one-worker-os",
+  "version": "1.0.0",
+  "artifact": {
+    "url": "/one-worker-os-universal/one-worker-os-universal-1.0.0.zip",
+    "size": 43843,
+    "sha256": "bc984fffd78c675928a5e3149c4413b798164b8ec7ffab1c8f3e5997fa64ffb8"
+  },
+  "hosts": [
+    "workbuddy",
+    "doubao",
+    "lobster"
+  ],
+  "mcp": {
+    "url": "https://www.dlgzz.com/mcp",
+    "transport": "streamable-http"
+  }
+}

@@ -1,29 +1,44 @@
 ---
-title: WorkBuddy 连接教程
-description: 在 WorkBuddy 中安装 OneWorkOS 插件并完成网页授权
+title: AI 客户端连接教程
+description: 使用一个通用安装包连接 WorkBuddy、豆包或龙虾并完成网页授权
 icon: Plug
 ---
 
 ## 连接前检查
 
-- 已安装并能正常打开 WorkBuddy
+- 已安装并能正常打开 WorkBuddy、豆包或龙虾
 - 已登录 OneWorkOS 账号
 - 会员状态有效，或已经准备好兑换码
 - 网络能够打开 `www.dlgzz.com`
 
-## 第一步：安装插件
+## 第一步：下载通用安装包
 
 1. 打开 [OneWorkOS 连接页面](/onework)或 [OneWorkOS 设置](/settings/onework)
-2. 点击“复制安装指令”
-3. 打开 WorkBuddy，新建一个任务
-4. 粘贴并发送安装指令
-5. 等待 WorkBuddy 完成安装和真实环境校验
+2. 点击“下载通用安装包”
+3. 将 ZIP 交给当前 AI 客户端读取
+4. AI 根据包内 `manifest.json` 选择对应的客户端入口
 
-安装指令由网站统一更新，不建议复制旧教程中的命令。
+一个包同时包含 WorkBuddy、豆包和龙虾的安装说明与配置，不需要复制长指令。
 
-## 第二步：连接账号
+## 第二步：按客户端安装
 
-在 WorkBuddy 中依次进入：
+### WorkBuddy
+
+在 WorkBuddy 的“技能/插件 → 插件市场”导入包内的 WorkBuddy 市场 ZIP，安装并启用 `one-worker-os@one-worker-os-marketplace`。
+
+### 豆包
+
+在豆包或火山方舟的 MCP / 自定义 MCP 入口导入包内 `adapters/doubao/mcp.json`。
+
+### 龙虾（OpenClaw）
+
+在龙虾的 MCP 设置中导入 `adapters/lobster/openclaw.json`，或由 AI 执行：
+
+`openclaw mcp add one-worker-os --url https://www.dlgzz.com/mcp --transport streamable-http --auth oauth`
+
+## 第三步：连接账号
+
+在当前客户端的 MCP 列表中找到 `one-worker-os`，点击“连接”“登录”或“重连”。WorkBuddy 的入口是：
 
 **专家·技能·连接器 → 连接器 → 自定义连接器 → one-worker-os → 连接**
 
@@ -36,9 +51,9 @@ icon: Plug
 
 同一会员账号同一时间只保留 1 个有效的 one-worker-os OAuth 连接。如果账号已有连接，授权页会显示“允许并替换”；只有本次令牌交换成功后，旧位置才会在下一次请求时失效。网站登录、会员权益和云端知识不受影响。
 
-## 第三步：测试
+## 第四步：测试
 
-连接成功后，可以直接在 WorkBuddy 新任务中说出目标：
+连接成功后，可以直接在当前 AI 客户端中说出目标：
 
 - “我想连接 WorkBuddy 的 QQ 邮箱，请告诉我下一步。”
 - “我想使用 WorkBuddy 制作 PPT，从哪里开始？”
@@ -50,7 +65,7 @@ icon: Plug
 <Accordions>
 <Accordion title="看不到 one-worker-os 连接器">
 
-确认安装任务已经完成。必要时重新打开 WorkBuddy，再从网站复制最新安装指令执行一次。
+确认通用包已经被当前客户端导入并保存。WorkBuddy 必要时重新打开应用；豆包或龙虾请刷新 MCP 列表。
 
 </Accordion>
 

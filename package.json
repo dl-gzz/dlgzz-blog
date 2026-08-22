@@ -33,6 +33,8 @@
     "one-worker-os:plugin:package": "node plugins/one-worker-os/scripts/package.mjs",
     "one-worker-os:plugin:validate": "node plugins/one-worker-os/scripts/package.mjs --check",
     "one-worker-os:plugin:sync-legacy": "node plugins/one-worker-os/scripts/package.mjs --sync-legacy --check",
+    "one-worker-os:universal:package": "node scripts/package-one-worker-os-universal.mjs",
+    "one-worker-os:universal:validate": "node scripts/package-one-worker-os-universal.mjs --check",
     "test:onework:access": "node --require ./tests/register-server-only.cjs --import tsx scripts/test-onework-access.ts",
     "test:onework:analytics": "node --import tsx scripts/test-onework-analytics-api.ts",
     "test:onework:public-api": "node --import tsx scripts/test-onework-public-api.ts",

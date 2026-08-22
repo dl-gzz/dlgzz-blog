@@ -18,12 +18,12 @@ import {
   CheckCircle2Icon,
   CircleIcon,
   CopyIcon,
+  DownloadIcon,
   ExternalLinkIcon,
   KeyRoundIcon,
   Link2Icon,
   Loader2Icon,
   LogInIcon,
-  PlugZapIcon,
   RefreshCwIcon,
   ShieldCheckIcon,
   SparklesIcon,
@@ -69,12 +69,21 @@ type AccessData = {
   };
 };
 
-const WORKBUDDY_INSTALL_PROMPT = [
-  '请在当前 WorkBuddy 安装并连接 one-worker-os。',
-  '请打开并严格执行：https://www.dlgzz.com/one-worker-os-marketplace/workbuddy-install.md',
-  '先自检是首次安装、旧版迁移还是已安装；所有结果必须写入并核验当前用户真实的 .workbuddy，不能使用临时或沙箱 profile；不得降级为独立 Skill、旧安装器或 API Key。除网页授权或必须重启外，请直接完成，并在真实验证成功后再告诉我。',
-  '不要在浏览器直接打开 https://www.dlgzz.com/mcp；授权必须从 WorkBuddy 的“自定义连接器 → 我的 MCP → one-worker-os → 连接/重连”发起。',
-].join('\n');
+const UNIVERSAL_PACKAGE_URL =
+  '/one-worker-os-universal/one-worker-os-universal-1.0.0.zip';
+const UNIVERSAL_INSTALL_GUIDE_URL = '/one-worker-os-universal/INSTALL.md';
+const GENERIC_MCP_CONFIG = JSON.stringify(
+  {
+    mcpServers: {
+      'one-worker-os': {
+        type: 'http',
+        url: 'https://www.dlgzz.com/mcp',
+      },
+    },
+  },
+  null,
+  2
+);
 
 const TEST_PROMPT = '查看我的 OneWorkOS 会员权益和剩余次数';
 
@@ -187,9 +196,6 @@ export function OneWorkAccessPanel({
   const [revokingClientId, setRevokingClientId] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [installCopyState, setInstallCopyState] = useState<
-    'idle' | 'copying' | 'copied' | 'error'
-  >('idle');
   const [now, setNow] = useState(() => Date.now());
 
   const activeEntitlements = useMemo(
@@ -201,7 +207,7 @@ export function OneWorkAccessPanel({
   const hasValidEntitlement = activeEntitlements.length > 0;
   const oauthConnections = access?.oauthConnections ?? [];
   const isAuthorized = oauthConnections.some(
-    (connection) => connection.identity === 'current'
+    (connection) => connection.identity !== 'legacy'
   );
   const canUseOneWorkerOs = hasValidEntitlement && isAuthorized;
   const hasHistoricalEntitlement = (access?.entitlements?.length ?? 0) > 0;
@@ -262,16 +268,6 @@ export function OneWorkAccessPanel({
       setMessage(successMessage);
     } catch {
       setError('浏览器没有允许复制，请允许剪贴板权限后重试。');
-    }
-  }
-
-  async function copyInstallPrompt() {
-    setInstallCopyState('copying');
-    try {
-      await navigator.clipboard.writeText(WORKBUDDY_INSTALL_PROMPT);
-      setInstallCopyState('copied');
-    } catch {
-      setInstallCopyState('error');
     }
   }
 
@@ -373,8 +369,8 @@ export function OneWorkAccessPanel({
           </div>
           <CardTitle className="text-2xl">登录后开始连接</CardTitle>
           <CardDescription className="max-w-xl text-base leading-7">
-            会员权益和 WorkBuddy 授权都属于你的账号。登录一次，即可在 Mac 或
-            Windows 上使用同一套连接流程。
+            会员权益和客户端授权都属于你的账号。登录一次，即可在
+            WorkBuddy、豆包或龙虾中连接使用。
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -410,21 +406,21 @@ export function OneWorkAccessPanel({
                           ? '会员已过期'
                           : '尚未开通'}
                 </Badge>
-                <Badge variant="outline">Mac / Windows 同一流程</Badge>
+                <Badge variant="outline">WorkBuddy / 豆包 / 龙虾</Badge>
               </div>
               <CardTitle className="text-2xl sm:text-3xl">
                 {canUseOneWorkerOs
                   ? 'OneWorkOS 已经可以使用'
                   : hasValidEntitlement
-                    ? '接下来，把 WorkBuddy 连接进来'
+                    ? '接下来，把你的 AI 客户端连接进来'
                     : hasHistoricalEntitlement
                       ? '续费后即可继续使用'
-                      : '先开通会员，再连接 WorkBuddy'}
+                      : '先开通会员，再连接 AI 客户端'}
               </CardTitle>
               <CardDescription className="max-w-2xl text-base leading-7">
                 {canUseOneWorkerOs
                   ? '你的会员账号已经授权给 AI 客户端。以后不需要复制 Key，知识库更新也不需要重新安装。'
-                  : '统一使用 WorkBuddy 插件和网页 OAuth。无需选择操作系统，无需安装 Node.js，也无需复制 API Key。'}
+                  : '下载一个通用安装包，交给 WorkBuddy、豆包或龙虾安装；安装后点击连接，完成网页授权即可。'}
               </CardDescription>
             </div>
             <Button
@@ -451,15 +447,15 @@ export function OneWorkAccessPanel({
             />
             <SetupStep
               index={2}
-              title="安装插件"
-              description="在 WorkBuddy 内安装并启用 OneWorkOS 插件。"
+              title="下载安装包"
+              description="下载一个通用包，AI 客户端会选择对应的安装入口。"
               done={isAuthorized}
               current={currentStep === 2}
             />
             <SetupStep
               index={3}
-              title="网页授权"
-              description="点击连接，在网页确认会员账号和授权范围。"
+              title="客户端连接"
+              description="在当前客户端的 MCP 连接入口点击连接并授权。"
               done={isAuthorized}
               current={currentStep === 2}
             />
@@ -521,59 +517,59 @@ export function OneWorkAccessPanel({
           )}
 
           {hasValidEntitlement && (
-            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
                 <div className="flex items-start gap-3">
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                    <PlugZapIcon className="size-5" />
+                    <DownloadIcon className="size-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-lg font-semibold">
-                      在 WorkBuddy 安装 OneWorkOS
+                      下载 one-worker-os 通用安装包
                     </h3>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      点击复制安装指令，粘贴到 WorkBuddy
-                      新任务中并发送，WorkBuddy 会自动完成后续处理。
+                      一个包同时支持 WorkBuddy、豆包和龙虾。AI
+                      客户端会读取包内说明，选择对应的安装方式。
                     </p>
                   </div>
                 </div>
-                <Button
-                  className={`mt-5 w-full sm:w-auto ${
-                    installCopyState === 'copied'
-                      ? 'bg-emerald-600 hover:bg-emerald-700'
-                      : ''
-                  }`}
-                  size="lg"
-                  disabled={installCopyState === 'copying'}
-                  aria-describedby="install-copy-feedback"
-                  onClick={() => void copyInstallPrompt()}
-                >
-                  {installCopyState === 'copying' ? (
-                    <Loader2Icon className="size-4 animate-spin" />
-                  ) : installCopyState === 'copied' ? (
-                    <CheckCircle2Icon className="size-4" />
-                  ) : (
-                    <CopyIcon className="size-4" />
-                  )}
-                  {installCopyState === 'copying'
-                    ? '正在复制…'
-                    : installCopyState === 'copied'
-                      ? '已复制，去 WorkBuddy 粘贴'
-                      : '复制安装指令'}
-                </Button>
-                <div id="install-copy-feedback" className="mt-3 min-h-6">
-                  {installCopyState === 'copied' ? (
-                    <output
-                      aria-live="polite"
-                      className="block text-sm font-medium text-emerald-700 dark:text-emerald-300"
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                  <Button asChild size="lg" className="sm:flex-1">
+                    <a href={UNIVERSAL_PACKAGE_URL} download>
+                      <DownloadIcon className="size-4" />
+                      下载通用安装包
+                    </a>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <a
+                      href={UNIVERSAL_INSTALL_GUIDE_URL}
+                      target="_blank"
+                      rel="noreferrer"
                     >
-                      复制成功。下一步：打开 WorkBuddy → 新建任务 → 粘贴并发送。
-                    </output>
-                  ) : installCopyState === 'error' ? (
-                    <p role="alert" className="text-sm text-destructive">
-                      复制失败，请重试；若仍失败，请检查浏览器的剪贴板权限。
+                      查看安装说明
+                      <ExternalLinkIcon className="size-4" />
+                    </a>
+                  </Button>
+                </div>
+                <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                  <div className="rounded-lg border border-primary/20 bg-background/70 p-3">
+                    <p className="text-sm font-semibold">WorkBuddy</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      导入插件包并启用
                     </p>
-                  ) : null}
+                  </div>
+                  <div className="rounded-lg border border-primary/20 bg-background/70 p-3">
+                    <p className="text-sm font-semibold">豆包</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      导入 MCP 配置
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-primary/20 bg-background/70 p-3">
+                    <p className="text-sm font-semibold">龙虾</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      添加远程 MCP
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -592,15 +588,25 @@ export function OneWorkAccessPanel({
                   </div>
                 </div>
                 <div className="mt-4 rounded-lg bg-muted p-3 text-sm font-medium leading-6">
-                  专家·技能·连接器 → 连接器 → 自定义连接器 → one-worker-os →
-                  连接
+                  安装完成后，在当前客户端的 MCP 列表找到
+                  one-worker-os，点击连接
                 </div>
                 <ol className="mt-4 space-y-2 text-sm leading-6 text-muted-foreground">
-                  <li>1. 浏览器会打开 OneWorkOS 授权页。</li>
-                  <li>2. 核对会员账号和四项权限。</li>
-                  <li>3. 由你本人点击「允许连接」。</li>
-                  <li>4. 返回本页点击「刷新状态」。</li>
+                  <li>1. 客户端自动发起 MCP 连接。</li>
+                  <li>2. 浏览器打开 OneWorkerOS 授权页。</li>
+                  <li>3. 核对账号和权限后点击「允许连接」。</li>
+                  <li>4. 返回客户端即可开始使用。</li>
                 </ol>
+                <Button
+                  className="mt-5 w-full"
+                  variant="outline"
+                  onClick={() =>
+                    void copyText(GENERIC_MCP_CONFIG, '通用 MCP 配置已复制。')
+                  }
+                >
+                  <CopyIcon className="size-4" />
+                  复制通用 MCP 配置（备用）
+                </Button>
               </div>
             </div>
           )}
@@ -613,8 +619,8 @@ export function OneWorkAccessPanel({
                   <div>
                     <h3 className="text-lg font-semibold">授权已经完成</h3>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      打开
-                      WorkBuddy，新建任务并直接说出需求即可。第一次可以用下面这句话验收。
+                      打开当前 AI
+                      客户端，直接说出需求即可。第一次可以用下面这句话验收。
                     </p>
                     <code className="mt-3 block rounded-lg border bg-background px-3 py-2 text-sm">
                       {TEST_PROMPT}
@@ -626,7 +632,7 @@ export function OneWorkAccessPanel({
                   onClick={() =>
                     void copyText(
                       TEST_PROMPT,
-                      '测试问题已复制，请粘贴到 WorkBuddy。'
+                      '测试问题已复制，请粘贴到当前 AI 客户端。'
                     )
                   }
                 >

@@ -6,7 +6,7 @@ icon: Laptop
 
 ## 当前推荐方式
 
-OneWorkOS 当前通过 **WorkBuddy 插件 + 网页授权**连接。会员权益属于账号，新版插件不再绑定某一台电脑，也不需要手动复制 API Key。同一账号同一时间只保留 1 个有效的 one-worker-os OAuth 连接；新连接成功后，旧连接会自动失效。
+OneWorkOS 当前通过 **通用安装包 + MCP + 网页授权**连接。会员权益属于账号，新版客户端不再绑定某一台电脑，也不需要手动复制 API Key。同一账号同一时间只保留 1 个有效的 one-worker-os OAuth 连接；新连接成功后，旧连接会自动失效。
 
 ## 安装与授权流程
 
@@ -16,13 +16,13 @@ OneWorkOS 当前通过 **WorkBuddy 插件 + 网页授权**连接。会员权益�
 
 打开 [OneWorkOS 设置](/settings/onework)，确认会员状态有效。
 
-### 复制安装指令
+### 下载通用安装包
 
-在账号页面复制当前安装指令，打开 WorkBuddy 新任务并粘贴发送。WorkBuddy 会完成插件安装和必要检查。
+在账号页面下载通用安装包，将 ZIP 交给 WorkBuddy、豆包或龙虾读取。包内包含三个客户端的安装入口和 MCP 配置。
 
-### 从 WorkBuddy 发起连接
+### 从客户端发起连接
 
-进入 WorkBuddy 的自定义连接器，找到 `one-worker-os`，点击“连接”或“重连”。
+在当前客户端的 MCP 列表中找到 `one-worker-os`，点击“连接”“登录”或“重连”。WorkBuddy 的入口是自定义连接器；龙虾也可以使用 `openclaw mcp login one-worker-os`。
 
 ### 在网页确认授权
 
@@ -35,7 +35,7 @@ OneWorkOS 当前通过 **WorkBuddy 插件 + 网页授权**连接。会员权益�
 </Steps>
 
 <Callout type="warn">
-不要直接在浏览器打开 `/mcp`。授权必须从 WorkBuddy 的连接器页面发起，否则系统无法确认正确的客户端和回调地址。
+不要直接在浏览器打开 `/mcp`。授权必须从当前客户端的 MCP 连接入口发起，否则系统无法确认正确的客户端和回调地址。
 </Callout>
 
 ## 当前连接
