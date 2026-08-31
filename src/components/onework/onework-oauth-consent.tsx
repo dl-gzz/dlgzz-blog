@@ -128,12 +128,13 @@ export function OneWorkOAuthConsent() {
       ) {
         throw new Error(errorMessage(payload));
       }
-      setRedirectTo(record.redirectTo);
+      const redirectUrl = record.redirectTo;
+      setRedirectTo(redirectUrl);
       setBusy(null);
       // Let the browser hand the custom workbuddy:// URL to the desktop app.
       // If the protocol handler is unavailable, the fallback link below stays
       // visible instead of leaving the consent button spinning forever.
-      window.location.assign(record.redirectTo);
+      window.setTimeout(() => window.location.assign(redirectUrl), 50);
     } catch (reason) {
       setError(
         reason instanceof DOMException && reason.name === 'AbortError'
