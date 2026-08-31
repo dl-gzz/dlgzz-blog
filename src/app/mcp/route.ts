@@ -276,7 +276,14 @@ export function GET() {
     'This stateless MCP endpoint accepts JSON-RPC via POST',
     405,
     undefined,
-    { Allow: 'POST, OPTIONS' }
+    {
+      Allow: 'POST, OPTIONS',
+      // Some WorkBuddy builds probe an HTTP MCP URL with GET before sending
+      // the first JSON-RPC POST. Keep the endpoint stateless/POST-only, but
+      // still advertise the OAuth resource so that probe can start OAuth
+      // instead of waiting indefinitely on a connector spinner.
+      'WWW-Authenticate': authChallenge(),
+    }
   );
 }
 
