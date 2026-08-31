@@ -68,12 +68,14 @@ export function OneWorkOAuthConsent() {
   const [data, setData] = useState<ConsentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<'approve' | 'deny' | null>(null);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const authorizationQuery = window.location.search;
     setQuery(authorizationQuery);
     const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15_000);
     void fetch(`/api/onework/oauth/authorize${authorizationQuery}`, {
       cache: 'no-store',
       signal: controller.signal,
@@ -86,21 +88,29 @@ export function OneWorkOAuthConsent() {
         setData(record);
       })
       .catch((reason) => {
-        if (reason instanceof DOMException && reason.name === 'AbortError')
-          return;
-        setError(reason instanceof Error ? reason.message : '授权请求无效');
+        if (reason instanceof DOMException && reason.name === 'AbortError') {
+          setError('授权服务响应超时，请刷新页面后重试。');
+        } else {
+          setError(reason instanceof Error ? reason.message : '授权请求无效');
+        }
       })
       .finally(() => setLoading(false));
-    return () => controller.abort();
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
   }, []);
 
   async function decide(decision: 'approve' | 'deny') {
     setBusy(decision);
     setError('');
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 20_000);
     try {
       const response = await fetch('/api/onework/oauth/authorize', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           decision,
           authorization_query: query,
@@ -118,10 +128,23 @@ export function OneWorkOAuthConsent() {
       ) {
         throw new Error(errorMessage(payload));
       }
+      setRedirectTo(record.redirectTo);
+      setBusy(null);
+      // Let the browser hand the custom workbuddy:// URL to the desktop app.
+      // If the protocol handler is unavailable, the fallback link below stays
+      // visible instead of leaving the consent button spinning forever.
       window.location.assign(record.redirectTo);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '授权失败，请重试');
+      setError(
+        reason instanceof DOMException && reason.name === 'AbortError'
+          ? '授权服务响应超时，请重试。'
+          : reason instanceof Error
+            ? reason.message
+            : '授权失败，请重试'
+      );
       setBusy(null);
+    } finally {
+      window.clearTimeout(timeout);
     }
   }
 
@@ -143,6 +166,30 @@ export function OneWorkOAuthConsent() {
         <AlertTitle>无法连接 OneWorkOS</AlertTitle>
         <AlertDescription>{error || '授权请求无效或已过期。'}</AlertDescription>
       </Alert>
+    );
+  }
+
+  if (redirectTo) {
+    return (
+      <Card className="mx-auto max-w-xl">
+        <CardContent className="space-y-4 p-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="size-6 text-green-600" />
+            <div>
+              <h1 className="font-semibold">授权已确认</h1>
+              <p className="text-sm text-muted-foreground">
+                正在返回 {data.client.name}…
+              </p>
+            </div>
+          </div>
+          <a
+            className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            href={redirectTo}
+          >
+            如果没有自动返回，点击这里继续
+          </a>
+        </CardContent>
+      </Card>
     );
   }
 
