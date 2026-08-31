@@ -284,6 +284,25 @@ function refreshTokenTtlSeconds() {
   );
 }
 
+/**
+ * A few OAuth clients retry a refresh request when the first response is slow
+ * or when two requests notice an expiring access token at the same time. A
+ * rotated refresh token is normally a replay signal, but treating a retry
+ * from the same short window as theft would revoke the whole connection. Keep
+ * that window short and configurable; replays outside it still revoke the
+ * token family.
+ */
+function refreshReplayGraceMs() {
+  return (
+    boundedInteger(
+      process.env.ONEWORK_OAUTH_REFRESH_REPLAY_GRACE_SECONDS,
+      60,
+      0,
+      300
+    ) * 1000
+  );
+}
+
 function dynamicClientLimit() {
   return boundedInteger(
     process.env.ONEWORK_OAUTH_DYNAMIC_CLIENT_LIMIT,
@@ -1406,7 +1425,69 @@ export async function rotateOneWorkRefreshToken(input: {
     if (!row || row.clientId !== input.clientId) {
       return { error: 'invalid' as const };
     }
+    if (
+      row.revokedAt ||
+      row.expiresAt.getTime() <= now.getTime() ||
+      row.resource !== requestedResource
+    ) {
+      return { error: 'invalid' as const };
+    }
+    if (
+      !(await activeOAuthSessionMatches(tx, {
+        userId: row.userId,
+        resource: row.resource,
+        clientId: row.clientId,
+        familyId: row.familyId,
+      }))
+    ) {
+      return { error: 'replaced' as const };
+    }
     if (row.consumedAt) {
+      const replayAgeMs = now.getTime() - row.consumedAt.getTime();
+      if (
+        row.replacedByTokenId &&
+        replayAgeMs >= 0 &&
+        replayAgeMs <= refreshReplayGraceMs()
+      ) {
+        // WorkBuddy can issue two refresh requests concurrently. Issue a new
+        // child pair for the retry instead of treating this benign race as a
+        // token theft and revoking the active family.
+        if (
+          !(await hasActiveOAuthConsent(
+            tx,
+            row.userId,
+            row.clientId,
+            row.scope
+          ))
+        ) {
+          return { error: 'invalid' as const };
+        }
+        await requireActiveEntitlement(row.userId, tx, 'invalid_grant');
+        const originalScopes = row.scope.split(/\s+/).filter(Boolean);
+        const requestedScopes = input.scope
+          ? normalizedScopeList(input.scope, originalScopes)
+          : (originalScopes as OneWorkOAuthScope[]);
+        const pair = tokenPairValues({
+          clientId: row.clientId,
+          userId: row.userId,
+          scope: requestedScopes.join(' '),
+          resource: row.resource,
+          familyId: row.familyId,
+          parentTokenId: row.id,
+        });
+        await insertTokenPair(tx, pair);
+        await tx
+          .update(oauthActiveSession)
+          .set({ lastSeenAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(oauthActiveSession.userId, row.userId),
+              eq(oauthActiveSession.resource, row.resource),
+              eq(oauthActiveSession.familyId, row.familyId)
+            )
+          );
+        return { token: publicTokenResponse(pair) };
+      }
       await tx
         .update(oauthRefreshToken)
         .set({ revokedAt: now })
@@ -1425,23 +1506,6 @@ export async function rotateOneWorkRefreshToken(input: {
           )
         );
       return { error: 'replayed' as const };
-    }
-    if (
-      row.revokedAt ||
-      row.expiresAt.getTime() <= now.getTime() ||
-      row.resource !== requestedResource
-    ) {
-      return { error: 'invalid' as const };
-    }
-    if (
-      !(await activeOAuthSessionMatches(tx, {
-        userId: row.userId,
-        resource: row.resource,
-        clientId: row.clientId,
-        familyId: row.familyId,
-      }))
-    ) {
-      return { error: 'replaced' as const };
     }
     if (
       !(await hasActiveOAuthConsent(tx, row.userId, row.clientId, row.scope))

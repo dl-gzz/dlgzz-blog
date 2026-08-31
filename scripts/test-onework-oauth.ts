@@ -865,26 +865,65 @@ async function main() {
       'access-token revoke must clear the active-session row'
     );
 
-    // Refresh replay still revokes the complete current family and now also
-    // removes the active-session pointer.
+    // A retry of a just-consumed refresh token is treated as a benign
+    // concurrent refresh. Both responses remain usable and the active family
+    // stays connected.
     const replayAuthorization = await issueAuthorization('replay');
     const replayPair = await exchangeAuthorization(replayAuthorization);
     const replayChild = await rotateOneWorkRefreshToken({
       clientId: registered.client_id,
       refreshToken: replayPair.refresh_token,
     });
-    await expectOAuthError(
-      () =>
-        rotateOneWorkRefreshToken({
-          clientId: registered.client_id,
-          refreshToken: replayPair.refresh_token,
-        }),
-      'invalid_grant'
+    const replayRetry = await rotateOneWorkRefreshToken({
+      clientId: registered.client_id,
+      refreshToken: replayPair.refresh_token,
+    });
+    assert(
+      (
+        await verifyOneWorkOAuthAccessToken(
+          `Bearer ${replayChild.access_token}`
+        )
+      ).ok &&
+        (
+          await verifyOneWorkOAuthAccessToken(
+            `Bearer ${replayRetry.access_token}`
+          )
+        ).ok,
+      'a refresh retry inside the grace window must keep both responses usable'
     );
+    assert(
+      (await activeSessions()).length === 1,
+      'a concurrent refresh retry must preserve the active-session row'
+    );
+
+    // Replays outside the grace window retain the security response and
+    // revoke the complete family. Set the window to zero so the test remains
+    // deterministic without sleeping.
+    const previousReplayGrace =
+      process.env.ONEWORK_OAUTH_REFRESH_REPLAY_GRACE_SECONDS;
+    process.env.ONEWORK_OAUTH_REFRESH_REPLAY_GRACE_SECONDS = '0';
+    try {
+      await expectOAuthError(
+        () =>
+          rotateOneWorkRefreshToken({
+            clientId: registered.client_id,
+            refreshToken: replayPair.refresh_token,
+          }),
+        'invalid_grant'
+      );
+    } finally {
+      if (previousReplayGrace === undefined) {
+        process.env.ONEWORK_OAUTH_REFRESH_REPLAY_GRACE_SECONDS = undefined;
+      } else {
+        process.env.ONEWORK_OAUTH_REFRESH_REPLAY_GRACE_SECONDS =
+          previousReplayGrace;
+      }
+    }
     await expectAccessFailure(replayChild.access_token, 'revoked');
+    await expectAccessFailure(replayRetry.access_token, 'revoked');
     assert(
       (await activeSessions()).length === 0,
-      'refresh replay must clear the active-session row'
+      'a replay outside the grace window must clear the active-session row'
     );
 
     // Connection revocation and refresh rotation share the active-session
@@ -960,7 +999,7 @@ async function main() {
           oldAccessReason: 'replaced',
           oldRefreshRejected: true,
           refreshStaysInFamily: true,
-          refreshRotationAndReplayRevocation: true,
+          refreshRotationReplayGraceAndRevocation: true,
           deviceAuthorizationReplacesSession: true,
           accountConnectionRevocation: true,
           accessTokenRevokesFamily: true,

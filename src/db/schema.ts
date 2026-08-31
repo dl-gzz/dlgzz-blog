@@ -902,7 +902,7 @@ export const oneworkOauthAccessToken = pgTable("onework_oauth_access_token", {
 	index('onework_oauth_access_token_expires_idx').on(table.expiresAt),
 ]);
 
-/** 刷新 token 每次使用后旋转；family 用于发现重放后整组撤销。 */
+/** 刷新 token 每次使用后旋转；短窗口内的并发重试不会误杀当前 family。 */
 export const oneworkOauthRefreshToken = pgTable("onework_oauth_refresh_token", {
 	id: text('id').primaryKey(),
 	tokenHash: text('token_hash').notNull(),
