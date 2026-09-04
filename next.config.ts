@@ -99,6 +99,10 @@ const nextConfig: NextConfig = {
         hostname: 'static-main.aiyeshi.cn',
       },
       {
+        protocol: 'https',
+        hostname: 'xiaohongshu-1251991248.cos.ap-chengdu.myqcloud.com',
+      },
+      {
         protocol: 'http',
         hostname: 'dashscope-result-sh.oss-cn-shanghai.aliyuncs.com',
       },

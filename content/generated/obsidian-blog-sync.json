@@ -1,1 +1,78 @@
-{}
+{
+  "generatedAt": "2026-09-04T11:48:42.609Z",
+  "sourceStatus": "已发送到公众号",
+  "articles": [
+    {
+      "sourceFile": "Mac 和 Windows 如何安装 WorkBuddy？先把数字员工请上岗（已发）.md",
+      "slug": "workbuddy-installation",
+      "title": "Mac 和 Windows 如何安装 WorkBuddy？先把数字员工请上岗",
+      "date": "2026-08-09",
+      "imageReferences": 24,
+      "mappedImages": 24
+    },
+    {
+      "sourceFile": "WorkBuddy如何新建任务栏（已发）.md",
+      "slug": "workbuddy-task-bar",
+      "title": "WorkBuddy的新建任务栏介绍",
+      "date": "2026-08-13",
+      "imageReferences": 10,
+      "mappedImages": 10
+    },
+    {
+      "sourceFile": "WorkBuddy的Skill介绍（已发）.md",
+      "slug": "workbuddy-skill",
+      "title": "WorkBuddy的Skill介绍",
+      "date": "2026-08-14",
+      "imageReferences": 12,
+      "mappedImages": 12
+    },
+    {
+      "sourceFile": "WorkBuddy的专家中心教程（已发）.md",
+      "slug": "workbuddy-expert-center",
+      "title": "WorkBuddy的专家中心介绍",
+      "date": "2026-08-14",
+      "imageReferences": 10,
+      "mappedImages": 10
+    },
+    {
+      "sourceFile": "WorkBuddy的助理介绍（已发）.md",
+      "slug": "workbuddy-assistant",
+      "title": "WorkBuddy的助理介绍",
+      "date": "2026-08-14",
+      "imageReferences": 8,
+      "mappedImages": 8
+    },
+    {
+      "sourceFile": "WorkBuddy的界面介绍（已发）.md",
+      "slug": "workbuddy-interface",
+      "title": "WorkBuddy的界面介绍",
+      "date": "2026-08-13",
+      "imageReferences": 13,
+      "mappedImages": 13
+    },
+    {
+      "sourceFile": "WorkBuddy的自动化介绍（已发）.md",
+      "slug": "workbuddy-automation",
+      "title": "WorkBuddy的自动化介绍",
+      "date": "2026-08-14",
+      "imageReferences": 11,
+      "mappedImages": 11
+    },
+    {
+      "sourceFile": "WorkBuddy的连接器介绍（已发）.md",
+      "slug": "workbuddy-connectors",
+      "title": "WorkBuddy的连接器介绍",
+      "date": "2026-08-14",
+      "imageReferences": 12,
+      "mappedImages": 12
+    },
+    {
+      "sourceFile": "WorkBuddy的项目介绍（已发）.md",
+      "slug": "workbuddy-projects",
+      "title": "WorkBuddy的项目介绍",
+      "date": "2026-08-14",
+      "imageReferences": 10,
+      "mappedImages": 10
+    }
+  ]
+}
