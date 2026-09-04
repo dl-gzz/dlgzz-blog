@@ -2,6 +2,7 @@ import 'server-only';
 
 import { promises as fs } from 'fs';
 import path from 'path';
+import { userHasPremiumAccess } from '@/lib/premium-access';
 import { authorSource, blogSource } from '@/lib/source';
 import matter from 'gray-matter';
 
@@ -320,7 +321,8 @@ export async function getMiniappBlogPosts(locale?: string) {
 
 export async function getMiniappBlogDetail(
   locale: string | undefined,
-  slug: string
+  slug: string,
+  userId?: string | null
 ) {
   const normalizedLocale = normalizeLocale(locale);
   const normalizedSlug = slug.trim();
@@ -342,6 +344,8 @@ export async function getMiniappBlogDetail(
   const paragraphs = splitParagraphs(parsed.content);
   const blocks = parseMdxToArticleBlocks(parsed.content);
   const premium = Boolean(post.data.premium);
+  const hasAccess =
+    !premium || Boolean(userId && (await userHasPremiumAccess(userId)));
   const previewParagraphs = paragraphs.slice(0, Math.min(3, paragraphs.length));
   const previewBlocks = getPreviewBlocks(blocks);
   const authorSlug =
@@ -364,10 +368,10 @@ export async function getMiniappBlogDetail(
     authorAvatar: author?.data.avatar,
     excerpt: previewParagraphs[0] || post.data.description || '',
     format: (post.data.images?.length || 0) > 1 ? 'gallery' : 'article',
-    locked: premium,
-    contentParagraphs: premium ? previewParagraphs : paragraphs,
+    locked: premium && !hasAccess,
+    contentParagraphs: hasAccess ? paragraphs : previewParagraphs,
     previewParagraphs,
-    contentBlocks: premium ? previewBlocks : blocks,
+    contentBlocks: hasAccess ? blocks : previewBlocks,
     previewBlocks,
   } satisfies MiniappBlogDetail;
 }

@@ -103,6 +103,85 @@ export const miniappAccount = pgTable("miniapp_account", {
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+/** 网站统一会员权益；星球、网站支付和管理员赠送都写入这里。 */
+export const membershipEntitlement = pgTable("membership_entitlement", {
+	id: text("id").primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	productId: text('product_id').notNull().default('club'),
+	level: text('level').notNull().default('member'),
+	source: text('source').notNull().default('activation'), // planet | website | activation | admin
+	status: text('status').notNull().default('active'), // active | expired | revoked
+	startsAt: timestamp('starts_at').notNull().defaultNow(),
+	expiresAt: timestamp('expires_at'),
+	externalId: text('external_id'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('membership_entitlement_user_product_unique_idx').on(table.userId, table.productId),
+	index('membership_entitlement_user_status_idx').on(table.userId, table.status),
+	index('membership_entitlement_external_id_idx').on(table.externalId),
+	index('membership_entitlement_expires_idx').on(table.expiresAt),
+]);
+
+/** 会员兑换码只保存哈希，原始码只在签发和兑换时短暂出现。 */
+export const membershipActivationCode = pgTable("membership_activation_code", {
+	id: text("id").primaryKey(),
+	codeHash: text('code_hash').notNull(),
+	codePrefix: text('code_prefix').notNull(),
+	productId: text('product_id').notNull().default('club'),
+	membershipLevel: text('membership_level').notNull().default('member'),
+	label: text('label').notNull().default(''),
+	source: text('source').notNull().default('planet'),
+	durationDays: integer('duration_days'), // NULL 表示永久
+	maxRedemptions: integer('max_redemptions').notNull().default(1),
+	redeemedCount: integer('redeemed_count').notNull().default(0),
+	status: text('status').notNull().default('active'), // active | redeemed | revoked
+	redeemedByUserId: text('redeemed_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+	redeemedAt: timestamp('redeemed_at'),
+	codeExpiresAt: timestamp('code_expires_at'),
+	createdByUserId: text('created_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('membership_activation_code_hash_unique_idx').on(table.codeHash),
+	index('membership_activation_code_status_idx').on(table.status),
+	index('membership_activation_code_external_source_idx').on(table.source),
+	index('membership_activation_code_redeemed_user_idx').on(table.redeemedByUserId),
+]);
+
+/** 小程序的 Bearer 会话；网站仍使用 Better Auth Cookie。 */
+export const miniappSession = pgTable("miniapp_session", {
+	id: text("id").primaryKey(),
+	tokenHash: text('token_hash').notNull(),
+	openid: text('openid').notNull(),
+	unionid: text('unionid'),
+	userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
+	expiresAt: timestamp('expires_at').notNull(),
+	lastSeenAt: timestamp('last_seen_at'),
+	revokedAt: timestamp('revoked_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('miniapp_session_token_hash_unique_idx').on(table.tokenHash),
+	index('miniapp_session_openid_idx').on(table.openid),
+	index('miniapp_session_user_idx').on(table.userId),
+	index('miniapp_session_expires_idx').on(table.expiresAt),
+]);
+
+/** 网站登录用户生成的一次性小程序绑定码。 */
+export const miniappBindCode = pgTable("miniapp_bind_code", {
+	id: text("id").primaryKey(),
+	codeHash: text('code_hash').notNull(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	expiresAt: timestamp('expires_at').notNull(),
+	consumedAt: timestamp('consumed_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+	uniqueIndex('miniapp_bind_code_hash_unique_idx').on(table.codeHash),
+	index('miniapp_bind_code_user_idx').on(table.userId),
+	index('miniapp_bind_code_expires_idx').on(table.expiresAt),
+]);
+
 export const healthUserProfile = pgTable("health_user_profile", {
 	id: text("id").primaryKey(),
 	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),

@@ -11,10 +11,14 @@ export async function GET() {
         surfaceColor: '#F8FAFC',
       },
       membership: {
-        planId: 'vip_yearly',
-        planName: '年度会员',
-        priceText: '请在支付接入后配置正式价格',
-        benefits: ['解锁会员文章', '解锁会员组件', '年度有效期 365 天'],
+        planId: 'club',
+        planName: '星球会员',
+        priceText: '在知识星球完成付费后，用兑换码开通',
+        benefits: [
+          '网站和小程序共享会员身份',
+          '解锁会员文章',
+          '按兑换码设置有效期',
+        ],
       },
       tabs: [
         { key: 'home', label: '博客' },

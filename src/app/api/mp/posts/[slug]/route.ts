@@ -1,3 +1,4 @@
+import { getOptionalMiniappSession } from '@/lib/miniapp-auth';
 import { getMiniappBlogDetail } from '@/lib/mp-blog';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -11,7 +12,18 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
   try {
     const { slug } = await params;
     const locale = request.nextUrl.searchParams.get('locale') || 'zh';
-    const detail = await getMiniappBlogDetail(locale, decodeURIComponent(slug));
+    let userId: string | null = null;
+    try {
+      userId = (await getOptionalMiniappSession(request))?.userId || null;
+    } catch {
+      // An expired optional token behaves like an anonymous reader. The client
+      // can refresh its login from the profile page without losing the post.
+    }
+    const detail = await getMiniappBlogDetail(
+      locale,
+      decodeURIComponent(slug),
+      userId
+    );
 
     if (!detail) {
       return NextResponse.json(

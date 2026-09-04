@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import { getDb } from '@/db';
 import { payment } from '@/db/schema';
+import { grantMembershipEntitlement } from '@/lib/membership';
 import {
   getOneWorkPaymentPacks,
   grantOneWorkEntitlements,
@@ -133,6 +134,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           monthlyQuota,
           source: 'xorpay',
           externalOrderId: `xorpay:${aoid}`,
+        });
+        await grantMembershipEntitlement({
+          userId: paid.userId,
+          durationDays: periodDays,
+          source: 'website',
+          externalId: `xorpay:${aoid}`,
         });
       }
 

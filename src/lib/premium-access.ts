@@ -1,7 +1,8 @@
-import { getSession } from '@/lib/server';
 import { getDb } from '@/db';
-import { payment } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { oneworkEntitlement, payment } from '@/db/schema';
+import { hasActiveMembership } from '@/lib/membership';
+import { getSession } from '@/lib/server';
+import { and, eq, gt, isNull, or } from 'drizzle-orm';
 
 /**
  * 检查指定用户是否拥有有效的付费订阅
@@ -17,19 +18,35 @@ export async function userHasPremiumAccess(userId: string): Promise<boolean> {
   try {
     const db = await getDb();
 
-    const userPayments = await db
-      .select()
-      .from(payment)
-      .where(eq(payment.userId, userId));
+    const now = new Date();
+    const [membershipAccess, userPayments, oneWorkRows] = await Promise.all([
+      hasActiveMembership(userId),
+      db.select().from(payment).where(eq(payment.userId, userId)),
+      db
+        .select({ id: oneworkEntitlement.id })
+        .from(oneworkEntitlement)
+        .where(
+          and(
+            eq(oneworkEntitlement.userId, userId),
+            eq(oneworkEntitlement.status, 'active'),
+            or(
+              isNull(oneworkEntitlement.expiresAt),
+              gt(oneworkEntitlement.expiresAt, now)
+            )
+          )
+        )
+        .limit(1),
+    ]);
 
-    if (userPayments.length === 0) {
-      return false;
+    if (membershipAccess || oneWorkRows.length > 0) {
+      return true;
     }
 
-    const now = new Date();
-
     return userPayments.some((p) => {
-      if (p.type !== 'subscription' || (p.status !== 'active' && p.status !== 'completed')) {
+      if (
+        p.type !== 'subscription' ||
+        (p.status !== 'active' && p.status !== 'completed')
+      ) {
         return false;
       }
 
