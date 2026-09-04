@@ -49,7 +49,41 @@ const ARTICLE_CONFIGS: ArticleConfig[] = [
     filename: 'WorkBuddy的项目介绍（已发）.md',
     slug: 'workbuddy-projects',
   },
+  {
+    filename: 'WorkBuddy 装好了，第一件小事怎么交给它？（已发）.md',
+    slug: 'workbuddy-first-task',
+  },
+  {
+    filename: 'WorkBuddy的右侧边栏介绍（已发）.md',
+    slug: 'workbuddy-right-sidebar',
+  },
+  {
+    filename: 'WorkBuddy的帮助与反馈介绍.md',
+    slug: 'workbuddy-help-feedback',
+  },
+  {
+    filename: 'WorkBuddy的数据管理介绍（已发）.md',
+    slug: 'workbuddy-data-management',
+  },
+  {
+    filename: 'WorkBuddy的模型配置介绍（已发）.md',
+    slug: 'workbuddy-model-settings',
+  },
+  {
+    filename: 'WorkBuddy的灵感介绍（已发）.md',
+    slug: 'workbuddy-inspiration',
+  },
+  {
+    filename: 'WorkBuddy的系统设置介绍(已发）.md',
+    slug: 'workbuddy-system-settings',
+  },
+  {
+    filename: 'WorkBuddy的设计创意介绍（已发）.md',
+    slug: 'workbuddy-design-ideas',
+  },
 ];
+
+const SYNCABLE_STATUSES = new Set(['已发送到公众号', '已配图·待发布']);
 
 const IMAGE_EXTENSIONS = new Set([
   '.avif',
@@ -212,7 +246,7 @@ async function main() {
   const pluginData = JSON.parse(
     await fs.readFile(pluginDataPath!, 'utf8')
   ) as PluginData;
-  const imagePaths = await walkImages(sourceRoot!);
+  const imagePaths = await walkImages(vaultRoot!);
   const imagePathsByName = new Map<string, string[]>();
 
   for (const imagePath of imagePaths) {
@@ -227,18 +261,19 @@ async function main() {
 
   const metadata: {
     generatedAt: string;
-    sourceStatus: string;
+    sourceStatuses: string[];
     articles: Array<{
       sourceFile: string;
       slug: string;
       title: string;
       date: string;
+      status: string;
       imageReferences: number;
       mappedImages: number;
     }>;
   } = {
     generatedAt: new Date().toISOString(),
-    sourceStatus: '已发送到公众号',
+    sourceStatuses: [...SYNCABLE_STATUSES],
     articles: [],
   };
 
@@ -249,9 +284,9 @@ async function main() {
     }
 
     const parsed = matter(await fs.readFile(articlePath, 'utf8'));
-    if (parsed.data.status !== '已发送到公众号') {
+    if (!SYNCABLE_STATUSES.has(String(parsed.data.status))) {
       throw new Error(
-        `Refusing to sync ${config.filename}: frontmatter status is not 已发送到公众号.`
+        `Refusing to sync ${config.filename}: frontmatter status is not syncable.`
       );
     }
 
@@ -312,7 +347,7 @@ async function main() {
       `date: ${quote(date)}`,
       'published: true',
       'author: "mksaas"',
-      'premium: true',
+      'premium: false',
       '---',
       '',
       body,
@@ -330,6 +365,7 @@ async function main() {
       slug: config.slug,
       title: String(parsed.data.title),
       date,
+      status: String(parsed.data.status),
       imageReferences: imageResults.length,
       mappedImages: imageResults.length,
     });
@@ -345,7 +381,7 @@ async function main() {
     'utf8'
   );
   console.log(
-    `Synced ${metadata.articles.length} published Obsidian articles without uploading images.`
+    `Synced ${metadata.articles.length} public Obsidian articles.`
   );
 }
 
