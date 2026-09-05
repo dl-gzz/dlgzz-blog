@@ -133,7 +133,8 @@ function loadWx(code, imports, wx) {
   return module.exports;
 }
 function deferred() {
-  let resolve, reject;
+  let resolve;
+  let reject;
   const promise = new Promise((yes, no) => {
     resolve = yes;
     reject = no;
