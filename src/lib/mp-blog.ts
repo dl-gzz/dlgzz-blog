@@ -5,6 +5,8 @@ import path from 'path';
 import { userHasPremiumAccess } from '@/lib/premium-access';
 import { authorSource, blogSource } from '@/lib/source';
 import matter from 'gray-matter';
+import { buildArticleCopy } from '@/lib/article-copy';
+import { getUrlWithLocale } from '@/lib/urls/urls';
 
 export interface MiniappBlogListItem {
   slug: string;
@@ -48,6 +50,7 @@ export type MiniappArticleBlock =
 
 export interface MiniappBlogDetail extends MiniappBlogListItem {
   locked: boolean;
+  copyContent: string | null;
   contentParagraphs: string[];
   previewParagraphs: string[];
   contentBlocks: MiniappArticleBlock[];
@@ -369,6 +372,22 @@ export async function getMiniappBlogDetail(
     excerpt: previewParagraphs[0] || post.data.description || '',
     format: (post.data.images?.length || 0) > 1 ? 'gallery' : 'article',
     locked: premium && !hasAccess,
+    copyContent: hasAccess
+      ? buildArticleCopy({
+          title: post.data.title,
+          description: post.data.description,
+          body: parsed.content,
+          sourceUrl: getUrlWithLocale(
+            `/blog/${normalizedSlug}`,
+            normalizedLocale
+          ),
+          images: post.data.images?.length
+            ? post.data.images
+            : post.data.image
+              ? [post.data.image]
+              : [],
+        })
+      : null,
     contentParagraphs: hasAccess ? paragraphs : previewParagraphs,
     previewParagraphs,
     contentBlocks: hasAccess ? blocks : previewBlocks,

@@ -5,6 +5,9 @@ import { ArticleChat } from '@/components/blog/article-chat';
 import BlogGrid from '@/components/blog/blog-grid';
 import { PremiumBadge } from '@/components/blog/premium-badge';
 import { PremiumContentGuard } from '@/components/blog/premium-content-guard';
+import { CopyArticleButton } from '@/components/blog/copy-article-button';
+import { buildArticleCopy } from '@/lib/article-copy';
+import { readBlogMarkdown } from '@/lib/blog-markdown';
 import { getMDXComponents } from '@/components/docs/mdx-components';
 import { NewsletterCard } from '@/components/newsletter/newsletter-card';
 import { websiteConfig } from '@/config/website';
@@ -136,6 +139,21 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
   const t = await getTranslations('BlogPage');
   const hasAccess = await hasAccessToPremiumContent();
   const relatedPosts = await getRelatedPosts(post);
+  let copyText: string | null = null;
+  if (post.data.published && (!premium || hasAccess)) {
+    try {
+      copyText = buildArticleCopy({
+        title,
+        description,
+        body: await readBlogMarkdown(locale, slugSegments.join('/')),
+        sourceUrl: getUrlWithLocale(`/blog/${slugSegments.join('/')}`, locale),
+        images: heroImages,
+      });
+    } catch {
+      // Do not label a truncated DOM fallback as the full article.
+      console.error('[blog/copy] Article source unavailable');
+    }
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -160,6 +178,8 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
             <p className="text-lg text-muted-foreground">{description}</p>
 
           </div>
+
+          {copyText ? <CopyArticleButton text={copyText} /> : null}
 
           <PremiumContentGuard isPremium={premium} hasAccess={hasAccess}>
             <div className="mt-8 relative">
@@ -245,6 +265,12 @@ function DatabaseCoursewareBlogPage({
 }) {
   const publishDate = formatDate(new Date(post.date));
   const body = stripSavedHtmlFromMdxBody(post.body);
+  const copyText = buildArticleCopy({
+    title: post.title,
+    description: post.description,
+    body,
+    sourceUrl: getUrlWithLocale(`/blog/${post.slug}`, locale),
+  });
   const whiteboardHref = `/own-whiteboard?loadCoursewareSlug=${encodeURIComponent(
     post.slug
   )}`;
@@ -292,6 +318,7 @@ function DatabaseCoursewareBlogPage({
             </div>
           </div>
 
+          <CopyArticleButton text={copyText} />
           <div className="mt-8 max-w-none prose prose-neutral dark:prose-invert prose-img:rounded-lg">
             <ReactMarkdown>{body}</ReactMarkdown>
           </div>
