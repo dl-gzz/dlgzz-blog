@@ -26,8 +26,9 @@ import { UpgradeCard } from './upgrade-card';
  * Dashboard sidebar
  */
 export function DashboardSidebar({
+  isAdmin = false,
   ...props
-}: React.ComponentProps<typeof Sidebar>) {
+}: React.ComponentProps<typeof Sidebar> & { isAdmin?: boolean }) {
   const t = useTranslations();
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
@@ -35,9 +36,10 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   // console.log('sidebar currentUser:', currentUser);
 
-  const sidebarLinks = getSidebarLinks();
+  const sidebarLinks = getSidebarLinks(isAdmin);
   const filteredSidebarLinks = sidebarLinks.filter((link) => {
     if (link.authorizeOnly) {
+      if (link.authorizeOnly.includes('admin')) return isAdmin;
       return link.authorizeOnly.includes(currentUser?.role || '');
     }
     return true;
@@ -76,7 +78,9 @@ export function DashboardSidebar({
         {!isPending && mounted && (
           <>
             {/* show upgrade card if user is not a member, and sidebar is not collapsed */}
-            {currentUser && state !== 'collapsed' && <UpgradeCard />}
+            {currentUser && !isAdmin && state !== 'collapsed' && (
+              <UpgradeCard />
+            )}
 
             {/* show user profile if user is logged in */}
             {currentUser && <SidebarUser user={currentUser} />}

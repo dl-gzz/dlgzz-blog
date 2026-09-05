@@ -2,6 +2,8 @@
 
 import { getDb } from '@/db';
 import { user } from '@/db/schema';
+import { canAccessHermesAdmin } from '@/lib/hermes-admin-access';
+import { getSession } from '@/lib/server';
 import { asc, desc, ilike, or, sql } from 'drizzle-orm';
 import { createSafeActionClient } from 'next-safe-action';
 import { z } from 'zod';
@@ -41,6 +43,10 @@ const sortFieldMap = {
 export const getUsersAction = actionClient
   .schema(getUsersSchema)
   .action(async ({ parsedInput }) => {
+    const session = await getSession();
+    if (!canAccessHermesAdmin(session?.user)) {
+      return { success: false, error: '只有管理员可以查看用户列表' };
+    }
     try {
       const { pageIndex, pageSize, search, sorting } = parsedInput;
 

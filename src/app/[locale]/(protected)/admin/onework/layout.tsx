@@ -6,9 +6,7 @@ export default function OneWorkAdminLayout({
   return (
     <>
       <DashboardHeader
-        breadcrumbs={[
-          { label: '统一会员与 OneWorkOS 兑换码管理', isCurrentPage: true },
-        ]}
+        breadcrumbs={[{ label: '会员发码与记录', isCurrentPage: true }]}
       />
       <div className="flex flex-1 flex-col py-4">{children}</div>
     </>

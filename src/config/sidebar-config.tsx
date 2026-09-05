@@ -26,15 +26,12 @@ import { useTranslations } from 'next-intl';
  *
  * @returns The sidebar config with translated titles and descriptions
  */
-export function getSidebarLinks(): NestedMenuItem[] {
+export function getSidebarLinks(isAdmin = false): NestedMenuItem[] {
   const t = useTranslations('Dashboard');
-
-  // if is demo website, allow user to access admin and user pages, but data is fake
-  const isDemo = process.env.NEXT_PUBLIC_DEMO_WEBSITE === 'true';
 
   return [
     {
-      title: t('dashboard.title'),
+      title: isAdmin ? '管理工作台' : t('dashboard.title'),
       icon: <LayoutDashboardIcon className="size-4 shrink-0" />,
       href: Routes.Dashboard,
       external: false,
@@ -42,10 +39,16 @@ export function getSidebarLinks(): NestedMenuItem[] {
     // 已冻结：三高健康管家（代码与 /health 路由保留，仅收起入口）。
     // 主线聚焦知识包 + 会员；跑出付费用户后再决定是否激活这条垂直。
     {
-      title: t('admin.title'),
+      title: '网站运营 · 仅管理员',
       icon: <SettingsIcon className="size-4 shrink-0" />,
-      authorizeOnly: isDemo ? ['admin', 'user'] : ['admin'],
+      authorizeOnly: ['admin'],
       items: [
+        {
+          title: '会员发码与记录',
+          icon: <NetworkIcon className="size-4 shrink-0" />,
+          href: Routes.AdminOneWork,
+          external: false,
+        },
         {
           title: t('bots.title'),
           icon: <BotIcon className="size-4 shrink-0" />,
@@ -58,16 +61,10 @@ export function getSidebarLinks(): NestedMenuItem[] {
           href: Routes.AdminUsers,
           external: false,
         },
-        {
-          title: '统一会员与 OneWorkOS 兑换码',
-          icon: <NetworkIcon className="size-4 shrink-0" />,
-          href: Routes.AdminOneWork,
-          external: false,
-        },
       ],
     },
     {
-      title: t('settings.title'),
+      title: isAdmin ? '我的账号 · 非运营管理' : t('settings.title'),
       icon: <Settings2Icon className="size-4 shrink-0" />,
       items: [
         {
