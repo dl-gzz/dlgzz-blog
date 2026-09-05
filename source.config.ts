@@ -1,10 +1,20 @@
 import {
   defineCollections,
+  defineConfig,
   defineDocs,
   frontmatterSchema,
   metaSchema,
 } from 'fumadocs-mdx/config';
 import { z } from 'zod';
+
+export default defineConfig({
+  mdxOptions: {
+    // Remote images stay on COS. ImageWrapper supplies responsive dimensions,
+    // so deployments must not depend on downloading every image for its size.
+    // Keep local static-image imports and the other MDX plugins enabled.
+    remarkImageOptions: { external: false },
+  },
+});
 
 /**
  * https://fumadocs.dev/docs/mdx/collections#schema-1
