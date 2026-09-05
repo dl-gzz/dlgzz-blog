@@ -93,6 +93,17 @@ async function exchangeWeChatCode(code: string) {
     errmsg?: string;
   };
   if (!payload.openid) {
+    if (
+      payload.errcode === 40125 ||
+      payload.errcode === 40013 ||
+      payload.errcode === 40001
+    ) {
+      throw new MiniappAuthError(
+        '微信登录配置暂时异常，请联系管理员处理',
+        'MINIAPP_AUTH_CONFIGURATION_ERROR',
+        503
+      );
+    }
     throw new MiniappAuthError(
       payload.errmsg || '微信登录凭证无效，请重试',
       `WECHAT_${payload.errcode || 'AUTH_FAILED'}`,
@@ -196,6 +207,25 @@ async function getSessionByToken(token: string) {
       'SESSION_EXPIRED'
     );
   }
+  if (session.userId) {
+    const [linkedUser] = await db
+      .select({ banned: user.banned, banExpires: user.banExpires })
+      .from(user)
+      .where(eq(user.id, session.userId))
+      .limit(1);
+    if (
+      !linkedUser ||
+      (linkedUser.banned &&
+        (!linkedUser.banExpires ||
+          linkedUser.banExpires.getTime() > Date.now()))
+    ) {
+      throw new MiniappAuthError(
+        '当前账号已停用，请联系管理员',
+        'USER_BANNED',
+        403
+      );
+    }
+  }
   return { db, session };
 }
 
@@ -222,7 +252,7 @@ export async function requireMiniappSession(request: Request) {
     .where(eq(miniappSession.id, session.id));
   if (!session.userId) {
     throw new MiniappAuthError(
-      '请先在网站个人中心生成绑定码，再回到小程序完成绑定',
+      '请在小程序“我的”页面关联网站账号',
       'BINDING_REQUIRED',
       409
     );
@@ -368,4 +398,79 @@ export async function bindMiniappSession({
 export function isMiniappTokenConfigured() {
   const { appId, appSecret } = miniappCredentials();
   return Boolean(appId && appSecret);
+}
+
+/** Call only with a user ID obtained from verified website authentication. */
+export async function linkVerifiedWebsiteAccount(
+  request: Request,
+  verifiedUserId: string
+) {
+  const token = readBearerToken(request);
+  if (!token) throw new MiniappAuthError('请先在小程序中登录', 'UNAUTHORIZED');
+  const { db, session } = await getSessionByToken(token);
+  return db.transaction(async (tx) => {
+    const now = new Date();
+    const [websiteUser] = await tx
+      .select()
+      .from(user)
+      .where(eq(user.id, verifiedUserId))
+      .for('update')
+      .limit(1);
+    if (
+      !websiteUser ||
+      (websiteUser.banned &&
+        (!websiteUser.banExpires || websiteUser.banExpires > now))
+    ) {
+      throw new MiniappAuthError('当前网站账号不可用', 'USER_BANNED', 403);
+    }
+
+    // The unique openid constraint arbitrates simultaneous first bindings.
+    // A conflicting insert is never allowed to overwrite another user's link.
+    await tx
+      .insert(miniappAccount)
+      .values({
+        id: `miniapp_account_${randomUUID()}`,
+        openid: session.openid,
+        unionid: session.unionid,
+        userId: verifiedUserId,
+      })
+      .onConflictDoNothing({ target: miniappAccount.openid });
+    const [account] = await tx
+      .select()
+      .from(miniappAccount)
+      .where(eq(miniappAccount.openid, session.openid))
+      .for('update')
+      .limit(1);
+    if (!account || account.userId !== verifiedUserId) {
+      throw new MiniappAuthError(
+        '当前微信已关联其他网站账号，请使用原账号',
+        'ACCOUNT_CONFLICT',
+        409
+      );
+    }
+    const [current] = await tx
+      .select()
+      .from(miniappSession)
+      .where(eq(miniappSession.id, session.id))
+      .for('update')
+      .limit(1);
+    if (!current || current.revokedAt || current.expiresAt <= now) {
+      throw new MiniappAuthError(
+        '微信登录已失效，请重新登录',
+        'SESSION_EXPIRED'
+      );
+    }
+    if (current.userId && current.userId !== verifiedUserId) {
+      throw new MiniappAuthError(
+        '当前微信已关联其他网站账号',
+        'ACCOUNT_CONFLICT',
+        409
+      );
+    }
+    await tx
+      .update(miniappSession)
+      .set({ userId: verifiedUserId, updatedAt: now, lastSeenAt: now })
+      .where(eq(miniappSession.id, current.id));
+    return { userId: verifiedUserId };
+  });
 }

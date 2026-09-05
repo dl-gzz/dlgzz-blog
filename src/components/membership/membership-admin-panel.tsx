@@ -63,7 +63,7 @@ export function MembershipAdminPanel() {
       <CardHeader>
         <CardTitle>签发统一会员兑换码</CardTitle>
         <CardDescription>
-          星球成交后，在这里为用户生成一次性兑换码；用户在网站兑换后，网站和小程序共享会员权限。
+          星球付款后，在这里生成一次性会员码；用户在网站或小程序兑换一次，两端共享会员身份。所有文章公开阅读。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -98,7 +98,7 @@ export function MembershipAdminPanel() {
           </label>
         </div>
         <p className="text-xs text-muted-foreground">
-          每个兑换码只能使用一次。建议把星球昵称或订单号写进备注，方便后续核对和人工撤销。
+          每个会员码只能使用一次，续期会累加剩余有效期。请把星球昵称或订单号写进备注，方便核对。
         </p>
         <Button onClick={() => void issue()} disabled={busy}>
           {busy && <Loader2Icon className="animate-spin" />}

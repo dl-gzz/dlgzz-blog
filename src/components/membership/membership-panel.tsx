@@ -128,7 +128,7 @@ export function MembershipPanel() {
       <CardHeader>
         <CardTitle>统一会员</CardTitle>
         <CardDescription>
-          星球成交后由管理员发码；兑换一次，网站和微信小程序都使用同一份会员权益。
+          星球付款后由管理员发码；在网站或小程序兑换一次，两端共享会员身份。所有文章公开阅读。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -181,7 +181,7 @@ export function MembershipPanel() {
             绑定微信小程序
           </div>
           <p className="text-sm leading-6 text-muted-foreground">
-            先在小程序点击登录，再生成绑定码并输入到小程序；绑定后同一个微信即可读取你的会员权益。
+            在小程序“我的”页面完成微信登录，再用网站邮箱和密码关联账号即可同步会员身份。也可使用下方绑定码作为备用方式。
           </p>
           <div className="flex flex-wrap gap-2">
             <Button

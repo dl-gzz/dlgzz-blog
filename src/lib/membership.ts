@@ -8,6 +8,7 @@ import {
   user,
 } from '@/db/schema';
 import { and, desc, eq, gt, isNull, or } from 'drizzle-orm';
+import { extendMembershipExpiry } from './membership-expiry';
 
 export const CLUB_MEMBERSHIP_PRODUCT = 'club';
 
@@ -334,7 +335,7 @@ export async function redeemMembershipActivationCode({
       .for('update')
       .limit(1);
 
-    const expiresAt = mergeExpiry(
+    const expiresAt = extendMembershipExpiry(
       existing?.status === 'active' ? existing.expiresAt : undefined,
       activation.durationDays,
       now
