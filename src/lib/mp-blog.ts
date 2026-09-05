@@ -288,36 +288,32 @@ export async function getMiniappBlogPosts(locale?: string) {
         new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
     );
 
-  const results = await Promise.all(
-    posts.map(async (post) => {
-      const slug = post.slugs.join('/');
-      const articlePath = await resolveBlogArticlePath(normalizedLocale, slug);
-      const raw = articlePath ? await fs.readFile(articlePath, 'utf8') : '';
-      const parsed = raw ? matter(raw) : null;
-      const paragraphs = parsed ? splitParagraphs(parsed.content) : [];
-      const authorSlug =
-        typeof post.data.author === 'string' ? post.data.author : '';
-      const author = authorSlug
-        ? authorSource.getPage([authorSlug], normalizedLocale) ||
-          authorSource.getPage([authorSlug])
-        : null;
+  // The catalog only needs compiled frontmatter. Read/parse the body on detail
+  // requests, not every time somebody opens or paginates the public homepage.
+  const results = posts.map((post) => {
+    const slug = post.slugs.join('/');
+    const authorSlug =
+      typeof post.data.author === 'string' ? post.data.author : '';
+    const author = authorSlug
+      ? authorSource.getPage([authorSlug], normalizedLocale) ||
+        authorSource.getPage([authorSlug])
+      : null;
 
-      return {
-        slug,
-        locale: normalizedLocale,
-        title: post.data.title,
-        description: post.data.description || '',
-        image: post.data.image || undefined,
-        images: post.data.images || undefined,
-        date: post.data.date,
-        premium: Boolean(post.data.premium),
-        authorName: author?.data.name,
-        authorAvatar: author?.data.avatar,
-        excerpt: paragraphs[0] || post.data.description || '',
-        format: (post.data.images?.length || 0) > 1 ? 'gallery' : 'article',
-      } satisfies MiniappBlogListItem;
-    })
-  );
+    return {
+      slug,
+      locale: normalizedLocale,
+      title: post.data.title,
+      description: post.data.description || '',
+      image: post.data.image || undefined,
+      images: post.data.images || undefined,
+      date: post.data.date,
+      premium: Boolean(post.data.premium),
+      authorName: author?.data.name,
+      authorAvatar: author?.data.avatar,
+      excerpt: post.data.description || '',
+      format: (post.data.images?.length || 0) > 1 ? 'gallery' : 'article',
+    } satisfies MiniappBlogListItem;
+  });
 
   return results;
 }
