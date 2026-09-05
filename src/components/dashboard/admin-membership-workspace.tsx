@@ -333,8 +333,7 @@ export function AdminMembershipWorkspace({
         ) : null}
         {overview ? (
           <p className="border-t px-5 py-3 text-xs text-muted-foreground">
-            最近更新：{date(overview.checkedAt)} · 统计不包含独立的 OneWorkOS
-            额度码。
+            最近更新：{date(overview.checkedAt)}
           </p>
         ) : null}
       </section>
