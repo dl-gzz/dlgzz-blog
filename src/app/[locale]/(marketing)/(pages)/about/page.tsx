@@ -1,10 +1,11 @@
 import Container from '@/components/layout/container';
+import { ContactQrButton } from '@/components/about/contact-qr-button';
 import { BlurFadeDemo } from '@/components/magicui/example/blur-fade-example';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { websiteConfig } from '@/config/website';
 import { constructMetadata } from '@/lib/metadata';
 import { getUrlWithLocale } from '@/lib/urls/urls';
-import { MailIcon, TwitterIcon } from 'lucide-react';
+import { TwitterIcon } from 'lucide-react';
 import type { Metadata } from 'next';
 import type { Locale } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
@@ -68,15 +69,7 @@ export default async function AboutPage() {
 
         {/* Action buttons */}
         <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
-          {websiteConfig.mail.supportEmail && (
-            <a
-              href={`mailto:${websiteConfig.mail.supportEmail}`}
-              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              <MailIcon className="size-4" />
-              {t('talkWithMe')}
-            </a>
-          )}
+          <ContactQrButton label={t('talkWithMe')} />
           {websiteConfig.metadata.social?.twitter && (
             <a
               href={websiteConfig.metadata.social.twitter}
