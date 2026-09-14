@@ -178,7 +178,7 @@ pm2 restart dlgzz
 
 ### Q: 数据库迁移
 ```bash
-pnpm db:push  # 推送数据库 schema 变更
+pnpm db:migrate  # 仅执行仓库中已审核的迁移
 ```
 
 ### Q: SSL 证书到期怎么办？

@@ -397,6 +397,12 @@ export function hashOneWorkOAuthRateLimitSubject(
  * 一个严格 bucket，不会因攻击者伪造随机头而无界写入数据库。
  */
 export function getOneWorkOAuthRequestRateLimitSubject(request: Request) {
+  // Forwarded client-IP headers are only meaningful when a trusted ingress
+  // explicitly overwrites them. Otherwise every caller shares a conservative
+  // bucket instead of spoofing arbitrary addresses to bypass throttling.
+  if (process.env.ONEWORK_TRUST_PROXY_HEADERS !== 'true') {
+    return 'unknown-network';
+  }
   const forwarded =
     request.headers.get('cf-connecting-ip') ||
     request.headers.get('x-real-ip') ||
@@ -2253,6 +2259,17 @@ export async function verifyOneWorkOAuthAccessToken(
     .where(eq(oauthAccessToken.tokenHash, hashSecret('access_token', rawToken)))
     .limit(1);
   if (!row) return { ok: false, reason: 'invalid' };
+  const [client] = await db
+    .select({ status: oauthClient.status })
+    .from(oauthClient)
+    .where(
+      and(
+        eq(oauthClient.clientId, row.clientId),
+        eq(oauthClient.status, 'active')
+      )
+    )
+    .limit(1);
+  if (!client) return { ok: false, reason: 'revoked' };
   const [active] = await db
     .select({ familyId: oauthActiveSession.familyId })
     .from(oauthActiveSession)

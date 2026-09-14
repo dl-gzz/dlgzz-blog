@@ -4,6 +4,11 @@ import {
   verifyApiKey,
 } from '@/lib/api-key';
 import {
+  RequestBodyReadTimeoutError,
+  RequestBodyTooLargeError,
+  readBoundedJson,
+} from '@/lib/api-security';
+import {
   SemanticQueryError,
   type SemanticQueryMode,
   executeSemanticQuery,
@@ -138,10 +143,22 @@ export async function POST(request: NextRequest) {
 
   let body: Record<string, unknown>;
   try {
-    const parsed = await request.json();
+    const parsed = await readBoundedJson(request, MAX_BODY_BYTES);
     if (!isRecord(parsed)) throw new Error('not an object');
     body = parsed;
-  } catch {
+  } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return json(
+        { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+        413
+      );
+    }
+    if (error instanceof RequestBodyReadTimeoutError) {
+      return json(
+        { success: false, code: 'REQUEST_TIMEOUT', error: '读取请求超时' },
+        408
+      );
+    }
     return json(
       {
         success: false,

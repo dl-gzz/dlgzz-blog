@@ -105,49 +105,61 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const paid = claimedPayments[0];
     try {
-      if (shouldGrantOneWorkForPrice(paid.priceId)) {
-        const periodStart = paid.periodStart || paid.createdAt;
-        const periodEnd = paid.periodEnd;
-        const periodDays = periodEnd
-          ? Math.max(
-              1,
-              Math.ceil(
-                (periodEnd.getTime() - periodStart.getTime()) /
-                  (24 * 60 * 60 * 1000)
+      await db.transaction(async (tx) => {
+        const [currentOrder] = await tx
+          .select({ status: payment.status })
+          .from(payment)
+          .where(eq(payment.id, paid.id))
+          .for('update')
+          .limit(1);
+        if (currentOrder?.status === 'completed') return;
+        if (shouldGrantOneWorkForPrice(paid.priceId)) {
+          const periodStart = paid.periodStart || paid.createdAt;
+          const periodEnd = paid.periodEnd;
+          const periodDays = periodEnd
+            ? Math.max(
+                1,
+                Math.ceil(
+                  (periodEnd.getTime() - periodStart.getTime()) /
+                    (24 * 60 * 60 * 1000)
+                )
               )
-            )
-          : paid.interval === 'year'
-            ? 365
-            : 30;
-        const configuredQuota = Number(
-          process.env.ONEWORK_MONTHLY_QUOTA || 1000
-        );
-        const monthlyQuota =
-          Number.isInteger(configuredQuota) && configuredQuota > 0
-            ? configuredQuota
-            : 1000;
+            : paid.interval === 'year'
+              ? 365
+              : 30;
+          const configuredQuota = Number(
+            process.env.ONEWORK_MONTHLY_QUOTA || 1000
+          );
+          const monthlyQuota =
+            Number.isInteger(configuredQuota) && configuredQuota > 0
+              ? configuredQuota
+              : 1000;
 
-        await grantOneWorkEntitlements({
-          userId: paid.userId,
-          packIds: getOneWorkPaymentPacks(),
-          trialDays: periodDays,
-          monthlyQuota,
-          source: 'xorpay',
-          externalOrderId: `xorpay:${aoid}`,
-        });
-        await grantMembershipEntitlement({
-          userId: paid.userId,
-          durationDays: periodDays,
-          source: 'website',
-          externalId: `xorpay:${aoid}`,
-        });
-      }
+          await grantOneWorkEntitlements({
+            database: tx,
+            userId: paid.userId,
+            packIds: getOneWorkPaymentPacks(),
+            trialDays: periodDays,
+            monthlyQuota,
+            source: 'xorpay',
+            externalOrderId: `xorpay:${aoid}`,
+          });
+          await grantMembershipEntitlement({
+            database: tx,
+            paymentId: paid.id,
+            userId: paid.userId,
+            durationDays: periodDays,
+            source: 'website',
+            externalId: `xorpay:${aoid}`,
+          });
+        }
 
-      await db
-        .update(payment)
-        .set({ status: 'completed', updatedAt: new Date() })
-        .where(and(eq(payment.id, paid.id), eq(payment.status, 'granting')));
-      console.log(`Payment ${aoid} marked as completed`);
+        await tx
+          .update(payment)
+          .set({ status: 'completed', updatedAt: new Date() })
+          .where(and(eq(payment.id, paid.id), eq(payment.status, 'granting')));
+        console.log(`Payment ${aoid} marked as completed`);
+      });
     } catch (error) {
       await db
         .update(payment)

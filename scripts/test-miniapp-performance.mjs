@@ -291,7 +291,16 @@ const requestWx = {
   },
 };
 const requestModule = loadWx(requestSource, { './config': config }, requestWx);
-const api = loadWx(apiSource, { './request': requestModule }, requestWx);
+const display = loadWx(
+  await source('utils/membership-display.js'),
+  {},
+  requestWx
+);
+const api = loadWx(
+  apiSource,
+  { './request': requestModule, './membership-display': display },
+  requestWx
+);
 await api.getPosts();
 await api.getConfig();
 await api.getPostDetail({ slug: 'test' });
@@ -303,6 +312,14 @@ for (const request of wire.slice(0, 2)) {
 for (const request of wire.slice(2))
   assert.equal(request.header.authorization, 'Bearer member-token');
 assert.equal(wire[3].method, 'POST');
+assert.equal(wire[2].timeout, 15000);
+assert.equal(
+  display.decorateMembership({
+    isMember: true,
+    expiresAt: '2026-09-17T18:45:00Z',
+  }).expiresLabel,
+  '2026年9月18日 02:45（北京时间）'
+);
 assert.equal(wire[3].timeout, undefined, 'Membership write timeout unchanged');
 console.log(
   'PASS: 17 public metadata-only articles, pagination/cache headers, immediate cached home, request races/retry, storage failures, auth isolation.'

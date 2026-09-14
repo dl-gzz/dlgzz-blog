@@ -1,4 +1,5 @@
 import { verifyApiKey } from '@/lib/api-key';
+import { isLegacyInstallerEnabled } from '@/lib/onework-access';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -14,6 +15,18 @@ const DENY_MESSAGE: Record<string, { status: number; error: string }> = {
 
 /** 安装后验收：只校验权益、Key 和设备，不消耗检索额度。 */
 export async function GET(request: NextRequest) {
+  if (!isLegacyInstallerEnabled()) {
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'LEGACY_INSTALLER_DISABLED',
+        error:
+          '旧版安装方式已停用，请安装 one-worker-os 完整插件并使用 OAuth 连接。',
+      },
+      { status: 410 }
+    );
+  }
+
   let verified: Awaited<ReturnType<typeof verifyApiKey>>;
   try {
     verified = await verifyApiKey(

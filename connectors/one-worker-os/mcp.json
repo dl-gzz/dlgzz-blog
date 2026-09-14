@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "one-worker-os": {
+      "type": "streamableHttp",
+      "url": "https://www.dlgzz.com/mcp",
+      "timeout": 30000
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { requireSameOrigin, requireSession } from '@/lib/api-security';
 import {
   OneWorkAccessError,
   createOneWorkInstallToken,
+  isLegacyInstallerEnabled,
 } from '@/lib/onework-access';
 import { getBaseUrl } from '@/lib/urls/urls';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -9,6 +10,18 @@ import { type NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  if (!isLegacyInstallerEnabled()) {
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'LEGACY_INSTALLER_DISABLED',
+        error:
+          '旧版安装方式已停用，请安装 one-worker-os 完整插件并使用 OAuth 连接。',
+      },
+      { status: 410 }
+    );
+  }
+
   const csrf = requireSameOrigin(request);
   if (csrf) return csrf;
 

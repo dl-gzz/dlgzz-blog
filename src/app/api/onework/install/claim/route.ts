@@ -1,6 +1,7 @@
 import {
   OneWorkAccessError,
   claimOneWorkInstallToken,
+  isLegacyInstallerEnabled,
 } from '@/lib/onework-access';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -10,6 +11,18 @@ export const runtime = 'nodejs';
  * 给跨平台安装器使用的公开接口。它只接受短时一次性 token，绝不接受用户 API Key。
  */
 export async function POST(request: NextRequest) {
+  if (!isLegacyInstallerEnabled()) {
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'LEGACY_INSTALLER_DISABLED',
+        error:
+          '旧版安装方式已停用，请安装 one-worker-os 完整插件并使用 OAuth 连接。',
+      },
+      { status: 410 }
+    );
+  }
+
   const contentLength = Number(request.headers.get('content-length') || 0);
   if (contentLength > 10_000) {
     return NextResponse.json(

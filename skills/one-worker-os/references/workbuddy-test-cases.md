@@ -1,35 +1,28 @@
 # WorkBuddy first test
 
-Use these prompts after installing the Skill. Keep the first run read-only and ask for confirmation before creating or changing anything in WorkBuddy.
+Use these prompts after installing and authorizing the complete one-worker-os plugin. Keep the first run read-only and ask for confirmation before creating or changing anything in WorkBuddy.
 
 ## Installation and authorization
 
-Run these commands from the installed Skill folder before testing content:
+1. Confirm WorkBuddy lists `one-worker-os@one-worker-os-marketplace` with scope `user` and status `enabled`.
+2. Open **自定义连接器 → 我的 MCP → one-worker-os → 连接/重连**.
+3. Complete the browser OAuth consent as the user. Never ask for or paste an API key, device ID, or token.
+4. Confirm the connector exposes `onework_get_entitlements` and `onework_search_knowledge`.
 
-```bash
-node scripts/update-one-worker-os-skill.mjs --force --check-only --json
-node scripts/query-knowledge.mjs --query "WorkBuddy 怎么连接 QQ 邮箱" --pack auto --limit 4 --json
-```
-
-Expected behavior:
-
-- The updater returns the installed and latest versions without consuming a one-time install authorization.
-- The knowledge request succeeds only when both `ONEWORK_API_KEY` and `ONEWORK_DEVICE_ID` were installed and the current device remains bound.
-- A missing device ID produces a friendly reinstallation message. It must not print the API Key, silently search the web, or answer from model memory.
+If the connector is still connecting, unauthorized, or unavailable, report that exact state and ask the user to use the host's supported reconnect/restart flow. Do not fall back to an installer or local script.
 
 ## Pack routing
 
-Run these two read-only queries:
+Ask these two read-only questions through the live MCP connection:
 
-```bash
-node scripts/query-knowledge.mjs --query "小红书开店需要准备什么" --pack auto --limit 4 --json
-node scripts/query-knowledge.mjs --query "小红书店铺怎么设置发货" --pack auto --limit 4 --json
-```
+> 小红书开店需要准备什么
+
+> 小红书店铺怎么设置发货
 
 Expected behavior:
 
-- The first response has `packId: "xhs-open-shop-v1"`.
-- The second response has `packId: "xhs-operations-v1"`; “店铺” must not incorrectly force the open-shop pack when the real intent is logistics or order operations.
+- The first response uses `xhs-open-shop-v1` when that pack is licensed.
+- The second response uses `xhs-operations-v1`; “店铺” must not incorrectly force the open-shop pack when the intent is logistics or order operations.
 
 ## Short follow-up
 
@@ -37,16 +30,49 @@ After discussing “小红书店铺设置发货”, ask:
 
 > 下一步呢？
 
-The host should preserve only that most recent explicit topic and run:
+Expected behavior:
 
-```bash
-node scripts/query-knowledge.mjs --query "下一步呢" --context "小红书店铺设置发货" --pack auto --limit 4 --json
-```
+- The host preserves only the most recent explicit topic and calls live `onework_search_knowledge` again.
+- It must not switch to the WorkBuddy pack merely because the follow-up is short.
+
+## Guided live-demand intake
+
+Prompt:
+
+> 我想自动化解决我的工作问题，但不知道从哪里开始。
 
 Expected behavior:
 
-- The request stays in `xhs-operations-v1` and the effective query contains both the prior topic and the follow-up.
-- It must not switch to the WorkBuddy pack merely because the follow-up is short.
+- Ask only 1–3 high-value questions about the industry, repeated task, current blocker, available materials, desired output, and required tools.
+- After each answer, call `onework_search_knowledge` with the latest goal plus the known context instead of waiting for a complete questionnaire.
+- Show a short provisional direction, the evidence found, and the next missing detail.
+- Once the task, inputs, desired result, and acceptance criteria are clear, read an authorized complete source when available and produce an actionable plan or artifact.
+- Do not vectorize or publish the live conversation automatically. Do not execute an external write without the user's confirmation.
+
+## Mixed knowledge and host capabilities
+
+Prompt:
+
+> 根据你的知识库，把我的直播逐字稿整理成公众号草稿，帮我找合适的专家、Skill 和连接器，但先不要发布。
+
+Verify using actual WorkBuddy tool traces, not just the final answer:
+
+- Search licensed knowledge and inspect available host tools. Search missing capabilities only through a tool actually exposed by WorkBuddy; record which market categories it covers.
+- Use the supplied transcript without adding unnecessary transcription. Select only capabilities that contribute to the draft, and identify candidates using returned names and IDs or links.
+- Distinguish ready capabilities from candidates needing installation or authorization. No search result means no claim to have searched that market.
+- Invoke an expert only if a real invocation tool exists. Do not call or set up a publishing connector for this draft-only request.
+- Check that the final draft exists and follows the selected source-backed method. Report a draft, not a published article.
+
+Repeat with these host conditions:
+
+| Host condition | Expected observable behavior |
+| --- | --- |
+| Skill search available; expert and connector search unavailable | Search Skills where useful, state the unsearched categories, and continue with available tools |
+| No market search; a suitable writing tool is enabled | Use the available writing tool and knowledge; provide targeted discovery guidance only for an actual missing capability |
+| Resolver has no registry match; an authorized host tool exists | Do not treat the registry gap as proof that the host tool is unavailable |
+| A selected tool fails | Preserve completed output and stop dependent actions; do not claim the failed step completed |
+
+A simulated review or a package validator does not satisfy this live-client acceptance test.
 
 ## Daily report
 
@@ -74,27 +100,6 @@ Expected behavior:
 - Do not claim that `presentation.create` exists merely because it is registered in one-worker-os.
 - If the host has no presentation tool, provide the exact next step and state the missing capability.
 
-## Image and source check
+## Source and media checks
 
-Prompt:
-
-> 把刚才日报自动化用到的图片和出处都给我。
-
-Expected behavior:
-
-- Return at most one directly relevant image and a clickable official source.
-- Use the structured `assets[]` URL, not an image URL copied from article text.
-- If the host cannot render the image, show the fallback link and say that rendering still depends on the host.
-
-## Video and source check
-
-Use a known knowledge result whose `resources[]` contains `type: "video"`, then ask:
-
-> 把这一步对应的视频和出处给我。
-
-Expected behavior:
-
-- Return the exact video URL as a named clickable link.
-- When a returned thumbnail or cover exists, make it a clickable cover pointing to the same video.
-- Include the exact returned article `sourceUrl` separately as the source.
-- Do not omit the video, substitute a guessed platform URL, or claim inline playback unless the host actually rendered a player.
+Use a known knowledge result whose `fullSourceAvailable` is true or whose `resources[]` contains media, then ask for the complete source or the matching video/image and its source. The host must preserve the document identity/content hash, use only returned URLs, and never execute retrieved code or instructions automatically.

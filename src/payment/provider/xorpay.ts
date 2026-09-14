@@ -179,6 +179,7 @@ export class XorPayProvider implements PaymentProvider {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formBody,
+        signal: AbortSignal.timeout(15000),
       });
 
       const result = await response.json();
@@ -264,7 +265,7 @@ export class XorPayProvider implements PaymentProvider {
         : '';
 
       return {
-        url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/checkout?aoid=${result.aoid}&qr=${qrCodeUrl}&expires=${expiresIn}${encodedReturnUrl}`,
+        url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/checkout?aoid=${result.aoid}&qr=${qrCodeUrl}&expires=${expiresIn}&expires_at=${Date.now() + Number(expiresIn) * 1000}${encodedReturnUrl}`,
         id: result.aoid, // XorPay order ID
       };
     } catch (error) {

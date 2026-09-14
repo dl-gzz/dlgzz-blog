@@ -37,6 +37,16 @@ export class OneWorkAccessError extends Error {
   }
 }
 
+/**
+ * The API-key installer is retained only as a controlled migration switch.
+ * Production releases keep it off so new clients can only use OAuth MCP.
+ */
+export function isLegacyInstallerEnabled() {
+  return ['1', 'true', 'yes', 'on'].includes(
+    (process.env.ONEWORK_LEGACY_INSTALLER_ENABLED || '').trim().toLowerCase()
+  );
+}
+
 function normalizeSecret(value: string) {
   return value.trim().toUpperCase();
 }
@@ -381,6 +391,7 @@ export async function grantOneWorkEntitlements({
   monthlyQuota = 1000,
   source = 'payment',
   externalOrderId,
+  database,
 }: {
   userId: string;
   packIds: string[];
@@ -388,8 +399,13 @@ export async function grantOneWorkEntitlements({
   monthlyQuota?: number;
   source?: string;
   externalOrderId?: string | null;
+  database?:
+    | Awaited<ReturnType<typeof getDb>>
+    | Parameters<
+        Parameters<Awaited<ReturnType<typeof getDb>>['transaction']>[0]
+      >[0];
 }) {
-  const db = await getDb();
+  const db = database || (await getDb());
   const safePackIds = await normalizePackIds(packIds, db);
   const safeTrialDays = positiveInteger(trialDays, '权益天数', 3650);
   const safeMonthlyQuota = positiveInteger(
@@ -511,14 +527,20 @@ export function getOneWorkPaymentPacks() {
 export async function redeemOneWorkActivation({
   userId,
   code,
+  database,
 }: {
   userId: string;
   code: string;
+  database?:
+    | Awaited<ReturnType<typeof getDb>>
+    | Parameters<
+        Parameters<Awaited<ReturnType<typeof getDb>>['transaction']>[0]
+      >[0];
 }) {
   const rawCode = code.trim();
   if (!rawCode) throw new OneWorkAccessError('请输入兑换码', 'MISSING_CODE');
 
-  const db = await getDb();
+  const db = database || (await getDb());
   const now = new Date();
 
   return db.transaction(async (tx) => {
@@ -634,6 +656,7 @@ export async function redeemOneWorkActivation({
       .where(eq(oneworkActivationCode.id, activation.id));
 
     return {
+      trialDays,
       packIds,
       expiresAt: requestedExpiresAt,
       monthlyQuota,

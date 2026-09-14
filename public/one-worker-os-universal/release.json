@@ -1,11 +1,11 @@
 {
   "schema": "one-worker-os.universal-release.v1",
   "name": "one-worker-os",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "artifact": {
-    "url": "/one-worker-os-universal/one-worker-os-universal-1.0.0.zip",
-    "size": 43843,
-    "sha256": "bc984fffd78c675928a5e3149c4413b798164b8ec7ffab1c8f3e5997fa64ffb8"
+    "url": "/one-worker-os-universal/one-worker-os-universal-1.0.3.zip",
+    "size": 20620,
+    "sha256": "affe3f500e204a5f80ffb5349d60548b75a03dd74cfeced9ac2483b1e92034f4"
   },
   "hosts": [
     "workbuddy",

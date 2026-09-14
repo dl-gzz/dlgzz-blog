@@ -6,6 +6,11 @@ import {
   verifyApiKey,
 } from '@/lib/api-key';
 import {
+  RequestBodyReadTimeoutError,
+  RequestBodyTooLargeError,
+  readBoundedJson,
+} from '@/lib/api-security';
+import {
   type KnowledgeAssetResult,
   searchKnowledgeChunks,
 } from '@/lib/knowledge-search';
@@ -172,8 +177,20 @@ export async function POST(request: NextRequest) {
     includeResources?: unknown;
   };
   try {
-    body = await request.json();
-  } catch {
+    body = (await readBoundedJson(request, 100_000)) as typeof body;
+  } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return NextResponse.json(
+        { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+        { status: 413 }
+      );
+    }
+    if (error instanceof RequestBodyReadTimeoutError) {
+      return NextResponse.json(
+        { success: false, code: 'REQUEST_TIMEOUT', error: '读取请求超时' },
+        { status: 408 }
+      );
+    }
     return NextResponse.json(
       { success: false, code: 'BAD_REQUEST', error: '请求体必须是 JSON' },
       { status: 400 }

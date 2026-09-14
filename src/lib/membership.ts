@@ -5,10 +5,13 @@ import { getDb } from '@/db';
 import {
   membershipActivationCode,
   membershipEntitlement,
+  payment,
+  oneworkEntitlement,
   user,
 } from '@/db/schema';
 import { and, desc, eq, gt, isNull, or } from 'drizzle-orm';
 import { extendMembershipExpiry } from './membership-expiry';
+import { ALL_PACKS_GRANT } from './onework-constants';
 
 export const CLUB_MEMBERSHIP_PRODUCT = 'club';
 
@@ -31,10 +34,6 @@ function hashSecret(value: string) {
   return createHash('sha256').update(normalizeSecret(value)).digest('hex');
 }
 
-function addDays(date: Date, days: number) {
-  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
-}
-
 function validateDurationDays(value: number | null | undefined) {
   if (value === null || value === undefined) return null;
   const normalized = Math.floor(value);
@@ -45,25 +44,6 @@ function validateDurationDays(value: number | null | undefined) {
     );
   }
   return normalized;
-}
-
-function mergeExpiry(
-  currentExpiry: Date | null | undefined,
-  durationDays: number | null,
-  now: Date
-) {
-  // null means permanent. A permanent grant must never be shortened by a
-  // later time-limited activation.
-  if (currentExpiry === null) return null;
-  if (durationDays === null) return null;
-
-  const requestedExpiry = addDays(now, durationDays);
-  if (!currentExpiry || currentExpiry.getTime() <= now.getTime()) {
-    return requestedExpiry;
-  }
-  return currentExpiry.getTime() >= requestedExpiry.getTime()
-    ? currentExpiry
-    : requestedExpiry;
 }
 
 function makeActivationCode() {
@@ -203,6 +183,8 @@ export async function grantMembershipEntitlement({
   durationDays,
   source = 'website',
   externalId,
+  paymentId,
+  database,
   productId = CLUB_MEMBERSHIP_PRODUCT,
   membershipLevel = 'member',
 }: {
@@ -210,14 +192,39 @@ export async function grantMembershipEntitlement({
   durationDays: number | null;
   source?: string;
   externalId?: string | null;
+  paymentId: string;
+  database?:
+    | Awaited<ReturnType<typeof getDb>>
+    | Parameters<
+        Parameters<Awaited<ReturnType<typeof getDb>>['transaction']>[0]
+      >[0];
   productId?: string;
   membershipLevel?: string;
 }) {
   const safeDurationDays = validateDurationDays(durationDays);
-  const db = await getDb();
+  const db = database || (await getDb());
   const now = new Date();
 
   return db.transaction(async (tx) => {
+    // The order and its membership grant commit together. Replaying ANY old
+    // completed order must never add time again, even after later purchases.
+    const [order] = await tx
+      .select()
+      .from(payment)
+      .where(and(eq(payment.id, paymentId), eq(payment.userId, userId)))
+      .for('update')
+      .limit(1);
+    if (!order || !['granting', 'completed'].includes(order.status)) {
+      throw new MembershipError('订单尚未确认付款', 'PAYMENT_NOT_READY', 409);
+    }
+    if (order.status === 'completed') return { alreadyGranted: true };
+    // Also serialize first grants and redemption against other orders.
+    await tx
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, userId))
+      .for('update')
+      .limit(1);
     const [existing] = await tx
       .select()
       .from(membershipEntitlement)
@@ -229,11 +236,34 @@ export async function grantMembershipEntitlement({
       )
       .for('update')
       .limit(1);
-    const expiresAt = mergeExpiry(
+    let expiresAt = extendMembershipExpiry(
       existing?.status === 'active' ? existing.expiresAt : undefined,
       safeDurationDays,
       now
     );
+
+    // The caller has granted the AI period in this same transaction. Unify
+    // deadlines without shortening older members who had longer rights.
+    const [aiMembership] = await tx
+      .select()
+      .from(oneworkEntitlement)
+      .where(
+        and(
+          eq(oneworkEntitlement.userId, userId),
+          eq(oneworkEntitlement.knowledgePackId, ALL_PACKS_GRANT)
+        )
+      )
+      .limit(1);
+    if (aiMembership?.status === 'active') {
+      if (aiMembership.expiresAt === null || expiresAt === null)
+        expiresAt = null;
+      else if (aiMembership.expiresAt > expiresAt)
+        expiresAt = aiMembership.expiresAt;
+      await tx
+        .update(oneworkEntitlement)
+        .set({ expiresAt, updatedAt: now })
+        .where(eq(oneworkEntitlement.id, aiMembership.id));
+    }
 
     await tx
       .insert(membershipEntitlement)
@@ -262,7 +292,11 @@ export async function grantMembershipEntitlement({
         },
       });
 
-    return { expiresAt, source: source.slice(0, 30) };
+    await tx
+      .update(payment)
+      .set({ status: 'completed', updatedAt: now })
+      .where(eq(payment.id, paymentId));
+    return { expiresAt, source: source.slice(0, 30), alreadyGranted: false };
   });
 }
 
@@ -270,14 +304,20 @@ export async function grantMembershipEntitlement({
 export async function redeemMembershipActivationCode({
   userId,
   code,
+  database,
 }: {
   userId: string;
   code: string;
+  database?:
+    | Awaited<ReturnType<typeof getDb>>
+    | Parameters<
+        Parameters<Awaited<ReturnType<typeof getDb>>['transaction']>[0]
+      >[0];
 }) {
   const rawCode = code.trim();
   if (!rawCode) throw new MembershipError('请输入会员兑换码', 'MISSING_CODE');
 
-  const db = await getDb();
+  const db = database || (await getDb());
   const now = new Date();
 
   return db.transaction(async (tx) => {

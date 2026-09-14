@@ -1,0 +1,31 @@
+name: one-worker-os checks
+
+on:
+  push:
+    branches: [main, codex/**]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit --pretty false
+      - run: pnpm run one-worker-os:plugin:validate
+      - run: pnpm run one-worker-os:universal:validate
+      - run: pnpm run test:onework:mcp
+      - run: pnpm run test:onework:import-security
+      - run: pnpm run test:onework:pack-authorization
+      - run: pnpm run build

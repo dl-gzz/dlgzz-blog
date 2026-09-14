@@ -21,7 +21,7 @@ Call:
 
 ```http
 POST /api/analytics/query
-Authorization: Bearer <key>
+Authorization is negotiated by the host's OAuth MCP connection. Do not construct or copy bearer credentials in the Skill.
 Content-Type: application/json
 ```
 

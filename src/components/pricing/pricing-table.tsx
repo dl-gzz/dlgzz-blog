@@ -46,8 +46,9 @@ export function PricingTable({
 
   // Treat an active OneWork entitlement as the current plan so members do not
   // see a second upgrade path or accidentally purchase the same access again.
-  const currentPlanId =
-    currentPlan?.id || (hasActiveOneWorkEntitlement ? 'pro' : null);
+  const currentPlanId = hasActiveOneWorkEntitlement
+    ? 'pro'
+    : (currentPlan?.id ?? null);
 
   if (isLoadingOneWorkEntitlement) {
     return <div className="min-h-48" aria-busy="true" />;

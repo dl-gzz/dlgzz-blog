@@ -6,10 +6,11 @@
 
 - 中英文博客与会员内容
 - 基于文章和知识库的 AI 问答
-- 知识包、API Key 与 OneWorkOS 安装链路
+- 知识包、OAuth MCP 与 one-worker-os 安装链路
 - 组件商店与本地客户端交付
 - 白板、课件与数字员工扩展能力
 - 订阅、支付、权益与管理后台
+- 知识星球、网站和微信小程序统一会员权益
 
 ## 本地开发
 
@@ -32,6 +33,8 @@ pnpm lint
 pnpm db:generate
 pnpm db:migrate
 ```
+
+统一会员流程：星球收款后，管理员在后台签发一次性 `MEM-` 兑换码；用户在网站兑换并绑定微信小程序，网站和小程序即可共享会员文章权限。数据库迁移完成后再部署，并在服务端配置 `WECHAT_MINIAPP_APP_ID`、`WECHAT_MINIAPP_APP_SECRET`。
 
 ## 项目结构
 

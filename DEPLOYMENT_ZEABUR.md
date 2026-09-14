@@ -119,7 +119,7 @@ git push origin main
 部署后运行数据库迁移：
 ```bash
 # 在 Zeabur 控制台的 "Terminal" 或本地
-pnpm db:push
+pnpm db:migrate
 ```
 
 ## 🔄 XorPay Webhook 配置

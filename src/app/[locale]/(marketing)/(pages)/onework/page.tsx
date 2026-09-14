@@ -1,4 +1,5 @@
 import Container from '@/components/layout/container';
+import { MembershipPanel } from '@/components/membership/membership-panel';
 import { OneWorkAccessPanel } from '@/components/onework/onework-access-panel';
 import { constructMetadata } from '@/lib/metadata';
 import { getUrlWithLocale } from '@/lib/urls/urls';
@@ -33,7 +34,8 @@ export default function OneWorkPage() {
             Windows 使用同一套方式，不需要复制 API Key，也不需要配置本地环境。
           </p>
         </div>
-        <OneWorkAccessPanel />
+        <MembershipPanel />
+        <OneWorkAccessPanel showRedeem={false} />
       </div>
     </Container>
   );

@@ -30,7 +30,13 @@ function formatDate(value: string | null) {
   if (!value) return '长期有效';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '未知';
-  return new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium' }).format(date);
+  return (
+    new Intl.DateTimeFormat('zh-CN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'Asia/Shanghai',
+    }).format(date) + '（北京时间）'
+  );
 }
 
 export function MembershipPanel() {
@@ -48,6 +54,7 @@ export function MembershipPanel() {
   const loadStatus = useCallback(async () => {
     if (!session?.user?.id) return;
     setLoading(true);
+    setError('');
     try {
       const response = await fetch('/api/membership/me', { cache: 'no-store' });
       const data = await response.json().catch(() => ({}));
@@ -81,6 +88,7 @@ export function MembershipPanel() {
       setStatus(data);
       setCode('');
       setMessage('会员已开通，网站和小程序现在共享这份权益。');
+      window.dispatchEvent(new Event('membership-updated'));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : '兑换失败');
     } finally {
@@ -114,7 +122,8 @@ export function MembershipPanel() {
   async function copyBindCode() {
     if (!bindCode) return;
     try {
-      await navigator.clipboard?.writeText(bindCode);
+      if (!navigator.clipboard) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(bindCode);
       setMessage('绑定码已复制。');
     } catch {
       setMessage('请手动复制绑定码。');
@@ -122,6 +131,31 @@ export function MembershipPanel() {
   }
 
   if (isPending) return null;
+  if (!session?.user?.id)
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>统一会员</CardTitle>
+          <CardDescription>
+            文章公开阅读，无需会员。登录后可以兑换会员码并关联小程序。
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex gap-4">
+          <a
+            className="underline"
+            href="/auth/login?callbackUrl=%2Fsettings%2Fonework"
+          >
+            登录
+          </a>
+          <a
+            className="underline"
+            href="/auth/register?callbackUrl=%2Fsettings%2Fonework"
+          >
+            注册账号
+          </a>
+        </CardContent>
+      </Card>
+    );
 
   return (
     <Card>
@@ -142,7 +176,13 @@ export function MembershipPanel() {
                   : 'font-semibold'
               }
             >
-              {loading ? '读取中…' : status?.isMember ? '会员有效' : '普通用户'}
+              {loading
+                ? '读取中…'
+                : !status
+                  ? '状态暂未取得，请重试'
+                  : status.isMember
+                    ? '会员有效'
+                    : '普通用户'}
             </span>
           </div>
           {status?.isMember && (
@@ -162,7 +202,8 @@ export function MembershipPanel() {
             <Input
               value={code}
               onChange={(event) => setCode(event.target.value)}
-              placeholder="例如：MEM-XXXXXX"
+              placeholder="会员码（兼容 MEM- / OWOS-）"
+              aria-label="会员兑换码"
               autoComplete="off"
             />
             <Button
@@ -211,8 +252,23 @@ export function MembershipPanel() {
           )}
         </div>
 
-        {message && <p className="text-sm text-emerald-600">{message}</p>}
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {message && (
+          <p role="status" className="text-sm text-emerald-600">
+            {message}
+          </p>
+        )}
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <Button
+          variant="outline"
+          disabled={loading}
+          onClick={() => void loadStatus()}
+        >
+          刷新会员状态
+        </Button>
       </CardContent>
     </Card>
   );

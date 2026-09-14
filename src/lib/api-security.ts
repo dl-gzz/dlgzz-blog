@@ -2,9 +2,68 @@ import 'server-only';
 
 import { NextResponse } from 'next/server';
 import { canAccessHermesAdmin } from './hermes-admin-access';
+import { getLocalClientOrigin } from './local-client-origin';
 import { getSession } from './server';
 import { getBaseUrl } from './urls/urls';
-import { getLocalClientOrigin } from './local-client-origin';
+
+export class RequestBodyTooLargeError extends Error {
+  constructor() {
+    super('request body too large');
+    this.name = 'RequestBodyTooLargeError';
+  }
+}
+
+export class RequestBodyReadTimeoutError extends Error {
+  constructor() {
+    super('request body read timed out');
+    this.name = 'RequestBodyReadTimeoutError';
+  }
+}
+
+/** Read JSON without allowing chunked requests to bypass the size limit. */
+export async function readBoundedJson(
+  request: Request,
+  maxBytes: number,
+  timeoutMs = 5_000
+): Promise<unknown> {
+  if (!request.body) throw new SyntaxError('empty request body');
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  const chunks: string[] = [];
+  let bytes = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = Date.now() + timeoutMs;
+
+  try {
+    while (true) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) throw new RequestBodyReadTimeoutError();
+      const next = await Promise.race([
+        reader.read(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => reject(new RequestBodyReadTimeoutError()),
+            remaining
+          );
+        }),
+      ]);
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      if (next.done) break;
+      bytes += next.value.byteLength;
+      if (bytes > maxBytes) throw new RequestBodyTooLargeError();
+      chunks.push(decoder.decode(next.value, { stream: true }));
+    }
+    chunks.push(decoder.decode());
+    return JSON.parse(chunks.join(''));
+  } catch (error) {
+    await reader.cancel().catch(() => undefined);
+    throw error;
+  } finally {
+    if (timer) clearTimeout(timer);
+    reader.releaseLock();
+  }
+}
 
 type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 

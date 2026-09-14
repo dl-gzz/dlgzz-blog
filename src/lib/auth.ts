@@ -10,28 +10,46 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
 import { parse as parseCookies } from 'cookie';
 import type { Locale } from 'next-intl';
-import {
-  getBaseUrl,
-  getOriginFromRequest,
-  getUrlWithLocaleInCallbackUrl,
-} from './urls/urls';
+import { getBaseUrl, getUrlWithLocaleInCallbackUrl } from './urls/urls';
 
-function getTrustedOrigins(request?: Request) {
+function normalizeTrustedOrigin(value: string) {
+  try {
+    const url = new URL(value);
+    if (
+      (url.protocol !== 'http:' && url.protocol !== 'https:') ||
+      url.username ||
+      url.password ||
+      url.pathname !== '/' ||
+      url.search ||
+      url.hash
+    ) {
+      return null;
+    }
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+function getTrustedOrigins(_request?: Request) {
   const envOrigins = (process.env.AUTH_TRUSTED_ORIGINS || '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+  // Never trust Host/X-Forwarded-* from an arbitrary request. Production
+  // aliases must be explicitly configured through AUTH_TRUSTED_ORIGINS.
   return Array.from(
     new Set(
       [
         getBaseUrl(),
-        getOriginFromRequest(request),
         getLocalClientOrigin(),
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         ...envOrigins,
-      ].filter(Boolean) as string[]
+      ]
+        .map(normalizeTrustedOrigin)
+        .filter((origin): origin is string => Boolean(origin))
     )
   );
 }

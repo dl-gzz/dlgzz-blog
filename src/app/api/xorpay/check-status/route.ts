@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/db';
 import { payment } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { requireSession } from '@/lib/api-security';
 import { findPriceInPlan, findPlanByPriceId } from '@/lib/price-plan';
 
 /**
@@ -12,6 +13,8 @@ import { findPriceInPlan, findPlanByPriceId } from '@/lib/price-plan';
  */
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireSession('请登录后查看支付结果');
+    if ('response' in auth) return auth.response;
     const searchParams = req.nextUrl.searchParams;
     const aoid = searchParams.get('aoid');
 
@@ -27,7 +30,12 @@ export async function GET(req: NextRequest) {
     const paymentRecord = await db
       .select()
       .from(payment)
-      .where(eq(payment.subscriptionId, aoid))
+      .where(
+        and(
+          eq(payment.subscriptionId, aoid),
+          eq(payment.userId, auth.session.user.id)
+        )
+      )
       .limit(1);
 
     if (paymentRecord.length === 0) {
@@ -44,24 +52,27 @@ export async function GET(req: NextRequest) {
     const plan = findPlanByPriceId(priceId);
     const price = plan ? findPriceInPlan(plan.id, priceId) : null;
 
-    return NextResponse.json({
-      status: paymentStatus,
-      aoid: aoid,
-      data: {
-        priceId: priceId,
-        amount: price?.amount || 0,
-        currency: price?.currency || 'CNY',
-        planId: plan?.id,
-        planName: plan?.id,
-        type: paymentRecord[0].type,
-        interval: paymentRecord[0].interval,
-        createdAt: paymentRecord[0].createdAt,
+    return NextResponse.json(
+      {
+        status: paymentStatus,
+        aoid: aoid,
+        data: {
+          priceId: priceId,
+          amount: price?.amount || 0,
+          currency: price?.currency || 'CNY',
+          planId: plan?.id,
+          planName: plan?.name || plan?.id,
+          type: paymentRecord[0].type,
+          interval: paymentRecord[0].interval,
+          createdAt: paymentRecord[0].createdAt,
+        },
       },
-    });
+      { headers: { 'Cache-Control': 'no-store' } }
+    );
   } catch (error: any) {
     console.error('Error checking payment status:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to check payment status' },
+      { error: '查询支付状态失败，请稍后重试' },
       { status: 500 }
     );
   }

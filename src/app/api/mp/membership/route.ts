@@ -1,8 +1,6 @@
-import {
-  MembershipError,
-  getMembershipStatus,
-  redeemMembershipActivationCode,
-} from '@/lib/membership';
+import { MembershipError, getMembershipStatus } from '@/lib/membership';
+import { redeemUnifiedMembership } from '@/lib/unified-redemption';
+import { OneWorkAccessError } from '@/lib/onework-access';
 import { MiniappAuthError, requireMiniappSession } from '@/lib/miniapp-auth';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -24,7 +22,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireMiniappSession(request);
     const body = await request.json().catch(() => ({}));
-    await redeemMembershipActivationCode({
+    await redeemUnifiedMembership({
       userId: session.userId,
       code: typeof body?.code === 'string' ? body.code : '',
     });
@@ -39,7 +37,11 @@ export async function POST(request: NextRequest) {
 }
 
 function handleMembershipError(error: unknown, logLabel: string) {
-  if (error instanceof MiniappAuthError || error instanceof MembershipError) {
+  if (
+    error instanceof MiniappAuthError ||
+    error instanceof MembershipError ||
+    error instanceof OneWorkAccessError
+  ) {
     return NextResponse.json(
       { success: false, code: error.code, error: error.message },
       { status: error.status }

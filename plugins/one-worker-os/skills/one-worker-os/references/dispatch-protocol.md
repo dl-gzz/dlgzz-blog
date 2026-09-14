@@ -52,7 +52,7 @@ Call:
 
 ```http
 POST /api/capabilities/resolve
-Authorization: Bearer <key>
+Authorization is negotiated by the host's OAuth MCP connection. Do not construct or copy bearer credentials in the Skill.
 Content-Type: application/json
 ```
 
@@ -84,7 +84,7 @@ Expect:
 }
 ```
 
-Treat the resolver response as a routing recommendation subject to host policy and actual tool availability.
+Treat the resolver response as a routing recommendation subject to host policy and actual tool availability. It matches the one-worker-os registry, not the WorkBuddy marketplace or local inventory. Discover host experts, Skills, and connectors separately using the actual host tools; follow “Combine knowledge with host experts, Skills, and connectors” in SKILL.md. Pass only known registry IDs in `availableCapabilities`, not arbitrary host item IDs. Missing registry mappings do not prove that the host lacks a capability, while access denials still apply to the protected service.
 
 ## Route classes
 
@@ -118,7 +118,7 @@ Use a registry record shaped like:
   "operations": ["query", "validate"],
   "inputContract": "onework.semantic-query.v1",
   "risk": "read_only",
-  "requires": ["ONEWORK_API_KEY"],
+  "requires": ["oauth_mcp"],
   "fallback": "guided_setup",
   "enabled": true
 }
@@ -130,7 +130,7 @@ Keep registry state on the one-worker-os service. Keep provider credentials and 
 
 - On `401`, request valid one-worker-os credentials without asking the user to paste the secret into chat.
 - On `403`, report the missing license or permission.
-- On `404` or `CAPABILITY_NOT_FOUND`, fall back only to an actually installed equivalent and disclose the substitution.
+- On `404` or `CAPABILITY_NOT_FOUND`, check actual host capabilities and use an authorized equivalent if available. If an appropriate host discovery tool exists, search for a missing capability and report any installation or authorization needed; a recommendation is not executable until setup is complete.
 - On `409`, refresh the capability record and resolve once more.
 - On `429`, stop automatic retries and report quota state.
 - On `5xx`, retry a read-only request once; never automatically repeat a write.

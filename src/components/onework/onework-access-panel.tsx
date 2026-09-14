@@ -70,7 +70,7 @@ type AccessData = {
 };
 
 const UNIVERSAL_PACKAGE_URL =
-  '/one-worker-os-universal/one-worker-os-universal-1.0.0.zip';
+  '/one-worker-os-universal/one-worker-os-universal-1.0.3.zip';
 const UNIVERSAL_INSTALL_GUIDE_URL = '/one-worker-os-universal/INSTALL.md';
 const GENERIC_MCP_CONFIG = JSON.stringify(
   {
@@ -85,7 +85,7 @@ const GENERIC_MCP_CONFIG = JSON.stringify(
   2
 );
 
-const TEST_PROMPT = '查看我的 OneWorkOS 会员权益和剩余次数';
+const TEST_PROMPT = '查看我的 one-worker-os 会员权益和剩余次数';
 
 function formatDate(value: string | null | undefined) {
   if (!value) return '长期有效';
@@ -105,7 +105,7 @@ function formatDateTime(value: string | null | undefined) {
 }
 
 function packName(packId: string) {
-  if (packId === ALL_PACKS_GRANT) return '全部 OneWorkOS 知识库';
+  if (packId === ALL_PACKS_GRANT) return '全部 one-worker-os 知识库';
   if (packId === 'onework-workbuddy-v1') return 'WorkBuddy 办公助手';
   if (packId === 'xhs-open-shop-v1') return '小红书开店助手';
   if (packId === 'xhs-operations-v1') return '小红书运营助手';
@@ -122,10 +122,10 @@ function oauthScopeName(scope: string) {
 
 function oauthClientName(connection: OneWorkOAuthConnection) {
   if (connection.identity === 'current') {
-    return 'WorkBuddy · OneWorkOS';
+    return 'WorkBuddy · one-worker-os';
   }
   if (connection.identity === 'legacy') return 'WorkBuddy · 旧版连接';
-  return connection.clientName || 'OneWorkOS 客户端';
+  return connection.clientName || 'one-worker-os 客户端';
 }
 
 function entitlementIsActive(item: Entitlement, now: number) {
@@ -196,6 +196,7 @@ export function OneWorkAccessPanel({
   const [revokingClientId, setRevokingClientId] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [packageDownloaded, setPackageDownloaded] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   const activeEntitlements = useMemo(
@@ -235,12 +236,12 @@ export function OneWorkAccessPanel({
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) {
-        throw new Error(data.error || '读取 OneWorkOS 权益失败');
+        throw new Error(data.error || '读取 one-worker-os 权益失败');
       }
       setAccess(data as AccessData);
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : '读取 OneWorkOS 权益失败'
+        reason instanceof Error ? reason.message : '读取 one-worker-os 权益失败'
       );
     } finally {
       setLoadingAccess(false);
@@ -253,6 +254,9 @@ export function OneWorkAccessPanel({
 
   useEffect(() => {
     void loadAccess();
+    const refresh = () => void loadAccess();
+    window.addEventListener('membership-updated', refresh);
+    return () => window.removeEventListener('membership-updated', refresh);
   }, [loadAccess]);
 
   useEffect(() => {
@@ -386,7 +390,13 @@ export function OneWorkAccessPanel({
     );
   }
 
-  const currentStep = !hasValidEntitlement ? 1 : isAuthorized ? 4 : 2;
+  const currentStep = !hasValidEntitlement
+    ? 1
+    : isAuthorized
+      ? 4
+      : packageDownloaded
+        ? 3
+        : 2;
 
   return (
     <div className="space-y-6">
@@ -410,7 +420,7 @@ export function OneWorkAccessPanel({
               </div>
               <CardTitle className="text-2xl sm:text-3xl">
                 {canUseOneWorkerOs
-                  ? 'OneWorkOS 已经可以使用'
+                  ? 'one-worker-os 已经可以使用'
                   : hasValidEntitlement
                     ? '接下来，把你的 AI 客户端连接进来'
                     : hasHistoricalEntitlement
@@ -449,7 +459,7 @@ export function OneWorkAccessPanel({
               index={2}
               title="下载安装包"
               description="下载一个通用包，AI 客户端会选择对应的安装入口。"
-              done={isAuthorized}
+              done={isAuthorized || packageDownloaded}
               current={currentStep === 2}
             />
             <SetupStep
@@ -457,19 +467,22 @@ export function OneWorkAccessPanel({
               title="客户端连接"
               description="在当前客户端的 MCP 连接入口点击连接并授权。"
               done={isAuthorized}
-              current={currentStep === 2}
+              current={currentStep === 3}
             />
             <SetupStep
               index={4}
               title="直接使用"
-              description="用自然语言提问，OneWorkOS 自动选择知识和能力。"
+              description="用自然语言提问，one-worker-os 自动选择知识和能力。"
               done={canUseOneWorkerOs}
               current={currentStep === 4}
             />
           </div>
 
           {message && (
-            <output className="block rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
+            <output
+              aria-live="polite"
+              className="block rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200"
+            >
               {message}
             </output>
           )}
@@ -535,7 +548,16 @@ export function OneWorkAccessPanel({
                 </div>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                   <Button asChild size="lg" className="sm:flex-1">
-                    <a href={UNIVERSAL_PACKAGE_URL} download>
+                    <a
+                      href={UNIVERSAL_PACKAGE_URL}
+                      download
+                      onClick={() => {
+                        setPackageDownloaded(true);
+                        setMessage(
+                          '安装包下载已开始。安装完成后，请在客户端点击 one-worker-os 连接。'
+                        );
+                      }}
+                    >
                       <DownloadIcon className="size-4" />
                       下载通用安装包
                     </a>
@@ -593,7 +615,7 @@ export function OneWorkAccessPanel({
                 </div>
                 <ol className="mt-4 space-y-2 text-sm leading-6 text-muted-foreground">
                   <li>1. 客户端自动发起 MCP 连接。</li>
-                  <li>2. 浏览器打开 OneWorkerOS 授权页。</li>
+                  <li>2. 浏览器打开 one-worker-os 授权页。</li>
                   <li>3. 核对账号和权限后点击「允许连接」。</li>
                   <li>4. 返回客户端即可开始使用。</li>
                 </ol>

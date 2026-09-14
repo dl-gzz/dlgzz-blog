@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { websiteConfig } from '@/config/website';
 import { authClient } from '@/lib/auth-client';
+import { safeLocalRedirect } from '@/lib/safe-redirect';
 import { Routes } from '@/routes';
 import { Loader2Icon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -26,7 +27,12 @@ export const RegisterForm = ({
   const searchParams = useSearchParams();
   const paramCallbackUrl =
     searchParams.get('callbackUrl') || searchParams.get('callbackURL');
-  const callbackUrl = propCallbackUrl || paramCallbackUrl || Routes.OneWork;
+  const requestedCallback =
+    propCallbackUrl || paramCallbackUrl || Routes.SettingsOneWork;
+  const callbackUrl = safeLocalRedirect(
+    requestedCallback,
+    Routes.SettingsOneWork
+  );
   const loginHref = `${Routes.Login}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
   const [name, setName] = useState('');
@@ -34,6 +40,7 @@ export const RegisterForm = ({
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,8 +72,9 @@ export const RegisterForm = ({
           onResponse: () => {
             setIsLoading(false);
           },
-          onSuccess: () => {
-            toast.success(t('registerSuccess') || '注册成功');
+          onSuccess: (ctx) => {
+            if (ctx.data?.token) window.location.assign(callbackUrl);
+            else setAwaitingVerification(true);
             setIsLoading(false);
           },
           onError: (ctx) => {
@@ -106,7 +114,42 @@ export const RegisterForm = ({
       bottomButtonHref={loginHref}
     >
       <div className="space-y-6">
-        {showEmailRegister && (
+        {awaitingVerification && (
+          <div
+            role="status"
+            className="rounded-lg border p-4 text-sm space-y-2"
+          >
+            <p>
+              账号已创建。请查看注册邮箱（包括垃圾邮件），点击验证链接后继续。
+            </p>
+            <a className="underline" href={loginHref}>
+              已完成验证？前往登录
+            </a>
+            <Button
+              variant="outline"
+              disabled={isLoading}
+              onClick={async () => {
+                setIsLoading(true);
+                try {
+                  const result = await authClient.sendVerificationEmail({
+                    email,
+                    callbackURL: callbackUrl,
+                  });
+                  if (result.error)
+                    throw new Error(result.error.message || '发送失败');
+                  toast.success('验证邮件已重新发送，请检查收件箱和垃圾邮件。');
+                } catch {
+                  toast.error('验证邮件发送失败，请稍后重试或联系支持。');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
+              重新发送验证邮件
+            </Button>
+          </div>
+        )}
+        {showEmailRegister && !awaitingVerification && (
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">{t('name') || '姓名'}</Label>

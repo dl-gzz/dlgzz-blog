@@ -27,6 +27,12 @@ export function useOneWorkEntitlement() {
   const [hasActiveOneWorkEntitlement, setHasActiveOneWorkEntitlement] =
     useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    const refresh = () => setRevision((value) => value + 1);
+    window.addEventListener('membership-updated', refresh);
+    return () => window.removeEventListener('membership-updated', refresh);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +74,7 @@ export function useOneWorkEntitlement() {
     return () => {
       cancelled = true;
     };
-  }, [isSessionPending, session?.user?.id]);
+  }, [isSessionPending, session?.user?.id, revision]);
 
   return {
     hasActiveOneWorkEntitlement,

@@ -23,7 +23,6 @@ import { fileURLToPath } from 'node:url';
 
 const pluginRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const projectRoot = resolve(pluginRoot, '..', '..');
-const canonicalSkill = join(projectRoot, 'skills', 'one-worker-os');
 const pluginSkill = join(pluginRoot, 'skills', 'one-worker-os');
 const marketplacePath = join(
   projectRoot,
@@ -33,21 +32,6 @@ const marketplacePath = join(
 const outputRoot = join(projectRoot, 'public', 'one-worker-os-marketplace');
 const normalizedMtime = new Date('2026-01-01T00:00:00.000Z');
 const checkOnly = process.argv.includes('--check');
-const syncLegacy = process.argv.includes('--sync-legacy');
-
-const legacyFiles = [
-  'SKILL.md',
-  'manifest.yaml',
-  'references/api-schema.md',
-  'references/dispatch-protocol.md',
-  'references/semantic-query-contract.md',
-  'references/workbuddy-test-cases.md',
-  'scripts/one-worker-os-credentials.mjs',
-  'scripts/query-analytics.mjs',
-  'scripts/query-knowledge.mjs',
-  'scripts/resolve-capability.mjs',
-  'scripts/update-one-worker-os-skill.mjs',
-];
 
 function lexicalCompare(left, right) {
   return left < right ? -1 : left > right ? 1 : 0;
@@ -72,30 +56,6 @@ function writeAtomic(path, content) {
   const temporary = `${path}.tmp-${process.pid}`;
   writeFileSync(temporary, content);
   renameSync(temporary, path);
-}
-
-function syncLegacyFiles() {
-  for (const path of legacyFiles) {
-    const source = join(canonicalSkill, path);
-    const destination = join(pluginSkill, path);
-    mkdirSync(dirname(destination), { recursive: true });
-    copyFileSync(source, destination);
-  }
-}
-
-function validateLegacyFiles() {
-  for (const path of legacyFiles) {
-    const source = join(canonicalSkill, path);
-    const bundled = join(pluginSkill, path);
-    if (!existsSync(source) || !existsSync(bundled)) {
-      throw new Error(`Missing legacy fallback file: ${path}`);
-    }
-    if (!readFileSync(source).equals(readFileSync(bundled))) {
-      throw new Error(
-        `Legacy fallback is stale: ${path}; run pnpm onework:plugin:sync-legacy`
-      );
-    }
-  }
 }
 
 function validateSource() {
@@ -173,7 +133,6 @@ function validateSource() {
     }
   }
 
-  validateLegacyFiles();
   return { plugin, marketplace };
 }
 
@@ -331,7 +290,6 @@ function publishArtifact(artifact) {
 }
 
 function main() {
-  if (syncLegacy) syncLegacyFiles();
   const { plugin } = validateSource();
   const first = buildOnce(plugin.version);
   const second = buildOnce(plugin.version);

@@ -10,7 +10,7 @@ Each member account has one active one-worker-os OAuth connection at a time. A n
 
 Knowledge, source documents, and account data are read from the remote MCP server when a tool is called. Updating or adding cloud knowledge therefore does not require reinstalling the plugin. A plugin update is needed only when the client-side orchestration contract changes.
 
-The bundled Node.js scripts remain available only as a legacy fallback for hosts that cannot connect to MCP. They use `ONEWORK_API_KEY` and `ONEWORK_DEVICE_ID` from the existing managed installation file; never paste those values into a conversation or commit them.
+This release is OAuth-only. It never creates, requests, stores, or displays API keys, device IDs, or tokens. Hosts without OAuth-capable MCP support must upgrade the host instead of using an undocumented fallback.
 
 ## Production installation
 
@@ -59,7 +59,7 @@ Verify the catalog lists only licensed active packs, run an unrestricted cross-p
 
 ## Compatibility assumption
 
-This package does not advertise a raw `marketplace.json` URL. Verified marketplace ZIPs are the production distribution path, and a local marketplace directory is only for development. OAuth requires a WorkBuddy version with MCP OAuth support; on older builds, use the legacy managed Skill installer until WorkBuddy is upgraded.
+This package does not advertise a raw `marketplace.json` URL. Verified marketplace ZIPs are the production distribution path, and a local marketplace directory is only for development. OAuth requires a WorkBuddy version with MCP OAuth support; older builds must be upgraded before connecting.
 
 Official references:
 

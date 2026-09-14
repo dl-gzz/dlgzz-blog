@@ -40,9 +40,9 @@ export function PasswordCardWrapper() {
 
         // Check if the response is successful and contains accounts data
         if ('data' in accounts && Array.isArray(accounts.data)) {
-          // Check if any account has a credential provider (provider === 'credential')
+          // Check if any account has a credential provider.
           const hasCredential = accounts.data.some(
-            (account) => account.provider === 'credential'
+            (account) => account.providerId === 'credential'
           );
           setHasCredentialProvider(hasCredential);
         }
