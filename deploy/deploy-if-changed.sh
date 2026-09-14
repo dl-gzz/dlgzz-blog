@@ -24,7 +24,7 @@ export GIT_COMMIT_SHA="$LOCAL_REVISION"
 export GIT_BRANCH="$(git branch --show-current)"
 
 if [ "$LOCAL_REVISION" = "$REMOTE_REVISION" ] && \
-   sudo docker compose --env-file /opt/dlgzz/shared/app.env \
+   sudo env "GIT_COMMIT_SHA=$GIT_COMMIT_SHA" "GIT_BRANCH=$GIT_BRANCH" docker compose --env-file /opt/dlgzz/shared/app.env \
      --env-file /opt/dlgzz/shared/app.env.local \
      -f deploy/docker-compose.prod.yml ps --status running --quiet app | grep -q . && \
    curl --fail --silent --max-time 5 http://127.0.0.1:3000/api/health/build | \

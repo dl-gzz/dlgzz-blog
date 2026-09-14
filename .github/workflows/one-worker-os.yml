@@ -23,6 +23,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec tsc --noEmit --pretty false
+      - run: node scripts/test-deploy-version.mjs
       - run: pnpm run one-worker-os:plugin:validate
       - run: pnpm run one-worker-os:universal:validate
       - run: pnpm run one-worker-os:connector:validate

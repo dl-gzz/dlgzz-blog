@@ -49,7 +49,7 @@ git merge --ff-only origin/main
 export GIT_COMMIT_SHA="$(git rev-parse HEAD)"
 export GIT_BRANCH="$(git branch --show-current)"
 
-COMPOSE=(sudo docker compose --env-file "$ENV_FILE")
+COMPOSE=(sudo env "GIT_COMMIT_SHA=$GIT_COMMIT_SHA" "GIT_BRANCH=$GIT_BRANCH" docker compose --env-file "$ENV_FILE")
 if [ -f "$LOCAL_ENV_FILE" ]; then
   COMPOSE+=(--env-file "$LOCAL_ENV_FILE")
 fi
