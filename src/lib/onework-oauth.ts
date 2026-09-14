@@ -482,9 +482,10 @@ async function lockOAuthConnection(tx: any, userId: string, clientId: string) {
 }
 
 /**
- * Serialize every operation that can replace or consume the account's current
- * OAuth session. This lock must always be acquired before the narrower
- * connection and token-family locks.
+ * Serialize operations that replace or consume active OAuth sessions. The
+ * lock is intentionally account/resource-wide so concurrent clients cannot
+ * race database migrations or entitlement revocation, while active rows are
+ * still isolated by clientId.
  */
 async function lockOAuthActiveSession(
   tx: any,
@@ -1183,6 +1184,7 @@ async function replaceActiveOAuthSession(
       and(
         eq(oauthAccessToken.userId, input.userId),
         eq(oauthAccessToken.resource, input.resource),
+        eq(oauthAccessToken.clientId, input.clientId),
         isNull(oauthAccessToken.revokedAt),
         or(
           isNull(oauthAccessToken.familyId),
@@ -1197,8 +1199,21 @@ async function replaceActiveOAuthSession(
       and(
         eq(oauthRefreshToken.userId, input.userId),
         eq(oauthRefreshToken.resource, input.resource),
+        eq(oauthRefreshToken.clientId, input.clientId),
         ne(oauthRefreshToken.familyId, input.familyId),
         isNull(oauthRefreshToken.revokedAt)
+      )
+    );
+  // Delete/insert avoids coupling the rollout to one particular unique-index
+  // shape. During deployment it remains safe against both the former
+  // user/resource index and the new user/resource/client index.
+  await tx
+    .delete(oauthActiveSession)
+    .where(
+      and(
+        eq(oauthActiveSession.userId, input.userId),
+        eq(oauthActiveSession.resource, input.resource),
+        eq(oauthActiveSession.clientId, input.clientId)
       )
     );
   await tx
@@ -1213,16 +1228,7 @@ async function replaceActiveOAuthSession(
       createdAt: now,
       updatedAt: now,
     })
-    .onConflictDoUpdate({
-      target: [oauthActiveSession.userId, oauthActiveSession.resource],
-      set: {
-        clientId: input.clientId,
-        familyId: input.familyId,
-        activatedAt: now,
-        lastSeenAt: now,
-        updatedAt: now,
-      },
-    });
+    .onConflictDoNothing();
 }
 
 async function activeOAuthSessionMatches(
@@ -1296,8 +1302,9 @@ export async function exchangeOneWorkAuthorizationCode(input: {
     throw new OneWorkOAuthError('invalid_grant', '授权码无效或已经过期');
   }
   return db.transaction(async (tx) => {
-    // Account/resource session lock is the outermost lock. It guarantees that
-    // concurrent computers cannot both finish token exchange as active.
+    // Account/resource session lock is the outermost lock. Different clients
+    // may both remain active, while each client atomically replaces only its
+    // own previous token family.
     await lockOAuthActiveSession(tx, candidate.userId, resource);
     await lockOAuthConnection(tx, candidate.userId, candidate.clientId);
     const [row] = await tx
@@ -1345,6 +1352,7 @@ export async function exchangeOneWorkAuthorizationCode(input: {
         and(
           eq(oauthAuthorizationCode.userId, row.userId),
           eq(oauthAuthorizationCode.resource, row.resource),
+          eq(oauthAuthorizationCode.clientId, row.clientId),
           ne(oauthAuthorizationCode.id, row.id),
           isNull(oauthAuthorizationCode.consumedAt),
           lte(oauthAuthorizationCode.createdAt, row.createdAt)
@@ -1357,6 +1365,7 @@ export async function exchangeOneWorkAuthorizationCode(input: {
         and(
           eq(oauthDeviceCode.userId, row.userId),
           eq(oauthDeviceCode.resource, row.resource),
+          eq(oauthDeviceCode.clientId, row.clientId),
           eq(oauthDeviceCode.status, 'approved'),
           lte(oauthDeviceCode.createdAt, row.createdAt)
         )
@@ -2276,7 +2285,8 @@ export async function verifyOneWorkOAuthAccessToken(
     .where(
       and(
         eq(oauthActiveSession.userId, row.userId),
-        eq(oauthActiveSession.resource, row.resource)
+        eq(oauthActiveSession.resource, row.resource),
+        eq(oauthActiveSession.clientId, row.clientId)
       )
     )
     .limit(1);

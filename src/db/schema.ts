@@ -1005,8 +1005,8 @@ export const oneworkOauthRefreshToken = pgTable("onework_oauth_refresh_token", {
 ]);
 
 /**
- * 每个用户在每个 MCP resource 上只保留一个当前 OAuth 令牌族。
- * 新会话激活后，runtime 会撤销同用户/资源的旧令牌族。
+ * 每个用户、MCP resource 和客户端各保留一个当前 OAuth 令牌族。
+ * 同一台 WorkBuddy 重新授权会替换自己的旧会话，不会挤掉其他电脑。
  */
 export const oneworkOauthActiveSession = pgTable("onework_oauth_active_session", {
 	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
@@ -1018,7 +1018,7 @@ export const oneworkOauthActiveSession = pgTable("onework_oauth_active_session",
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
-	uniqueIndex('onework_oauth_active_session_user_resource_unique_idx').on(table.userId, table.resource),
+	uniqueIndex('onework_oauth_active_session_user_resource_client_unique_idx').on(table.userId, table.resource, table.clientId),
 	uniqueIndex('onework_oauth_active_session_family_unique_idx').on(table.familyId),
 	index('onework_oauth_active_session_client_idx').on(table.clientId),
 ]);
