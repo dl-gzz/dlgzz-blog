@@ -19,16 +19,16 @@ export async function GET() {
     buildMarker: BUILD_MARKER,
     commit:
       firstPresentEnv([
-        'ZEABUR_GIT_COMMIT_SHA',
         'GIT_COMMIT_SHA',
+        'ZEABUR_GIT_COMMIT_SHA',
         'VERCEL_GIT_COMMIT_SHA',
         'RAILWAY_GIT_COMMIT_SHA',
         'CF_PAGES_COMMIT_SHA',
       ]) || null,
     branch:
       firstPresentEnv([
-        'ZEABUR_GIT_BRANCH',
         'GIT_BRANCH',
+        'ZEABUR_GIT_BRANCH',
         'VERCEL_GIT_COMMIT_REF',
         'RAILWAY_GIT_BRANCH',
         'CF_PAGES_BRANCH',

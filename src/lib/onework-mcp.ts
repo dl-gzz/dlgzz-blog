@@ -1,5 +1,6 @@
 import 'server-only';
 
+import authorizationPolicy from '@/config/onework-authorization-policy.json';
 import { completeApiKeyUsage, reserveOneWorkUserUsage } from '@/lib/api-key';
 import {
   type KnowledgeCatalog,
@@ -1294,11 +1295,7 @@ async function callTool(
     return asToolResult({
       success: true,
       entitlements: access.entitlements,
-      authorizationPolicy: {
-        mode: 'single_active_connection',
-        maxActiveConnections: 1,
-        replacementRule: 'latest_successful_authorization_wins',
-      },
+      authorizationPolicy,
     });
   }
   return asToolResult({ success: true, usage: access.usage });

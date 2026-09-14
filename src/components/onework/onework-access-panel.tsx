@@ -70,7 +70,7 @@ type AccessData = {
 };
 
 const UNIVERSAL_PACKAGE_URL =
-  '/one-worker-os-universal/one-worker-os-universal-1.0.3.zip';
+  '/one-worker-os-universal/one-worker-os-universal-1.0.4.zip';
 const UNIVERSAL_INSTALL_GUIDE_URL = '/one-worker-os-universal/INSTALL.md';
 const GENERIC_MCP_CONFIG = JSON.stringify(
   {
@@ -755,8 +755,9 @@ export function OneWorkAccessPanel({
               当前 one-worker-os 连接
             </CardTitle>
             <CardDescription>
-              同一会员账号同一时间只保留 1 个有效的 one-worker-os
-              连接。在新位置授权成功后，旧连接会自动失效；网站登录和会员权益不受影响。
+              不同客户端可以同时保持 one-worker-os
+              连接。重新授权只更新同一客户端的连接，
+              不会断开其他客户端；你可以在这里分别管理和断开连接。
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

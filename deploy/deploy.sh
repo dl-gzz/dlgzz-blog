@@ -46,6 +46,9 @@ fi
 git checkout main
 git merge --ff-only origin/main
 
+export GIT_COMMIT_SHA="$(git rev-parse HEAD)"
+export GIT_BRANCH="$(git branch --show-current)"
+
 COMPOSE=(sudo docker compose --env-file "$ENV_FILE")
 if [ -f "$LOCAL_ENV_FILE" ]; then
   COMPOSE+=(--env-file "$LOCAL_ENV_FILE")
@@ -56,7 +59,8 @@ COMPOSE+=(-f "$COMPOSE_FILE")
 "${COMPOSE[@]}" up -d --remove-orphans app
 
 for attempt in $(seq 1 24); do
-  if curl --fail --silent --show-error --max-time 5 "$HEALTH_URL"; then
+  if curl --fail --silent --show-error --max-time 5 "$HEALTH_URL" | \
+    python3 -c 'import json,sys; data=json.load(sys.stdin); sys.exit(0 if data.get("success") and data.get("commit") == sys.argv[1] else 1)' "$GIT_COMMIT_SHA"; then
     echo
     echo "Deployment healthy at $(git rev-parse --short HEAD)."
     exit 0

@@ -521,9 +521,7 @@ async function main() {
       'revoked WorkBuddy client must disappear from active connections'
     );
 
-    // The single-active invariant is account/resource scoped, not client
-    // scoped. Two distinct dynamically registered clients must therefore
-    // serialize against the same slot.
+    // Different clients retain independent active families, including races.
     const crossClientAuthorizations = [
       await issueAuthorization(
         'cross-client-a',
@@ -540,18 +538,9 @@ async function main() {
       crossClientAuthorizations.map(exchangeAuthorization)
     );
     assert(
-      crossClientResults.some((result) => result.status === 'fulfilled'),
-      'at least one cross-client exchange must succeed'
+      crossClientResults.every((result) => result.status === 'fulfilled'),
+      'both cross-client exchanges must succeed'
     );
-    for (const result of crossClientResults) {
-      if (result.status === 'rejected') {
-        assert(
-          result.reason instanceof OneWorkOAuthError &&
-            result.reason.code === 'invalid_grant',
-          'a cross-client exchange may only lose as invalid_grant'
-        );
-      }
-    }
     const crossClientPairs = crossClientResults.flatMap((result, index) =>
       result.status === 'fulfilled'
         ? [
@@ -574,8 +563,8 @@ async function main() {
       ({ verification }) => verification.ok
     );
     assert(
-      activeCrossClientPairs.length === 1,
-      'two DCR clients racing must leave exactly one usable token family'
+      activeCrossClientPairs.length === 2,
+      'two DCR clients racing must leave both token families usable'
     );
     for (const { verification } of crossClientVerification) {
       if (!verification.ok) {
@@ -586,17 +575,18 @@ async function main() {
       }
     }
     const crossClientWinner = activeCrossClientPairs[0];
-    const [crossClientSession] = await activeSessions();
+    const crossClientSession = (await activeSessions()).find(
+      (row) => row.clientId === crossClientWinner.clientId
+    );
     assert(
       crossClientSession &&
         crossClientSession.clientId === crossClientWinner.clientId &&
-        (await activeSessions()).length === 1,
-      'cross-client race must persist one matching active-session row'
+        (await activeSessions()).length === 2,
+      'cross-client race must persist a row per client'
     );
 
-    // Establish the other DCR client as current, then revoke the stale access
-    // token. Revoking an already replaced family must never delete the new
-    // active-session pointer.
+    // Reauthorize one client, then revoke its stale token. The other client
+    // and the newly authorized family must remain usable.
     const nextClientId =
       crossClientWinner.clientId === registered.client_id
         ? secondaryRegistered.client_id
@@ -611,16 +601,31 @@ async function main() {
       nextCallbackUri
     );
     const nextPair = await exchangeAuthorization(nextAuthorization);
-    await expectAccessFailure(crossClientWinner.pair.access_token, 'replaced');
-    const [nextSession] = await activeSessions();
+    const previousNext = activeCrossClientPairs.find(
+      (entry) => entry.clientId === nextClientId
+    )!;
+    await expectAccessFailure(previousNext.pair.access_token, 'replaced');
+    assert(
+      (
+        await verifyOneWorkOAuthAccessToken(
+          `Bearer ${crossClientWinner.pair.access_token}`
+        )
+      ).ok,
+      'reauthorizing another client must preserve this client'
+    );
+    const nextSession = (await activeSessions()).find(
+      (row) => row.clientId === nextClientId
+    )!;
     await revokeOneWorkOAuthToken({
-      clientId: crossClientWinner.clientId,
-      token: crossClientWinner.pair.access_token,
+      clientId: nextClientId,
+      token: previousNext.pair.access_token,
     });
     const sessionsAfterStaleAccessRevoke = await activeSessions();
     assert(
-      sessionsAfterStaleAccessRevoke.length === 1 &&
-        sessionsAfterStaleAccessRevoke[0].familyId === nextSession.familyId,
+      sessionsAfterStaleAccessRevoke.length === 2 &&
+        sessionsAfterStaleAccessRevoke.some(
+          (row) => row.familyId === nextSession.familyId
+        ),
       'revoking a replaced access token must not clear the new active session'
     );
     assert(
@@ -629,9 +634,7 @@ async function main() {
       'the new active token must survive stale access-token revocation'
     );
 
-    // If the old connection refreshes while another client completes a new
-    // authorization, the active-session lock must prevent both families from
-    // remaining usable.
+    // Refresh and reauthorization of different clients both remain usable.
     const refreshRaceClientId = crossClientWinner.clientId;
     const refreshRaceCallbackUri =
       refreshRaceClientId === registered.client_id
@@ -654,16 +657,16 @@ async function main() {
       'the new cross-client authorization must complete successfully'
     );
     if (staleRefreshRace.status === 'fulfilled') {
-      await expectAccessFailure(
-        staleRefreshRace.value.access_token,
-        'replaced'
+      assert(
+        (
+          await verifyOneWorkOAuthAccessToken(
+            `Bearer ${staleRefreshRace.value.access_token}`
+          )
+        ).ok,
+        'refresh must survive authorization in another client'
       );
     } else {
-      assert(
-        staleRefreshRace.reason instanceof OneWorkOAuthError &&
-          staleRefreshRace.reason.code === 'invalid_grant',
-        'refresh losing to new authorization must fail with invalid_grant'
-      );
+      throw new Error('refresh in another client must succeed');
     }
     assert(
       (
@@ -671,14 +674,16 @@ async function main() {
           `Bearer ${newAuthorizationRace.value.access_token}`
         )
       ).ok,
-      'new authorization must be the sole usable family after refresh race'
+      'new authorization must remain usable after refresh race'
     );
-    const [refreshRaceSession] = await activeSessions();
+    const refreshRaceSession = (await activeSessions()).find(
+      (row) => row.clientId === refreshRaceClientId
+    );
     assert(
       refreshRaceSession &&
         refreshRaceSession.clientId === refreshRaceClientId &&
-        (await activeSessions()).length === 1,
-      'refresh/new-authorization race must leave one matching active row'
+        (await activeSessions()).length === 2,
+      'refresh/new-authorization race must preserve both clients'
     );
 
     await revokeOneWorkOAuthToken({
@@ -744,9 +749,7 @@ async function main() {
       '0021 must pre-register the trusted device client'
     );
 
-    // Approving the browser page is still not enough to replace the old
-    // computer. Replacement happens only when the device successfully polls
-    // and receives its token pair.
+    // Device authorization keeps other OAuth clients connected.
     const beforeDeviceAuthorization = await issueAuthorization('before-device');
     const beforeDevicePair = await exchangeAuthorization(
       beforeDeviceAuthorization
@@ -782,27 +785,32 @@ async function main() {
         .ok,
       'device access token should verify'
     );
-    await expectAccessFailure(beforeDevicePair.access_token, 'replaced');
-    await expectOAuthError(
-      () =>
-        rotateOneWorkRefreshToken({
-          clientId: registered.client_id,
-          refreshToken: beforeDevicePair.refresh_token,
-        }),
-      'invalid_grant'
+    assert(
+      (
+        await verifyOneWorkOAuthAccessToken(
+          `Bearer ${beforeDevicePair.access_token}`
+        )
+      ).ok,
+      'device authorization must preserve another client'
     );
+    await rotateOneWorkRefreshToken({
+      clientId: registered.client_id,
+      refreshToken: beforeDevicePair.refresh_token,
+    });
     const deviceSessions = await activeSessions();
     assert(
-      deviceSessions.length === 1 &&
-        deviceSessions[0].clientId === trustedDeviceClientId &&
-        deviceSessions[0].familyId !== beforeDeviceSession.familyId,
-      'device-code token issuance must replace the prior active family'
+      deviceSessions.length === 2 &&
+        deviceSessions.some((row) => row.clientId === trustedDeviceClientId) &&
+        deviceSessions.some(
+          (row) => row.familyId === beforeDeviceSession.familyId
+        ),
+      'device-code token issuance must preserve the other active family'
     );
     const connections = await listOneWorkOAuthConnections(userId);
     assert(
-      connections.length === 1 &&
-        connections[0].clientId === trustedDeviceClientId,
-      'the connection list must expose only the active device client'
+      connections.length === 2 &&
+        connections.some((row) => row.clientId === trustedDeviceClientId),
+      'the connection list must expose both clients'
     );
 
     await db
@@ -810,6 +818,10 @@ async function main() {
       .set({ status: 'revoked', updatedAt: new Date() })
       .where(eq(oneworkEntitlement.id, entitlementId));
     await expectAccessFailure(devicePair.access_token, 'entitlement_expired');
+    await expectAccessFailure(
+      beforeDevicePair.access_token,
+      'entitlement_expired'
+    );
     await db
       .update(oneworkEntitlement)
       .set({ status: 'active', updatedAt: new Date() })
@@ -821,8 +833,13 @@ async function main() {
     });
     await expectAccessFailure(devicePair.access_token, 'revoked');
     assert(
-      (await activeSessions()).length === 0,
-      'refresh-token revoke must clear the active-session row'
+      (await activeSessions()).length === 1 &&
+        (
+          await verifyOneWorkOAuthAccessToken(
+            `Bearer ${beforeDevicePair.access_token}`
+          )
+        ).ok,
+      'device refresh-token revoke must preserve the other client'
     );
     await expectOAuthError(
       () =>
@@ -839,6 +856,10 @@ async function main() {
       }),
       'account connection consent should remain explicitly revocable'
     );
+    await revokeOneWorkOAuthConnection({
+      userId,
+      clientId: registered.client_id,
+    });
 
     // Revoking the current access token terminates the whole grant, not just
     // that short-lived token. Its refresh token must stop working and the
@@ -990,7 +1011,7 @@ async function main() {
         {
           success: true,
           authorizationCodePkce: true,
-          singleActiveAuthorization: true,
+          multipleClientAuthorization: true,
           failedAuthorizationPreservesSession: true,
           concurrentAuthorizationSerialized: true,
           crossClientAuthorizationSerialized: true,
@@ -1000,7 +1021,7 @@ async function main() {
           oldRefreshRejected: true,
           refreshStaysInFamily: true,
           refreshRotationReplayGraceAndRevocation: true,
-          deviceAuthorizationReplacesSession: true,
+          deviceAuthorizationPreservesOtherClients: true,
           accountConnectionRevocation: true,
           accessTokenRevokesFamily: true,
           activeSessionClearedOnRevoke: true,

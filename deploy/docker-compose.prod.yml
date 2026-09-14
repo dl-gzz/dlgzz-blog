@@ -4,6 +4,8 @@ services:
       context: ..
       dockerfile: Dockerfile
       args:
+        GIT_COMMIT_SHA: ${GIT_COMMIT_SHA:?Deploy through deploy/deploy.sh to set the source revision}
+        GIT_BRANCH: ${GIT_BRANCH:-main}
         NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-}
         NEXT_PUBLIC_AI_PROVIDER: ${NEXT_PUBLIC_AI_PROVIDER:-}
         NEXT_PUBLIC_CLAUDE_API_ENDPOINT: ${NEXT_PUBLIC_CLAUDE_API_ENDPOINT:-}

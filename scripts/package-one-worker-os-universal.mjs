@@ -27,7 +27,13 @@ const marketplaceRoot = join(
   'public',
   'one-worker-os-marketplace'
 );
-const version = '1.0.3';
+const version = '1.0.4';
+const authorizationPolicy = JSON.parse(
+  readFileSync(
+    join(projectRoot, 'src/config/onework-authorization-policy.json'),
+    'utf8'
+  )
+);
 const packageName = 'one-worker-os';
 const artifactName = `one-worker-os-universal-${version}.zip`;
 const normalizedMtime = new Date('2026-01-01T00:00:00.000Z');
@@ -115,11 +121,7 @@ function writePackageFiles(stage, workbuddyArtifact) {
             url: 'https://www.dlgzz.com/mcp',
             oauth: 'client-discovered',
           },
-          authorization: {
-            mode: 'single_active_connection',
-            maxActiveConnections: 1,
-            replacementRule: 'latest_successful_authorization_wins',
-          },
+          authorization: authorizationPolicy,
           hosts: [
             {
               id: 'workbuddy',
@@ -291,9 +293,7 @@ function verifyPublishedArtifact(path, stage, generatedArchive) {
       const expected = readFileSync(join(stage, relativePath));
       const actual = readFileSync(join(extractedStage, relativePath));
       if (sha256(expected) !== sha256(actual)) {
-        throw new Error(
-          `Universal artifact content mismatch: ${relativePath}`
-        );
+        throw new Error(`Universal artifact content mismatch: ${relativePath}`);
       }
     }
   } finally {
@@ -350,11 +350,7 @@ function main() {
         `${sha256(releaseJson)}  release.json\n`
       );
     } else {
-      verifyPublishedArtifact(
-        join(outputRoot, artifactName),
-        stage,
-        first
-      );
+      verifyPublishedArtifact(join(outputRoot, artifactName), stage, first);
     }
     process.stdout.write(
       `${JSON.stringify({ success: true, checkOnly, ...release }, null, 2)}\n`

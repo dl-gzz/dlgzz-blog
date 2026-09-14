@@ -20,11 +20,15 @@ for attempt in $(seq 1 3); do
 done
 LOCAL_REVISION="$(git rev-parse HEAD)"
 REMOTE_REVISION="$(git rev-parse origin/main)"
+export GIT_COMMIT_SHA="$LOCAL_REVISION"
+export GIT_BRANCH="$(git branch --show-current)"
 
 if [ "$LOCAL_REVISION" = "$REMOTE_REVISION" ] && \
    sudo docker compose --env-file /opt/dlgzz/shared/app.env \
      --env-file /opt/dlgzz/shared/app.env.local \
-     -f deploy/docker-compose.prod.yml ps --status running --quiet app | grep -q .; then
+     -f deploy/docker-compose.prod.yml ps --status running --quiet app | grep -q . && \
+   curl --fail --silent --max-time 5 http://127.0.0.1:3000/api/health/build | \
+     python3 -c 'import json,sys; data=json.load(sys.stdin); sys.exit(0 if data.get("success") and data.get("commit") == sys.argv[1] else 1)' "$LOCAL_REVISION"; then
   exit 0
 fi
 

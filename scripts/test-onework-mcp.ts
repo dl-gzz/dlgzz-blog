@@ -724,9 +724,9 @@ async function main() {
   );
   assert.equal((entitlementPayload.entitlements as unknown[]).length, 1);
   assert.deepEqual(entitlementPayload.authorizationPolicy, {
-    mode: 'single_active_connection',
-    maxActiveConnections: 1,
-    replacementRule: 'latest_successful_authorization_wins',
+    mode: 'multiple_client_connections',
+    maxActiveConnections: null,
+    replacementRule: 'same_client_latest_successful_authorization_wins',
   });
   assert.equal(
     Object.prototype.hasOwnProperty.call(entitlementPayload, 'deviceLimit'),

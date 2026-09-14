@@ -1,0 +1,5 @@
+{
+  "mode": "multiple_client_connections",
+  "maxActiveConnections": null,
+  "replacementRule": "same_client_latest_successful_authorization_wins"
+}

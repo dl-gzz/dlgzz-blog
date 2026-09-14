@@ -1,3 +1,4 @@
+import authorizationPolicy from '@/config/onework-authorization-policy.json';
 import { requireSameOrigin, requireSession } from '@/lib/api-security';
 import {
   OneWorkOAuthError,
@@ -57,11 +58,7 @@ export async function GET(request: NextRequest) {
         success: true,
         eligible,
         hasActiveConnection: connections.length > 0,
-        authorizationPolicy: {
-          mode: 'single_active_connection',
-          maxActiveConnections: 1,
-          replacementRule: 'latest_successful_authorization_wins',
-        },
+        authorizationPolicy,
         client: {
           id: prepared.client.clientId,
           name: prepared.client.clientName,

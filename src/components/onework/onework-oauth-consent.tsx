@@ -25,9 +25,9 @@ type ConsentData = {
   eligible: boolean;
   hasActiveConnection: boolean;
   authorizationPolicy: {
-    mode: 'single_active_connection';
-    maxActiveConnections: 1;
-    replacementRule: 'latest_successful_authorization_wins';
+    mode: 'multiple_client_connections';
+    maxActiveConnections: null;
+    replacementRule: 'same_client_latest_successful_authorization_wins';
   };
   client: { id: string; name: string; dynamicallyRegistered: boolean };
   scopes: string[];
@@ -236,16 +236,10 @@ export function OneWorkOAuthConsent() {
 
         <Alert className="border-blue-500/40 bg-blue-500/5">
           <ShieldCheck className="size-4 text-blue-600" />
-          <AlertTitle>
-            {data.hasActiveConnection
-              ? '将替换现有 one-worker-os 连接'
-              : `同一时间仅保留 ${data.authorizationPolicy.maxActiveConnections} 个 one-worker-os 连接`}
-          </AlertTitle>
+          <AlertTitle>各客户端分别保持连接</AlertTitle>
           <AlertDescription>
-            {data.hasActiveConnection
-              ? '本次连接成功后，其他位置的 one-worker-os 连接将自动失效。'
-              : '以后在其他位置授权成功时，当前 one-worker-os 连接会自动失效。'}
-            这只影响 one-worker-os 连接，不会退出网站，也不会取消会员权益。
+            本次授权不会断开其他客户端。同一客户端重新授权成功后，只更新该客户端的连接。
+            你可以在会员页面分别断开连接；网站登录和会员权益不受影响。
           </AlertDescription>
         </Alert>
 

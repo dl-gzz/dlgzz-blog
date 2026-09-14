@@ -10,7 +10,7 @@
 
 ## WorkBuddy
 
-1. 解压本包，找到 adapters/workbuddy/one-worker-os-marketplace-1.0.6.zip。
+1. 解压本包，找到 adapters/workbuddy/one-worker-os-marketplace-1.0.7.zip。
 2. 在 WorkBuddy 的“技能/插件 → 插件市场”中添加这个本地 ZIP 市场。
 3. 安装并启用 one-worker-os@one-worker-os-marketplace。
 4. 进入“连接器 → 自定义连接器 → 我的 MCP → one-worker-os → 连接”。

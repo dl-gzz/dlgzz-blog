@@ -1204,9 +1204,8 @@ async function replaceActiveOAuthSession(
         isNull(oauthRefreshToken.revokedAt)
       )
     );
-  // Delete/insert avoids coupling the rollout to one particular unique-index
-  // shape. During deployment it remains safe against both the former
-  // user/resource index and the new user/resource/client index.
+  // Delete/insert replaces only this client's family. A stale account-wide
+  // index must fail the transaction instead of returning unusable tokens.
   await tx
     .delete(oauthActiveSession)
     .where(
@@ -1216,7 +1215,7 @@ async function replaceActiveOAuthSession(
         eq(oauthActiveSession.clientId, input.clientId)
       )
     );
-  await tx
+  const [activated] = await tx
     .insert(oauthActiveSession)
     .values({
       userId: input.userId,
@@ -1228,7 +1227,15 @@ async function replaceActiveOAuthSession(
       createdAt: now,
       updatedAt: now,
     })
-    .onConflictDoNothing();
+    .onConflictDoNothing()
+    .returning({ familyId: oauthActiveSession.familyId });
+  if (!activated) {
+    throw new OneWorkOAuthError(
+      'server_error',
+      '连接状态未能保存，请稍后重试；现有连接不受影响',
+      503
+    );
+  }
 }
 
 async function activeOAuthSessionMatches(
@@ -1568,7 +1575,7 @@ export async function rotateOneWorkRefreshToken(input: {
       result.error === 'replayed'
         ? '检测到 refresh token 重放，令牌族已撤销'
         : result.error === 'replaced'
-          ? '该授权已被其他位置的新连接替换，请重新连接'
+          ? '该客户端授权已更新，请重新连接'
           : 'refresh token 无效或已经过期'
     );
   }

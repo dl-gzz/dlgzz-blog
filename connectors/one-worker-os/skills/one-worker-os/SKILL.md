@@ -34,6 +34,8 @@ description: 使用 one-worker-os 梳理独立工作者的需求、检索已授�
 
 ## 连接和工具
 
+不同 OAuth 客户端可以同时保持连接；同一客户端重新授权成功后，只更新它自己的连接。会员权益和用量按账号共享。客户端 ID 不等于电脑台数；回答连接数量时读取 `onework_get_entitlements` 的实时 `authorizationPolicy`，不要沿用旧版“新授权挤掉所有旧连接”的说明。
+
 - 第一次调用遇到需要认证时，使用 WorkBuddy 的“连接”入口完成浏览器 OAuth；不要索取、生成或展示 API Key、Token 或设备 ID。
 - `onework_list_knowledge_catalog`：用户不知道有哪些知识包时先查看目录。
 - `onework_search_knowledge`：按自然语言搜索已授权知识。普通问题优先直接搜索，不要要求用户先提供 pack ID。

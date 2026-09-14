@@ -20,6 +20,7 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { verifyArchiveContents } from '../../../scripts/lib/verify-release-archive.mjs';
 
 const pluginRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const projectRoot = resolve(pluginRoot, '..', '..');
@@ -308,6 +309,34 @@ function main() {
       ({ name, size, sha256: hash }) => ({ name, size, sha256: hash })
     ),
   };
+
+  if (checkOnly) {
+    const publishedRelease = parseJson(join(outputRoot, 'release.json'));
+    if (publishedRelease.version !== plugin.version) {
+      throw new Error(
+        'Released plugin version differs from source; package the new version'
+      );
+    }
+    for (const artifact of [first.plugin, first.marketplace]) {
+      const published = readFileSync(join(outputRoot, artifact.name));
+      const record = publishedRelease.artifacts?.find(
+        (item) => item.name === artifact.name
+      );
+      const hash = sha256(published);
+      if (
+        !record ||
+        record.sha256 !== hash ||
+        record.size !== published.length ||
+        readFileSync(join(outputRoot, `${artifact.name}.sha256`), 'utf8') !==
+          `${hash}  ${artifact.name}\n`
+      ) {
+        throw new Error(
+          `Released artifact metadata mismatch: ${artifact.name}`
+        );
+      }
+      verifyArchiveContents(published, artifact.content, artifact.name);
+    }
+  }
 
   if (!checkOnly) {
     publishArtifact(first.plugin);
