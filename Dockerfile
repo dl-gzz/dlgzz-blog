@@ -1,12 +1,8 @@
 # syntax=docker/dockerfile:1
-FROM node:22-alpine AS base
+FROM node:22-bookworm-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-# Tencent Cloud CVMs can time out against Alpine's overseas CDN. Use the
-# Tencent mirror so initial and automated production builds remain reliable.
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.cloud.tencent.com/g' /etc/apk/repositories && \
-    apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install pnpm
