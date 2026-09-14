@@ -29,3 +29,7 @@ jobs:
       - run: pnpm run test:onework:import-security
       - run: pnpm run test:onework:pack-authorization
       - run: pnpm run build
+        env:
+          # Route modules validate the database URL while Next.js collects build
+          # metadata. No database connection is made during this CI build.
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
