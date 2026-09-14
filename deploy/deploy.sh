@@ -16,12 +16,27 @@ fi
 
 cd "$APP_DIR"
 
+fetch_main() {
+  local attempt
+  for attempt in $(seq 1 5); do
+    if git -c http.version=HTTP/1.1 fetch --prune origin main; then
+      return 0
+    fi
+    if [ "$attempt" -lt 5 ]; then
+      echo "GitHub fetch failed (attempt $attempt/5); retrying shortly." >&2
+      sleep $((attempt * 3))
+    fi
+  done
+  echo "Unable to fetch origin/main after 5 attempts." >&2
+  return 1
+}
+
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "Refusing to deploy over local changes in $APP_DIR."
   exit 1
 fi
 
-git fetch --prune origin main
+fetch_main
 git checkout main
 git merge --ff-only origin/main
 
