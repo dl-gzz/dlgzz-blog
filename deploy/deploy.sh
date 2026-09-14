@@ -19,7 +19,11 @@ cd "$APP_DIR"
 fetch_main() {
   local attempt
   for attempt in $(seq 1 5); do
-    if git -c http.version=HTTP/1.1 fetch --prune origin main; then
+    if timeout 90s git \
+      -c http.version=HTTP/1.1 \
+      -c http.lowSpeedLimit=1024 \
+      -c http.lowSpeedTime=30 \
+      fetch --prune origin main; then
       return 0
     fi
     if [ "$attempt" -lt 5 ]; then
@@ -36,7 +40,9 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
-fetch_main
+if [ "${SKIP_FETCH:-0}" != "1" ]; then
+  fetch_main
+fi
 git checkout main
 git merge --ff-only origin/main
 

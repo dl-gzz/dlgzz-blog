@@ -5,7 +5,11 @@ APP_DIR="${APP_DIR:-/opt/dlgzz/app}"
 cd "$APP_DIR"
 
 for attempt in $(seq 1 3); do
-  if git -c http.version=HTTP/1.1 fetch --quiet origin main; then
+  if timeout 90s git \
+    -c http.version=HTTP/1.1 \
+    -c http.lowSpeedLimit=1024 \
+    -c http.lowSpeedTime=30 \
+    fetch --quiet origin main; then
     break
   fi
   if [ "$attempt" -eq 3 ]; then
@@ -24,4 +28,4 @@ if [ "$LOCAL_REVISION" = "$REMOTE_REVISION" ] && \
   exit 0
 fi
 
-exec "$APP_DIR/deploy/deploy.sh"
+exec env SKIP_FETCH=1 "$APP_DIR/deploy/deploy.sh"
