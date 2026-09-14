@@ -29,6 +29,7 @@ services:
     env_file:
       - /opt/dlgzz/shared/app.env
       - /opt/dlgzz/shared/app.env.local
+      - /opt/dlgzz/shared/wechat.env
     environment:
       NODE_ENV: production
       PORT: "3000"
