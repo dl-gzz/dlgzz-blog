@@ -243,6 +243,68 @@ function publishArtifact(path, archive) {
   }
 }
 
+function verifyPublishedArtifact(path, stage, generatedArchive) {
+  if (!existsSync(path)) {
+    throw new Error(`Missing published universal artifact: ${artifactName}`);
+  }
+
+  const published = readFileSync(path);
+  const publishedHash = sha256(published);
+  const hashPath = `${path}.sha256`;
+  const expectedHashFile = `${publishedHash}  ${artifactName}\n`;
+  if (
+    !existsSync(hashPath) ||
+    readFileSync(hashPath, 'utf8') !== expectedHashFile
+  ) {
+    throw new Error(`Universal artifact checksum mismatch: ${artifactName}`);
+  }
+
+  const releasePath = join(outputRoot, 'release.json');
+  const release = JSON.parse(readFileSync(releasePath, 'utf8'));
+  if (
+    release.artifact?.sha256 !== publishedHash ||
+    release.artifact?.size !== published.length
+  ) {
+    throw new Error(`Universal release metadata mismatch: ${artifactName}`);
+  }
+
+  const extractedRoot = mkdtempSync(join(tmpdir(), 'one-worker-os-published-'));
+  try {
+    const extracted = spawnSync('unzip', ['-q', path, '-d', extractedRoot], {
+      encoding: 'utf8',
+    });
+    if (extracted.status !== 0) {
+      throw new Error(
+        `unzip failed: ${(extracted.stderr || extracted.stdout || '').trim()}`
+      );
+    }
+
+    const extractedStage = join(extractedRoot, 'one-worker-os-universal');
+    const expectedFiles = listFiles(stage).map((file) => relative(stage, file));
+    const actualFiles = listFiles(extractedStage).map((file) =>
+      relative(extractedStage, file)
+    );
+    if (JSON.stringify(expectedFiles) !== JSON.stringify(actualFiles)) {
+      throw new Error(`Universal artifact file list mismatch: ${artifactName}`);
+    }
+    for (const relativePath of expectedFiles) {
+      const expected = readFileSync(join(stage, relativePath));
+      const actual = readFileSync(join(extractedStage, relativePath));
+      if (sha256(expected) !== sha256(actual)) {
+        throw new Error(
+          `Universal artifact content mismatch: ${relativePath}`
+        );
+      }
+    }
+  } finally {
+    rmSync(extractedRoot, { recursive: true, force: true });
+  }
+
+  if (generatedArchive.size <= 0 || !generatedArchive.sha256) {
+    throw new Error('Universal package generation produced an empty artifact');
+  }
+}
+
 function main() {
   const workbuddyArtifact = readWorkBuddyArtifact();
   const temporaryRoot = mkdtempSync(join(tmpdir(), 'one-worker-os-universal-'));
@@ -288,7 +350,11 @@ function main() {
         `${sha256(releaseJson)}  release.json\n`
       );
     } else {
-      publishArtifact(join(outputRoot, artifactName), first);
+      verifyPublishedArtifact(
+        join(outputRoot, artifactName),
+        stage,
+        first
+      );
     }
     process.stdout.write(
       `${JSON.stringify({ success: true, checkOnly, ...release }, null, 2)}\n`
