@@ -9,9 +9,10 @@ LOCAL_REVISION="$(git rev-parse HEAD)"
 REMOTE_REVISION="$(git rev-parse origin/main)"
 
 if [ "$LOCAL_REVISION" = "$REMOTE_REVISION" ] && \
-   sudo docker compose -f deploy/docker-compose.prod.yml ps --status running --quiet app | grep -q .; then
+   sudo docker compose --env-file /opt/dlgzz/shared/app.env \
+     --env-file /opt/dlgzz/shared/app.env.local \
+     -f deploy/docker-compose.prod.yml ps --status running --quiet app | grep -q .; then
   exit 0
 fi
 
 exec "$APP_DIR/deploy/deploy.sh"
-

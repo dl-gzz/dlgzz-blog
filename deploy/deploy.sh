@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 APP_DIR="${APP_DIR:-/opt/dlgzz/app}"
 COMPOSE_FILE="$APP_DIR/deploy/docker-compose.prod.yml"
+ENV_FILE="${ENV_FILE:-/opt/dlgzz/shared/app.env}"
+LOCAL_ENV_FILE="${LOCAL_ENV_FILE:-/opt/dlgzz/shared/app.env.local}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/api/health/build}"
 LOCK_FILE="${LOCK_FILE:-/opt/dlgzz/deploy.lock}"
 
@@ -23,8 +25,14 @@ git fetch --prune origin main
 git checkout main
 git merge --ff-only origin/main
 
-sudo docker compose -f "$COMPOSE_FILE" build --pull app
-sudo docker compose -f "$COMPOSE_FILE" up -d --remove-orphans app
+COMPOSE=(sudo docker compose --env-file "$ENV_FILE")
+if [ -f "$LOCAL_ENV_FILE" ]; then
+  COMPOSE+=(--env-file "$LOCAL_ENV_FILE")
+fi
+COMPOSE+=(-f "$COMPOSE_FILE")
+
+"${COMPOSE[@]}" build --pull app
+"${COMPOSE[@]}" up -d --remove-orphans app
 
 for attempt in $(seq 1 24); do
   if curl --fail --silent --show-error --max-time 5 "$HEALTH_URL"; then
@@ -36,7 +44,6 @@ for attempt in $(seq 1 24); do
 done
 
 echo "Deployment did not become healthy in time." >&2
-sudo docker compose -f "$COMPOSE_FILE" ps >&2
-sudo docker compose -f "$COMPOSE_FILE" logs --tail=120 app >&2
+"${COMPOSE[@]}" ps >&2
+"${COMPOSE[@]}" logs --tail=120 app >&2
 exit 1
-
