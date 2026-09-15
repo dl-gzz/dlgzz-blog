@@ -1,8 +1,11 @@
 import BlogGridWithPagination from '@/components/blog/blog-grid-with-pagination';
+import { BlogColumnNav } from '@/components/blog/blog-column-nav';
 import { websiteConfig } from '@/config/website';
 import { LOCALES } from '@/i18n/routing';
 import { constructMetadata } from '@/lib/metadata';
 import { blogSource } from '@/lib/source';
+import { isBlogColumnId, isBlogSubcategory } from '@/lib/blog-columns';
+import { notFound } from 'next/navigation';
 import { getUrlWithLocale } from '@/lib/urls/urls';
 import type { Locale } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
@@ -27,12 +30,24 @@ interface BlogPageProps {
   params: Promise<{
     locale: Locale;
   }>;
+  searchParams: Promise<{
+    column?: string;
+    subcategory?: string;
+  }>;
 }
 
-export default async function BlogPage({ params }: BlogPageProps) {
+export default async function BlogPage({ params, searchParams }: BlogPageProps) {
   const { locale } = await params;
+  const { column: requestedColumn, subcategory } = await searchParams;
+  const activeColumn = isBlogColumnId(requestedColumn)
+    ? requestedColumn
+    : undefined;
+  if ((requestedColumn && !activeColumn) || (subcategory && !isBlogSubcategory(activeColumn, subcategory))) notFound();
   const localePosts = blogSource.getPages(locale);
-  const publishedPosts = localePosts.filter((post) => post.data.published);
+  const publishedPosts = localePosts
+    .filter((post) => post.data.published)
+    .filter((post) => !activeColumn || post.data.column === activeColumn)
+    .filter((post) => !subcategory || post.data.subcategory === subcategory);
   const sortedPosts = publishedPosts.sort((a, b) => {
     return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
   });
@@ -42,14 +57,19 @@ export default async function BlogPage({ params }: BlogPageProps) {
     (currentPage - 1) * blogPageSize,
     currentPage * blogPageSize
   );
-  const totalPages = Math.ceil(sortedPosts.length / blogPageSize);
+  const totalPages = activeColumn
+    ? 1
+    : Math.ceil(sortedPosts.length / blogPageSize);
 
   return (
-    <BlogGridWithPagination
-      locale={locale}
-      posts={paginatedLocalePosts}
-      totalPages={totalPages}
-      routePrefix={'/blog'}
-    />
+    <>
+      <BlogColumnNav active={activeColumn} subcategory={subcategory} />
+      <BlogGridWithPagination
+        locale={locale}
+        posts={activeColumn ? sortedPosts : paginatedLocalePosts}
+        totalPages={totalPages}
+        routePrefix={'/blog'}
+      />
+    </>
   );
 }

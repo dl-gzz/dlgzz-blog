@@ -347,6 +347,8 @@ async function main() {
       `date: ${quote(date)}`,
       'published: true',
       'author: "mksaas"',
+      'column: "ai-practice"',
+      'subcategory: "workbuddy"',
       'premium: false',
       '---',
       '',

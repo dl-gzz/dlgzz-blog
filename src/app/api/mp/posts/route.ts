@@ -1,5 +1,6 @@
 import { getMiniappBlogPosts } from '@/lib/mp-blog';
 import { type NextRequest, NextResponse } from 'next/server';
+import { getBlogSubcategories, isBlogColumnId, isBlogSubcategory } from '@/lib/blog-columns';
 
 function positiveInteger(value: string | null, fallback: number) {
   const number = Number(value);
@@ -15,8 +16,16 @@ export async function GET(request: NextRequest) {
       20,
       positiveInteger(searchParams.get('pageSize'), 10)
     );
+    const requestedColumn = searchParams.get('column');
+    const column = isBlogColumnId(requestedColumn)
+      ? requestedColumn
+      : undefined;
 
-    const posts = await getMiniappBlogPosts(locale);
+    const subcategory = searchParams.get('subcategory') || undefined;
+    if ((requestedColumn && !column) || (subcategory && !isBlogSubcategory(column, subcategory))) {
+      return NextResponse.json({ success: false, error: 'Invalid article category' }, { status: 400 });
+    }
+    const posts = await getMiniappBlogPosts(locale, column, subcategory);
     const start = (page - 1) * pageSize;
     const pagedItems = posts.slice(start, start + pageSize);
 
@@ -24,6 +33,8 @@ export async function GET(request: NextRequest) {
       {
         success: true,
         data: {
+          taxonomyVersion: 2,
+          subcategories: getBlogSubcategories(column),
           items: pagedItems,
           pagination: {
             page,

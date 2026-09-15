@@ -7,6 +7,7 @@ import { authorSource, blogSource } from '@/lib/source';
 import matter from 'gray-matter';
 import { buildArticleCopy } from '@/lib/article-copy';
 import { getUrlWithLocale } from '@/lib/urls/urls';
+import type { BlogColumnId } from '@/lib/blog-columns';
 
 export interface MiniappBlogListItem {
   slug: string;
@@ -21,6 +22,8 @@ export interface MiniappBlogListItem {
   authorAvatar?: string;
   excerpt: string;
   format: 'article' | 'gallery';
+  column?: BlogColumnId;
+  subcategory?: string;
 }
 
 export type MiniappArticleBlock =
@@ -278,11 +281,17 @@ function getPreviewBlocks(blocks: MiniappArticleBlock[]) {
   return previewBlocks;
 }
 
-export async function getMiniappBlogPosts(locale?: string) {
+export async function getMiniappBlogPosts(
+  locale?: string,
+  column?: BlogColumnId,
+  subcategory?: string
+) {
   const normalizedLocale = normalizeLocale(locale);
   const posts = blogSource
     .getPages(normalizedLocale)
     .filter((post) => post.data.published)
+    .filter((post) => !column || post.data.column === column)
+    .filter((post) => !subcategory || post.data.subcategory === subcategory)
     .sort(
       (a, b) =>
         new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
@@ -312,6 +321,8 @@ export async function getMiniappBlogPosts(locale?: string) {
       authorAvatar: author?.data.avatar,
       excerpt: post.data.description || '',
       format: (post.data.images?.length || 0) > 1 ? 'gallery' : 'article',
+      column: post.data.column,
+      subcategory: post.data.subcategory,
     } satisfies MiniappBlogListItem;
   });
 
@@ -367,6 +378,8 @@ export async function getMiniappBlogDetail(
     authorAvatar: author?.data.avatar,
     excerpt: previewParagraphs[0] || post.data.description || '',
     format: (post.data.images?.length || 0) > 1 ? 'gallery' : 'article',
+    column: post.data.column,
+    subcategory: post.data.subcategory,
     locked: premium && !hasAccess,
     copyContent: hasAccess
       ? buildArticleCopy({

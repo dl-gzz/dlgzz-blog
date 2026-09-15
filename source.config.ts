@@ -93,7 +93,11 @@ export const blog = defineCollections({
     date: z.string().date(),
     published: z.boolean().default(true),
     author: z.string(),
+    column: z
+      .enum(['ai-practice', 'solo-company', 'independent-thinking'])
+      .optional(),
     premium: z.boolean().default(false), // Premium/paid content flag
+    subcategory: z.string().optional(),
     whiteboard_prompt: z.string().optional(), // 安装到本地白板的生成指令
     whiteboard_category: z.string().optional(), // 白板课件分类，如 education
     tool_actions: z.any().optional(), // 文章工具动作：安装、下载、对话
