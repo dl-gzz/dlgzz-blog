@@ -104,7 +104,7 @@ export default function OneWorkOSHome() {
                 className="h-12 rounded-xl bg-blue-600 px-6 text-base shadow-lg shadow-blue-200 hover:bg-blue-700"
               >
                 <LocaleLink href="/onework">
-                  立即使用 OneWorkOS <ArrowRight className="size-4" />
+                  连接 OneWorkOS <ArrowRight className="size-4" />
                 </LocaleLink>
               </Button>
               <Button
@@ -117,6 +117,9 @@ export default function OneWorkOSHome() {
               </Button>
             </div>
             <p className="mt-5 text-sm text-slate-500">
+              进入连接页面后，先登录网站账号，再连接 WorkBuddy。
+            </p>
+            <p className="mt-2 text-sm text-slate-500">
               支持 WorkBuddy、内容创作、自动化及更多持续更新的知识能力。
             </p>
           </div>

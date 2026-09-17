@@ -18,11 +18,6 @@ export function getNavbarLinks(): NestedMenuItem[] {
 
   return [
     {
-      title: t('aiChat.title'),
-      href: Routes.AIChat,
-      external: false,
-    },
-    {
       title: t('blog.title'),
       href: Routes.Blog,
       external: false,
