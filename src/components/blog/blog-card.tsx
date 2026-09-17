@@ -57,14 +57,12 @@ export default function BlogCard({ locale, post }: BlogCardProps) {
           <div className="mt-4 pt-4 border-t flex items-center justify-between space-x-4 text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="relative h-8 w-8 shrink-0">
-                {blogAuthor?.data.avatar && (
-                  <Image
-                    src={blogAuthor?.data.avatar}
-                    alt={`avatar for ${blogAuthor?.data.name}`}
-                    className="rounded-full object-cover border-2 border-background"
-                    fill
-                  />
-                )}
+                <Image
+                  src="/logo.png"
+                  alt="独立工作者 LOGO"
+                  className="rounded-full object-cover border-2 border-background"
+                  fill
+                />
               </div>
               <span className="truncate text-sm">{blogAuthor?.data.name}</span>
             </div>

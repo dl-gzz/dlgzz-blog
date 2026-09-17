@@ -85,7 +85,7 @@
       "features": {
         "feature-1": "Full access to OneWorkOS knowledge bases",
         "feature-2": "1,000 knowledge searches every month",
-        "feature-3": "WorkBuddy and Xiaohongshu knowledge capabilities",
+        "feature-3": "WorkBuddy and independent-worker knowledge capabilities",
         "feature-4": "Official images, citations, and video entries",
         "feature-5": "Continuously updated cloud knowledge",
         "feature-6": "New knowledge packs unlock automatically"
@@ -719,7 +719,7 @@
     "description": "Put a curated knowledge base inside your AI: become a member, get an API key, install with one command.",
     "hero": {
       "title": "Put my knowledge base inside your AI",
-      "description": "724 official Xiaohongshu operations docs, updated daily. Become a member, get an API key, and install it into your own AI with a single command.",
+      "description": "Connect WorkBuddy and independent-worker knowledge so AI can find relevant resources and suggest next steps.",
       "introduction": "Try the knowledge base free",
       "primary": "Try free (3/day)",
       "secondary": "See membership"
@@ -783,7 +783,7 @@
     },
     "calltoaction": {
       "title": "Give your AI my knowledge base",
-      "description": "724 official Xiaohongshu operations docs, updated daily. Become a member, get an API key, install with a single command.",
+      "description": "Connect independent-worker knowledge to help your AI find resources, understand questions, and move work forward.",
       "primaryButton": "Become a member",
       "secondaryButton": "Read the blog"
     }

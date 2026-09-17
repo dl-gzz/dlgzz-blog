@@ -85,7 +85,7 @@
       "features": {
         "feature-1": "使用全部 OneWorkOS 知识库",
         "feature-2": "每月 1000 次知识检索",
-        "feature-3": "WorkBuddy 与小红书知识能力",
+        "feature-3": "WorkBuddy 与独立工作者知识能力",
         "feature-4": "官方图片、资料出处和视频入口",
         "feature-5": "云端知识持续更新",
         "feature-6": "新增知识包自动开放"
@@ -717,7 +717,7 @@
     "description": "把策展好的知识库装进你的 AI：开通会员即得 API Key，一条命令接入，随时检索。",
     "hero": {
       "title": "把我的知识库，装进你的 AI",
-      "description": "724 篇小红书官方经营知识库，每日更新。开通会员即得 API Key，一条命令装进你自己的 AI，随时提问随时查。",
+      "description": "连接 WorkBuddy 与独立工作者知识能力，让 AI 根据你的目标检索资料并提供下一步建议。",
       "introduction": "免费试用知识库",
       "primary": "免费试用（每天 3 次）",
       "secondary": "查看会员方案"
@@ -781,7 +781,7 @@
     },
     "calltoaction": {
       "title": "让你的 AI 拥有我的知识库",
-      "description": "724 篇小红书官方经营知识，每日更新。开通会员拿到 API Key，一条命令装进你自己的 AI。",
+      "description": "连接独立工作者知识能力，让 AI 协助检索资料、理解问题并推进下一步。",
       "primaryButton": "开通会员",
       "secondaryButton": "阅读博客"
     }

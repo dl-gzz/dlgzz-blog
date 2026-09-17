@@ -19,7 +19,6 @@ import {
   Presentation,
   ShieldCheck,
   Sparkles,
-  Store,
   Video,
   Workflow,
   Zap,
@@ -38,7 +37,7 @@ const workflowSteps: Array<{
     number: '01',
     title: '说出目标',
     description:
-      '例如：“我想连接 QQ 邮箱”“我想用 WorkBuddy 做 PPT”“小红书店铺怎么设置发货”。',
+      '例如：“我想连接 QQ 邮箱”“我想用 WorkBuddy 做 PPT”“怎么设置自动生成日报”。',
     icon: MessageSquareText,
   },
   {
@@ -104,7 +103,7 @@ export default function OneWorkOSHome() {
                 size="lg"
                 className="h-12 rounded-xl bg-blue-600 px-6 text-base shadow-lg shadow-blue-200 hover:bg-blue-700"
               >
-                <LocaleLink href="/ai-chat">
+                <LocaleLink href="/onework">
                   立即使用 OneWorkOS <ArrowRight className="size-4" />
                 </LocaleLink>
               </Button>
@@ -118,8 +117,7 @@ export default function OneWorkOSHome() {
               </Button>
             </div>
             <p className="mt-5 text-sm text-slate-500">
-              支持
-              WorkBuddy、小红书开店与运营、内容创作及更多持续更新的知识能力。
+              支持 WorkBuddy、内容创作、自动化及更多持续更新的知识能力。
             </p>
           </div>
 
@@ -240,7 +238,7 @@ export default function OneWorkOSHome() {
               不是回答问题，而是推动工作继续。
             </h2>
           </div>
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+          <div className="mt-12 grid gap-5 lg:grid-cols-2">
             <article className={`${cardClass} border-blue-100`}>
               <Brain className="size-7 text-blue-600" />
               <h3 className="mt-6 text-2xl font-semibold">知识大脑</h3>
@@ -328,20 +326,6 @@ export default function OneWorkOSHome() {
                 <p>“我现在想连接 WorkBuddy 的 QQ 邮箱。”</p>
                 <p>“我想使用 WorkBuddy 制作 PPT。”</p>
                 <p>“怎么设置每天自动生成日报？”</p>
-              </div>
-            </article>
-            <article className={`${cardClass} relative overflow-hidden`}>
-              <Store className="size-7 text-blue-600" />
-              <h3 className="mt-5 text-xl font-semibold">
-                小红书开店与运营助手
-              </h3>
-              <p className="mt-3 leading-7 text-slate-600">
-                覆盖小红书开店准备、店铺设置、商品、物流、发货、运营规则和官方教程。
-              </p>
-              <div className="mt-6 space-y-2 border-t border-slate-200 pt-5 text-sm text-slate-600">
-                <p>“我刚开小红书店，下一步做什么？”</p>
-                <p>“小红书店铺怎么设置发货？”</p>
-                <p>“店铺类型如何变更？”</p>
               </div>
             </article>
             <article className={`${cardClass} relative overflow-hidden`}>
@@ -476,7 +460,7 @@ export default function OneWorkOSHome() {
                   {[
                     '使用全部 OneWorkOS 知识库',
                     '每月 1000 次知识检索',
-                    'WorkBuddy 与小红书知识能力',
+                    'WorkBuddy 与独立工作者知识能力',
                     '官方图片、资料出处和视频入口',
                     '云端知识持续更新',
                     '新增知识包自动开放',

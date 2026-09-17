@@ -207,14 +207,12 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
                 <h2 className="text-lg font-semibold mb-4">{t('author')}</h2>
                 <div className="flex items-center gap-4">
                   <div className="relative h-8 w-8 shrink-0">
-                    {blogAuthor.data.avatar && (
-                      <Image
-                        src={blogAuthor.data.avatar}
-                        alt={`avatar for ${blogAuthor.data.name}`}
-                        className="rounded-full object-cover border"
-                        fill
-                      />
-                    )}
+                    <Image
+                      src="/logo.png"
+                      alt="独立工作者 LOGO"
+                      className="rounded-full object-cover border"
+                      fill
+                    />
                   </div>
                   <span className="line-clamp-1">{blogAuthor.data.name}</span>
                 </div>
