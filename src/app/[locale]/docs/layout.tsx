@@ -46,7 +46,7 @@ export default async function DocsRootLayout({
     i18n: showLocaleSwitch ? docsI18nConfig : undefined,
     githubUrl: websiteConfig.metadata.social?.github ?? undefined,
     nav: {
-      url: getUrlWithLocale('/docs', locale),
+      url: getUrlWithLocale('/', locale),
       title: (
         <>
           <Logo className="size-6" />
