@@ -313,6 +313,25 @@ async function main() {
       `Bearer ${firstPair.access_token}`
     );
     assert(firstVerified.ok, 'authorization-code access token should verify');
+    await db
+      .update(user)
+      .set({ banned: true, banExpires: null })
+      .where(eq(user.id, userId));
+    await expectAccessFailure(firstPair.access_token, 'entitlement_expired');
+    await expectOAuthError(
+      () =>
+        rotateOneWorkRefreshToken({
+          clientId: firstAuthorization.clientId,
+          refreshToken: firstPair.refresh_token,
+        }),
+      'invalid_grant'
+    );
+    await db.update(user).set({ banned: false }).where(eq(user.id, userId));
+    assert(
+      (await verifyOneWorkOAuthAccessToken(`Bearer ${firstPair.access_token}`))
+        .ok,
+      'unbanned account should verify again'
+    );
     assert(
       firstVerified.principal.scopes.has('onework:knowledge'),
       'knowledge scope should be present'

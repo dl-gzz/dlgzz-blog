@@ -1,10 +1,8 @@
 import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
 import { getDb } from '@/db';
-import { payment, user } from '@/db/schema';
+import { payment, user, xorpayOrderSnapshot } from '@/db/schema';
 import { findPlanByPriceId, findPriceInPlan } from '@/lib/price-plan';
-import { sendEmail } from '@/mail';
-import { sendNotification } from '@/notification/notification';
 import { desc, eq } from 'drizzle-orm';
 import type {
   CheckoutResult,
@@ -27,8 +25,6 @@ import type {
 export class XorPayProvider implements PaymentProvider {
   private appId: string;
   private appSecret: string;
-  private webhookSecret: string;
-  private apiBaseUrl = 'https://api.xorpay.com';
 
   /**
    * Initialize XorPay provider with credentials
@@ -44,47 +40,35 @@ export class XorPayProvider implements PaymentProvider {
       throw new Error('XORPAY_APP_SECRET environment variable is not set');
     }
 
-    const webhookSecret = process.env.XORPAY_WEBHOOK_SECRET;
-    if (!webhookSecret) {
-      console.warn(
-        'XORPAY_WEBHOOK_SECRET is not set. Webhook validation will be disabled.'
-      );
-    }
-
     this.appId = appId;
     this.appSecret = appSecret;
-    this.webhookSecret = webhookSecret || '';
-  }
-
-  /**
-   * Generate signature for XorPay API requests
-   */
-  private generateSignature(params: Record<string, any>): string {
-    // Sort parameters by key
-    const sortedKeys = Object.keys(params).sort();
-    const signString = sortedKeys
-      .map((key) => `${key}=${params[key]}`)
-      .join('&');
-
-    // Add app secret
-    const stringToSign = `${signString}&key=${this.appSecret}`;
-
-    // Generate MD5 hash
-    return createHash('md5').update(stringToSign).digest('hex').toUpperCase();
   }
 
   /**
    * Create or get customer in database
    */
-  private async createOrGetCustomer(email: string): Promise<string> {
+  private async createOrGetCustomer(
+    userId: string,
+    email: string
+  ): Promise<string> {
     const db = await getDb();
 
     // Find existing user by email
     const existingUser = await db
       .select()
       .from(user)
-      .where(eq(user.email, email))
+      .where(eq(user.id, userId))
       .limit(1);
+
+    const account = existingUser[0];
+    if (
+      !account ||
+      account.email !== email ||
+      (account.banned &&
+        (!account.banExpires || account.banExpires > new Date()))
+    ) {
+      throw new Error('Checkout account is unavailable');
+    }
 
     if (existingUser.length > 0 && existingUser[0].customerId) {
       return existingUser[0].customerId;
@@ -101,7 +85,7 @@ export class XorPayProvider implements PaymentProvider {
           customerId: customerId,
           updatedAt: new Date(),
         })
-        .where(eq(user.email, email));
+        .where(eq(user.id, userId));
     }
 
     return customerId;
@@ -127,8 +111,28 @@ export class XorPayProvider implements PaymentProvider {
         throw new Error(`Price not found in plan: ${priceId}`);
       }
 
+      if (
+        plan.disabled ||
+        price.disabled ||
+        price.currency.toUpperCase() !== 'CNY' ||
+        !Number.isSafeInteger(price.amount) ||
+        price.amount <= 0 ||
+        price.amount > 2_147_483_647
+      ) {
+        throw new Error('Checkout price is unavailable');
+      }
+      const amountMinor = price.amount;
+
+      const db = await getDb();
+      // Fail before calling the payment gateway if the snapshot migration has
+      // not been applied. Never return a payable order with missing local checks.
+      await db
+        .select({ paymentId: xorpayOrderSnapshot.paymentId })
+        .from(xorpayOrderSnapshot)
+        .limit(0);
+
       // Create or get customer
-      const customerId = await this.createOrGetCustomer(customerEmail);
+      const customerId = await this.createOrGetCustomer(userId, customerEmail);
 
       // Generate order number
       const orderNo = `ORDER_${Date.now()}_${randomUUID().substring(0, 8)}`;
@@ -143,7 +147,7 @@ export class XorPayProvider implements PaymentProvider {
       const requestParams: Record<string, string> = {
         name: plan.name || 'OneWorkOS 会员',
         pay_type: payType,
-        price: (price.amount / 100).toFixed(2), // Convert cents to yuan, format like "1.80"
+        price: (amountMinor / 100).toFixed(2), // Convert cents to yuan, format like "1.80"
         order_id: orderNo,
         notify_url: notifyUrl,
       };
@@ -158,12 +162,6 @@ export class XorPayProvider implements PaymentProvider {
       // Note: openid is NOT included in signature calculation
       const signString = `${requestParams.name}${requestParams.pay_type}${requestParams.price}${requestParams.order_id}${requestParams.notify_url}${this.appSecret}`;
       const sign = createHash('md5').update(signString).digest('hex');
-
-      console.log('XorPay request params:', {
-        ...requestParams,
-        sign,
-        apiUrl: `${this.apiBaseUrl}/pay/${this.appId}`,
-      });
 
       // Make API request to XorPay
       const formBody = new URLSearchParams({
@@ -183,8 +181,6 @@ export class XorPayProvider implements PaymentProvider {
       });
 
       const result = await response.json();
-
-      console.log('XorPay response:', result);
 
       // Check response status
       if (result.status !== 'ok') {
@@ -207,20 +203,21 @@ export class XorPayProvider implements PaymentProvider {
         throw new Error(`XorPay checkout failed: ${errorInfo}`);
       }
 
-      // Use the provided user ID directly (user must be logged in)
-      const db = await getDb();
-
-      // Verify user exists
-      const userRecord = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, userId))
-        .limit(1);
-
-      if (userRecord.length === 0) {
-        throw new Error(
-          `User not found: ${userId}. Please ensure user is logged in.`
-        );
+      const aoid =
+        typeof result.aoid === 'string'
+          ? result.aoid
+          : Number.isSafeInteger(result.aoid) && result.aoid > 0
+            ? String(result.aoid)
+            : '';
+      if (
+        !response.ok ||
+        !aoid ||
+        aoid.length > 256 ||
+        typeof result.info?.qr !== 'string' ||
+        !result.info.qr ||
+        result.info.qr.length > 8192
+      ) {
+        throw new Error('Invalid payment gateway response');
       }
 
       // Calculate period end based on subscription interval
@@ -236,23 +233,32 @@ export class XorPayProvider implements PaymentProvider {
         periodEnd.setFullYear(periodEnd.getFullYear() + 1);
       }
 
-      // Save payment record to database
-      await db.insert(payment).values({
-        id: randomUUID(),
-        userId: userRecord[0].id,
-        customerId: customerId,
-        priceId: priceId,
-        type: price.type,
-        interval: price.interval || null,
-        status: 'processing',
-        periodStart: periodStart,
-        periodEnd: periodEnd, // ⭐ 自动计算的到期时间
-        cancelAtPeriodEnd: false,
-        trialStart: null,
-        trialEnd: null,
-        subscriptionId: result.aoid, // Use XorPay order ID as subscription ID
-        createdAt: new Date(),
-        updatedAt: new Date(),
+      // Save the payment and trusted request fields together, or neither.
+      const paymentId = randomUUID();
+      await db.transaction(async (tx) => {
+        await tx.insert(payment).values({
+          id: paymentId,
+          userId,
+          customerId: customerId,
+          priceId: priceId,
+          type: price.type,
+          interval: price.interval || null,
+          status: 'processing',
+          periodStart: periodStart,
+          periodEnd: periodEnd, // ⭐ 自动计算的到期时间
+          cancelAtPeriodEnd: false,
+          trialStart: null,
+          trialEnd: null,
+          subscriptionId: aoid, // Use XorPay order ID as subscription ID
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        await tx.insert(xorpayOrderSnapshot).values({
+          paymentId,
+          providerOrderId: orderNo,
+          amountMinor,
+          currency: 'CNY',
+        });
       });
 
       // Return payment URL with QR code data
@@ -265,11 +271,14 @@ export class XorPayProvider implements PaymentProvider {
         : '';
 
       return {
-        url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/checkout?aoid=${result.aoid}&qr=${qrCodeUrl}&expires=${expiresIn}&expires_at=${Date.now() + Number(expiresIn) * 1000}${encodedReturnUrl}`,
-        id: result.aoid, // XorPay order ID
+        url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/checkout?aoid=${encodeURIComponent(aoid)}&qr=${qrCodeUrl}&expires=${expiresIn}&expires_at=${Date.now() + Number(expiresIn) * 1000}${encodedReturnUrl}`,
+        id: aoid, // XorPay order ID
       };
     } catch (error) {
-      console.error('XorPay createCheckout error:', error);
+      console.error(
+        'XorPay createCheckout error:',
+        error instanceof Error ? error.name : 'UnknownError'
+      );
       throw error;
     }
   }
@@ -320,161 +329,11 @@ export class XorPayProvider implements PaymentProvider {
       }));
   }
 
-  /**
-   * Handle XorPay webhook event
-   */
-  async handleWebhookEvent(payload: string, signature: string): Promise<void> {
-    try {
-      const event = JSON.parse(payload);
-
-      // Verify signature if webhook secret is set
-      if (this.webhookSecret) {
-        const expectedSignature = this.generateSignature(event);
-        if (signature !== expectedSignature) {
-          throw new Error('Invalid webhook signature');
-        }
-      }
-
-      // Handle different event types
-      switch (event.event_type || event.trade_state) {
-        case 'SUCCESS':
-        case 'TRADE_SUCCESS':
-          await this.handlePaymentSuccess(event);
-          break;
-        case 'CLOSED':
-        case 'TRADE_CLOSED':
-          await this.handlePaymentCanceled(event);
-          break;
-        case 'REFUND':
-          await this.handleRefund(event);
-          break;
-        default:
-          console.log(
-            `Unhandled XorPay event type: ${event.event_type || event.trade_state}`
-          );
-      }
-    } catch (error) {
-      console.error('XorPay webhook error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Handle successful payment
-   */
-  private async handlePaymentSuccess(event: any): Promise<void> {
-    const db = await getDb();
-    const aoid = event.aoid; // XorPay uses 'aoid' as order ID
-    const orderId = event.order_id; // Our system's order ID
-
-    console.log('Processing payment success:', { aoid, orderId });
-
-    // Update payment record status to 'active' (all payments are subscriptions now)
-    const updatedPayment = await db
-      .update(payment)
-      .set({
-        status: 'active', // ⭐ 订阅设为 active
-        updatedAt: new Date(),
-      })
-      .where(eq(payment.subscriptionId, aoid))
-      .returning();
-
-    // Send notification and confirmation email if payment found
-    if (updatedPayment.length > 0) {
-      const payAmount = Number.parseFloat(event.pay_price || '0');
-      const paymentRecord = updatedPayment[0];
-
-      // Get user email from payment record
-      const userRecord = await db
-        .select()
-        .from(user)
-        .where(eq(user.id, paymentRecord.userId))
-        .limit(1);
-
-      const customerEmail =
-        userRecord.length > 0 ? userRecord[0].email : 'Unknown';
-
-      // Send notification
-      await sendNotification(
-        aoid,
-        paymentRecord.customerId,
-        customerEmail,
-        payAmount
-      );
-
-      // Send payment success confirmation email
-      try {
-        // Get plan information
-        const plan = findPlanByPriceId(paymentRecord.priceId);
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-
-        if (plan && customerEmail !== 'Unknown') {
-          await sendEmail({
-            to: customerEmail,
-            template: 'paymentSuccess',
-            context: {
-              planName: plan.name || 'OneWorkOS 会员',
-              interval: paymentRecord.interval || 'month',
-              amount: payAmount * 100, // Convert yuan to cents for email template
-              currency: 'CNY',
-              periodStart:
-                paymentRecord.periodStart?.toISOString() ||
-                new Date().toISOString(),
-              periodEnd:
-                paymentRecord.periodEnd?.toISOString() ||
-                new Date().toISOString(),
-              dashboardUrl: `${baseUrl}/dashboard`,
-            },
-            locale: 'zh', // Default to Chinese, could be improved by storing user locale preference
-          });
-
-          console.log(`Payment success email sent to: ${customerEmail}`);
-        }
-      } catch (emailError) {
-        console.error('Failed to send payment success email:', emailError);
-        // Don't throw - email failure shouldn't block payment processing
-      }
-
-      console.log(`Payment completed successfully: ${aoid}`);
-    } else {
-      console.warn(`Payment record not found for aoid: ${aoid}`);
-    }
-  }
-
-  /**
-   * Handle canceled payment
-   */
-  private async handlePaymentCanceled(event: any): Promise<void> {
-    const db = await getDb();
-    const orderNo = event.out_trade_no;
-
-    await db
-      .update(payment)
-      .set({
-        status: 'canceled',
-        updatedAt: new Date(),
-      })
-      .where(eq(payment.subscriptionId, orderNo));
-
-    console.log(`Payment canceled: ${orderNo}`);
-  }
-
-  /**
-   * Handle refund
-   */
-  private async handleRefund(event: any): Promise<void> {
-    const db = await getDb();
-    const orderNo = event.out_trade_no;
-
-    await db
-      .update(payment)
-      .set({
-        status: 'canceled',
-        updatedAt: new Date(),
-      })
-      .where(eq(payment.subscriptionId, orderNo));
-
-    console.log(`Payment refunded: ${orderNo}`);
+  /** XorPay only accepts signed form notifications at /api/webhooks/xorpay. */
+  async handleWebhookEvent(
+    _payload: string,
+    _signature: string
+  ): Promise<void> {
+    throw new Error('XorPay JSON webhook processing is disabled');
   }
 }

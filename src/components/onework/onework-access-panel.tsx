@@ -67,6 +67,9 @@ type AccessData = {
     limit?: number;
     monthlyQuota?: number;
     remaining?: number;
+    monthlyRemaining?: number;
+    creditBalance?: number;
+    totalRemaining?: number;
   };
 };
 
@@ -228,7 +231,6 @@ export function OneWorkAccessPanel({
   const isAuthorized = oauthConnections.some(
     (connection) => connection.identity !== 'legacy'
   );
-  const canUseOneWorkerOs = hasValidEntitlement && isAuthorized;
   const hasHistoricalEntitlement = (access?.entitlements?.length ?? 0) > 0;
 
   const usageLimit =
@@ -239,10 +241,19 @@ export function OneWorkAccessPanel({
       : null);
   const usageUsed = access?.usage?.usedThisMonth ?? access?.usage?.used ?? null;
   const usageRemaining =
+    access?.usage?.monthlyRemaining ??
     access?.usage?.remaining ??
     (usageUsed !== null && usageLimit !== null
       ? Math.max(0, usageLimit - usageUsed)
       : null);
+  const creditBalance = access?.usage?.creditBalance ?? 0;
+  const totalRemaining =
+    access?.usage?.totalRemaining ??
+    (usageRemaining === null ? null : usageRemaining + creditBalance);
+  const hasServiceAccess = hasValidEntitlement || creditBalance > 0;
+  const quotaExhausted = hasServiceAccess && totalRemaining === 0;
+  const canUseOneWorkerOs = hasServiceAccess && !quotaExhausted && isAuthorized;
+  const accessLabel = hasValidEntitlement ? '会员有效' : '次数包可用';
 
   const loadAccess = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -422,28 +433,32 @@ export function OneWorkAccessPanel({
                 <Badge variant={canUseOneWorkerOs ? 'default' : 'secondary'}>
                   {loadingAccess
                     ? '正在检查'
-                    : canUseOneWorkerOs
-                      ? '会员有效 · 已授权'
-                      : hasValidEntitlement
-                        ? '会员有效 · 待连接'
-                        : hasHistoricalEntitlement
-                          ? '会员已过期'
-                          : '尚未开通'}
+                    : quotaExhausted
+                      ? '本期次数已用完'
+                      : canUseOneWorkerOs
+                        ? `${accessLabel} · 已授权`
+                        : hasServiceAccess
+                          ? `${accessLabel} · 待连接`
+                          : hasHistoricalEntitlement
+                            ? '会员已过期'
+                            : '尚未开通'}
                 </Badge>
                 <Badge variant="outline">MCP · OAuth 2.1 + PKCE</Badge>
               </div>
               <CardTitle className="text-2xl sm:text-3xl">
-                {canUseOneWorkerOs
-                  ? 'one-worker-os 已经可以使用'
-                  : hasValidEntitlement
-                    ? '接下来，把你的 AI 客户端连接进来'
-                    : hasHistoricalEntitlement
-                      ? '续费后即可继续使用'
-                      : '先开通会员，再连接 AI 客户端'}
+                {quotaExhausted
+                  ? '本期次数已用完，请等待额度更新或续费'
+                  : canUseOneWorkerOs
+                    ? 'one-worker-os 已经可以使用'
+                    : hasServiceAccess
+                      ? '接下来，把你的 AI 客户端连接进来'
+                      : hasHistoricalEntitlement
+                        ? '续费后即可继续使用'
+                        : '先开通会员，再连接 AI 客户端'}
               </CardTitle>
               <CardDescription className="max-w-2xl text-base leading-7">
                 {canUseOneWorkerOs
-                  ? '你的会员账号已经授权给 AI 客户端。以后不需要复制 Key，知识库更新也不需要重新安装。'
+                  ? '你的账号已经授权给 AI 客户端。以后不需要复制 Key，知识库更新也不需要重新安装。'
                   : '选择你正在使用的客户端，生成接入提示并完成网页授权即可。'}
               </CardDescription>
             </div>
@@ -478,7 +493,7 @@ export function OneWorkAccessPanel({
             </div>
           )}
 
-          {!hasValidEntitlement && !loadingAccess && showRedeem && (
+          {!hasServiceAccess && !loadingAccess && showRedeem && (
             <div className="rounded-xl border bg-muted/20 p-5">
               <div className="flex items-start gap-3">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -512,7 +527,7 @@ export function OneWorkAccessPanel({
             </div>
           )}
 
-          {hasValidEntitlement && (
+          {hasServiceAccess && (
             <div className="space-y-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -647,21 +662,33 @@ export function OneWorkAccessPanel({
             <CardDescription>权益属于账号，不属于某一台电脑。</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">本月已用</p>
+                <p className="text-xs text-muted-foreground">本期会员已用</p>
                 <p className="mt-1 text-xl font-semibold">{usageUsed ?? '—'}</p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">本月剩余</p>
+                <p className="text-xs text-muted-foreground">本期会员剩余</p>
                 <p className="mt-1 text-xl font-semibold">
                   {usageRemaining ?? '—'}
                 </p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">每月额度</p>
+                <p className="text-xs text-muted-foreground">每期会员额度</p>
                 <p className="mt-1 text-xl font-semibold">
                   {usageLimit ?? '—'}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">次数包余额</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {access ? creditBalance : '—'}
+                </p>
+              </div>
+              <div className="rounded-lg border border-primary/25 bg-primary/5 p-3">
+                <p className="text-xs text-muted-foreground">总可用次数</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {totalRemaining ?? '—'}
                 </p>
               </div>
             </div>
@@ -694,7 +721,7 @@ export function OneWorkAccessPanel({
               })
             )}
 
-            {hasValidEntitlement && showRedeem && (
+            {hasServiceAccess && showRedeem && (
               <details className="rounded-lg border p-3 text-sm">
                 <summary className="cursor-pointer font-medium">
                   我有新的兑换码或续费码

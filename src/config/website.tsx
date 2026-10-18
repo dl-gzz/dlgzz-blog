@@ -1,6 +1,22 @@
 import { PaymentTypes, PlanIntervals } from '@/payment/types';
 import type { WebsiteConfig } from '@/types';
 
+const oneWorkCreditPriceId =
+  process.env.NEXT_PUBLIC_ONEWORK_CREDIT_PRICE_ID?.trim() || '';
+const oneWorkCreditAmount = Number(
+  process.env.NEXT_PUBLIC_ONEWORK_CREDIT_AMOUNT_MINOR || 0
+);
+const oneWorkCreditCount = Number(
+  process.env.NEXT_PUBLIC_ONEWORK_CREDIT_COUNT || 0
+);
+const oneWorkCreditConfigured =
+  oneWorkCreditPriceId.length > 0 &&
+  Number.isSafeInteger(oneWorkCreditAmount) &&
+  oneWorkCreditAmount > 0 &&
+  Number.isSafeInteger(oneWorkCreditCount) &&
+  oneWorkCreditCount > 0 &&
+  oneWorkCreditCount <= 10_000_000;
+
 /**
  * 独立工作者 website configuration
  *
@@ -125,6 +141,23 @@ export const websiteConfig: WebsiteConfig = {
         isFree: false,
         isLifetime: false,
         recommended: true,
+      },
+      onework_credits: {
+        id: 'onework_credits',
+        name: 'OneWorkOS 调用次数包',
+        prices: [
+          {
+            type: PaymentTypes.ONE_TIME,
+            priceId: oneWorkCreditPriceId || 'onework_credits_unconfigured',
+            amount: oneWorkCreditAmount,
+            currency: 'CNY',
+            usageCredits: oneWorkCreditCount,
+            disabled: !oneWorkCreditConfigured,
+          },
+        ],
+        isFree: false,
+        isLifetime: false,
+        disabled: !oneWorkCreditConfigured,
       },
     },
   },

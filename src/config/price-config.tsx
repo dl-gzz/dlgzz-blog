@@ -42,6 +42,20 @@ export function getPricePlans(): Record<string, PricePlan> {
     };
   }
 
+  if (priceConfig.plans.onework_credits) {
+    const plan = priceConfig.plans.onework_credits;
+    const creditCount = plan.prices[0]?.usageCredits || 0;
+    plans.onework_credits = {
+      ...plan,
+      name: t('oneworkCredits.name'),
+      description: t('oneworkCredits.description'),
+      features: creditCount
+        ? [t('oneworkCredits.features.feature-1', { count: creditCount })]
+        : [],
+      limits: [],
+    };
+  }
+
   return plans;
 }
 

@@ -46,6 +46,7 @@ export interface Price {
   currency: string;                  // Currency code (e.g., USD)
   interval?: PlanInterval;           // Billing interval for recurring payments
   trialPeriodDays?: number;          // Free trial period in days
+  usageCredits?: number;             // One Worker OS call credits for this one-time price
   disabled?: boolean;                // Whether to disable this price in UI
 }
 

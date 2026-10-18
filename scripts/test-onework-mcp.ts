@@ -46,13 +46,21 @@ function accountAccess(packIds = ['pack.test']) {
       source: 'test',
       status: 'active',
       monthlyQuota: 100,
+      startsAt: new Date(),
       expiresAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     })),
     devices: [],
     keys: [],
-    usage: { usedThisMonth: 2, limit: 100, remaining: 98 },
+    usage: {
+      usedThisMonth: 2,
+      limit: 100,
+      remaining: 98,
+      monthlyRemaining: 98,
+      creditBalance: 0,
+      totalRemaining: 98,
+    },
     legacyDeviceLimit: 3,
   };
 }
@@ -553,6 +561,7 @@ async function main() {
     'onework_query_analytics',
     'onework_get_entitlements',
     'onework_get_usage',
+    'onework_begin_expert_use',
   ]);
 
   const resolved = await request(3, 'tools/call', {
@@ -744,6 +753,16 @@ async function main() {
     98
   );
 
+  const beginExpertUse = await request(11, 'tools/call', {
+    name: 'onework_begin_expert_use',
+    arguments: {},
+  });
+  const beginExpertPayload = asRecord(
+    successResult(beginExpertUse.response).structuredContent
+  );
+  assert.equal(beginExpertPayload.authorized, true);
+  assert.equal(beginExpertPayload.chargedCalls, 1);
+
   const insufficientScope = await request(
     10,
     'tools/call',
@@ -759,6 +778,20 @@ async function main() {
     'scope rejection must be a JSON-RPC error'
   );
   assert.equal(insufficientScope.response.error.code, -32003);
+
+  const insufficientExpertGateScope = await request(
+    100,
+    'tools/call',
+    { name: 'onework_begin_expert_use', arguments: {} },
+    { ...principal, scopes: new Set(['onework:knowledge']) }
+  );
+  assert.equal(insufficientExpertGateScope.status, 403);
+  assert(
+    insufficientExpertGateScope.response &&
+      'error' in insufficientExpertGateScope.response,
+    'paid Expert gate must require the account authorization scope'
+  );
+  assert.equal(insufficientExpertGateScope.response.error.code, -32003);
 
   const reservationsBeforeDeniedReads = calls.reservations;
   const unavailableSource = await request(
@@ -893,11 +926,155 @@ async function main() {
   assert.deepEqual(okFirstAppliedCompletions, ['ok']);
   assert.equal(okFirstUsageStatus.get(okFirstEventId), 'ok');
 
+  // Two distinct OAuth clients (the pattern used by separate experts) share
+  // one account pool: subscription quota is consumed first, then credit lots.
+  const sharedPool = { monthlyUsed: 0, credits: 1 };
+  const sharedPoolDependencies = {
+    ...dependencies,
+    async getAccountAccess(userId: string) {
+      assert.equal(userId, principal.userId);
+      const monthlyLimit = 1;
+      const monthlyRemaining = Math.max(
+        0,
+        monthlyLimit - sharedPool.monthlyUsed
+      );
+      return {
+        ...accountAccess(sharedPool.credits > 0 ? ['*'] : ['pack.test']),
+        entitlements:
+          sharedPool.credits > 0 ? [] : accountAccess().entitlements,
+        usage: {
+          usedThisMonth: sharedPool.monthlyUsed,
+          limit: monthlyLimit,
+          remaining: monthlyRemaining,
+          monthlyRemaining,
+          creditBalance: sharedPool.credits,
+          totalRemaining: monthlyRemaining + sharedPool.credits,
+        },
+      };
+    },
+    async listKnowledgeCatalog() {
+      return licensedRoutingCatalog;
+    },
+    async searchKnowledge() {
+      return [];
+    },
+    async reserveUsage(
+      input: Parameters<OneWorkMcpDependencies['reserveUsage']>[0]
+    ) {
+      if (input.userId !== principal.userId) return null;
+      if (sharedPool.monthlyUsed < 1) {
+        sharedPool.monthlyUsed += 1;
+      } else if (sharedPool.credits > 0) {
+        sharedPool.credits -= 1;
+      } else {
+        return null;
+      }
+      return {
+        eventId: `shared_${sharedPool.monthlyUsed}_${sharedPool.credits}`,
+        usedThisMonth: sharedPool.monthlyUsed,
+      };
+    },
+    async completeUsage() {},
+  } as OneWorkMcpDependencies;
+  const expertA = { ...principal, clientId: 'expert_a_client' };
+  const expertB = { ...principal, clientId: 'expert_b_client' };
+  const sharedCall = (id: number, client: typeof expertA) =>
+    request(
+      id,
+      'tools/call',
+      {
+        name: 'onework_search_knowledge',
+        arguments: { query: `shared expert call ${id}` },
+      },
+      client,
+      sharedPoolDependencies
+    );
+  const fromExpertA = await sharedCall(51, expertA);
+  assert.equal(
+    asRecord(successResult(fromExpertA.response).structuredContent).success,
+    true
+  );
+  const fromExpertB = await sharedCall(52, expertB);
+  assert.equal(
+    asRecord(successResult(fromExpertB.response).structuredContent).success,
+    true
+  );
+  assert.deepEqual(sharedPool, { monthlyUsed: 1, credits: 0 });
+  const exhaustedAcrossExperts = await sharedCall(53, expertB);
+  const exhaustedToolResult = successResult(exhaustedAcrossExperts.response);
+  assert.equal(exhaustedToolResult.isError, true);
+  assert.equal(
+    asRecord(exhaustedToolResult.structuredContent).code,
+    'QUOTA_EXCEEDED'
+  );
+  const sharedUsage = await request(
+    54,
+    'tools/call',
+    { name: 'onework_get_usage', arguments: {} },
+    expertB,
+    sharedPoolDependencies
+  );
+  assert.deepEqual(
+    asRecord(successResult(sharedUsage.response).structuredContent).usage,
+    {
+      usedThisMonth: 1,
+      limit: 1,
+      remaining: 0,
+      monthlyRemaining: 0,
+      creditBalance: 0,
+      totalRemaining: 0,
+    }
+  );
+
+  let prepaidCredits = 1;
+  const prepaidOnlyDependencies = {
+    ...dependencies,
+    async getAccountAccess(userId: string) {
+      assert.equal(userId, principal.userId);
+      return {
+        ...accountAccess([]),
+        entitlements: [],
+        usage: {
+          usedThisMonth: 0,
+          limit: 0,
+          remaining: 0,
+          monthlyRemaining: 0,
+          creditBalance: prepaidCredits,
+          totalRemaining: prepaidCredits,
+        },
+      };
+    },
+    async listKnowledgeCatalog() {
+      return licensedRoutingCatalog;
+    },
+    async reserveUsage() {
+      if (prepaidCredits < 1) return null;
+      prepaidCredits -= 1;
+      return { eventId: 'prepaid_only', usedThisMonth: 0 };
+    },
+    async completeUsage() {},
+  } as OneWorkMcpDependencies;
+  const prepaidOnlyCall = await request(
+    55,
+    'tools/call',
+    {
+      name: 'onework_search_knowledge',
+      arguments: { query: 'perpetual credit only' },
+    },
+    expertA,
+    prepaidOnlyDependencies
+  );
+  assert.equal(
+    asRecord(successResult(prepaidOnlyCall.response).structuredContent).success,
+    true
+  );
+  assert.equal(prepaidCredits, 0);
+
   const malformed = await handleOneWorkMcpMessage([], principal, dependencies);
   assert(malformed.response && 'error' in malformed.response);
   assert.equal(malformed.response.error.code, -32600);
-  assert.equal(calls.reservations, 4);
-  assert.equal(calls.completions, 4);
+  assert.equal(calls.reservations, 5);
+  assert.equal(calls.completions, 5);
 
   console.log('one-worker-os MCP protocol tests passed');
 }

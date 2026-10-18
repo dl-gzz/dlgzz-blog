@@ -92,6 +92,14 @@
       },
       "limits": {}
     },
+    "oneworkCredits": {
+      "name": "OneWorkOS Call Credits",
+      "description": "Shared by all authorized experts; credits do not expire",
+      "features": {
+        "feature-1": "Includes {count} MCP calls shared across your experts"
+      },
+      "limits": {}
+    },
     "lifetime": {
       "name": "Annual Membership",
       "description": "Best value for long-term members",

@@ -1,6 +1,8 @@
 import { randomUUID } from 'crypto';
 import { getDb } from '@/db';
 import { payment, session, user } from '@/db/schema';
+import { grantOneWorkUsageCredits } from '@/lib/onework-access';
+import { getOneWorkUsageCreditsForPrice } from '@/lib/onework-credit-products';
 import {
   findPlanByPlanId,
   findPlanByPriceId,
@@ -193,6 +195,9 @@ export class StripeProvider implements PaymentProvider {
       const price = findPriceInPlan(planId, priceId);
       if (!price) {
         throw new Error(`Price ID ${priceId} not found in plan ${planId}`);
+      }
+      if (plan.disabled || price.disabled) {
+        throw new Error(`Price ID ${priceId} is disabled`);
       }
 
       // Get userName from metadata if available
@@ -622,6 +627,17 @@ export class StripeProvider implements PaymentProvider {
       );
       return;
     }
+
+    const usageCredits = getOneWorkUsageCreditsForPrice(priceId);
+    if (usageCredits) {
+      await grantOneWorkUsageCredits({
+        userId,
+        credits: usageCredits,
+        source: 'stripe',
+        externalOrderId: `stripe:${session.id}`,
+      });
+    }
+
     console.log(
       `<< Created one-time payment record for user ${userId}, price: ${priceId}`
     );

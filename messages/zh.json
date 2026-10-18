@@ -92,6 +92,14 @@
       },
       "limits": {}
     },
+    "oneworkCredits": {
+      "name": "OneWorkOS 调用次数包",
+      "description": "所有已授权专家共用，次数不过期",
+      "features": {
+        "feature-1": "包含 {count} 次 MCP 调用，可供你的所有专家共用"
+      },
+      "limits": {}
+    },
     "lifetime": {
       "name": "年付会员",
       "description": "长期用户首选，高性价比（推荐）",

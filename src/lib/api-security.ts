@@ -21,15 +21,18 @@ export class RequestBodyReadTimeoutError extends Error {
 }
 
 /** Read JSON without allowing chunked requests to bypass the size limit. */
-export async function readBoundedJson(
+async function readBoundedBody(
   request: Request,
   maxBytes: number,
   timeoutMs = 5_000
-): Promise<unknown> {
+): Promise<Buffer> {
   if (!request.body) throw new SyntaxError('empty request body');
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && Number(contentLength) > maxBytes) {
+    throw new RequestBodyTooLargeError();
+  }
   const reader = request.body.getReader();
-  const decoder = new TextDecoder();
-  const chunks: string[] = [];
+  const chunks: Uint8Array[] = [];
   let bytes = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const deadline = Date.now() + timeoutMs;
@@ -52,17 +55,61 @@ export async function readBoundedJson(
       if (next.done) break;
       bytes += next.value.byteLength;
       if (bytes > maxBytes) throw new RequestBodyTooLargeError();
-      chunks.push(decoder.decode(next.value, { stream: true }));
+      chunks.push(next.value);
     }
-    chunks.push(decoder.decode());
-    return JSON.parse(chunks.join(''));
+    return Buffer.concat(chunks, bytes);
   } catch (error) {
-    await reader.cancel().catch(() => undefined);
+    // Do not let an uncooperative stream's cancel promise defeat the deadline.
+    void reader.cancel().catch(() => undefined);
     throw error;
   } finally {
     if (timer) clearTimeout(timer);
     reader.releaseLock();
   }
+}
+
+export async function readBoundedJson(
+  request: Request,
+  maxBytes: number,
+  timeoutMs = 5_000
+): Promise<unknown> {
+  return JSON.parse(
+    (await readBoundedBody(request, maxBytes, timeoutMs)).toString('utf8')
+  );
+}
+
+/** Preserve raw UTF-8 webhook payloads while enforcing the same read limits. */
+export async function readBoundedText(request: Request, maxBytes: number, timeoutMs = 5_000) {
+  return (await readBoundedBody(request, maxBytes, timeoutMs)).toString('utf8');
+}
+
+export async function readBoundedFormData(request: Request, maxBytes: number) {
+  const body = await readBoundedBody(request, maxBytes);
+  return new Response(body, {
+    headers: { 'content-type': request.headers.get('content-type') || '' },
+  }).formData();
+}
+
+export function bodyErrorResponse(error: unknown) {
+  if (error instanceof RequestBodyTooLargeError) {
+    return NextResponse.json(
+      { success: false, code: 'PAYLOAD_TOO_LARGE', error: '请求体过大' },
+      { status: 413 }
+    );
+  }
+  if (error instanceof RequestBodyReadTimeoutError) {
+    return NextResponse.json(
+      { success: false, code: 'REQUEST_TIMEOUT', error: '读取请求超时' },
+      { status: 408 }
+    );
+  }
+  if (error instanceof SyntaxError) {
+    return NextResponse.json(
+      { success: false, code: 'BAD_REQUEST', error: '请求格式无效' },
+      { status: 400 }
+    );
+  }
+  return null;
 }
 
 type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
@@ -106,12 +153,28 @@ export async function requireHermesAdmin(message = '这个接口只允许管理�
   return { session: auth.session } as const;
 }
 
+/** Shared-workspace authoring and student records are administrator operations. */
+export async function requireAdminRequest(request: Request) {
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+    const blocked = requireSameOrigin(request);
+    if (blocked) return { response: blocked } as const;
+  }
+  return requireHermesAdmin();
+}
+
 /**
  * Cookie-authenticated mutation endpoints must not be callable cross-origin.
  * Requests without an Origin header are kept compatible with CLI/server clients;
  * browser requests are restricted to the configured app and local client origin.
  */
 export function requireSameOrigin(request: Request) {
+  // Fetch Metadata also protects browser requests with no Origin header.
+  if (request.headers.get('sec-fetch-site') === 'cross-site') {
+    return NextResponse.json(
+      { success: false, code: 'CSRF_BLOCKED', error: '请求来源不受信任' },
+      { status: 403 }
+    );
+  }
   const origin = request.headers.get('origin');
   if (!origin) return null;
 
