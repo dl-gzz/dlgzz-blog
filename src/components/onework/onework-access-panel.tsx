@@ -15,10 +15,11 @@ import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { Routes } from '@/routes';
 import {
   ArrowRightIcon,
+  BotIcon,
+  BoxesIcon,
   CheckCircle2Icon,
-  CircleIcon,
+  Code2Icon,
   CopyIcon,
-  DownloadIcon,
   ExternalLinkIcon,
   KeyRoundIcon,
   Link2Icon,
@@ -69,21 +70,80 @@ type AccessData = {
   };
 };
 
-const UNIVERSAL_PACKAGE_URL =
-  '/one-worker-os-universal/one-worker-os-universal-1.0.4.zip';
-const UNIVERSAL_INSTALL_GUIDE_URL = '/one-worker-os-universal/INSTALL.md';
-const GENERIC_MCP_CONFIG = JSON.stringify(
+const ONEWORK_MCP_URL = 'https://www.dlgzz.com/mcp';
+
+type ClientKey = 'workbuddy' | 'doubao' | 'openclaw' | 'other';
+
+const CLIENT_OPTIONS: Array<{
+  key: ClientKey;
+  title: string;
+  description: string;
+  action: string;
+  icon: typeof BotIcon;
+}> = [
   {
-    mcpServers: {
-      'one-worker-os': {
-        type: 'http',
-        url: 'https://www.dlgzz.com/mcp',
+    key: 'workbuddy',
+    title: 'WorkBuddy',
+    description: '兼容接入，复制提示词后由客户端完成配置。',
+    action: '一键接入',
+    icon: BotIcon,
+  },
+  {
+    key: 'doubao',
+    title: '豆包',
+    description: '添加远程 MCP，再从客户端发起登录授权。',
+    action: '查看接入提示',
+    icon: SparklesIcon,
+  },
+  {
+    key: 'openclaw',
+    title: '龙虾（OpenClaw）',
+    description: '使用远程 MCP 地址连接，不需要复制 API Key。',
+    action: '一键接入',
+    icon: BoxesIcon,
+  },
+  {
+    key: 'other',
+    title: '其他 MCP 客户端',
+    description: '复制通用配置，适用于支持 OAuth 的 MCP 客户端。',
+    action: '查看配置',
+    icon: Code2Icon,
+  },
+];
+
+const CLIENT_PROMPTS: Record<ClientKey, string> = {
+  workbuddy: `请在当前 WorkBuddy 桌面端配置 OneWorkOS MCP，不要只给我操作说明。
+
+连接名称：one-worker-os
+MCP 地址：${ONEWORK_MCP_URL}
+
+请保留现有 MCP 配置。配置完成后，在当前客户端点击连接或认证，由浏览器打开 OneWorkOS OAuth 授权页；我会本人确认授权。`,
+  doubao: `请在当前豆包或火山方舟的自定义 MCP 中添加 OneWorkOS：
+
+名称：one-worker-os
+类型：远程 HTTP MCP
+地址：${ONEWORK_MCP_URL}
+
+保存后点击连接或登录，浏览器打开 OAuth 页面后由我本人确认授权。`,
+  openclaw: `请在当前 OpenClaw 中添加 OneWorkOS 远程 MCP：
+
+openclaw mcp add one-worker-os --url ${ONEWORK_MCP_URL} --transport streamable-http --auth oauth
+openclaw mcp login one-worker-os
+
+授权页面打开后由我本人确认，不要复制或回显任何令牌。`,
+  other: JSON.stringify(
+    {
+      mcpServers: {
+        'one-worker-os': {
+          type: 'http',
+          url: ONEWORK_MCP_URL,
+        },
       },
     },
-  },
-  null,
-  2
-);
+    null,
+    2
+  ),
+};
 
 const TEST_PROMPT = '查看我的 one-worker-os 会员权益和剩余次数';
 
@@ -141,48 +201,6 @@ function entitlementStatus(item: Entitlement, now: number) {
   return '已过期';
 }
 
-function SetupStep({
-  index,
-  title,
-  description,
-  done,
-  current,
-}: {
-  index: number;
-  title: string;
-  description: string;
-  done: boolean;
-  current: boolean;
-}) {
-  return (
-    <div
-      className={`relative flex gap-3 rounded-xl border p-4 transition-colors ${
-        done
-          ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20'
-          : current
-            ? 'border-primary/40 bg-primary/5'
-            : 'bg-muted/20'
-      }`}
-    >
-      {done ? (
-        <CheckCircle2Icon className="mt-0.5 size-5 shrink-0 text-emerald-600" />
-      ) : current ? (
-        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-          {index}
-        </span>
-      ) : (
-        <CircleIcon className="mt-0.5 size-5 shrink-0 text-muted-foreground/50" />
-      )}
-      <div className="min-w-0">
-        <p className="font-medium">{title}</p>
-        <p className="mt-1 text-sm leading-6 text-muted-foreground">
-          {description}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export function OneWorkAccessPanel({
   showRedeem = true,
 }: { showRedeem?: boolean }) {
@@ -196,7 +214,7 @@ export function OneWorkAccessPanel({
   const [revokingClientId, setRevokingClientId] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [packageDownloaded, setPackageDownloaded] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<ClientKey>('workbuddy');
   const [now, setNow] = useState(() => Date.now());
 
   const activeEntitlements = useMemo(
@@ -390,13 +408,9 @@ export function OneWorkAccessPanel({
     );
   }
 
-  const currentStep = !hasValidEntitlement
-    ? 1
-    : isAuthorized
-      ? 4
-      : packageDownloaded
-        ? 3
-        : 2;
+  const selectedClientOption = CLIENT_OPTIONS.find(
+    (client) => client.key === selectedClient
+  );
 
   return (
     <div className="space-y-6">
@@ -416,7 +430,7 @@ export function OneWorkAccessPanel({
                           ? '会员已过期'
                           : '尚未开通'}
                 </Badge>
-                <Badge variant="outline">WorkBuddy / 豆包 / 龙虾</Badge>
+                <Badge variant="outline">MCP · OAuth 2.1 + PKCE</Badge>
               </div>
               <CardTitle className="text-2xl sm:text-3xl">
                 {canUseOneWorkerOs
@@ -430,7 +444,7 @@ export function OneWorkAccessPanel({
               <CardDescription className="max-w-2xl text-base leading-7">
                 {canUseOneWorkerOs
                   ? '你的会员账号已经授权给 AI 客户端。以后不需要复制 Key，知识库更新也不需要重新安装。'
-                  : '下载一个通用安装包，交给 WorkBuddy、豆包或龙虾安装；安装后点击连接，完成网页授权即可。'}
+                  : '选择你正在使用的客户端，生成接入提示并完成网页授权即可。'}
               </CardDescription>
             </div>
             <Button
@@ -447,37 +461,6 @@ export function OneWorkAccessPanel({
           </div>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
-          <div className="grid gap-3 lg:grid-cols-4">
-            <SetupStep
-              index={1}
-              title="开通会员"
-              description="购买后自动开通，或输入兑换码绑定到账号。"
-              done={hasValidEntitlement}
-              current={currentStep === 1}
-            />
-            <SetupStep
-              index={2}
-              title="下载安装包"
-              description="下载一个通用包，AI 客户端会选择对应的安装入口。"
-              done={isAuthorized || packageDownloaded}
-              current={currentStep === 2}
-            />
-            <SetupStep
-              index={3}
-              title="客户端连接"
-              description="在当前客户端的 MCP 连接入口点击连接并授权。"
-              done={isAuthorized}
-              current={currentStep === 3}
-            />
-            <SetupStep
-              index={4}
-              title="直接使用"
-              description="用自然语言提问，one-worker-os 自动选择知识和能力。"
-              done={canUseOneWorkerOs}
-              current={currentStep === 4}
-            />
-          </div>
-
           {message && (
             <output
               aria-live="polite"
@@ -530,105 +513,92 @@ export function OneWorkAccessPanel({
           )}
 
           {hasValidEntitlement && (
-            <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                    <DownloadIcon className="size-5" />
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Link2Icon className="size-5 text-primary" />
+                    <h3 className="text-lg font-semibold">OAuth 授权</h3>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-semibold">
-                      下载 one-worker-os 通用安装包
-                    </h3>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      一个包同时支持 WorkBuddy、豆包和龙虾。AI
-                      客户端会读取包内说明，选择对应的安装方式。
-                    </p>
-                  </div>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    选择要新增的客户端连接。每次点击都会生成一段接入提示，按客户端提示完成配置、信任和首次连接。
+                  </p>
                 </div>
-                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                  <Button asChild size="lg" className="sm:flex-1">
-                    <a
-                      href={UNIVERSAL_PACKAGE_URL}
-                      download
-                      onClick={() => {
-                        setPackageDownloaded(true);
-                        setMessage(
-                          '安装包下载已开始。安装完成后，请在客户端点击 one-worker-os 连接。'
-                        );
-                      }}
-                    >
-                      <DownloadIcon className="size-4" />
-                      下载通用安装包
-                    </a>
-                  </Button>
-                  <Button asChild size="lg" variant="outline">
-                    <a
-                      href={UNIVERSAL_INSTALL_GUIDE_URL}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      查看安装说明
-                      <ExternalLinkIcon className="size-4" />
-                    </a>
-                  </Button>
-                </div>
-                <div className="mt-5 grid gap-2 sm:grid-cols-3">
-                  <div className="rounded-lg border border-primary/20 bg-background/70 p-3">
-                    <p className="text-sm font-semibold">WorkBuddy</p>
-                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      导入插件包并启用
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-primary/20 bg-background/70 p-3">
-                    <p className="text-sm font-semibold">豆包</p>
-                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      导入 MCP 配置
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-primary/20 bg-background/70 p-3">
-                    <p className="text-sm font-semibold">龙虾</p>
-                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      添加远程 MCP
-                    </p>
-                  </div>
-                </div>
+                <Badge variant="outline">支持多客户端连接</Badge>
               </div>
 
-              <div className="rounded-xl border p-5">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-300">
-                    <Link2Icon className="size-5" />
-                  </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {CLIENT_OPTIONS.map((client) => {
+                  const Icon = client.icon;
+                  const selected = selectedClient === client.key;
+                  return (
+                    <button
+                      key={client.key}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setSelectedClient(client.key)}
+                      className={`rounded-xl border p-4 text-left transition-colors ${
+                        selected
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'hover:border-primary/40 hover:bg-muted/30'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <Icon className="size-5 text-primary" />
+                        {selected && (
+                          <CheckCircle2Icon className="size-4 text-primary" />
+                        )}
+                      </div>
+                      <p className="mt-3 font-semibold">{client.title}</p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                        {client.description}
+                      </p>
+                      <p className="mt-3 text-xs font-medium text-primary">
+                        {client.action}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="rounded-xl border border-primary/25 bg-primary/5 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold">
-                      第二步：点击连接并授权
+                      {selectedClientOption?.title} 接入
                     </h3>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      安装完成后，进入：
+                      复制下面的接入提示给当前客户端；授权页面打开后，由你本人确认授权。
                     </p>
                   </div>
+                  <Badge variant="secondary">需要本人确认授权</Badge>
                 </div>
-                <div className="mt-4 rounded-lg bg-muted p-3 text-sm font-medium leading-6">
-                  安装完成后，在当前客户端的 MCP 列表找到
-                  one-worker-os，点击连接
+                <pre className="mt-4 max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border bg-background p-4 text-xs leading-6 text-foreground">
+                  {CLIENT_PROMPTS[selectedClient]}
+                </pre>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button
+                    onClick={() =>
+                      void copyText(
+                        CLIENT_PROMPTS[selectedClient],
+                        `${selectedClientOption?.title} 接入提示已复制。`
+                      )
+                    }
+                  >
+                    <CopyIcon className="size-4" />
+                    复制一键接入提示
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/docs/workbuddy-connection">
+                      查看接入教程
+                      <ExternalLinkIcon className="size-4" />
+                    </Link>
+                  </Button>
                 </div>
-                <ol className="mt-4 space-y-2 text-sm leading-6 text-muted-foreground">
-                  <li>1. 客户端自动发起 MCP 连接。</li>
-                  <li>2. 浏览器打开 one-worker-os 授权页。</li>
-                  <li>3. 核对账号和权限后点击「允许连接」。</li>
-                  <li>4. 返回客户端即可开始使用。</li>
-                </ol>
-                <Button
-                  className="mt-5 w-full"
-                  variant="outline"
-                  onClick={() =>
-                    void copyText(GENERIC_MCP_CONFIG, '通用 MCP 配置已复制。')
-                  }
-                >
-                  <CopyIcon className="size-4" />
-                  复制通用 MCP 配置（备用）
-                </Button>
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                  配置完成后，在客户端点击“连接 / 认证”；浏览器打开 OneWorkOS
+                  授权页后，确认账号和权限即可。
+                </p>
               </div>
             </div>
           )}
