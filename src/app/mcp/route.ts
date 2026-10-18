@@ -113,7 +113,7 @@ async function readBoundedJson(request: Request): Promise<unknown> {
     chunks.push(decoder.decode());
     return JSON.parse(chunks.join(''));
   } catch (error) {
-    await reader.cancel().catch(() => undefined);
+    void reader.cancel().catch(() => undefined);
     throw error;
   } finally {
     if (timer) clearTimeout(timer);

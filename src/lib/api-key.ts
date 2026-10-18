@@ -9,10 +9,11 @@ import {
   apiUsageEvent,
   oneworkDevice,
   oneworkEntitlement,
+  oneworkUsageCreditGrant,
   user,
 } from '@/db/schema';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
-import { and, desc, eq, gt, gte, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, isNull, lt, or, sql } from 'drizzle-orm';
 
 const KEY_PREFIX = 'dk_live_';
 
@@ -80,7 +81,8 @@ export type ApiUsageKind =
   | 'knowledge_query'
   | 'analytics_query'
   | 'capability_resolve'
-  | 'skill_install';
+  | 'skill_install'
+  | 'expert_use';
 
 export interface ApiUsageReservation {
   eventId: string;
@@ -102,15 +104,63 @@ function extractRawKey(headerValue: string | null): string {
     : trimmed;
 }
 
+function accountIsBlocked(
+  account: { banned: boolean | null; banExpires: Date | null } | undefined
+) {
+  return (
+    !account ||
+    Boolean(
+      account.banned &&
+        (!account.banExpires || account.banExpires.getTime() > Date.now())
+    )
+  );
+}
+
 const SHANGHAI_OFFSET_MS = 8 * 60 * 60 * 1000;
 
-/** one-worker-os 会员按北京时间自然月结算。 */
+/** 历史/兑换码权益没有账期锚点时，按北京时间自然月结算。 */
 export function oneWorkMonthStart(now = new Date()): Date {
   const shanghai = new Date(now.getTime() + SHANGHAI_OFFSET_MS);
   return new Date(
     Date.UTC(shanghai.getUTCFullYear(), shanghai.getUTCMonth(), 1) -
       SHANGHAI_OFFSET_MS
   );
+}
+
+/** 按权益生效日周年计算额度周期，月底日期在短月份钳制到当月最后一天。 */
+export function oneWorkQuotaPeriodStart(now: Date, anchor: Date): Date {
+  if (anchor.getTime() > now.getTime()) return anchor;
+
+  const anchorMonth = anchor.getUTCFullYear() * 12 + anchor.getUTCMonth();
+  const currentMonth = now.getUTCFullYear() * 12 + now.getUTCMonth();
+  let monthOffset = currentMonth - anchorMonth;
+
+  const anniversary = (offset: number) => {
+    const month = anchor.getUTCMonth() + offset;
+    const year = anchor.getUTCFullYear() + Math.floor(month / 12);
+    const normalizedMonth = ((month % 12) + 12) % 12;
+    const lastDay = new Date(
+      Date.UTC(year, normalizedMonth + 1, 0)
+    ).getUTCDate();
+    return new Date(
+      Date.UTC(
+        year,
+        normalizedMonth,
+        Math.min(anchor.getUTCDate(), lastDay),
+        anchor.getUTCHours(),
+        anchor.getUTCMinutes(),
+        anchor.getUTCSeconds(),
+        anchor.getUTCMilliseconds()
+      )
+    );
+  };
+
+  let periodStart = anniversary(monthOffset);
+  if (periodStart.getTime() > now.getTime()) {
+    monthOffset -= 1;
+    periodStart = anniversary(monthOffset);
+  }
+  return periodStart;
 }
 
 export function hashOneWorkDeviceId(value: string) {
@@ -136,19 +186,28 @@ async function getEntitlementState(userId: string) {
     .select({
       knowledgePackId: oneworkEntitlement.knowledgePackId,
       monthlyQuota: oneworkEntitlement.monthlyQuota,
+      startsAt: oneworkEntitlement.startsAt,
       status: oneworkEntitlement.status,
       expiresAt: oneworkEntitlement.expiresAt,
     })
     .from(oneworkEntitlement)
     .where(eq(oneworkEntitlement.userId, userId));
+  const active = all.filter(
+    (entitlement) =>
+      entitlement.status === 'active' &&
+      (!entitlement.expiresAt ||
+        entitlement.expiresAt.getTime() > now.getTime())
+  );
+  const quotaAnchor = active
+    .filter((entitlement) => (entitlement.monthlyQuota || 0) > 0)
+    .map((entitlement) => entitlement.startsAt)
+    .sort((left, right) => left.getTime() - right.getTime())[0];
   return {
     all,
-    active: all.filter(
-      (entitlement) =>
-        entitlement.status === 'active' &&
-        (!entitlement.expiresAt ||
-          entitlement.expiresAt.getTime() > now.getTime())
-    ),
+    active,
+    quotaPeriodStart: quotaAnchor
+      ? oneWorkQuotaPeriodStart(now, quotaAnchor)
+      : oneWorkMonthStart(now),
   };
 }
 
@@ -169,6 +228,9 @@ export async function verifyApiKey(
 ): Promise<KeyVerifyResult> {
   const rawKey = extractRawKey(headerValue);
   if (!rawKey) return { ok: false, reason: 'missing' };
+  if (rawKey.length > 256 || !/^dk_live_[A-Za-z0-9_-]+$/.test(rawKey)) {
+    return { ok: false, reason: 'invalid' };
+  }
 
   const db = await getDb();
   const [row] = await db
@@ -179,6 +241,13 @@ export async function verifyApiKey(
 
   if (!row) return { ok: false, reason: 'invalid' };
   if (row.status !== 'active') return { ok: false, reason: 'revoked' };
+
+  const [account] = await db
+    .select({ banned: user.banned, banExpires: user.banExpires })
+    .from(user)
+    .where(eq(user.id, row.userId))
+    .limit(1);
+  if (accountIsBlocked(account)) return { ok: false, reason: 'revoked' };
 
   const [device] = await db
     .select({
@@ -233,8 +302,9 @@ export async function verifyApiKey(
     .where(
       and(
         eq(apiUsageEvent.userId, row.userId),
+        eq(apiUsageEvent.billingSource, 'subscription'),
         eq(apiUsageEvent.status, 'ok'),
-        gte(apiUsageEvent.createdAt, oneWorkMonthStart())
+        gte(apiUsageEvent.createdAt, entitlementState.quotaPeriodStart)
       )
     );
 
@@ -419,12 +489,12 @@ export async function reserveApiKeyUsage(event: {
     // Key 与 OAuth/MCP 两条通道都锁同一个 user 行，才能共享
     // 一份月度额度并防止跨通道并发超额。
     const [account] = await tx
-      .select({ id: user.id })
+      .select({ id: user.id, banned: user.banned, banExpires: user.banExpires })
       .from(user)
       .where(eq(user.id, event.userId))
       .for('update')
       .limit(1);
-    if (!account) return null;
+    if (accountIsBlocked(account)) return null;
 
     const keys = await tx
       .select({ id: apiKey.id, status: apiKey.status })
@@ -435,13 +505,34 @@ export async function reserveApiKeyUsage(event: {
 
     if (!key || key.status !== 'active') return null;
 
+    const [quotaAnchor] = await tx
+      .select({ startsAt: oneworkEntitlement.startsAt })
+      .from(oneworkEntitlement)
+      .where(
+        and(
+          eq(oneworkEntitlement.userId, event.userId),
+          eq(oneworkEntitlement.status, 'active'),
+          gt(oneworkEntitlement.monthlyQuota, 0),
+          or(
+            isNull(oneworkEntitlement.expiresAt),
+            gt(oneworkEntitlement.expiresAt, now)
+          )
+        )
+      )
+      .orderBy(asc(oneworkEntitlement.startsAt))
+      .limit(1);
+    const quotaPeriodStart = quotaAnchor
+      ? oneWorkQuotaPeriodStart(now, quotaAnchor.startsAt)
+      : oneWorkMonthStart(now);
+
     const [usage] = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(apiUsageEvent)
       .where(
         and(
           eq(apiUsageEvent.userId, event.userId),
-          gte(apiUsageEvent.createdAt, oneWorkMonthStart(now)),
+          eq(apiUsageEvent.billingSource, 'subscription'),
+          gte(apiUsageEvent.createdAt, quotaPeriodStart),
           or(
             eq(apiUsageEvent.status, 'ok'),
             and(
@@ -453,7 +544,54 @@ export async function reserveApiKeyUsage(event: {
       );
 
     const usedThisMonth = usage?.count ?? 0;
-    if (event.monthlyQuota < 1 || usedThisMonth >= event.monthlyQuota) {
+    const subscriptionAvailable =
+      event.monthlyQuota > 0 && usedThisMonth < event.monthlyQuota;
+    let billingSource: 'subscription' | 'credit' = 'subscription';
+    let creditGrantId: string | null = null;
+
+    if (!subscriptionAvailable) {
+      const [credit] = await tx
+        .select({
+          id: oneworkUsageCreditGrant.id,
+          creditsRemaining: oneworkUsageCreditGrant.creditsRemaining,
+        })
+        .from(oneworkUsageCreditGrant)
+        .where(
+          and(
+            eq(oneworkUsageCreditGrant.userId, event.userId),
+            gt(oneworkUsageCreditGrant.creditsRemaining, 0),
+            or(
+              isNull(oneworkUsageCreditGrant.expiresAt),
+              gt(oneworkUsageCreditGrant.expiresAt, now)
+            )
+          )
+        )
+        .orderBy(
+          sql`${oneworkUsageCreditGrant.expiresAt} ASC NULLS LAST`,
+          oneworkUsageCreditGrant.createdAt
+        )
+        .limit(1)
+        .for('update');
+
+      if (!credit) return null;
+      const [decremented] = await tx
+        .update(oneworkUsageCreditGrant)
+        .set({
+          creditsRemaining: sql`${oneworkUsageCreditGrant.creditsRemaining} - 1`,
+        })
+        .where(
+          and(
+            eq(oneworkUsageCreditGrant.id, credit.id),
+            gt(oneworkUsageCreditGrant.creditsRemaining, 0)
+          )
+        )
+        .returning({ id: oneworkUsageCreditGrant.id });
+      if (!decremented) return null;
+      billingSource = 'credit';
+      creditGrantId = credit.id;
+    }
+
+    if (!subscriptionAvailable && !creditGrantId) {
       return null;
     }
 
@@ -465,6 +603,8 @@ export async function reserveApiKeyUsage(event: {
       kind: event.kind,
       knowledgePackId: event.knowledgePackId ?? null,
       serviceId: event.serviceId ?? null,
+      billingSource,
+      creditGrantId,
       query: usageQueryForStorage(event.query),
       status: 'pending',
       createdAt: now,
@@ -493,12 +633,32 @@ export async function reserveOneWorkUserUsage(event: {
 
   return db.transaction(async (tx) => {
     const [account] = await tx
-      .select({ id: user.id })
+      .select({ id: user.id, banned: user.banned, banExpires: user.banExpires })
       .from(user)
       .where(eq(user.id, event.userId))
       .for('update')
       .limit(1);
-    if (!account) return null;
+    if (accountIsBlocked(account)) return null;
+
+    const [quotaAnchor] = await tx
+      .select({ startsAt: oneworkEntitlement.startsAt })
+      .from(oneworkEntitlement)
+      .where(
+        and(
+          eq(oneworkEntitlement.userId, event.userId),
+          eq(oneworkEntitlement.status, 'active'),
+          gt(oneworkEntitlement.monthlyQuota, 0),
+          or(
+            isNull(oneworkEntitlement.expiresAt),
+            gt(oneworkEntitlement.expiresAt, now)
+          )
+        )
+      )
+      .orderBy(asc(oneworkEntitlement.startsAt))
+      .limit(1);
+    const quotaPeriodStart = quotaAnchor
+      ? oneWorkQuotaPeriodStart(now, quotaAnchor.startsAt)
+      : oneWorkMonthStart(now);
 
     const [usage] = await tx
       .select({ count: sql<number>`count(*)::int` })
@@ -506,7 +666,8 @@ export async function reserveOneWorkUserUsage(event: {
       .where(
         and(
           eq(apiUsageEvent.userId, event.userId),
-          gte(apiUsageEvent.createdAt, oneWorkMonthStart(now)),
+          eq(apiUsageEvent.billingSource, 'subscription'),
+          gte(apiUsageEvent.createdAt, quotaPeriodStart),
           or(
             eq(apiUsageEvent.status, 'ok'),
             and(
@@ -518,8 +679,48 @@ export async function reserveOneWorkUserUsage(event: {
       );
 
     const usedThisMonth = usage?.count ?? 0;
-    if (event.monthlyQuota < 1 || usedThisMonth >= event.monthlyQuota) {
-      return null;
+    const subscriptionAvailable =
+      event.monthlyQuota > 0 && usedThisMonth < event.monthlyQuota;
+    let billingSource: 'subscription' | 'credit' = 'subscription';
+    let creditGrantId: string | null = null;
+
+    if (!subscriptionAvailable) {
+      const [credit] = await tx
+        .select({ id: oneworkUsageCreditGrant.id })
+        .from(oneworkUsageCreditGrant)
+        .where(
+          and(
+            eq(oneworkUsageCreditGrant.userId, event.userId),
+            gt(oneworkUsageCreditGrant.creditsRemaining, 0),
+            or(
+              isNull(oneworkUsageCreditGrant.expiresAt),
+              gt(oneworkUsageCreditGrant.expiresAt, now)
+            )
+          )
+        )
+        .orderBy(
+          sql`${oneworkUsageCreditGrant.expiresAt} ASC NULLS LAST`,
+          oneworkUsageCreditGrant.createdAt
+        )
+        .limit(1)
+        .for('update');
+
+      if (!credit) return null;
+      const [decremented] = await tx
+        .update(oneworkUsageCreditGrant)
+        .set({
+          creditsRemaining: sql`${oneworkUsageCreditGrant.creditsRemaining} - 1`,
+        })
+        .where(
+          and(
+            eq(oneworkUsageCreditGrant.id, credit.id),
+            gt(oneworkUsageCreditGrant.creditsRemaining, 0)
+          )
+        )
+        .returning({ id: oneworkUsageCreditGrant.id });
+      if (!decremented) return null;
+      billingSource = 'credit';
+      creditGrantId = credit.id;
     }
 
     const eventId = `usage_${randomUUID()}`;
@@ -530,6 +731,8 @@ export async function reserveOneWorkUserUsage(event: {
       kind: event.kind,
       knowledgePackId: event.knowledgePackId ?? null,
       serviceId: event.serviceId ?? null,
+      billingSource,
+      creditGrantId,
       query: usageQueryForStorage(event.query),
       status: 'pending',
       createdAt: now,
@@ -549,21 +752,41 @@ export async function completeApiKeyUsage(event: {
 }) {
   try {
     const db = await getDb();
-    const [updated] = await db
-      .update(apiUsageEvent)
-      .set({
-        status: event.status,
-        resultCount: event.resultCount ?? 0,
-        embeddingTokens: event.embeddingTokens ?? 0,
-        latencyMs: event.latencyMs ?? 0,
-      })
-      .where(
-        and(
-          eq(apiUsageEvent.id, event.eventId),
-          eq(apiUsageEvent.status, 'pending')
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(apiUsageEvent)
+        .set({
+          status: event.status,
+          resultCount: event.resultCount ?? 0,
+          embeddingTokens: event.embeddingTokens ?? 0,
+          latencyMs: event.latencyMs ?? 0,
+        })
+        .where(
+          and(
+            eq(apiUsageEvent.id, event.eventId),
+            eq(apiUsageEvent.status, 'pending')
+          )
         )
-      )
-      .returning({ apiKeyId: apiUsageEvent.apiKeyId });
+        .returning({
+          apiKeyId: apiUsageEvent.apiKeyId,
+          creditGrantId: apiUsageEvent.creditGrantId,
+          billingSource: apiUsageEvent.billingSource,
+        });
+
+      if (
+        row?.billingSource === 'credit' &&
+        row.creditGrantId &&
+        event.status === 'error'
+      ) {
+        await tx
+          .update(oneworkUsageCreditGrant)
+          .set({
+            creditsRemaining: sql`${oneworkUsageCreditGrant.creditsRemaining} + 1`,
+          })
+          .where(eq(oneworkUsageCreditGrant.id, row.creditGrantId));
+      }
+      return row;
+    });
 
     if (updated?.apiKeyId) {
       await db

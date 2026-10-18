@@ -14,6 +14,7 @@ import {
 } from '@/lib/knowledge-search';
 import { getKnowledgeSource } from '@/lib/knowledge-source';
 import { listOneWorkAccess } from '@/lib/onework-access';
+import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { resolveDispatch } from '@/lib/onework-dispatcher';
 import {
   type SemanticQueryMode,
@@ -42,6 +43,7 @@ const TOOL_SCOPES = {
   onework_query_analytics: 'onework:analytics',
   onework_get_entitlements: 'onework:account',
   onework_get_usage: 'onework:account',
+  onework_begin_expert_use: 'onework:account',
 } as const;
 
 export type OneWorkMcpToolName = keyof typeof TOOL_SCOPES;
@@ -284,7 +286,18 @@ const TOOLS = [
   },
   {
     name: 'onework_get_usage',
-    description: 'Get current-month one-worker-os usage and remaining quota.',
+    description:
+      'Get account-wide one-worker-os monthly quota, purchased call credits, and remaining usage.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {},
+    },
+  },
+  {
+    name: 'onework_begin_expert_use',
+    description:
+      'Authorize and meter one paid WorkBuddy Expert task. Required before an Expert generates any user-facing answer; consumes one shared account call.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
@@ -571,7 +584,7 @@ function asToolError(error: McpToolError | McpTimeoutError): ToolResult {
 
 function activePackIds(access: Awaited<ReturnType<typeof listOneWorkAccess>>) {
   const now = Date.now();
-  return new Set(
+  const packIds = new Set(
     access.entitlements
       .filter(
         (item) =>
@@ -580,13 +593,15 @@ function activePackIds(access: Awaited<ReturnType<typeof listOneWorkAccess>>) {
       )
       .map((item) => item.knowledgePackId)
   );
+  if (access.usage.creditBalance > 0) packIds.add(ALL_PACKS_GRANT);
+  return packIds;
 }
 
 function ensureQuota(access: Awaited<ReturnType<typeof listOneWorkAccess>>) {
-  if (access.usage.limit < 1 || access.usage.remaining < 1) {
+  if (access.usage.totalRemaining < 1) {
     throw new McpToolError(
       'QUOTA_EXCEEDED',
-      'Monthly one-worker-os quota exhausted'
+      'One-Worker-OS 调用次数已用完，请续费或购买调用次数包'
     );
   }
 }
@@ -1110,7 +1125,7 @@ async function callTool(
     if (!reservation) {
       throw new McpToolError(
         'QUOTA_EXCEEDED',
-        'Monthly one-worker-os quota exhausted'
+        'One-Worker-OS 调用次数已用完，请续费或购买调用次数包'
       );
     }
     try {
@@ -1197,7 +1212,7 @@ async function callTool(
     if (!reservation) {
       throw new McpToolError(
         'QUOTA_EXCEEDED',
-        'Monthly one-worker-os quota exhausted'
+        'One-Worker-OS 调用次数已用完，请续费或购买调用次数包'
       );
     }
     try {
@@ -1247,7 +1262,7 @@ async function callTool(
     if (!reservation) {
       throw new McpToolError(
         'QUOTA_EXCEEDED',
-        'Monthly one-worker-os quota exhausted'
+        'One-Worker-OS 调用次数已用完，请续费或购买调用次数包'
       );
     }
     try {
@@ -1279,6 +1294,49 @@ async function callTool(
           metricDefinitions: result.metricDefinitions,
           resolvedTimeRange: result.resolvedTimeRange,
         },
+      });
+    } catch (error) {
+      await dependencies.completeUsage({
+        eventId: reservation.eventId,
+        status: 'error',
+        latencyMs: Date.now() - startedAt,
+      });
+      throw error;
+    }
+  }
+
+  if (name === 'onework_begin_expert_use') {
+    const startedAt = Date.now();
+    const access = await dependencies.getAccountAccess(principal.userId);
+    ensureQuota(access);
+    const reservation = await dependencies.reserveUsage({
+      userId: principal.userId,
+      monthlyQuota: access.usage.limit,
+      kind: 'expert_use',
+      serviceId: 'expert.begin',
+      query: 'WorkBuddy expert invocation',
+    });
+    if (!reservation) {
+      throw new McpToolError(
+        'QUOTA_EXCEEDED',
+        'One-Worker-OS 调用次数已用完，请续费或购买调用次数包'
+      );
+    }
+    try {
+      const updatedAccess = await dependencies.getAccountAccess(
+        principal.userId
+      );
+      await dependencies.completeUsage({
+        eventId: reservation.eventId,
+        resultCount: 0,
+        status: 'ok',
+        latencyMs: Date.now() - startedAt,
+      });
+      return asToolResult({
+        success: true,
+        authorized: true,
+        chargedCalls: 1,
+        usage: updatedAccess.usage,
       });
     } catch (error) {
       await dependencies.completeUsage({

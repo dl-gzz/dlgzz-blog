@@ -27,6 +27,12 @@ In WorkBuddy, open **自定义连接器 → 我的 MCP → one-worker-os** and c
 - `onework_query_analytics`
 - `onework_get_entitlements`
 - `onework_get_usage`
+- `onework_begin_expert_use`
+
+Paid WorkBuddy Experts should declare the existing connector ID `one-worker-os` in `dependencies.connectors` and call `onework_begin_expert_use` before every user-facing response. The gate consumes one account-shared paid call; if authorization or quota fails, the Expert must stop instead of answering from generic model knowledge. A later knowledge search is separately metered as another MCP call.
+- `onework_begin_expert_use`
+
+Paid WorkBuddy Experts should declare the existing connector ID `one-worker-os` in `dependencies.connectors` and call `onework_begin_expert_use` before every user-facing response. The gate consumes one account-shared paid call; if authorization or quota fails, the Expert must stop instead of answering from generic model knowledge. A later knowledge search is separately metered as another MCP call.
 
 ## Knowledge-to-Skill flow
 

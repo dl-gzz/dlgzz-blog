@@ -1,5 +1,6 @@
 import {
 	boolean,
+	check,
 	customType,
 	index,
 	integer,
@@ -10,6 +11,7 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 const vector = customType<{
 	data: number[];
@@ -93,6 +95,18 @@ export const payment = pgTable("payment", {
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+/** Trusted checkout snapshot; never populated from callback fields. */
+export const xorpayOrderSnapshot = pgTable("xorpay_order_snapshot", {
+	paymentId: text('payment_id').primaryKey().references(() => payment.id, { onDelete: 'cascade' }),
+	providerOrderId: text('provider_order_id').notNull().unique(),
+	amountMinor: integer('amount_minor').notNull(),
+	currency: text('currency').notNull(),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+	check('xorpay_order_snapshot_positive_amount', sql`${table.amountMinor} > 0`),
+	check('xorpay_order_snapshot_cny', sql`${table.currency} = 'CNY'`),
+]);
 
 export const miniappAccount = pgTable("miniapp_account", {
 	id: text("id").primaryKey(),
@@ -777,6 +791,23 @@ export const apiKeyPackGrant = pgTable("api_key_pack_grant", {
 	index('api_key_pack_grant_pack_idx').on(table.knowledgePackId),
 ]);
 
+/** 用户购买的 MCP 调用次数包；expires_at 为空表示不设时间期限。 */
+export const oneworkUsageCreditGrant = pgTable("onework_usage_credit_grant", {
+	id: text("id").primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	source: text('source').notNull().default('payment'),
+	externalOrderId: text('external_order_id'),
+	creditsGranted: integer('credits_granted').notNull(),
+	creditsRemaining: integer('credits_remaining').notNull(),
+	expiresAt: timestamp('expires_at'),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+	check('onework_usage_credit_grant_positive', sql`${table.creditsGranted} > 0`),
+	check('onework_usage_credit_remaining_range', sql`${table.creditsRemaining} >= 0 AND ${table.creditsRemaining} <= ${table.creditsGranted}`),
+	uniqueIndex('onework_usage_credit_order_unique_idx').on(table.userId, table.externalOrderId),
+	index('onework_usage_credit_user_expiry_idx').on(table.userId, table.expiresAt),
+]);
+
 /** 用量计量：每次检索/安装记一条。这是"能不能算账"的地基。 */
 export const apiUsageEvent = pgTable("api_usage_event", {
 	id: text("id").primaryKey(),
@@ -784,9 +815,11 @@ export const apiUsageEvent = pgTable("api_usage_event", {
 	userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
 	// 未登录访客的稳定标识（IP 哈希），用于免费试用额度计数
 	visitorId: text('visitor_id'),
-	kind: text('kind').notNull(), // knowledge_query | skill_install | web_chat
+	kind: text('kind').notNull(), // Metered API action, including knowledge, analytics, and paid expert use.
 	knowledgePackId: text('knowledge_pack_id'),
 	serviceId: text('service_id'),
+	billingSource: text('billing_source').notNull().default('subscription'), // subscription | credit
+	creditGrantId: text('credit_grant_id').references(() => oneworkUsageCreditGrant.id, { onDelete: 'set null' }),
 	query: text('query').notNull().default(''),
 	resultCount: integer('result_count').notNull().default(0),
 	embeddingTokens: integer('embedding_tokens').notNull().default(0),

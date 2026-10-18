@@ -10,9 +10,14 @@ import {
   oneworkEntitlement,
   oneworkEntitlementGrant,
   oneworkInstallToken,
+  oneworkUsageCreditGrant,
   user,
 } from '@/db/schema';
-import { hashOneWorkDeviceId, oneWorkMonthStart } from '@/lib/api-key';
+import {
+  hashOneWorkDeviceId,
+  oneWorkMonthStart,
+  oneWorkQuotaPeriodStart,
+} from '@/lib/api-key';
 import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { findPlanByPriceId } from '@/lib/price-plan';
 import { and, desc, eq, gt, gte, inArray, isNull, or, sql } from 'drizzle-orm';
@@ -459,6 +464,10 @@ export async function grantOneWorkEntitlements({
           )
         )
         .limit(1);
+      const existingPeriodActive = Boolean(
+        existing?.status === 'active' &&
+          (!existing.expiresAt || existing.expiresAt.getTime() > now.getTime())
+      );
       const mergedExpiry = extendEntitlementExpiry(
         existing ? existing.expiresAt : undefined,
         safeTrialDays,
@@ -474,7 +483,7 @@ export async function grantOneWorkEntitlements({
           source,
           status: 'active',
           monthlyQuota: safeMonthlyQuota,
-          startsAt: existing?.startsAt ?? now,
+          startsAt: existingPeriodActive ? existing.startsAt : now,
           expiresAt: mergedExpiry,
           externalOrderId: externalOrderId ?? null,
         })
@@ -511,6 +520,87 @@ export async function grantOneWorkEntitlements({
     expiresAt: requestedExpiresAt,
     monthlyQuota: safeMonthlyQuota,
   };
+}
+
+/** 发放 MCP 调用次数包；expiresAt 为空即永久有效。 */
+export async function grantOneWorkUsageCredits({
+  userId,
+  credits,
+  source = 'payment',
+  externalOrderId,
+  expiresAt = null,
+  database,
+}: {
+  userId: string;
+  credits: number;
+  source?: string;
+  externalOrderId?: string | null;
+  expiresAt?: Date | null;
+  database?:
+    | Awaited<ReturnType<typeof getDb>>
+    | Parameters<
+        Parameters<Awaited<ReturnType<typeof getDb>>['transaction']>[0]
+      >[0];
+}) {
+  if (!Number.isSafeInteger(credits) || credits < 1 || credits > 10_000_000) {
+    throw new OneWorkAccessError(
+      '调用次数必须是 1 到 10000000 的整数',
+      'INVALID_CREDITS'
+    );
+  }
+  if (expiresAt && expiresAt.getTime() <= Date.now()) {
+    throw new OneWorkAccessError(
+      '次数包到期时间必须晚于现在',
+      'INVALID_CREDIT_EXPIRY'
+    );
+  }
+  const db = database || (await getDb());
+  const now = new Date();
+
+  return db.transaction(async (tx) => {
+    const [account] = await tx
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, userId))
+      .for('update')
+      .limit(1);
+    if (!account) {
+      throw new OneWorkAccessError('用户不存在', 'USER_NOT_FOUND', 404);
+    }
+
+    const values = {
+      id: `usage_credit_${randomUUID()}`,
+      userId,
+      source: source.slice(0, 40),
+      externalOrderId: externalOrderId?.slice(0, 200) ?? null,
+      creditsGranted: credits,
+      creditsRemaining: credits,
+      expiresAt,
+      createdAt: now,
+    };
+    const inserted = externalOrderId
+      ? await tx
+          .insert(oneworkUsageCreditGrant)
+          .values(values)
+          .onConflictDoNothing({
+            target: [
+              oneworkUsageCreditGrant.userId,
+              oneworkUsageCreditGrant.externalOrderId,
+            ],
+          })
+          .returning({ id: oneworkUsageCreditGrant.id })
+      : await tx
+          .insert(oneworkUsageCreditGrant)
+          .values(values)
+          .returning({ id: oneworkUsageCreditGrant.id });
+
+    return {
+      granted: inserted.length > 0,
+      grantId: inserted[0]?.id ?? null,
+      credits: inserted.length > 0 ? credits : 0,
+      expiresAt,
+    };
+  });
 }
 
 export function shouldGrantOneWorkForPrice(priceId: string) {
@@ -864,12 +954,13 @@ export async function listOneWorkAccess(userId: string) {
   const db = await getDb();
   const now = new Date();
   const pendingSince = new Date(now.getTime() - 10 * 60 * 1000);
-  const [rawEntitlements, devices, usageRows] = await Promise.all([
+  const [rawEntitlements, devices, creditRows] = await Promise.all([
     db
       .select({
         knowledgePackId: oneworkEntitlement.knowledgePackId,
         status: oneworkEntitlement.status,
         monthlyQuota: oneworkEntitlement.monthlyQuota,
+        startsAt: oneworkEntitlement.startsAt,
         expiresAt: oneworkEntitlement.expiresAt,
       })
       .from(oneworkEntitlement)
@@ -888,18 +979,17 @@ export async function listOneWorkAccess(userId: string) {
       .where(eq(oneworkDevice.userId, userId))
       .orderBy(desc(oneworkDevice.createdAt)),
     db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(apiUsageEvent)
+      .select({
+        balance: sql<number>`coalesce(sum(${oneworkUsageCreditGrant.creditsRemaining}), 0)::int`,
+      })
+      .from(oneworkUsageCreditGrant)
       .where(
         and(
-          eq(apiUsageEvent.userId, userId),
-          gte(apiUsageEvent.createdAt, oneWorkMonthStart(now)),
+          eq(oneworkUsageCreditGrant.userId, userId),
+          gt(oneworkUsageCreditGrant.creditsRemaining, 0),
           or(
-            eq(apiUsageEvent.status, 'ok'),
-            and(
-              eq(apiUsageEvent.status, 'pending'),
-              gte(apiUsageEvent.createdAt, pendingSince)
-            )
+            isNull(oneworkUsageCreditGrant.expiresAt),
+            gt(oneworkUsageCreditGrant.expiresAt, now)
           )
         )
       ),
@@ -921,7 +1011,33 @@ export async function listOneWorkAccess(userId: string) {
     (maximum, entitlement) => Math.max(maximum, entitlement.monthlyQuota || 0),
     0
   );
-  const usedThisMonth = usageRows[0]?.count ?? 0;
+  const quotaAnchor = activeEntitlements
+    .filter((entitlement) => (entitlement.monthlyQuota || 0) > 0)
+    .map((entitlement) => entitlement.startsAt)
+    .sort((left, right) => left.getTime() - right.getTime())[0];
+  const quotaPeriodStart = quotaAnchor
+    ? oneWorkQuotaPeriodStart(now, quotaAnchor)
+    : oneWorkMonthStart(now);
+  const [usageRows] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(apiUsageEvent)
+    .where(
+      and(
+        eq(apiUsageEvent.userId, userId),
+        eq(apiUsageEvent.billingSource, 'subscription'),
+        gte(apiUsageEvent.createdAt, quotaPeriodStart),
+        or(
+          eq(apiUsageEvent.status, 'ok'),
+          and(
+            eq(apiUsageEvent.status, 'pending'),
+            gte(apiUsageEvent.createdAt, pendingSince)
+          )
+        )
+      )
+    );
+  const usedThisMonth = usageRows?.count ?? 0;
+  const creditBalance = creditRows[0]?.balance ?? 0;
+  const monthlyRemaining = Math.max(0, limit - usedThisMonth);
 
   return {
     entitlements,
@@ -929,7 +1045,10 @@ export async function listOneWorkAccess(userId: string) {
     usage: {
       usedThisMonth,
       limit,
-      remaining: Math.max(0, limit - usedThisMonth),
+      remaining: monthlyRemaining,
+      monthlyRemaining,
+      creditBalance,
+      totalRemaining: monthlyRemaining + creditBalance,
     },
     legacyDeviceLimit: oneWorkDeviceLimit(),
   };

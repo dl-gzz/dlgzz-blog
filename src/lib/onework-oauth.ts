@@ -17,6 +17,8 @@ import {
   oneworkOauthRateLimitBucket as oauthRateLimitBucket,
   oneworkOauthRefreshToken as oauthRefreshToken,
   oneworkEntitlement,
+  oneworkUsageCreditGrant,
+  user,
 } from '@/db/schema';
 import { getBaseUrl } from '@/lib/urls/urls';
 import { and, desc, eq, gt, isNull, lt, lte, ne, or, sql } from 'drizzle-orm';
@@ -91,7 +93,7 @@ export async function readOneWorkOAuthBody(
     while (true) {
       const remaining = deadline - Date.now();
       if (remaining <= 0) {
-        await reader.cancel();
+        void reader.cancel().catch(() => undefined);
         throw new OneWorkOAuthError('invalid_request', '读取请求体超时', 408);
       }
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -112,7 +114,7 @@ export async function readOneWorkOAuthBody(
       if (result.done) break;
       bytes += result.value.byteLength;
       if (bytes > maxBytes) {
-        await reader.cancel();
+        void reader.cancel().catch(() => undefined);
         throw new OneWorkOAuthError('invalid_request', '请求体过大', 413);
       }
       raw += decoder.decode(result.value, { stream: true });
@@ -120,7 +122,7 @@ export async function readOneWorkOAuthBody(
     raw += decoder.decode();
     return raw;
   } catch (error) {
-    await reader.cancel().catch(() => undefined);
+    void reader.cancel().catch(() => undefined);
     throw error;
   } finally {
     try {
@@ -1030,6 +1032,18 @@ export async function userHasActiveOneWorkEntitlement(
   tx?: any
 ) {
   const db = tx || (await getDb());
+  const [account] = await db
+    .select({ banned: user.banned, banExpires: user.banExpires })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  if (
+    !account ||
+    (account.banned &&
+      (!account.banExpires || account.banExpires.getTime() > Date.now()))
+  ) {
+    return false;
+  }
   const [row] = await db
     .select({ id: oneworkEntitlement.id })
     .from(oneworkEntitlement)
@@ -1037,6 +1051,7 @@ export async function userHasActiveOneWorkEntitlement(
       and(
         eq(oneworkEntitlement.userId, userId),
         eq(oneworkEntitlement.status, 'active'),
+        gt(oneworkEntitlement.monthlyQuota, 0),
         or(
           isNull(oneworkEntitlement.expiresAt),
           gt(oneworkEntitlement.expiresAt, new Date())
@@ -1044,7 +1059,23 @@ export async function userHasActiveOneWorkEntitlement(
       )
     )
     .limit(1);
-  return Boolean(row);
+  if (row) return true;
+
+  const [credit] = await db
+    .select({ id: oneworkUsageCreditGrant.id })
+    .from(oneworkUsageCreditGrant)
+    .where(
+      and(
+        eq(oneworkUsageCreditGrant.userId, userId),
+        gt(oneworkUsageCreditGrant.creditsRemaining, 0),
+        or(
+          isNull(oneworkUsageCreditGrant.expiresAt),
+          gt(oneworkUsageCreditGrant.expiresAt, new Date())
+        )
+      )
+    )
+    .limit(1);
+  return Boolean(credit);
 }
 
 async function requireActiveEntitlement(
@@ -2266,7 +2297,9 @@ export async function verifyOneWorkOAuthAccessToken(
   const match = authorization?.match(/^Bearer\s+(.+)$/i);
   const rawToken = match?.[1]?.trim() || '';
   if (!rawToken) return { ok: false, reason: 'missing' };
-  if (!rawToken.startsWith('owat_')) return { ok: false, reason: 'invalid' };
+  if (rawToken.length > 256 || !/^owat_[A-Za-z0-9_-]+$/.test(rawToken)) {
+    return { ok: false, reason: 'invalid' };
+  }
 
   const db = await getDb();
   const [row] = await db

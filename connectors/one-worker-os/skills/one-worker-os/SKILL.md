@@ -42,6 +42,7 @@ description: 使用 one-worker-os 梳理独立工作者的需求、检索已授�
 - `onework_get_knowledge_source`：只有搜索结果明确标记 `fullSourceAvailable: true` 时，才用 `documentId` 和 `contentHash` 分页读取完整来源。
 - `onework_get_entitlements`：查看会员、知识包和当前连接授权状态。
 - `onework_get_usage`：查看 one-worker-os 用量或配额。
+- `onework_begin_expert_use`：WorkBuddy 专家每轮开始前调用，授权并扣除 1 次账号共享额度。调用失败或次数耗尽时必须停止，不能改用通用模型答案兜底。
 - `onework_resolve_capability`：目标同时涉及知识、工具、数据或人工步骤时，用于判断应走哪条路径。
 - `onework_query_analytics`：查询受治理的指标、趋势、排名或对比；不要发送原始 SQL。
 

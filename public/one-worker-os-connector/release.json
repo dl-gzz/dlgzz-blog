@@ -1,9 +1,9 @@
 {
   "name": "one-worker-os",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "artifact": {
-    "url": "/one-worker-os-connector/one-worker-os-connector-0.1.4.zip",
-    "size": 1005390,
-    "sha256": "57f08b385e1555e9fca00262f350a949c6d6c18e0a0ed9702da3e4f596fa5d8e"
+    "url": "/one-worker-os-connector/one-worker-os-connector-0.2.0.zip",
+    "size": 1005483,
+    "sha256": "00a75ac40dfb7671f33c93d0ac142e656e11f1c37805723418d4b2098e8e2742"
   }
 }

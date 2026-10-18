@@ -30,6 +30,15 @@ For a task that needs several capabilities, help the user choose and combine the
 
 Example: for “turn this livestream into a public-account article,” use an available transcription Skill if needed, retrieve the owner's relevant writing method, optionally use an available writing expert, and use a connected publishing tool only when publication is requested and authorized. Return the article draft if publishing is unavailable. A completed draft and a published article are different outcomes.
 
+## Paid MCP service gate
+
+One-Worker-OS knowledge and expert service are paid MCP capabilities, not a free standalone expert. For every substantive request made to this service:
+
+- Call the live One-Worker-OS MCP; do not answer from model memory as a substitute for the paid service.
+- If the connector or required tool is unavailable, OAuth is not connected, the account has no active entitlement, or the server reports expired access or exhausted quota, stop the service workflow and explain the exact required next step. Do not fall back to generic model answers, another knowledge base, or an unrelated Skill to complete the same expert task.
+- Installation alone is not authorization. Only a successful MCP tool response proves that the service is usable for this request.
+- When quota is exhausted, report the account usage tool's available monthly allowance and purchased credits if that tool is available; never claim that a call succeeded when the MCP rejected it.
+
 ## Prefer the OAuth MCP connection
 
 When the seven one-worker-os MCP tools are available, use them as the primary live path. Cloud knowledge can change without reinstalling this Skill, so do not run a local update check before MCP calls.
@@ -42,9 +51,10 @@ Use the smallest sufficient tool:
 - `onework_resolve_capability` routes goals that may require knowledge, analytics, an installed host capability, or a human step.
 - `onework_query_analytics` answers governed metric, ranking, trend, and comparison questions. Never send raw SQL.
 - `onework_get_entitlements` reports current access, licensed knowledge packs, and the active OAuth connection policy.
-- `onework_get_usage` reports current one-worker-os usage or quota.
+- `onework_get_usage` reports the account-wide monthly allowance, purchased call credits, and remaining total usage.
+- `onework_begin_expert_use` authorizes and consumes one shared paid call for a WorkBuddy Expert task. A paid Expert package that declares the `one-worker-os` connector must call it before every user-facing response; if authorization fails or quota is exhausted, stop instead of falling back to a generic answer. Do not call it for ordinary direct MCP tasks unless the host Expert instructions require it.
 
-For a direct catalog, source, entitlement, or usage request, call that tool without adding an unnecessary resolver call. For a mixed or ambiguous goal, resolve first and then run the smallest route. A resolver result is a recommendation, not proof that knowledge was searched or an action was performed.
+For a direct catalog, source, entitlement, or usage request, call that tool without adding an unnecessary resolver call. For a mixed or ambiguous goal, resolve first and then run the smallest route. A resolver result is a recommendation, not proof that knowledge was searched or an action was performed. Paid WorkBuddy Experts must use `onework_begin_expert_use` as their first tool call on every user turn; this call is metered from the same account-wide allowance and credit pool as searches and source reads.
 
 ## Discover and search knowledge
 

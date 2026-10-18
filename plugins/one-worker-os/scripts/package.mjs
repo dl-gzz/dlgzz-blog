@@ -128,6 +128,7 @@ function validateSource() {
     'onework_query_analytics',
     'onework_get_entitlements',
     'onework_get_usage',
+    'onework_begin_expert_use',
   ]) {
     if (!skill.includes(`\`${tool}\``)) {
       throw new Error(`Plugin Skill does not route ${tool}`);
