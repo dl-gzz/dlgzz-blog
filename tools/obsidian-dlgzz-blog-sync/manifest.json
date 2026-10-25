@@ -1,7 +1,7 @@
 {
   "id": "dlgzz-blog-sync",
   "name": "独立工作者博客同步",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "minAppVersion": "1.5.0",
   "description": "确认发布当前笔记，自动处理图片，并核对网站与小程序文章接口。",
   "author": "独立工作者",

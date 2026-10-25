@@ -1,4 +1,4 @@
-# 独立工作者博客同步 1.1.0
+# 独立工作者博客同步 1.1.1
 
 只发布当前选择并确认的一篇笔记，适用于桌面 Obsidian。无需先使用口播出稿机或小白排版。
 
@@ -17,9 +17,9 @@
 - 默认标题为笔记名；可用 title 覆盖。首次发布自动生成 blog_slug，并在推送后写回笔记，以后改名仍保留网址。
 - 历史 WorkBuddy 文章按已有映射保留网址；归档/移动不再使发布失效。
 - blog_column 可为 ai-practice、solo-company、independent-thinking；blog_subcategory 支持 AI 实战下的 workbuddy。
-- blog_cover、cover 或 image 可指定封面；否则沿用已有封面、首张图片或网站 /og.png 默认图。
+- blog_cover、cover 或 image 可指定封面；否则使用首张图片、已有封面或网站 /og.png 默认图。
 - blog_premium 或 premium 可指定 true/false；更新旧文时默认保留原访问属性。
-- 自动处理 ![[本地图片]]、![说明](相对路径)、引用式图片和 HTTPS 图片。本地 PNG/JPEG/WebP/GIF/AVIF 随文章保存到网站 public/blog/obsidian，按内容哈希去重。旧小白排版图片缓存存在时可以复用，但不是必要依赖。
+- 自动处理 ![[本地图片]]、![说明](相对路径)、引用式图片和 HTTPS 图片。本地 PNG/JPEG/WebP/GIF/AVIF 随文章保存到网站 public/blog/obsidian，按内容哈希去重。不读取小白排版缓存，也不依赖其他插件的图床。
 - 只接受库内非隐藏目录的笔记和图片，不会嵌入另一篇私人笔记，也不会扫描整库自动发布。普通笔记中的可执行 MDX 声明会被拒绝，请将示例代码放入代码块。
 
 ## 发布仓库

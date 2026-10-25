@@ -86,8 +86,7 @@ export async function prepareArticle({ raw, sourcePath, vaultRoot, repo, resolve
   const date = rawDate instanceof Date ? rawDate.toISOString().slice(0, 10) : String(rawDate).slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) throw new Error('文章日期应为 YYYY-MM-DD。');
 
-  // An optional old URL cache is reused, but no COS account or other plugin is required.
-  const cache = (await optionalJson(path.join(vaultRoot, '.obsidian/plugins/gzh-design/data.json'))).uploadedImages || {};
+  // Publish assets with this article; no other plugin or upload account is involved.
   const root = await fs.realpath(vaultRoot);
   const assets = new Map();
   async function imageUrl(input) {
@@ -106,9 +105,6 @@ export async function prepareArticle({ raw, sourcePath, vaultRoot, repo, resolve
     const stat = await fs.stat(file);
     if (stat.size > 20 * 1024 * 1024) throw new Error('单张图片超过 20 MB，请先压缩。');
     const bytes = await fs.readFile(file);
-    const old = cache[createHash('md5').update(bytes).digest('hex')];
-    const cached = httpsOrLocal(typeof old === 'string' ? old : old?.url || old?.publicUrl);
-    if (cached) return cached;
     const relativePath = `public/blog/obsidian/${digest(bytes)}${extension}`;
     assets.set(relativePath, bytes);
     return '/' + relativePath.slice('public/'.length);
@@ -159,7 +155,7 @@ export async function prepareArticle({ raw, sourcePath, vaultRoot, repo, resolve
   }
   await walk(tree);
   const explicitCover = fm.blog_cover || fm.cover || fm.image;
-  const cover = explicitCover ? await imageUrl(explicitCover) : existing?.image || firstImage || '/og.png';
+  const cover = explicitCover ? await imageUrl(explicitCover) : firstImage || existing?.image || '/og.png';
   // A leading title is already rendered by both readers.
   if (tree.children[0]?.type === 'heading' && tree.children[0].depth === 1 && tree.children[0].children.map(n => n.value || '').join('') === title) tree.children.shift();
   // Preserve historical convention: a leading standalone cover is not duplicated in the body.

@@ -36133,7 +36133,6 @@ async function prepareArticle({ raw, sourcePath, vaultRoot, repo, resolveAsset, 
   const rawDate = fm.date || fm.created || existing?.date || now;
   const date = rawDate instanceof Date ? rawDate.toISOString().slice(0, 10) : String(rawDate).slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) throw new Error("\u6587\u7AE0\u65E5\u671F\u5E94\u4E3A YYYY-MM-DD\u3002");
-  const cache = (await optionalJson(import_node_path2.default.join(vaultRoot, ".obsidian/plugins/gzh-design/data.json"))).uploadedImages || {};
   const root4 = await import_promises.default.realpath(vaultRoot);
   const assets = /* @__PURE__ */ new Map();
   async function imageUrl(input) {
@@ -36157,9 +36156,6 @@ async function prepareArticle({ raw, sourcePath, vaultRoot, repo, resolveAsset, 
     const stat = await import_promises.default.stat(file);
     if (stat.size > 20 * 1024 * 1024) throw new Error("\u5355\u5F20\u56FE\u7247\u8D85\u8FC7 20 MB\uFF0C\u8BF7\u5148\u538B\u7F29\u3002");
     const bytes = await import_promises.default.readFile(file);
-    const old = cache[(0, import_node_crypto.createHash)("md5").update(bytes).digest("hex")];
-    const cached = httpsOrLocal(typeof old === "string" ? old : old?.url || old?.publicUrl);
-    if (cached) return cached;
     const relativePath = `public/blog/obsidian/${digest(bytes)}${extension2}`;
     assets.set(relativePath, bytes);
     return "/" + relativePath.slice("public/".length);
@@ -36211,7 +36207,7 @@ async function prepareArticle({ raw, sourcePath, vaultRoot, repo, resolveAsset, 
   }
   await walk3(tree);
   const explicitCover = fm.blog_cover || fm.cover || fm.image;
-  const cover = explicitCover ? await imageUrl(explicitCover) : existing?.image || firstImage || "/og.png";
+  const cover = explicitCover ? await imageUrl(explicitCover) : firstImage || existing?.image || "/og.png";
   if (tree.children[0]?.type === "heading" && tree.children[0].depth === 1 && tree.children[0].children.map((n) => n.value || "").join("") === title) tree.children.shift();
   if (tree.children[0]?.type === "paragraph" && tree.children[0].children.length === 1 && tree.children[0].children[0].type === "image" && tree.children[0].children[0].url === cover) tree.children.shift();
   const body = toMarkdown(tree, {
