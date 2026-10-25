@@ -1,6 +1,6 @@
 # GitHub → production
 
-Production checks public GitHub `dl-gzz/dlgzz-blog` main every two minutes, then builds the exact commit using GitHub API + official codeload HTTPS. This avoids the server's unreachable github.com Git endpoint. No third-party mirror, GitHub write token, webhook public port, or chat automation is needed.
+Production checks public GitHub `dl-gzz/dlgzz-blog` main every two minutes, then builds the exact commit using GitHub API over HTTPS, downloading changed files and checking the complete Git tree. The previous verified snapshot is reused as the next base. This avoids the server's unreachable github.com Git endpoint. No third-party mirror, GitHub write token, webhook public port, or chat automation is needed.
 
 Current server: Tencent Cloud Shanghai CVM, existing `dlgzz-deploy.timer` and `dlgzz-deploy.service`, ubuntu user. Runner is `/opt/dlgzz/bin/poll-github-release.py` (reviewed copy of this repository's script). Existing service and timer have `github-source.conf` drop-ins: ExecStart is Python runner; OnUnitActiveSec is two minutes. Runner changes require explicit installation; pushing articles or site code does not.
 

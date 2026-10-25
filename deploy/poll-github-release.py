@@ -2,6 +2,7 @@
 """Deploy this public repository from GitHub's official API and codeload endpoints."""
 import base64
 import hashlib
+import gzip
 from concurrent.futures import ThreadPoolExecutor
 import fcntl
 import json
@@ -20,9 +21,16 @@ HEALTH = 'http://127.0.0.1:3000/api/health/build'
 REPO = 'dl-gzz/dlgzz-blog'
 
 def fetch_json(url):
-    req = urllib.request.Request(url, headers={'User-Agent': 'dlgzz-deploy', 'Accept': 'application/vnd.github+json'})
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return json.load(r)
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'dlgzz-deploy', 'Accept': 'application/vnd.github+json', 'Accept-Encoding': 'gzip'})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                data = r.read()
+                if r.headers.get('Content-Encoding') == 'gzip': data = gzip.decompress(data)
+                return json.loads(data)
+        except Exception:
+            if attempt == 2: raise
+            time.sleep(2 * (attempt + 1))
 
 def health():
     try:
@@ -49,7 +57,13 @@ def extract(archive, target, sha):
 def incremental_source(target, sha):
     """Rebuild from a committed local base, verifying changed Git blobs."""
     repo = ROOT / 'app'
-    base = subprocess.check_output(['git', '-C', str(repo), 'rev-parse', 'HEAD'], text=True).strip()
+    cached = None
+    receipt = ROOT / 'last-deploy.json'
+    if receipt.exists():
+        candidate = json.loads(receipt.read_text()).get('commit', '')
+        if re.fullmatch(r'[0-9a-f]{40}', candidate) and (ROOT/'releases'/candidate).is_dir():
+            cached = ROOT/'releases'/candidate
+    base = cached.name if cached else subprocess.check_output(['git', '-C', str(repo), 'rev-parse', 'HEAD'], text=True).strip()
     compare = fetch_json(f'https://api.github.com/repos/{REPO}/compare/{base}...{sha}')
     files = compare.get('files', [])
     if compare.get('status') not in ('ahead', 'identical') or len(files) >= 300:
@@ -60,11 +74,14 @@ def incremental_source(target, sha):
     expected = {x['path']: x for x in tree['tree'] if x['type'] == 'blob'}
     if any(x.get('mode') not in ('100644','100755') for x in expected.values()):
         raise ValueError('Unsupported source file mode')
-    archive = target.parent / 'base.tar'
-    run(['git', '-C', str(repo), 'archive', '--format=tar', '-o', str(archive), base])
-    target.mkdir()
-    with tarfile.open(archive) as tar:
-        tar.extractall(target, filter='data')
+    if cached:
+        shutil.copytree(cached, target)
+    else:
+        archive = target.parent / 'base.tar'
+        run(['git', '-C', str(repo), 'archive', '--format=tar', '-o', str(archive), base])
+        target.mkdir()
+        with tarfile.open(archive) as tar:
+            tar.extractall(target, filter='data')
     def safe(name):
         p = Path(name)
         if p.is_absolute() or '..' in p.parts or not p.parts or p.parts[0] == '.git':
