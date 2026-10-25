@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """Deploy this public repository from GitHub's official API and codeload endpoints."""
+import base64
+import hashlib
+from concurrent.futures import ThreadPoolExecutor
 import fcntl
 import json
 import os
@@ -43,6 +46,55 @@ def extract(archive, target, sha):
         tar.extractall(target, filter='data')
         return target / prefix
 
+def incremental_source(target, sha):
+    """Rebuild from a committed local base, verifying changed Git blobs."""
+    repo = ROOT / 'app'
+    base = subprocess.check_output(['git', '-C', str(repo), 'rev-parse', 'HEAD'], text=True).strip()
+    compare = fetch_json(f'https://api.github.com/repos/{REPO}/compare/{base}...{sha}')
+    files = compare.get('files', [])
+    if compare.get('status') not in ('ahead', 'identical') or len(files) >= 300:
+        raise ValueError('Incremental comparison is not complete; use archive')
+    tree = fetch_json(f'https://api.github.com/repos/{REPO}/git/trees/{sha}?recursive=1')
+    if tree.get('truncated'):
+        raise ValueError('Truncated Git tree')
+    expected = {x['path']: x for x in tree['tree'] if x['type'] == 'blob'}
+    if any(x.get('mode') not in ('100644','100755') for x in expected.values()):
+        raise ValueError('Unsupported source file mode')
+    archive = target.parent / 'base.tar'
+    run(['git', '-C', str(repo), 'archive', '--format=tar', '-o', str(archive), base])
+    target.mkdir()
+    with tarfile.open(archive) as tar:
+        tar.extractall(target, filter='data')
+    def safe(name):
+        p = Path(name)
+        if p.is_absolute() or '..' in p.parts or not p.parts or p.parts[0] == '.git':
+            raise ValueError('Unsafe changed file path')
+        return target / p
+    for item in files:
+        if item['status'] == 'removed':
+            safe(item['filename']).unlink(missing_ok=True)
+        elif item['status'] == 'renamed':
+            safe(item['previous_filename']).unlink(missing_ok=True)
+    def update(item):
+        if item['status'] == 'removed': return
+        name = item['filename']; entry = expected[name]
+        blob = fetch_json(f"https://api.github.com/repos/{REPO}/git/blobs/{entry['sha']}")
+        data = base64.b64decode(blob['content'])
+        actual = hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+        if actual != entry['sha']: raise ValueError('Git blob mismatch')
+        dest = safe(name); dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(data); dest.chmod(0o755 if entry['mode']=='100755' else 0o644)
+    print(f'Downloading {len(files)} changed files from official GitHub API', flush=True)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(update, files))
+    actual_files = {str(p.relative_to(target)):p for p in target.rglob('*') if p.is_file()}
+    if set(actual_files) != set(expected): raise ValueError('Source tree paths mismatch')
+    for name,p in actual_files.items():
+        data=p.read_bytes()
+        if hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()!=expected[name]['sha']:
+            raise ValueError('Complete source tree hash mismatch: '+name)
+    return target
+
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
     with (ROOT / 'deploy.lock').open('a') as lock:
@@ -66,9 +118,7 @@ def main():
         if not release.exists():
             with tempfile.TemporaryDirectory(prefix='.download-', dir=releases) as tmp:
                 tmp = Path(tmp)
-                archive = tmp / 'source.tar.gz'
-                run(['curl', '--fail', '--silent', '--show-error', '--location', '--proto', '=https', '--connect-timeout', '15', '--max-time', '300', '--retry', '2', '--max-filesize', str(512*1024**2), '-o', str(archive), f'https://codeload.github.com/{REPO}/tar.gz/{sha}'])
-                source = extract(archive, tmp, sha)
+                source = incremental_source(tmp / 'source', sha)
                 source.rename(release)
         env = dict(os.environ, GIT_COMMIT_SHA=sha, GIT_BRANCH='main')
         compose = ['sudo', 'env', f'GIT_COMMIT_SHA={sha}', 'GIT_BRANCH=main', 'docker', 'compose', '--project-name', 'deploy', '--env-file', str(ROOT/'shared/app.env'), '--env-file', str(ROOT/'shared/app.env.local'), '-f', str(release/'deploy/docker-compose.prod.yml')]
