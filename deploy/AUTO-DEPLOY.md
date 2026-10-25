@@ -15,3 +15,9 @@ Current server: Tencent Cloud Shanghai CVM, existing `dlgzz-deploy.timer` and `d
 - A server reboot keeps the existing enabled timer. Internet availability and build duration still determine publishing latency.
 
 Validation: `python3 scripts/test-github-release.py` covers no-op, build failure preserving live app, health failure rollback, and successful revision receipt.
+
+## Build cache retention
+
+Dependency installation uses empty MDX collection directories, independent of article content. The builder regenerates MDX from the actual content before building. Next compilation cache is removed in the same build instruction so it is not persisted in the completed layer.
+
+Before each build the running image is tagged `deploy-app:rollback`. After exact-revision health verification, under the deployment lock, unused builder cache is pruned with `--keep-storage 6GB`. This is a retention target, not a hard disk quota; in-use layers may remain. Cleanup failure logs a warning without rolling back a healthy release. Containers, volumes and tagged images are not pruned. The installed runner must be updated explicitly to activate this policy.

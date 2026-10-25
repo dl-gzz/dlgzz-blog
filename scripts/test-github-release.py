@@ -10,10 +10,12 @@ m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 SHA = 'a'*40
 class DeploySafety(unittest.TestCase):
-    def exercise(self, states, fail_build=False):
+    def exercise(self, states, fail_build=False, fail_cleanup=False):
         calls=[]
         def run(args, **kw):
             calls.append(args)
+            if fail_cleanup and 'prune' in args:
+                raise RuntimeError('fixture cleanup failed')
             if fail_build and args[-2:] == ['build','app']:
                 raise RuntimeError('fixture build failed')
         with tempfile.TemporaryDirectory() as d:
@@ -23,6 +25,15 @@ class DeploySafety(unittest.TestCase):
                 try:m.main()
                 except RuntimeError as e:error=str(e)
                 return calls,error,(root/'last-deploy.json').exists()
+    def test_cleanup_failure_keeps_healthy_release(self):
+        calls,error,receipt=self.exercise([{'success':True,'commit':'old'},{'success':True,'commit':SHA}],fail_cleanup=True)
+        self.assertIsNone(error); self.assertTrue(receipt)
+        self.assertFalse(any(c[-1:] == ['deploy-app:latest'] for c in calls))
+    def test_cleanup_only_after_health_and_preserves_volumes(self):
+        calls,error,receipt=self.exercise([{'success':True,'commit':'old'},{'success':True,'commit':SHA}])
+        self.assertEqual(calls[-1], ['sudo','docker','builder','prune','--force','--keep-storage','6GB'])
+        calls,error,receipt=self.exercise([{'success':True,'commit':'old'}]+[{}]*36)
+        self.assertFalse(any('prune' in c for c in calls))
     def test_already_healthy_does_not_rebuild(self):
         calls,error,receipt=self.exercise([{'success':True,'commit':SHA}]);self.assertEqual(calls,[]);self.assertIsNone(error)
     def test_failed_build_never_replaces_running_site(self):

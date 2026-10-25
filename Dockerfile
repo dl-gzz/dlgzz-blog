@@ -12,7 +12,9 @@ RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 # Copy config files needed for fumadocs-mdx postinstall
 COPY source.config.ts ./
-COPY content ./content
+# Article changes must not invalidate the dependency installation layer.
+# MDX postinstall can initialize against empty collections; regenerate after COPY.
+RUN mkdir -p content/docs content/blog content/author content/pages content/changelog
 
 # Use China mirror first, then fallback to npmjs if mirror is unavailable
 RUN pnpm config set dangerously-allow-all-builds true && \
@@ -90,7 +92,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
-RUN DOCKER_BUILD=true pnpm build
+RUN pnpm content && DOCKER_BUILD=true pnpm build && rm -rf .next/cache
 
 # Production image, copy all the files and run next
 FROM base AS runner

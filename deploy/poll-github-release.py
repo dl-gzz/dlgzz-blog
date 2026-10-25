@@ -140,6 +140,8 @@ def main():
         env = dict(os.environ, GIT_COMMIT_SHA=sha, GIT_BRANCH='main')
         compose = ['sudo', 'env', f'GIT_COMMIT_SHA={sha}', 'GIT_BRANCH=main', 'docker', 'compose', '--project-name', 'deploy', '--env-file', str(ROOT/'shared/app.env'), '--env-file', str(ROOT/'shared/app.env.local'), '-f', str(release/'deploy/docker-compose.prod.yml')]
         previous = subprocess.run(['sudo', 'docker', 'inspect', '--format', '{{.Image}}', 'deploy-app-1'], capture_output=True, text=True).stdout.strip()
+        if re.fullmatch(r'sha256:[0-9a-f]{64}', previous):
+            run(['sudo', 'docker', 'tag', previous, 'deploy-app:rollback'])
         print(f'Building GitHub main {sha}', flush=True)
         run(compose + ['build', 'app'], env=env, timeout=1500)
         try:
@@ -152,6 +154,12 @@ def main():
                     tmp.write_text(json.dumps(receipt, indent=2)+'\n')
                     tmp.replace(ROOT/'last-deploy.json')
                     print(f'Deployment healthy at {sha}', flush=True)
+                    # Still under deploy.lock: only unused build cache is eligible.
+                    # Preserve running containers, tagged rollback image and volumes.
+                    try:
+                        run(['sudo', 'docker', 'builder', 'prune', '--force', '--keep-storage', '6GB'], timeout=300)
+                    except Exception as exc:
+                        print(f'Cache maintenance failed; healthy deployment retained: {type(exc).__name__}', flush=True)
                     return
                 time.sleep(5)
             raise RuntimeError('New website failed its revision health check')
