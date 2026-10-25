@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { createHash } from 'node:crypto';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { userHasPremiumAccess } from '@/lib/premium-access';
@@ -52,6 +53,7 @@ export type MiniappArticleBlock =
     };
 
 export interface MiniappBlogDetail extends MiniappBlogListItem {
+  contentHash: string;
   locked: boolean;
   copyContent: string | null;
   contentParagraphs: string[];
@@ -367,6 +369,7 @@ export async function getMiniappBlogDetail(
 
   return {
     slug: normalizedSlug,
+    contentHash: createHash('sha256').update(raw).digest('hex'),
     locale: normalizedLocale,
     title: post.data.title,
     description: post.data.description || '',
