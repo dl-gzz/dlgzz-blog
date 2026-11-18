@@ -1,0 +1,670 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file:; media-src 'self' file:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1"><title>曹冲称象 · 互动实验</title><style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #e8e1d0; color: #493725; font-family: "Songti SC", "Noto Serif SC", serif; }
+.app { display: flex; flex-direction: column; min-height: 100dvh; gap: 8px; padding: clamp(8px, 1.2vw, 18px); }
+header { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+h1 { margin: 0 auto 0 0; font-size: clamp(22px, 3vw, 34px); letter-spacing: .14em; }
+button, input { font: inherit; }
+button { min-height: 34px; padding: 6px 11px; cursor: pointer; background: #fff6e5; color: #59432e; border: 1px solid #ba9a69; border-radius: 8px; }
+button:hover { background: #eeddbd; }
+button:disabled { opacity: .5; cursor: default; }
+button:focus-visible, summary:focus-visible { outline: 2px solid #346e5b; outline-offset: 2px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; grid-template-areas: "scene" "controls"; gap: 8px; min-height: 0; }
+.layout.is-weighing { grid-template-columns: minmax(0, 1fr) clamp(166px, 20vw, 250px); grid-template-areas: "scene ledger" "controls controls"; }
+.sceneWrap { grid-area: scene; position: relative; min-width: 0; min-height: 0; border: 1px solid #b8a27b; border-radius: 10px; overflow: hidden; background: #8abeb7; }
+#scene { display: block; width: 100%; height: auto; aspect-ratio: 900 / 560; touch-action: none; user-select: none; }
+.bubble { position: absolute; z-index: 1; left: var(--speech-left, 8px); bottom: var(--speech-bottom, 38%); width: var(--speech-width, 140px); padding: 8px 10px; background: #fffaef; border: 1px solid #a68b62; border-radius: 10px; pointer-events: none; font-size: clamp(12px, 1.2vw, 17px); line-height: 1.48; box-shadow: 0 4px 12px #55422122; }
+.bubble::after { content: ""; position: absolute; left: var(--speech-tail, 72%); bottom: -6px; width: 10px; height: 10px; background: inherit; border-right: 1px solid #a68b62; border-bottom: 1px solid #a68b62; transform: translateX(-50%) rotate(45deg); }
+.resultMarker { position: absolute; z-index: 2; left: var(--result-left, 58%); top: var(--result-top, 10%); transform: translate(-50%, -50%); display: flex; align-items: baseline; justify-content: center; gap: .38em; width: max-content; max-width: calc(100% - 12px); padding: clamp(4px, 1vw, 12px) clamp(6px, 1.3vw, 17px); border: 1px solid #a68b62; border-radius: 12px; color: #173d2e; background: #fffaef; box-shadow: 0 6px 20px #1b372839; pointer-events: none; font-size: clamp(12px, 1.6vw, 23px); font-weight: 700; white-space: nowrap; }
+.resultMarker strong { font-family: system-ui, sans-serif; font-variant-numeric: tabular-nums; font-size: clamp(25px, 4.4vw, 55px); letter-spacing: -.04em; line-height: 1; }
+.formulaMarker { position: absolute; z-index: 2; left: var(--formula-left, 45%); top: var(--formula-top, 6%); transform: translateX(-50%); width: max-content; max-width: min(80%, 700px); grid-template-columns: minmax(0, 1fr); box-shadow: 0 4px 14px #1b372833; }
+.readingCard.formulaMarker { background: #fff4dc; color: #183b2e; border-color: #d5bd93; }
+.formulaMarker.cue-once { animation: formula-cue 800ms ease-out 1; }
+@keyframes formula-cue {
+  0% { opacity: .93; border-color: #d5bd93; box-shadow: 0 4px 14px #1b372833, 0 0 0 0 #b4834250; }
+  33% { opacity: 1; border-color: #a77937; box-shadow: 0 4px 14px #1b372833, 0 0 0 4px #b4834250; }
+  100% { opacity: 1; border-color: #d5bd93; box-shadow: 0 4px 14px #1b372833, 0 0 0 5px #b4834200; }
+}
+.formulaLabel { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 2px 18px; }
+.bubble strong { display: inline-flex; align-items: center; gap: 5px; font-size: .85em; color: #944e32; margin-right: .45em; }
+.voiceDots { display: inline-flex; gap: 2.5px; align-items: center; visibility: hidden; }
+.voiceDots span { width: 3.5px; height: 3.5px; border-radius: 50%; background: #387862; }
+.bubble.is-speaking .voiceDots { visibility: visible; }
+.bubble.is-speaking .voiceDots span { animation: voice-dot .66s ease-in-out infinite; }
+.bubble.is-speaking .voiceDots span:nth-child(2) { animation-delay: .10s; }
+.bubble.is-speaking .voiceDots span:nth-child(3) { animation-delay: .20s; }
+@keyframes voice-dot { 0%, 70%, 100% { transform: translateY(0); opacity: .56; } 32% { transform: translateY(-3px); opacity: 1; } }
+.caoMouth { visibility: hidden; }
+#caoChong.is-speaking .caoMouth { visibility: visible; }
+#caoChong.is-speaking .mouthShape { transform-box: fill-box; transform-origin: 50% 15%; animation: voice-mouth .74s ease-in-out infinite; }
+@keyframes voice-mouth {
+  0%, 100% { transform: scale(.82,.14); }
+  17% { transform: scale(1.15,1.57); }
+  34% { transform: scale(.85,.36); }
+  50% { transform: scale(.98,1.73); }
+  70% { transform: scale(.78,.19); }
+  83% { transform: scale(1.12,1.28); }
+}
+.controlBar { grid-area: controls; position: relative; align-self: start; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; min-width: 0; padding: 8px 12px; background: #fff7e8; border: 1px solid #b8a27b; border-radius: 10px; }
+.stepLabel, .actionSet { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.step { font-size: 12px; font-weight: 700; color: #705335; background: #efe1bf; border-radius: 999px; padding: 4px 8px; white-space: nowrap; }
+.controlBar h2 { font-size: 18px; margin: 0; }
+.instruction { min-width: 0; flex: 1 1 200px; margin: 0; font-size: 15px; line-height: 1.45; }
+.status { font-size: 14px; font-weight: 700; color: #2a594b; font-variant-numeric: tabular-nums; }
+.primary { background: #346e5b; color: #fff; border-color: #346e5b; white-space: nowrap; }
+.primary:not(:disabled):hover { background: #275342; }
+#answerBox { display: grid; gap: 6px; font-size: 14px; }
+#answer { width: 100%; min-width: 0; padding: 7px 8px; border: 1px solid #ba9a69; border-radius: 7px; background: #fffdf7; }
+.barDetails > summary { cursor: pointer; font-size: 13px; color: #6b4c31; padding: 7px 2px; white-space: nowrap; }
+.detailPanel { position: absolute; z-index: 2; right: 0; bottom: calc(100% + 6px); width: min(100%, 320px); max-height: min(55dvh, 320px); overflow: auto; padding: 13px 16px; background: #fff7e8; border: 1px solid #b8a27b; border-radius: 10px; box-shadow: 0 6px 22px #49372522; font-size: 14px; line-height: 1.55; }
+.detailPanel p { margin: 6px 0; }
+.weighingLog { grid-area: ledger; align-self: center; display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 10px 11px; border: 1px solid #b8a27b; border-radius: 10px; background: #fff7e8; font-size: 14px; font-variant-numeric: tabular-nums; }
+.weighingLog h3 { margin: 0; font-size: 18px; }
+.readingCard { display: grid; gap: 4px; min-width: 0; padding: 7px 9px; color: #123629; background: #e7efe3; border: 1px solid #b8cdbb; border-radius: 8px; }
+.readingLabel { font-weight: 700; line-height: 1.25; }
+.massValue { display: flex; align-items: baseline; flex-wrap: wrap; gap: 1px 5px; }
+.massValue strong, #equation, #recordList b, #answer { font-family: system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.massValue strong { font-size: clamp(27px, 3.4vw, 42px); line-height: 1.05; letter-spacing: -.035em; }
+#liveCount { font-size: 12px; white-space: nowrap; }
+#equation { display: flex; flex-wrap: nowrap; gap: .28em; min-width: 0; overflow-x: auto; font-size: clamp(18px, 2.65vw, 36px); font-weight: 750; line-height: 1.32; }
+#equation span { flex: none; white-space: nowrap; }
+.mathUnit { font-size: 12px; }
+#recordList { display: grid; gap: 5px; max-height: min(32dvh, 235px); overflow-y: auto; list-style: none; padding: 0; margin: 0; }
+#recordList:empty { display: none; }
+#recordList li { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0 5px; padding: 4px 7px; border: 1px solid #e1d2b7; border-radius: 6px; background: #fffaf0; }
+#recordList b { font-size: clamp(15px, 1.5vw, 20px); color: #3e2b17; }
+#sum { margin: 0; font-weight: 700; color: #2a594b; }
+#sum:empty { display: none; }
+.notice { flex-basis: 100%; margin: 0; color: #794926; font-size: 14px; }
+.notice:empty, .hidden { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.draggable { cursor: grab; touch-action: none; outline: none; }
+.draggable:focus-visible { filter: drop-shadow(0 0 5px #f8e36b); }
+.moving { cursor: grabbing; }
+#inkPreview, .draw-prompt { pointer-events: none; }
+.awaiting-mark .draw-prompt { animation: guide-pulse 650ms ease-in-out 2; }
+@keyframes guide-pulse { 0%, 100% { opacity: 1; } 48% { opacity: .57; } }
+@media (prefers-reduced-motion: reduce) {
+  .awaiting-mark .draw-prompt, .bubble.is-speaking .voiceDots span, #caoChong.is-speaking .mouthShape, .formulaMarker.cue-once { animation: none; }
+  #caoChong.is-speaking .caoMouth { visibility: hidden; }
+}
+@media (min-width: 700px) and (min-height: 400px) and (min-aspect-ratio: 1/1) {
+  .app { height: 100dvh; }
+  .layout { flex: 1; grid-template-rows: minmax(260px, 1fr) auto; }
+  #scene { height: 100%; aspect-ratio: auto; }
+}
+@media (max-aspect-ratio: 4/3) {
+  /* The ledger narrows the scene; in a nearly square window keep the art proportional. */
+  .layout.is-weighing { flex: none; grid-template-rows: auto auto; }
+  .layout.is-weighing #scene { height: auto; aspect-ratio: 900 / 560; }
+}
+@media (max-width: 720px) {
+  /* On narrow screens, a separate caption strip preserves the whole interactive scene. */
+  .layout { flex: none; grid-template-rows: auto auto; }
+  .sceneWrap { align-self: start; }
+  #scene { height: auto; aspect-ratio: 900 / 560; }
+  .bubble { position: relative; inset: auto; width: auto; margin: 5px; padding: 5px 8px; }
+  .bubble::after { display: none; }
+  .formulaMarker { position: relative; inset: auto; width: auto; max-width: none; margin: 5px; transform: none; }
+}
+@media (max-width: 530px) {
+  .layout.is-weighing { grid-template-columns: minmax(0, 1fr) clamp(113px, 28vw, 145px); gap: 6px; }
+  .weighingLog { font-size: 12px; padding: 6px; gap: 5px; }
+  .weighingLog h3 { font-size: 14px; }
+  .readingCard { padding: 4px 5px; }
+  .massValue strong { font-size: 27px; }
+  #recordList b { font-size: 14px; }
+  #answerBox { font-size: 12px; }
+  #answerBox button { padding-inline: 3px; }
+  #liveCount { font-size: 11px; }
+  .instruction { flex-basis: 100%; }
+}
+</style></head><body><main class="app"><header><h1>曹冲称象</h1><button id="replay">重听</button><button id="mute">有声</button><button id="undo">撤销</button><button id="reset">重置</button><button id="full" aria-pressed="false">全屏</button></header><div id="lessonLayout" class="layout"><section class="sceneWrap" aria-label="河岸称象场景"><div id="speechBubble" class="bubble"><strong>曹冲<span class="voiceDots" aria-hidden="true"><span></span><span></span><span></span></span></strong><span id="speech" aria-live="polite"></span></div>
+<output id="resultCard" class="resultMarker hidden" aria-live="polite" aria-atomic="true"><span>大象重</span><strong id="classroomTotal"></strong><span>千克</span></output>
+<div id="mathCard" class="readingCard formulaMarker hidden">
+  <div class="formulaLabel"><span class="readingLabel">合计怎么算？</span><span class="mathUnit">单位：千克</span></div>
+  <div id="equation" role="math" tabindex="0"></div>
+</div>
+<svg id="scene" viewBox="0 0 900 560" aria-label="拖动大象、画吃水线、放石头和分批称重">
+<image id="sceneBackdrop" href="river-foreground-bank.webp" x="-18" y="-11" width="936" height="590" preserveAspectRatio="none" pointer-events="none"/>
+<defs>
+  <clipPath id="aboveWater"><rect width="900" height="283"/></clipPath>
+  <clipPath id="belowWater"><rect x="0" y="283" width="900" height="65"/></clipPath>
+  <clipPath id="riverWaterClip">
+    <path id="riverWaterMask" d="M0 .334 C.32 .32 .66 .318 1 .335 V.602 C.8 .60 .64 .608 .48 .601 C.27 .6 .17 .597 0 .60 Z" transform="translate(-18 -11) scale(936 590)"/>
+  </clipPath>
+  <linearGradient id="waterTint" x1="0" x2="0" y1="0" y2="1" gradientUnits="objectBoundingBox">
+    <stop stop-color="#8df6f3" stop-opacity=".14"/><stop offset="1" stop-color="#168ba4" stop-opacity=".12"/>
+  </linearGradient>
+  <linearGradient id="wakeShine">
+    <stop stop-color="#c4faf1" stop-opacity="0"/><stop offset=".22" stop-color="#d3fff2" stop-opacity=".95"/><stop offset=".77" stop-color="#e0fff5" stop-opacity=".95"/><stop offset="1" stop-color="#d3fff2" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="mouthSkin">
+    <stop offset=".65" stop-color="#ffd0ac"/><stop offset="1" stop-color="#ffd0ac" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<g clip-path="url(#riverWaterClip)" pointer-events="none" aria-hidden="true">
+  <rect x="-900" y="75" width="2700" height="350" fill="url(#waterTint)"/>
+  <g id="waterGlints" fill="none" stroke="#e1fff4" stroke-width="1.8" stroke-linecap="round"></g>
+</g>
+<g clip-path="url(#belowWater)" opacity=".29" pointer-events="none" aria-hidden="true">
+  <g id="submergedHull"><use href="#hull"/></g>
+</g>
+<g clip-path="url(#aboveWater)" pointer-events="none">
+  <g id="boat"><svg id="hull" x="155" y="158" width="490" height="132" viewBox="0 220 2160 350" preserveAspectRatio="none"><image href="boat.webp" width="2160" height="720"/></svg></g>
+</g>
+<g clip-path="url(#riverWaterClip)" pointer-events="none" aria-hidden="true">
+  <path id="surfaceWake" fill="none" stroke="url(#wakeShine)" stroke-width="2.4"/>
+  <g id="impactRipples" fill="none" stroke="url(#wakeShine)" stroke-width="2.8">
+    <ellipse id="impact0" cx="402" cy="289" rx="0" ry="0" opacity="0"/>
+    <ellipse id="impact1" cx="402" cy="294" rx="0" ry="0" opacity="0"/>
+    <ellipse id="impact2" cx="402" cy="299" rx="0" ry="0" opacity="0"/>
+  </g>
+</g>
+<g id="markGroup" pointer-events="none"><line id="mark" visibility="hidden" stroke="#fff8ec" stroke-width="8" stroke-linecap="round"/><line id="markColor" visibility="hidden" stroke="#e44148" stroke-width="5" stroke-linecap="round"/></g>
+<g id="elephant" class="draggable" role="button" tabindex="0" aria-label="大象，上船或回到岸上"><image href="elephant-happy.webp" x="-156" y="-184" width="312" height="208"/><rect x="-110" y="-155" width="220" height="165" fill="transparent"/></g>
+<g id="caoChong" role="img" aria-label="站在岸边、面朝大象的曹冲" pointer-events="none">
+  <svg x="42" y="351" width="181" height="181" viewBox="0 0 1254 1254">
+    <g transform="translate(1254 0) scale(-1 1)">
+      <image href="cao-chong.webp" width="1254" height="1254"/>
+      <g class="caoMouth" aria-hidden="true">
+        <ellipse cx="677" cy="277" rx="28" ry="19" fill="url(#mouthSkin)"/>
+        <g class="mouthShape">
+          <path d="M656 270 Q673 273 698 268 Q691 290 677 291 Q665 289 656 270Z" fill="#652e26" stroke="#773e31" stroke-linejoin="round" stroke-width="1.5"/>
+          <path d="M661 271 Q679 273 693 269 Q688 276 676 278 Q667 277 661 271Z" fill="#fff0db"/>
+          <path d="M670 284 Q677 279 686 283 Q680 290 670 284Z" fill="#e68270"/>
+        </g>
+      </g>
+    </g>
+  </svg>
+</g>
+<g id="scale" class="hidden" aria-label="宽平台教学台秤"><image href="scale.webp" x="614" y="355" width="230" height="172"/><text x="729" y="391" text-anchor="middle" fill="#fff9d6" font-family="system-ui" font-variant-numeric="tabular-nums" font-size="28" font-weight="800"><tspan id="scaleValue">0</tspan><tspan font-size="10"> 千克</tspan></text></g><text id="weighedLabel" x="505" y="529" font-size="13" fill="#59432e">已称</text><g id="rocks"></g>
+<g id="drawZone" class="hidden">
+  <g class="draw-prompt">
+    <path d="M220 283H600" fill="none" stroke="#fff3a4" stroke-width="7" stroke-dasharray="9 7"/>
+    <text x="410" y="319" text-anchor="middle" fill="#fff8e5" stroke="#325350" stroke-width="3" stroke-linejoin="round" paint-order="stroke" font-size="16">沿水面横向画线</text>
+  </g>
+  <rect x="215" y="262" width="390" height="43" fill="transparent"/>
+</g><path id="inkPreview" stroke="#dd3744" stroke-width="4" fill="none" stroke-linecap="round"/></svg></section>
+<section class="controlBar" aria-label="实验操作">
+  <div class="stepLabel"><span class="step" id="step"></span><h2 id="title"></h2></div>
+  <p class="instruction" id="instruction"></p>
+  <div class="actionSet">
+    <span class="status hidden" id="status"></span>
+    <button id="action" class="primary hidden"></button>
+    <details id="help" class="barDetails">
+      <summary>说明</summary>
+      <div class="detailPanel">
+        <p>大象和石头可拖动、点击，或选中后按 Enter。画吃水线时，沿黄线在船舷上横向拖动。</p>
+        <p>台秤每批最多放三块；点击秤上的石头可放回船上。台秤与重量为教学示意。</p>
+      </div>
+    </details>
+  </div>
+  <p id="hint" class="notice" aria-live="polite"></p><span id="audioNote" class="notice" aria-live="polite"></span>
+</section>
+<section id="ledger" class="weighingLog hidden" aria-labelledby="ledgerTitle">
+  <h3 id="ledgerTitle">称重记录</h3>
+  <div id="liveReading" class="readingCard" role="status" aria-live="polite" aria-atomic="true">
+    <span class="readingLabel">本批读数</span><div class="massValue"><strong id="liveWeight">0</strong><span>千克</span></div><span id="liveCount">0 / 3 块</span>
+  </div>
+  <div id="answerBox" class="hidden"><label for="answer" class="sr-only">大象的质量是多少千克？</label><input id="answer" type="number" inputmode="numeric" min="0" placeholder="质量（千克）"><button id="confirm" class="primary">确认答案</button></div>
+  <ol id="recordList"></ol>
+  <p id="sum"></p>
+</section></div></main><script>/* Reference-style teaching simulation. Numerical masses are illustrative. */
+const LESSON={weights:[200,400,300,500,600,700,200,300,400,200,300,400],target:3600,waterY:283,sink:30,maxBatch:3};
+// Coordinates in the common 900 × 560 scene, independent of the viewport.
+const SCENE={
+  shoreY:343, shoreFraction:.60,
+  speakerHead:{x:110,y:361},
+  resultAnchor:{x:533,y:67},
+  formulaAnchor:{x:400,y:29},
+  line:{left:220,right:600},
+  boatDrop:{left:155,right:645,top:141,bottom:303},
+  shoreDrop:{left:26,right:874,top:348,bottom:550},
+  scaleDrop:{left:614,right:844,top:430,bottom:501},
+};
+function lessonDropTarget(kind, stage, point) {
+  const inside = ({left,right,top,bottom}) => point.x>=left && point.x<=right && point.y>=top && point.y<=bottom;
+  if ((kind==='elephant' && stage===0 || kind==='rock' && (stage===3 || stage===4)) && inside(SCENE.boatDrop)) return 'boat';
+  if ((kind==='elephant' && stage===2 || kind==='rock' && stage===3) && inside(SCENE.shoreDrop)) return 'shore';
+  if (kind==='rock' && stage===4 && inside(SCENE.scaleDrop)) return 'scale';
+  return null;
+}
+class LessonModel {
+ constructor(){this.reset()}
+ reset(){this.stage=0;this.locations=LESSON.weights.map(()=>'shore');this.batch=[];this.records=[];this.mark=null;this.history=[];this.message='';}
+ snapshot(){return JSON.parse(JSON.stringify({stage:this.stage,locations:this.locations,batch:this.batch,records:this.records,mark:this.mark,message:this.message}))}
+ save(){this.history.push(this.snapshot())}
+ undo(){if(!this.history.length)return false;Object.assign(this,this.history.pop());return true}
+ get load(){return LESSON.weights.reduce((n,w,i)=>n+(this.locations[i]==='boat'?w:0),0)}
+ // The final replay puts the elephant back aboard without changing the recorded batches.
+ get elephantAboard(){return this.stage===1||this.stage===2||this.stage===6}
+ get sink(){return this.elephantAboard?LESSON.sink:Math.min(42,this.load/LESSON.target*LESSON.sink)}
+ get batchWeight(){return this.batch.reduce((n,i)=>n+LESSON.weights[i],0)}
+ get total(){return this.records.reduce((n,b)=>n+b.weight,0)}
+ elephant(){if(this.stage!==0&&this.stage!==2)return false;this.save();this.stage=this.stage===0?1:3;this.message='';return true}
+ draw(points){if(this.stage!==1)return false;let xs=points.map(p=>p.x);if(points.length<2||Math.max(...xs)-Math.min(...xs)<70||points.some(p=>p.x<SCENE.line.left||p.x>SCENE.line.right||Math.abs(p.y-LESSON.waterY)>12)){this.message='沿黄色虚线横向画长一些；画偏或太短可以重画。';return false}this.save();this.mark={x1:Math.min(...xs),x2:Math.max(...xs),y:LESSON.waterY-LESSON.sink};this.stage=2;this.message='';return true}
+ rock(i,destination){if(!Number.isInteger(i)||i<0||i>=12)return false;let from=this.locations[i];if(this.stage===3&&['shore','boat'].includes(from)&&['shore','boat'].includes(destination)&&from!==destination){this.save();this.locations[i]=destination;this.message='';return true}
+ if(this.stage===4&&from==='boat'&&destination==='scale'){if(this.batch.length>=LESSON.maxBatch){this.message='这一批已放三块，请先记录，或把石头放回船上。';return false}this.save();this.locations[i]='scale';this.batch.push(i);this.message='';return true}
+ if(this.stage===4&&from==='scale'&&destination==='boat'){this.save();this.locations[i]='boat';this.batch=this.batch.filter(x=>x!==i);this.message='';return true}return false}
+ startWeigh(){if(this.stage!==3||this.load!==LESSON.target)return false;this.save();this.stage=4;return true}
+ record(){if(this.stage!==4||!this.batch.length)return false;this.save();const ids=[...this.batch];this.records.push({ids,weight:this.batchWeight});ids.forEach(i=>this.locations[i]='weighed');this.batch=[];if(!this.locations.includes('boat'))this.stage=5;this.message='';return true}
+ answer(value){if(this.stage!==5)return false;if(String(value).trim()===''||Number(value)!==this.total){this.message='再算一算，把每一批的质量相加。';return false}this.save();this.stage=6;this.message='';return true}
+ voiceKey(){return this.stage===3?'3:'+Math.sign(this.load-LESSON.target):String(this.stage)}
+}
+</script><script>const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg', model=new LessonModel(),svg=$('scene');
+let muted=false,audio=null,lastVoiceKey=null,currentClip=0,drag=null,stroke=[];
+let formulaShown = false, formulaCueTimer = 0;
+// The recorded sum instruction begins after ~210 ms of leading silence.
+const FORMULA_VOICE_CLIP = 7, FORMULA_VOICE_START = .215;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let visualSink = 0;
+let boatMotion = null;
+let elephantMotion = null;
+let splash = null;
+let animationFrame = 0;
+const waterGlints = [];
+const cues={0:[0,'我有一个办法！先把大象请到船上。'],1:[1,'船下沉了！沿着水面，在船舷上画一条线。'],2:[2,'记住这条线，再让大象回到岸上。'],'3:-1':[3,'现在往船上放石头，看看刻线怎样变化。'],'3:0':[4,'对齐了！这些石头和大象一样重。开始称重吧！'],'3:1':[5,'放多了，取回一些石头试试。'],4:[6,'把石头分批放到秤上，每批最多三块。称好后记下来。'],5:[7,'把每批的质量加起来，就是大象的质量。'],6:[8,'答对啦！我们用石头称出了大象的质量。']};
+function setVoiceAnimation(playing) {
+  for (const id of ['speechBubble', 'caoChong']) $(id).classList.toggle('is-speaking', playing);
+}
+function stopVoice() {
+  const previous = audio;
+  audio = null;
+  previous?.pause();
+  setVoiceAnimation(false);
+}
+function bindVoiceAnimation(clip) {
+  clip.addEventListener('playing', () => {
+    if (audio === clip && !muted && !clip.paused && !clip.ended) setVoiceAnimation(true);
+  });
+  for (const event of ['pause', 'ended', 'waiting', 'seeking', 'emptied', 'error', 'abort']) {
+    clip.addEventListener(event, () => {
+      if (audio === clip) setVoiceAnimation(false);
+    });
+  }
+}
+function clearFormulaCueTimer() {
+  if (formulaCueTimer) clearTimeout(formulaCueTimer);
+  formulaCueTimer = 0;
+}
+function revealFormulaCue() {
+  if (model.stage !== 5 || formulaShown) return;
+  clearFormulaCueTimer();
+  formulaShown = true;
+  const card = $('mathCard');
+  card.classList.remove('hidden');
+  card.classList.add('cue-once');
+  fitScene();
+}
+function updateFormulaCue(withVoice) {
+  if (model.stage !== 5) {
+    clearFormulaCueTimer();
+    formulaShown = false;
+    $('mathCard').classList.remove('cue-once');
+    return;
+  }
+  if (formulaShown) return;
+  if (muted || !withVoice && !formulaCueTimer) {
+    revealFormulaCue();
+  } else if (!formulaCueTimer) {
+    // A blocked or stalled recording must not prevent solving the exercise.
+    formulaCueTimer = setTimeout(revealFormulaCue, 1600);
+  }
+}
+function bindFormulaVoiceCue(clip) {
+  const followVoice = () => {
+    if (audio !== clip || muted || formulaShown || model.stage !== 5 || clip.paused || clip.ended) return;
+    if (clip.currentTime >= FORMULA_VOICE_START) revealFormulaCue();
+    else requestAnimationFrame(followVoice);
+  };
+  clip.addEventListener('playing', followVoice, {once:true});
+}
+function play(){
+  stopVoice();
+  if(muted || model.stage===1 && (elephantMotion || boatMotion)) return;
+  const cue = currentClip;
+  const clip = new Audio('audio/'+cue+'.mp3');
+  audio = clip;
+  bindVoiceAnimation(clip);
+  if (cue === FORMULA_VOICE_CLIP) bindFormulaVoiceCue(clip);
+  clip.play().then(()=>{
+    if (audio===clip) $('audioNote').textContent='';
+  }).catch(error=>{
+    if (audio!==clip) return;
+    stopVoice();
+    if (cue === FORMULA_VOICE_CLIP) revealFormulaCue();
+    if (!muted && error.name!=='AbortError') $('audioNote').textContent='点击“重听”播放讲解。';
+  });
+}
+function pos(e){let p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+function elephantPos(){return model.elephantAboard?{x:345,y:197+visualSink,k:.88}:{x:343,y:530,k:1.38}}
+function easeElephantPose(from, to, progress) {
+  const t = Math.max(0, Math.min(1, progress));
+  const blend = 1 - (1 - t) ** 3;
+  return {
+    x: from.x + (to.x - from.x) * blend,
+    y: from.y + (to.y - from.y) * blend,
+    k: from.k + (to.k - from.k) * blend,
+  };
+}
+function animateElephantLanding(release, duration) {
+  if (reduceMotion.matches) return;
+  // Anchor the transition at the feet so the elephant lands on the deck.
+  elephantMotion = { from: release, start: performance.now(), duration };
+  stopVoice();
+  queueMotionFrame();
+}
+function moveElephant(release = elephantPos()) {
+  if (model.elephant() && model.elephantAboard) animateElephantLanding(release, 460);
+}
+function rockPos(i){
+  const where=model.locations[i], idx=model.locations.slice(0,i).filter(v=>v===where).length;
+  if(where==='shore')return {x:552+i%4*76,y:425+Math.floor(i/4)*43,k:1};
+  if(where==='boat')return {x:238+idx%6*58,y:200+Math.floor(idx/6)*20+visualSink,k:1};
+  if(where==='scale')return {x:652+model.batch.indexOf(i)*58,y:470,k:.8};
+  return {x:518+idx%3*34,y:435+Math.floor(idx/3)*25,k:.55};
+}
+function placeRock(i){let p=rockPos(i);$('rock'+i).setAttribute('transform',`translate(${p.x} ${p.y}) scale(${p.k})`)}
+function easeBoatDepth(from, to, progress) {
+  const t = Math.max(0, Math.min(1, progress));
+  return from + (to - from) * t * t * (3 - 2 * t);
+}
+function syncFloatingObjects() {
+  const shift = `translate(0 ${visualSink})`;
+  ['boat', 'submergedHull', 'markGroup'].forEach(id => $(id).setAttribute('transform', shift));
+  if (drag?.kind !== 'elephant') {
+    const p = elephantMotion?.pose ?? elephantMotion?.from ?? elephantPos();
+    $('elephant').setAttribute('transform', `translate(${p.x} ${p.y}) scale(${p.k})`);
+  }
+  model.locations.forEach((where, i) => {
+    if (drag?.kind === 'rock' && drag.i === i) return;
+    placeRock(i);
+  });
+}
+function syncWaterReadiness() {
+  const busy = Boolean(elephantMotion || boatMotion);
+  const guide = $('drawZone');
+  const canDraw = model.stage === 1 && !busy;
+  const wasHidden = guide.classList.contains('hidden');
+  guide.classList.toggle('hidden', !canDraw);
+  if (!canDraw) guide.classList.remove('awaiting-mark');
+  else if (wasHidden && !reduceMotion.matches) guide.classList.add('awaiting-mark');
+  $('replay').disabled = model.stage === 1 && busy;
+  if (model.stage === 1) {
+    $('instruction').textContent = elephantMotion ? '等大象站稳，观察木船下沉。' : boatMotion ? '等船停稳，再沿黄线画。' : '沿黄色虚线横向画吃水线。';
+  }
+  if (model.stage === 6) {
+    $('instruction').textContent = busy ? '回放大象上船，观察红色吃水线。' : '红色吃水线与水面重合：大象和这些石头一样重。';
+  }
+  if (model.stage !== 3) return;
+  const loaded = model.locations.filter(where => where === 'boat').length;
+  const level = model.load < LESSON.target ? '刻线还在水面上方' : model.load === LESSON.target ? '刻线与水面重合' : '放多了，刻线在水面下方';
+  $('status').textContent = `已装 ${loaded} 块 · ${boatMotion ? '等船停稳，再看刻线' : level}`;
+  $('action').disabled = model.load !== LESSON.target || Boolean(boatMotion);
+}
+function prepareWaterGlints() {
+  for (let i = 0; i < 20; i++) {
+    const path = document.createElementNS(NS, 'path');
+    $('waterGlints').appendChild(path);
+    waterGlints.push(path);
+  }
+}
+function paintWater(now) {
+  const time = reduceMotion.matches ? 0 : now / 1000;
+  waterGlints.forEach((path, i) => {
+    const phase = time * (1.06 + i % 4 * .21) + i * 1.74;
+    const x = -180 + i * 179 % 1300 + Math.sin(phase) * 16;
+    const y = SCENE.shoreY - 16 - i * 37 % 184 + Math.cos(phase) * 1.15;
+    const length = 22 + i * 11 % 52;
+    path.setAttribute('d', `M${x} ${y} q${length * .45} ${-1.8 - Math.sin(phase) * 1.1} ${length} 0`);
+    path.setAttribute('opacity', (.24 + .15 * Math.sin(phase)).toFixed(2));
+  });
+  const wave = Math.sin(time * 2.2);
+  $('surfaceWake').setAttribute('d', `M138 ${LESSON.waterY + 2} Q245 ${LESSON.waterY + 4 + wave * 2} 367 ${LESSON.waterY + 1} T665 ${LESSON.waterY + 3 - wave * 2}`);
+  for (let i = 0; i < 3; i++) {
+    const ripple = $('impact' + i);
+    const phase = splash && !reduceMotion.matches ? (now - splash.start) / 1080 - i * .14 : -1;
+    if (phase < 0 || phase >= 1) {
+      ripple.setAttribute('opacity', '0');
+      continue;
+    }
+    ripple.setAttribute('rx', 114 + 143 * phase);
+    ripple.setAttribute('ry', 2.6 + 15 * phase);
+    ripple.setAttribute('opacity', ((1 - phase) * splash.strength).toFixed(2));
+  }
+  if (splash && now - splash.start > 1500) splash = null;
+}
+function queueMotionFrame() {
+  if (!animationFrame) animationFrame = requestAnimationFrame(paintMotionFrame);
+}
+function paintMotionFrame(now) {
+  animationFrame = 0;
+  let changed = false, settled = false;
+  if (elephantMotion) {
+    const progress = reduceMotion.matches ? 1 : (now - elephantMotion.start) / elephantMotion.duration;
+    elephantMotion.pose = easeElephantPose(elephantMotion.from, elephantPos(), progress);
+    changed = true;
+    if (progress >= 1) {
+      elephantMotion = null;
+      moveBoatTowards(model.sink);
+      settled = true;
+    }
+  }
+  if (boatMotion) {
+    const progress = reduceMotion.matches ? 1 : (now - boatMotion.start) / boatMotion.duration;
+    visualSink = easeBoatDepth(boatMotion.from, boatMotion.to, progress);
+    changed = true;
+    if (progress >= 1) {
+      boatMotion = null;
+      settled = true;
+    }
+  }
+  if (changed) syncFloatingObjects();
+  if (settled) {
+    syncWaterReadiness();
+    if (model.stage === 1 && !elephantMotion && !boatMotion) updateVoice(true);
+  }
+  paintWater(now);
+  if (!reduceMotion.matches || elephantMotion || boatMotion) queueMotionFrame();
+}
+function moveBoatTowards(depth) {
+  if (reduceMotion.matches) {
+    visualSink = depth;
+    boatMotion = splash = null;
+    return;
+  }
+  if ((boatMotion?.to ?? visualSink) === depth) return;
+  const start = performance.now();
+  const change = Math.abs(depth - visualSink);
+  boatMotion = { from: visualSink, to: depth, start, duration: Math.min(820, 310 + change * 15) };
+  if (change > .25) splash = { start, strength: Math.min(.96, .52 + change / 46) };
+  queueMotionFrame();
+}
+function updateVoice(speak) {
+  if (model.stage === 1 && (elephantMotion || boatMotion)) return;
+  const key = model.voiceKey(), cue = cues[key];
+  currentClip = cue[0];
+  if ($('speech').textContent !== cue[1]) $('speech').textContent = cue[1];
+  if (speak && key !== lastVoiceKey) play();
+  lastVoiceKey = key;
+}
+function renderWeighingLog() {
+  const solving = model.stage === 5, completed = model.stage === 6;
+  $('lessonLayout').classList.toggle('is-weighing', model.stage >= 4);
+  $('ledger').classList.toggle('hidden', model.stage < 4);
+  $('liveReading').classList.toggle('hidden', model.stage !== 4);
+  $('mathCard').classList.toggle('hidden', !solving || !formulaShown);
+  $('answerBox').classList.toggle('hidden', !solving);
+  $('resultCard').classList.toggle('hidden', !completed);
+  const total = completed ? String(model.total) : '';
+  if ($('classroomTotal').textContent !== total) $('classroomTotal').textContent = total;
+  const weight = String(model.batchWeight);
+  const count = `${model.batch.length} / ${LESSON.maxBatch} 块`;
+  if ($('liveWeight').textContent !== weight) $('liveWeight').textContent = weight;
+  if ($('liveCount').textContent !== count) $('liveCount').textContent = count;
+  $('scaleValue').textContent = weight;
+  const list = $('recordList');
+  const rows = model.records.map((batch, i) =>
+    `<li><span>第 ${i + 1} 批</span><b>${batch.weight} 千克</b></li>`).join('');
+  if (list.innerHTML !== rows) {
+    list.innerHTML = rows;
+    list.scrollTop = list.scrollHeight;
+  }
+  const addends = solving ? model.records.map(batch => batch.weight) : [];
+  const equation = addends.length ? addends.map((n, i) =>
+    `<span>${i ? '+ ' : ''}${n}</span>`).join('') + '<span>= ？</span>' : '';
+  if ($('equation').innerHTML !== equation) $('equation').innerHTML = equation;
+  $('sum').textContent = model.stage !== 4 ? '' : !model.records.length ?
+    '记录后，每一批会列在这里。' : `已记录合计 ${model.total} 千克`;
+}
+function render(speak=true){
+ if (!elephantMotion) moveBoatTowards(model.sink);
+ syncFloatingObjects();
+ for(const id of ['mark','markColor']){const line=$(id);line.setAttribute('visibility',model.mark?'visible':'hidden');if(model.mark){for(const [a,v] of Object.entries({x1:model.mark.x1,x2:model.mark.x2,y1:model.mark.y,y2:model.mark.y}))line.setAttribute(a,v)}}
+ $('scale').classList.toggle('hidden',model.stage<4);$('weighedLabel').classList.toggle('hidden',!model.records.length);
+ model.locations.forEach((where,i)=>{let g=$('rock'+i);g.classList.toggle('hidden',model.stage>=4&&where==='shore');g.setAttribute('aria-disabled',String(!(model.stage===3&&['shore','boat'].includes(where)||model.stage===4&&['boat','scale'].includes(where))))});
+ const titles=['大象上船','画吃水线','大象下船','装入石头','分批称重','相加求质量','称出来了'];const instructions=['把大象向上拖到木船上，也可以点击它。','沿黄色虚线，在船舷上横向拖画。','把大象拖回下方河岸，观察船浮起来。','把岸上的石头拖到船上，直到刻线重合。','把船上的石头拖到岸上的秤台，每批最多三块。','把每批的质量相加，填写总质量。','同一条船回到相同水痕，替代物与大象的总重相同。'];
+ $('step').textContent=model.stage===6?'实验完成':'第 '+(model.stage+1)+' 步';$('title').textContent=titles[model.stage];$('instruction').textContent=instructions[model.stage];$('hint').textContent=model.message;
+ $('status').classList.toggle('hidden', model.stage !== 3);
+ renderWeighingLog();
+ $('action').classList.toggle('hidden',![3,4,6].includes(model.stage));$('action').textContent=model.stage===3?'开始称重':model.stage===4?`记录这一批（${model.batch.length}/3）`:'重新开始';$('action').disabled=model.stage===3?model.load!==LESSON.target:model.stage===4?!model.batch.length:false;
+ $('undo').disabled=!model.history.length;
+ syncWaterReadiness();
+ updateFormulaCue(speak);
+ updateVoice(speak);
+ if (model.stage >= 5) fitScene();
+}
+function rockClick(i){let from=model.locations[i];model.rock(i,model.stage===3?(from==='boat'?'shore':'boat'):(from==='scale'?'boat':'scale'));render()}
+function createRocks(){const crops=[[30,260,440,410],[540,120,690,550],[1250,20,910,680]];LESSON.weights.forEach((w,i)=>{let g=document.createElementNS(NS,'g'),[cx,cy,cw,ch]=crops[i%3],width=30+(w-200)*.06,height=width*ch/cw;g.id='rock'+i;g.setAttribute('role','button');g.setAttribute('tabindex','0');g.setAttribute('aria-label',`第 ${i+1} 块石头`);g.classList.add('draggable');g.innerHTML=`<ellipse cx="0" cy="1" rx="${width*.4}" ry="3" fill="#433728" opacity=".2"/><svg x="${-width/2}" y="${-height}" width="${width}" height="${height}" viewBox="${cx} ${cy} ${cw} ${ch}" pointer-events="none"><image href="stones.webp" width="2160" height="720"/></svg><rect x="${-Math.max(22,width/2)}" y="${-Math.max(35,height)}" width="${Math.max(44,width)}" height="${Math.max(44,height+8)}" fill="transparent"/>`;$('rocks').appendChild(g);
+ g.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();rockClick(i)}});g.addEventListener('pointerdown',e=>{if(!(model.stage===3&&['shore','boat'].includes(model.locations[i])||model.stage===4&&['boat','scale'].includes(model.locations[i])))return;begin(e,'rock',i)})})}
+function begin(e,kind,i){if(drag)return;e.preventDefault();drag={kind,i,start:pos(e),origin:kind==='elephant'?elephantPos():rockPos(i),node:e.currentTarget,pointerId:e.pointerId};e.currentTarget.setPointerCapture(e.pointerId);drag.node.classList.add('moving')}
+function pointerPose({origin, start}, pointer) {
+  return { x: origin.x + pointer.x - start.x, y: origin.y + pointer.y - start.y, k: origin.k };
+}
+svg.addEventListener('pointermove',e=>{
+  const p=pos(e);
+  if(stroke.length){stroke.push(p);$('inkPreview').setAttribute('d',stroke.map((v,i)=>`${i?'L':'M'}${v.x},${v.y}`).join(' '))}
+  if(!drag || drag.pointerId!==e.pointerId)return;
+  const {x,y,k}=pointerPose(drag,p);
+  drag.node.setAttribute('transform',`translate(${x} ${y}) scale(${k})`);
+});
+svg.addEventListener('pointerup',e=>{
+  const p=pos(e);
+  if(stroke.length){stroke.push(p);model.draw(stroke);stroke=[];$('inkPreview').setAttribute('d','');render();return}
+  if(!drag || drag.pointerId!==e.pointerId)return;
+  const t=drag;
+  drag=null;
+  t.node.classList.remove('moving');
+  const click=Math.hypot(p.x-t.start.x,p.y-t.start.y)<7;
+  const destination=lessonDropTarget(t.kind,model.stage,p);
+  if(t.kind==='elephant'){
+    if(click||destination)moveElephant(click?t.origin:pointerPose(t,p));
+  }else if(click){rockClick(t.i);return}
+  else if(destination)model.rock(t.i,destination);
+  render();
+});
+function clearGesture(){if(drag)drag.node.classList.remove('moving');drag=null;stroke=[];$('inkPreview').setAttribute('d','')}
+function cancel(){clearGesture();render(false)}
+svg.addEventListener('pointercancel',cancel);window.addEventListener('blur',cancel);
+$('elephant').addEventListener('pointerdown',e=>{if(model.stage===0||model.stage===2)begin(e,'elephant')});$('elephant').addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();moveElephant();render()}});
+$('drawZone').addEventListener('pointerdown',e=>{
+  if(model.stage!==1||drag||stroke.length||elephantMotion||boatMotion)return;
+  e.preventDefault();
+  e.currentTarget.classList.remove('awaiting-mark');
+  stroke=[pos(e)];
+  e.currentTarget.setPointerCapture(e.pointerId);
+});
+function reset(){
+  stopVoice();model.reset();lastVoiceKey=null;elephantMotion=null;clearGesture();
+  $('answer').value='';$('audioNote').textContent='';render();
+}
+$('confirm').onclick=()=>{
+  const shorePose = elephantPos();
+  if (model.answer($('answer').value)) animateElephantLanding(shorePose, 680);
+  render();
+};
+$('action').onclick=()=>{if(model.stage===3)model.startWeigh();else if(model.stage===4)model.record();else if(model.stage===6){reset();return}render()};$('answer').addEventListener('keydown',e=>{if(e.key==='Enter')$('confirm').click()});$('undo').onclick=()=>{clearGesture();if(model.undo()){elephantMotion=null;stopVoice();$('answer').value='';render(false)}};$('reset').onclick=reset;$('replay').onclick=play;
+$('mute').onclick=()=>{
+  muted=!muted;
+  $('mute').textContent=muted?'静音':'有声';
+  if(muted){stopVoice();$('audioNote').textContent='';updateFormulaCue(false)}
+  else play();
+};
+window.addEventListener('pagehide', stopVoice);
+const fullButton = $('full');
+function updateFullscreenButton() {
+  const active = Boolean(document.fullscreenElement);
+  fullButton.textContent = active ? '退出全屏' : '全屏';
+  fullButton.setAttribute('aria-pressed', String(active));
+}
+fullButton.onclick = async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+    else $('audioNote').textContent = '当前浏览器不支持全屏。';
+  } catch {
+    $('audioNote').textContent = '当前浏览器未允许课件进入全屏。';
+  }
+};
+document.addEventListener('fullscreenchange', updateFullscreenButton);
+
+function sceneViewBox(width, height) {
+  const scale = Math.min(width / 900, height / 560);
+  if (!Number.isFinite(scale) || scale <= 0) return [0, 0, 900, 560];
+  const w = Math.max(900, width / scale);
+  const h = Math.max(560, height / scale);
+  // Keep the shore and the waterline anchored. Extend the view, not the objects.
+  return [-(w - 900) * 0.58, -(h - 560) * 0.69, w, h];
+}
+function speechBubblePlacement(bounds, pixelWidth, pixelHeight) {
+  const [x, y, w, h] = bounds;
+  const px = coord => (coord - x) * pixelWidth / w;
+  const speaker = SCENE.speakerHead;
+  const right = Math.max(8, Math.floor(px(SCENE.boatDrop.left) - 8));
+  const width = Math.min(254, right - 8);
+  const left = right - width;
+  const bottom = Math.round(pixelHeight - (speaker.y - y) * pixelHeight / h + 13);
+  const tail = Math.round(Math.max(8, Math.min(width - 8, px(speaker.x) - left)));
+  return {left, width, bottom, tail};
+}
+function fitScene() {
+  const bounds = sceneViewBox(svg.clientWidth, svg.clientHeight);
+  const [x, y, width, height] = bounds;
+  const bubble = $('speechBubble');
+  for (const [key, value] of Object.entries(speechBubblePlacement(bounds, svg.clientWidth, svg.clientHeight))) {
+    bubble.style.setProperty('--speech-' + key, value + 'px');
+  }
+  const sceneWrap = svg.parentElement;
+  // SVG elements do not have HTMLElement's offsetTop/offsetLeft.
+  const canvas = svg.getBoundingClientRect(), frame = sceneWrap.getBoundingClientRect();
+  for (const [id, name, anchor] of [['resultCard', 'result', SCENE.resultAnchor], ['mathCard', 'formula', SCENE.formulaAnchor]]) {
+    const marker = $(id);
+    const left = canvas.left - frame.left - sceneWrap.clientLeft + (anchor.x - x) * canvas.width / width;
+    const top = canvas.top - frame.top - sceneWrap.clientTop + (anchor.y - y) * canvas.height / height;
+    marker.style.setProperty('--' + name + '-left', left + 'px');
+    marker.style.setProperty('--' + name + '-top', top + 'px');
+  }
+  const viewBox = bounds.join(' ');
+  if (svg.getAttribute('viewBox') === viewBox) return;
+  svg.setAttribute('viewBox', viewBox);
+  // Crop the illustration and its water mask together, keeping the shoreline
+  // at a fixed scene coordinate across fullscreen and card sizes.
+  const bottom = y + height * 1.02;
+  const {shoreY, shoreFraction} = SCENE;
+  const top = Math.min(y - height * .02, (shoreY - bottom * shoreFraction) / (1 - shoreFraction));
+  const backdrop = [x - width * .02, top, width * 1.04, (shoreY - top) / shoreFraction];
+  ['x', 'y', 'width', 'height'].forEach((attr, i) =>
+    $('sceneBackdrop').setAttribute(attr, backdrop[i])
+  );
+  $('riverWaterMask').setAttribute('transform', `translate(${backdrop[0]} ${backdrop[1]}) scale(${backdrop[2]} ${backdrop[3]})`);
+}
+new ResizeObserver(fitScene).observe(svg);
+fitScene();
+createRocks();
+prepareWaterGlints();
+render(false);
+paintWater(performance.now());
+if (!reduceMotion.matches) queueMotionFrame();
+reduceMotion.addEventListener('change', queueMotionFrame);
+</script></body></html>

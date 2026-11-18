@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen,
   Bot,
@@ -20,6 +20,18 @@ import QrSvg from 'react-qr-code';
 
 type ShapeType = 'preview_html' | 'ai_result' | 'math_quiz';
 
+const CAO_CHONG_COURSEWARE = {
+  id: 'cao-chong',
+  title: '曹冲称象',
+  description: '拖大象、画吃水线、分批称重，验证大象的质量。',
+  href: '/courseware/cao-chong/index.html',
+  shapeId: 'shape:published-courseware-cao-chong',
+} as const;
+
+function getPublishedCourseware(id: unknown) {
+  return id === CAO_CHONG_COURSEWARE.id ? CAO_CHONG_COURSEWARE : null;
+}
+
 type BoardShape = {
   id: string;
   type: ShapeType;
@@ -31,6 +43,7 @@ type BoardShape = {
     html?: string;
     text?: string;
     color?: string;
+    publishedCoursewareId?: string;
   };
 };
 
@@ -1378,6 +1391,8 @@ function collectBoardOperations(plan: unknown, responseText: string): BoardOpera
 }
 
 function getShapeTitle(shape: BoardShape) {
+  const published = getPublishedCourseware(shape.props.publishedCoursewareId);
+  if (published) return published.title;
   if (shape.type === 'math_quiz') return '十以内加减法互动课件';
   if (shape.type === 'preview_html') {
     const title = shape.props.html?.match(/<title>(.*?)<\/title>/i)?.[1];
@@ -1712,6 +1727,7 @@ export default function OwnWhiteboard() {
   const autoPromptStartedRef = useRef(false);
   const coursewareImportStartedRef = useRef(false);
   const coursewareSlugLoadStartedRef = useRef(false);
+  const publishedCoursewareOpenedRef = useRef(false);
   const studentId = useMemo(() => readSearchParam('studentId', ''), []);
   const lessonId = useMemo(() => readSearchParam('lessonId', 'own-whiteboard-demo'), []);
   const storageKey = useMemo(() => {
@@ -1724,6 +1740,10 @@ export default function OwnWhiteboard() {
   const initialPromptTitle = useMemo(() => readSearchParam('title', ''), []);
   const initialCoursewareImportKey = useMemo(() => readSearchParam('coursewareImportKey', ''), []);
   const initialLoadCoursewareSlug = useMemo(() => readSearchParam('loadCoursewareSlug', ''), []);
+  const initialPublishedCourseware = useMemo(
+    () => getPublishedCourseware(readSearchParam('courseware', '')),
+    []
+  );
   const [bindPanelOpen, setBindPanelOpen] = useState(false);
   const [bindStudentId, setBindStudentId] = useState(studentId);
   const [bindStudentName, setBindStudentName] = useState('');
@@ -1756,6 +1776,7 @@ export default function OwnWhiteboard() {
       );
     });
   }, [lessonPromptPosts, lessonSearch]);
+  const showPublishedCourseware = `${CAO_CHONG_COURSEWARE.title} ${CAO_CHONG_COURSEWARE.description}`.includes(lessonSearch.trim());
 
   useEffect(() => {
     try {
@@ -1775,6 +1796,33 @@ export default function OwnWhiteboard() {
     if (!ready) return;
     localStorage.setItem(storageKey, JSON.stringify(shapes));
   }, [ready, shapes, storageKey]);
+
+  const openPublishedCourseware = useCallback(() => {
+    const lesson = CAO_CHONG_COURSEWARE;
+    const w = Math.max(280, Math.min(1280, window.innerWidth - 32));
+    const h = Math.max(270, Math.min(900, window.innerHeight - 154));
+    const card: BoardShape = {
+      id: lesson.shapeId,
+      type: 'preview_html',
+      x: Math.max(8, Math.round((window.innerWidth - w) / 2)),
+      y: 66,
+      props: { w, h, publishedCoursewareId: lesson.id },
+    };
+    setShapes((current) =>
+      current.some((shape) => shape.id === card.id)
+        ? current.map((shape) => (shape.id === card.id ? card : shape))
+        : [...current, card]
+    );
+    setSelectedId(lesson.shapeId);
+    setAiOpen(false);
+    setLessonLibraryOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !initialPublishedCourseware || publishedCoursewareOpenedRef.current) return;
+    publishedCoursewareOpenedRef.current = true;
+    openPublishedCourseware();
+  }, [ready, initialPublishedCourseware, openPublishedCourseware]);
 
   useEffect(() => {
     if (studentId && !bindStudentId) setBindStudentId(studentId);
@@ -2881,10 +2929,21 @@ export default function OwnWhiteboard() {
                 className="mb-2 h-9 w-full rounded-md border border-black/15 px-3 text-sm outline-none focus:border-[#111827]"
               />
               <div className="max-h-44 overflow-y-auto rounded-md border border-black/10">
+                {showPublishedCourseware && (
+                  <button
+                    type="button"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={openPublishedCourseware}
+                    className="block w-full border-b border-black/10 px-3 py-2 text-left hover:bg-black/[0.03]"
+                  >
+                    <div className="text-sm font-medium text-[#111827]">{CAO_CHONG_COURSEWARE.title}</div>
+                    <div className="mt-1 text-xs leading-4 text-black/55">{CAO_CHONG_COURSEWARE.description}</div>
+                  </button>
+                )}
                 {lessonLoading ? (
                   <div className="px-3 py-4 text-center text-xs text-black/50">加载中...</div>
                 ) : filteredLessonPosts.length === 0 ? (
-                  <div className="px-3 py-4 text-center text-xs text-black/45">暂无教育课件</div>
+                  !showPublishedCourseware && <div className="px-3 py-4 text-center text-xs text-black/45">暂无教育课件</div>
                 ) : (
                   filteredLessonPosts.map((post) => (
                     <button
@@ -3296,6 +3355,7 @@ function ShapeView({
   onMoveStart: (event: React.PointerEvent) => void;
   onResizeStart: (event: React.PointerEvent) => void;
 }) {
+  const published = getPublishedCourseware(shape.props.publishedCoursewareId);
   return (
     <div
       className="absolute rounded-md bg-white shadow-lg"
@@ -3327,7 +3387,17 @@ function ShapeView({
       </div>
 
       <div className="h-[calc(100%-36px)] overflow-hidden rounded-b-md">
-        {shape.type === 'math_quiz' ? (
+        {published ? (
+          <iframe
+            data-shape-interactive="true"
+            title={published.title}
+            src={published.href}
+            className="h-full w-full border-0 bg-white"
+            sandbox="allow-scripts"
+            referrerPolicy="no-referrer"
+            allowFullScreen
+          />
+        ) : shape.type === 'math_quiz' ? (
           <div data-shape-interactive="true" className="h-full">
             <MathQuizShape onQuizResult={onQuizResult} />
           </div>
