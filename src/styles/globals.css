@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "tldraw/tldraw.css";
+@import "../components/own-whiteboard/workspace.css";
+@import "../components/own-whiteboard/assistant/assistant.css";
+@import "../components/own-whiteboard/dock/dock.css";
+@import "../components/own-whiteboard/article-picker.css";
 
 @custom-variant dark (&:is(.dark *));
 

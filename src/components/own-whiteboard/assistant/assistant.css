@@ -1,0 +1,410 @@
+.ow-assistant {
+  position: fixed;
+  z-index: 502;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 16px));
+  max-height: min(500px, calc(100dvh - 16px));
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #111;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  font: 13px / 1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: auto;
+  user-select: text;
+}
+.ow-assistant * {
+  box-sizing: border-box;
+}
+.ow-assistant button,
+.ow-assistant textarea {
+  font: inherit;
+}
+.ow-assistant button {
+  cursor: pointer;
+  transition: background .15s, opacity .15s;
+}
+.ow-assistant button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+.ow-assistant button:focus-visible,
+.ow-assistant textarea:focus-visible,
+.ow-assistant summary:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+.ow-assistant p {
+  margin: 0;
+}
+.ow-assistant__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid #e5e7eb;
+  background: transparent;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.ow-assistant__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.ow-assistant__title > strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+}
+.ow-assistant__grip {
+  color: #bbb;
+  font-size: 12px;
+  line-height: 1;
+}
+.ow-assistant__badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 10px;
+  font-weight: 500;
+}
+.ow-assistant__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.ow-assistant .ow-assistant__icon {
+  width: 24px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #888;
+  font-size: 20px !important;
+}
+.ow-assistant .ow-assistant__icon:hover {
+  background: #f3f4f6;
+}
+.ow-assistant--dragging,
+.ow-assistant--dragging .ow-assistant__header {
+  cursor: grabbing;
+  user-select: none;
+}
+.ow-assistant--dragging iframe,
+.ow-assistant--dragging .ow-assistant__thread,
+.ow-assistant--dragging .ow-assistant__composer {
+  pointer-events: none;
+}
+.ow-assistant__context {
+  padding: 0 0 8px;
+  flex-shrink: 0;
+  max-height: 84px;
+  overflow: auto;
+}
+.ow-assistant__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ow-assistant__context strong {
+  color: #8b8b8b;
+  font-size: 10px;
+  font-weight: 400;
+}
+.ow-assistant__context .ow-assistant__row > span {
+  color: #aaa;
+  font-size: 9px;
+}
+.ow-assistant__context p {
+  margin-top: 3px;
+  color: #999;
+  font-size: 10px;
+}
+.ow-assistant__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+.ow-assistant__chips span {
+  max-width: 180px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: #666;
+  background: #f9fafb;
+  font-size: 10px;
+}
+.ow-assistant__thread {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100px;
+  overflow: auto;
+  margin-bottom: 12px;
+  padding: 0;
+  overscroll-behavior: contain;
+}
+.ow-assistant__welcome {
+  color: #111;
+}
+.ow-assistant__welcome > p {
+  max-width: 85%;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  line-height: 1.4;
+}
+.ow-assistant__suggestion-toggle {
+  margin-top: 8px;
+  font-size: 10px;
+  color: #999;
+}
+.ow-assistant__suggestion-toggle > summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.ow-assistant__suggestions {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+.ow-assistant .ow-assistant__suggestions button {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  background: #fff;
+  min-height: 28px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #666;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+.ow-assistant .ow-assistant__suggestions button:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+.ow-assistant__suggestions span {
+  color: #999;
+}
+.ow-assistant__message {
+  align-self: flex-start;
+  flex-shrink: 0;
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  color: #111;
+  overflow-wrap: anywhere;
+}
+.ow-assistant__message > p {
+  white-space: pre-wrap;
+}
+.ow-assistant__speaker {
+  display: none;
+}
+.ow-assistant__message--user {
+  align-self: flex-end;
+  background: #000;
+  color: #fff;
+}
+.ow-assistant__sources {
+  color: #aaa;
+  font-size: 9px;
+  margin-bottom: 5px;
+}
+.ow-assistant__message--error {
+  color: #a24324;
+}
+.ow-assistant__notes {
+  margin: 8px 0 0;
+  padding: 8px 8px 8px 24px;
+  border-radius: 7px;
+  background: #fff9;
+  color: #777;
+  font-size: 11px;
+}
+.ow-assistant__plan {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 8px;
+}
+.ow-assistant__plan > strong {
+  font-size: 12px;
+}
+.ow-assistant__plan ol {
+  margin: 8px 0;
+  padding-left: 22px;
+}
+.ow-assistant__plan li {
+  margin-bottom: 5px;
+}
+.ow-assistant__plan li small {
+  display: block;
+  color: #888;
+  font-size: 11px;
+}
+.ow-assistant__plan details {
+  margin: 10px 0;
+}
+.ow-assistant__plan summary {
+  cursor: pointer;
+  color: #666;
+  font-size: 11px;
+}
+.ow-assistant__plan pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 180px;
+  overflow: auto;
+  background: #f3f4f6;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 10px;
+}
+.ow-assistant .ow-assistant__primary {
+  padding: 7px 12px;
+  border: 1px solid #000;
+  border-radius: 8px;
+  background: #000;
+  color: #fff;
+  font-weight: 600 !important;
+}
+.ow-assistant .ow-assistant__primary:hover:not(:disabled) {
+  background: #292929;
+}
+.ow-assistant .ow-assistant__secondary {
+  padding: 7px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #666;
+}
+.ow-assistant__plan > button {
+  width: 100%;
+  margin-top: 4px;
+}
+.ow-assistant__hint {
+  display: block;
+  color: #aaa;
+  font-size: 9px;
+  margin-top: 6px !important;
+  line-height: 1.5;
+}
+.ow-assistant__progress {
+  color: #888;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.ow-assistant__composer {
+  padding: 0;
+  flex-shrink: 0;
+  background: transparent;
+}
+.ow-assistant__composer > form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.ow-assistant .ow-assistant__composer textarea {
+  display: block;
+  width: auto;
+  min-width: 0;
+  flex: 1;
+  resize: vertical;
+  height: 36px;
+  max-height: 100px;
+  min-height: 36px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+  color: #111;
+  margin: 0;
+  font-size: 13px;
+}
+.ow-assistant__composer textarea::placeholder {
+  color: #aaa;
+}
+.ow-assistant .ow-assistant__clear {
+  min-height: 26px;
+  padding: 4px 7px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #666;
+  font-size: 11px !important;
+}
+.ow-assistant__send {
+  flex-shrink: 0;
+}
+.ow-assistant .ow-assistant__send > button {
+  min-width: 42px;
+  height: 36px;
+  padding: 0 12px;
+}
+.ow-assistant__composer > .ow-assistant__hint {
+  text-align: center;
+}
+.ow-assistant__error,
+.ow-assistant__notice {
+  color: #946038 !important;
+  font-size: 11px;
+  margin: 6px 0 !important;
+}
+.ow-assistant__tool-preview iframe {
+  display: block;
+  width: 100%;
+  height: 240px;
+  margin-top: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #fff;
+}
+@media (max-width: 350px) {
+  .ow-assistant {
+    padding: 12px;
+  }
+  .ow-assistant__badge {
+    display: none;
+  }
+  .ow-assistant__title {
+    gap: 6px;
+  }
+}
+@media (max-height: 420px) {
+  .ow-assistant__context {
+    max-height: 54px;
+  }
+  .ow-assistant__thread {
+    min-height: 36px;
+  }
+}

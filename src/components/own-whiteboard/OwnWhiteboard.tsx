@@ -17,6 +17,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import QrSvg from 'react-qr-code';
+import CanvasWorkspace from './CanvasWorkspace';
 
 type ShapeType = 'preview_html' | 'ai_result' | 'math_quiz';
 
@@ -1708,6 +1709,36 @@ function formatDueWrongbookPrompt(items: DueWrongbookItem[]) {
 }
 
 export default function OwnWhiteboard() {
+  const [lessonMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const query = new URLSearchParams(window.location.search);
+    if (query.get('mode') === 'canvas') return false;
+    return (
+      query.get('mode') === 'lesson' ||
+      [
+        'studentId',
+        'lessonId',
+        'prompt',
+        'coursewareImportKey',
+        'loadCoursewareSlug',
+      ].some((key) => query.has(key))
+    );
+  });
+
+  function openMode(mode: 'lesson' | 'canvas') {
+    const url = new URL(window.location.href);
+    url.searchParams.set('mode', mode);
+    window.location.assign(url.href);
+  }
+
+  if (!lessonMode) {
+    return <CanvasWorkspace onOpenLesson={() => openMode('lesson')} />;
+  }
+
+  return <LessonWhiteboard onReturnToCanvas={() => openMode('canvas')} />;
+}
+
+function LessonWhiteboard({ onReturnToCanvas }: { onReturnToCanvas: () => void }) {
   const [shapes, setShapes] = useState<BoardShape[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
@@ -2751,6 +2782,13 @@ export default function OwnWhiteboard() {
           <Home size={16} />
           首页
         </a>
+        <button
+          type="button"
+          className="h-8 rounded-md px-2 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+          onClick={onReturnToCanvas}
+        >
+          返回创作白板
+        </button>
       </div>
 
       {shapes.map((shape) => (

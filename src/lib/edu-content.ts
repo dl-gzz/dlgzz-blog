@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull, or } from 'drizzle-orm';
 import matter from 'gray-matter';
 import { getDb } from '@/db';
 import { eduBlogPost, eduCourseware, eduWorkspace } from '@/db/schema';
@@ -223,8 +223,11 @@ function rowToCoursewarePost({
   };
 }
 
-export async function listDatabaseCoursewarePosts(locale = 'zh') {
-  await ensureDefaultWorkspace();
+export async function listDatabaseCoursewarePosts(
+  locale = 'zh',
+  { includePrivate = true }: { includePrivate?: boolean } = {}
+) {
+  if (includePrivate) await ensureDefaultWorkspace();
   const db = await getDb();
   const rows = await db
     .select({
@@ -237,7 +240,17 @@ export async function listDatabaseCoursewarePosts(locale = 'zh') {
       and(
         eq(eduBlogPost.workspaceId, DEFAULT_WORKSPACE_ID),
         eq(eduBlogPost.locale, locale),
-        eq(eduBlogPost.status, 'published')
+        eq(eduBlogPost.status, 'published'),
+        includePrivate ? undefined : eq(eduBlogPost.visibility, 'public'),
+        includePrivate
+          ? undefined
+          : or(
+              isNull(eduCourseware.id),
+              and(
+                eq(eduCourseware.visibility, 'public'),
+                eq(eduCourseware.status, 'published')
+              )
+            )
       )
     )
     .orderBy(desc(eduBlogPost.publishedAt), desc(eduBlogPost.createdAt))

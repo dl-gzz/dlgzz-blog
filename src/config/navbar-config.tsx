@@ -28,6 +28,11 @@ export function getNavbarLinks(): NestedMenuItem[] {
       external: false,
     },
     {
+      title: t('whiteboard.title'),
+      href: Routes.Whiteboard,
+      external: false,
+    },
+    {
       title: t('docs.title'),
       href: Routes.Docs,
       external: false,
