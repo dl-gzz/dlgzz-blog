@@ -75,17 +75,30 @@ button:focus-visible, summary:focus-visible { outline: 2px solid #346e5b; outlin
 #recordList b { font-size: clamp(15px, 1.5vw, 20px); color: #3e2b17; }
 #sum { margin: 0; font-weight: 700; color: #2a594b; }
 #sum:empty { display: none; }
-.notice { flex-basis: 100%; margin: 0; color: #794926; font-size: 14px; }
+.controlNotices { display: grid; flex-basis: 100%; gap: 4px; }
+.controlNotices:not(:has(.notice:not(:empty))) { display: none; }
+.notice { margin: 0; color: #794926; font-size: 14px; }
 .notice:empty, .hidden { display: none !important; }
+@media (min-width: 900px) {
+  .controlBar, .stepLabel, .actionSet { flex-wrap: nowrap; }
+  .controlBar { min-height: 3.375rem; }
+  .stepLabel { flex: 0 0 10.5rem; white-space: nowrap; }
+  .instruction { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .actionSet { flex: none; white-space: nowrap; }
+  /* Feedback stays visible without resizing the controls or the river scene. */
+  .controlNotices { position: absolute; z-index: 1; inset-inline-end: 0; bottom: calc(100% + 6px); justify-items: end; max-width: 100%; pointer-events: none; }
+  .notice { padding: 5px 9px; background: #fff7e8; border: 1px solid #b8a27b; border-radius: 7px; }
+}
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .draggable { cursor: grab; touch-action: none; outline: none; }
 .draggable:focus-visible { filter: drop-shadow(0 0 5px #f8e36b); }
 .moving { cursor: grabbing; }
 #inkPreview, .draw-prompt { pointer-events: none; }
-.awaiting-mark .draw-prompt { animation: guide-pulse 650ms ease-in-out 2; }
-@keyframes guide-pulse { 0%, 100% { opacity: 1; } 48% { opacity: .57; } }
+.marking-ready .instruction { color: #67471e; font-weight: 650; text-decoration: underline .16em #c28c19; text-underline-offset: .22em; }
+.awaiting-mark :is(.draw-prompt, .instruction) { animation: guide-pulse 720ms ease-in-out 2; }
+@keyframes guide-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .62; } }
 @media (prefers-reduced-motion: reduce) {
-  .awaiting-mark .draw-prompt, .bubble.is-speaking .voiceDots span, #caoChong.is-speaking .mouthShape, .formulaMarker.cue-once { animation: none; }
+  .awaiting-mark :is(.draw-prompt, .instruction), .bubble.is-speaking .voiceDots span, #caoChong.is-speaking .mouthShape, .formulaMarker.cue-once { animation: none; }
   #caoChong.is-speaking .caoMouth { visibility: hidden; }
 }
 @media (min-width: 700px) and (min-height: 400px) and (min-aspect-ratio: 1/1) {
@@ -181,8 +194,9 @@ button:focus-visible, summary:focus-visible { outline: 2px solid #346e5b; outlin
 <g id="scale" class="hidden" aria-label="宽平台教学台秤"><image href="scale.webp" x="614" y="355" width="230" height="172"/><text x="729" y="391" text-anchor="middle" fill="#fff9d6" font-family="system-ui" font-variant-numeric="tabular-nums" font-size="28" font-weight="800"><tspan id="scaleValue">0</tspan><tspan font-size="10"> 千克</tspan></text></g><text id="weighedLabel" x="505" y="529" font-size="13" fill="#59432e">已称</text><g id="rocks"></g>
 <g id="drawZone" class="hidden">
   <g class="draw-prompt">
-    <path d="M220 283H600" fill="none" stroke="#fff3a4" stroke-width="7" stroke-dasharray="9 7"/>
-    <text x="410" y="319" text-anchor="middle" fill="#fff8e5" stroke="#325350" stroke-width="3" stroke-linejoin="round" paint-order="stroke" font-size="16">沿水面横向画线</text>
+    <path d="M220 283H600" fill="none" stroke="#503713" stroke-opacity=".75" stroke-width="10" stroke-dasharray="12 6"/>
+    <path d="M220 283H600" fill="none" stroke="#ffeb80" stroke-width="6" stroke-dasharray="12 6"/>
+    <text x="410" y="319" text-anchor="middle" fill="#fff3b0" stroke="#254a44" stroke-width="4" stroke-linejoin="round" paint-order="stroke" font-size="18" font-weight="700">沿黄虚线画一条线</text>
   </g>
   <rect x="215" y="262" width="390" height="43" fill="transparent"/>
 </g><path id="inkPreview" stroke="#dd3744" stroke-width="4" fill="none" stroke-linecap="round"/></svg></section>
@@ -200,7 +214,7 @@ button:focus-visible, summary:focus-visible { outline: 2px solid #346e5b; outlin
       </div>
     </details>
   </div>
-  <p id="hint" class="notice" aria-live="polite"></p><span id="audioNote" class="notice" aria-live="polite"></span>
+  <div class="controlNotices"><p id="hint" class="notice" aria-live="polite"></p><p id="audioNote" class="notice" aria-live="polite"></p></div>
 </section>
 <section id="ledger" class="weighingLog hidden" aria-labelledby="ledgerTitle">
   <h3 id="ledgerTitle">称重记录</h3>
@@ -264,7 +278,17 @@ let elephantMotion = null;
 let splash = null;
 let animationFrame = 0;
 const waterGlints = [];
-const cues={0:[0,'我有一个办法！先把大象请到船上。'],1:[1,'船下沉了！沿着水面，在船舷上画一条线。'],2:[2,'记住这条线，再让大象回到岸上。'],'3:-1':[3,'现在往船上放石头，看看刻线怎样变化。'],'3:0':[4,'对齐了！这些石头和大象一样重。开始称重吧！'],'3:1':[5,'放多了，取回一些石头试试。'],4:[6,'把石头分批放到秤上，每批最多三块。称好后记下来。'],5:[7,'把每批的质量加起来，就是大象的质量。'],6:[8,'答对啦！我们用石头称出了大象的质量。']};
+const cues = {
+  "0": [0, "我想到一个法子。来，咱们先请大象上船！"],
+  "1": [1, "瞧，船往下沉了。顺着黄虚线，在船舷上记下水面的位置。"],
+  "2": [2, "这道记号留在船上。现在，请大象回岸上歇一歇。"],
+  "3:-1": [3, "咱们换石头试试。一块块放进去，看看记号离水面还有多远。"],
+  "3:0": [4, "水面刚好碰到记号！这些石头和大象一样重，咱们来称石头。"],
+  "3:1": [5, "水面盖过记号了。先拿回几块，让船浮起来些。"],
+  "4": [6, "秤上一次最多放三块。称完这一批，先记下读数，再称下一批。"],
+  "5": [7, "把每一批加起来，就知道大象有多重了。"],
+  "6": [8, "算对了！石头和大象让船沉到同一道记号，所以它们一样重。"]
+};
 function setVoiceAnimation(playing) {
   for (const id of ['speechBubble', 'caoChong']) $(id).classList.toggle('is-speaking', playing);
 }
@@ -324,7 +348,7 @@ function play(){
   stopVoice();
   if(muted || model.stage===1 && (elephantMotion || boatMotion)) return;
   const cue = currentClip;
-  const clip = new Audio('audio/'+cue+'.mp3');
+  const clip = new Audio(`audio/${cue}.mp3?v=2`);
   audio = clip;
   bindVoiceAnimation(clip);
   if (cue === FORMULA_VOICE_CLIP) bindFormulaVoiceCue(clip);
@@ -385,11 +409,13 @@ function syncFloatingObjects() {
 function syncWaterReadiness() {
   const busy = Boolean(elephantMotion || boatMotion);
   const guide = $('drawZone');
+  const layout = $('lessonLayout');
   const canDraw = model.stage === 1 && !busy;
   const wasHidden = guide.classList.contains('hidden');
   guide.classList.toggle('hidden', !canDraw);
-  if (!canDraw) guide.classList.remove('awaiting-mark');
-  else if (wasHidden && !reduceMotion.matches) guide.classList.add('awaiting-mark');
+  layout.classList.toggle('marking-ready', canDraw);
+  if (!canDraw) layout.classList.remove('awaiting-mark');
+  else if (wasHidden && !reduceMotion.matches) layout.classList.add('awaiting-mark');
   $('replay').disabled = model.stage === 1 && busy;
   if (model.stage === 1) {
     $('instruction').textContent = elephantMotion ? '等大象站稳，观察木船下沉。' : boatMotion ? '等船停稳，再沿黄线画。' : '沿黄色虚线横向画吃水线。';
@@ -571,7 +597,7 @@ $('elephant').addEventListener('pointerdown',e=>{if(model.stage===0||model.stage
 $('drawZone').addEventListener('pointerdown',e=>{
   if(model.stage!==1||drag||stroke.length||elephantMotion||boatMotion)return;
   e.preventDefault();
-  e.currentTarget.classList.remove('awaiting-mark');
+  $('lessonLayout').classList.remove('awaiting-mark');
   stroke=[pos(e)];
   e.currentTarget.setPointerCapture(e.pointerId);
 });
