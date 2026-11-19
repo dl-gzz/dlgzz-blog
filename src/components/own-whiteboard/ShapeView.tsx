@@ -303,7 +303,7 @@ export default function ShapeView(
                 {!interactive && (
                   <button type="button" onClick={props.onActivateCourseware}>操作课件</button>
                 )}
-                <a href="/blog">浏览文章</a>
+                <a href={courseware.articleHref}>返回文章</a>
               </div>
             </div>
           )}

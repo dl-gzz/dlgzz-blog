@@ -1,3 +1,4 @@
+import { CoursewareLaunch } from '@/components/blog/courseware-launch';
 import { ImageWrapper } from '@/components/docs/image-wrapper';
 import { Wrapper } from '@/components/docs/wrapper';
 import { YoutubeVideo } from '@/components/docs/youtube-video';
@@ -40,6 +41,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Files,
     FileDownload,
     FileDownloads,
+    CoursewareLaunch,
     blockquote: Callout as unknown as FC<ComponentProps<'blockquote'>>,
     img: ImageWrapper,
   };

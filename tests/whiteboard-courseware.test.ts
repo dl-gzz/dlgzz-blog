@@ -71,6 +71,22 @@ test('the authored lesson ships every picture and narration clip beside its entr
   }
 });
 
+test('the published lesson guide ends with its registered whiteboard launcher and has a real cover', () => {
+  const lesson = getCourseware('cao-chong');
+  assert.ok(lesson);
+  const source = readFileSync(
+    new URL(`../content${lesson.articleHref}.zh.mdx`, import.meta.url),
+    'utf8'
+  );
+  assert.match(source, /\npublished: true\n/);
+  assert.match(source.trimEnd(), /<CoursewareLaunch id="cao-chong"\s*\/>$/);
+  const cover = source.match(
+    /\nimage: "(\/courseware\/cao-chong\/[^"\n]+)"\n/
+  )?.[1];
+  assert.ok(cover);
+  assert.ok(existsSync(new URL(`../public${cover}`, import.meta.url)));
+});
+
 test('an existing published lesson remains an interactive embed after legacy migration', () => {
   const legacy = [{
     id: 'shape:published-courseware-cao-chong',
