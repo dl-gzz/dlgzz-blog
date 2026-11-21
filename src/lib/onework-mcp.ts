@@ -3,6 +3,10 @@ import 'server-only';
 import authorizationPolicy from '@/config/onework-authorization-policy.json';
 import { completeApiKeyUsage, reserveOneWorkUserUsage } from '@/lib/api-key';
 import {
+  coursewareWhiteboardHref,
+  findPublishedCourseware,
+} from '@/lib/courseware-catalog';
+import {
   type KnowledgeCatalog,
   listKnowledgeCatalog,
   selectCurrentKnowledgePackVersions,
@@ -37,6 +41,7 @@ export function isSupportedOneWorkMcpProtocolVersion(value: string) {
 
 const TOOL_SCOPES = {
   onework_resolve_capability: 'onework:resolve',
+  onework_find_courseware: 'onework:resolve',
   onework_list_knowledge_catalog: 'onework:knowledge',
   onework_search_knowledge: 'onework:knowledge',
   onework_get_knowledge_source: 'onework:knowledge',
@@ -178,6 +183,26 @@ const TOOLS = [
         kind: { type: 'string', maxLength: 80 },
         skillId: { type: 'string', maxLength: 160 },
         limit: { type: 'integer', minimum: 1, maximum: 20 },
+      },
+    },
+  },
+  {
+    name: 'onework_find_courseware',
+    title: '查找互动课件',
+    description:
+      'Find published OneWorkOS interactive lessons (互动课件), such as 曹冲称象. Returns the clickable whiteboard URL, guide article, and teaching points. Use for locating or opening a lesson; this tool does not launch the browser or operate the whiteboard.',
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        query: {
+          type: 'string',
+          minLength: 1,
+          maxLength: 160,
+          description:
+            'Lesson title, ID, or short topic. Omit to browse the published catalog.',
+        },
       },
     },
   },
@@ -1017,6 +1042,23 @@ async function callTool(
   dependencies: OneWorkMcpDependencies
 ): Promise<ToolResult> {
   requireToolScope(principal, name);
+
+  if (name === 'onework_find_courseware') {
+    if (Object.keys(args).some((key) => key !== 'query')) {
+      throw new McpRpcError(-32602, 'Only query is supported');
+    }
+    const query = stringArg(args, 'query', 160, args.query !== undefined);
+    const origin = getBaseUrl();
+    const results = findPublishedCourseware(query).map((product) => ({
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      whiteboardUrl: new URL(coursewareWhiteboardHref(product), origin).href,
+      articleUrl: new URL(product.articleHref, origin).href,
+      teachingPoints: product.teachingPoints,
+    }));
+    return asToolResult({ success: true, results });
+  }
 
   if (name === 'onework_resolve_capability') {
     const goal = stringArg(args, 'goal', 2000, true)!;

@@ -1,23 +1,15 @@
+import {
+  type CoursewareProduct,
+  getCourseware,
+} from '@/lib/courseware-catalog';
 import { createShape } from './model';
 import type { BoardDocument, BoardShape, Bounds } from './types';
 
-const CAO_CHONG = {
-  id: 'cao-chong',
-  title: '曹冲称象',
-  articleHref: '/blog/cao-chong-weighs-elephant',
-  entryHref: '/courseware/cao-chong/index.html',
-} as const;
-
-export type CoursewareProduct = typeof CAO_CHONG;
-
-/** Only authored courseware IDs can resolve to executable lesson documents. */
-export function getCourseware(id: unknown): CoursewareProduct | undefined {
-  return id === CAO_CHONG.id ? CAO_CHONG : undefined;
-}
-
-export function coursewareWhiteboardHref(product: CoursewareProduct) {
-  return `/whiteboard?courseware=${encodeURIComponent(product.id)}`;
-}
+export {
+  type CoursewareProduct,
+  coursewareWhiteboardHref,
+  getCourseware,
+} from '@/lib/courseware-catalog';
 
 export function coursewareForShape(shape: BoardShape) {
   return shape.type === 'embed'

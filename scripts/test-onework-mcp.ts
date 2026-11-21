@@ -14,6 +14,7 @@ import {
   resolveKnowledgeSearchPackIds,
   routeKnowledgeSearchPackIds,
 } from '@/lib/onework-mcp';
+import { getBaseUrl } from '@/lib/urls/urls';
 
 const principal = {
   tokenId: 'token_test',
@@ -555,6 +556,7 @@ async function main() {
   ).map((tool) => tool.name);
   assert.deepEqual(toolNames, [
     'onework_resolve_capability',
+    'onework_find_courseware',
     'onework_list_knowledge_catalog',
     'onework_search_knowledge',
     'onework_get_knowledge_source',
@@ -563,6 +565,94 @@ async function main() {
     'onework_get_usage',
     'onework_begin_expert_use',
   ]);
+  const coursewareTool = (
+    successResult(listed.response).tools as Record<string, unknown>[]
+  ).find((tool) => tool.name === 'onework_find_courseware');
+  assert.equal(asRecord(coursewareTool?.annotations).readOnlyHint, true);
+
+  const noDependencyCalls = async () => {
+    assert.fail('Public courseware search must not access backend dependencies');
+  };
+  const coursewareDependencies: OneWorkMcpDependencies = {
+    resolveCapability: noDependencyCalls,
+    searchKnowledge: noDependencyCalls,
+    listKnowledgeCatalog: noDependencyCalls,
+    getKnowledgeSource: noDependencyCalls,
+    queryAnalytics: noDependencyCalls,
+    getAccountAccess: noDependencyCalls,
+    reserveUsage: noDependencyCalls,
+    completeUsage: noDependencyCalls,
+  };
+  const searchCourseware = (
+    args: Record<string, unknown>,
+    scopes = new Set(['onework:resolve'])
+  ) =>
+    request(
+      20,
+      'tools/call',
+      { name: 'onework_find_courseware', arguments: args },
+      { ...principal, scopes },
+      coursewareDependencies
+    );
+  for (const query of [
+    undefined,
+    '曹冲称象',
+    '找一下《曹冲称象》的互动课件',
+    ' CAO-CHONG ',
+    '吃水线',
+  ]) {
+    const courseware = await searchCourseware(query ? { query } : {});
+    assert.equal(courseware.status, 200);
+    const toolResult = successResult(courseware.response);
+    const content = asRecord(toolResult.structuredContent);
+    assert.equal(content.success, true);
+    const results = content.results as unknown[];
+    assert.equal(results.length, 1);
+    const lesson = asRecord(results[0]);
+    assert.equal(lesson.id, 'cao-chong');
+    assert.equal(lesson.title, '曹冲称象');
+    assert.equal(
+      lesson.whiteboardUrl,
+      new URL('/whiteboard?courseware=cao-chong', getBaseUrl()).href
+    );
+    assert.equal(
+      lesson.articleUrl,
+      new URL('/blog/cao-chong-weighs-elephant', getBaseUrl()).href
+    );
+    assert.match(String(lesson.teachingPoints), /吃水线.*每批最多称三块/);
+    const [textBlock] = toolResult.content as { type: string; text: string }[];
+    assert.equal(textBlock.type, 'text');
+    assert.deepEqual(JSON.parse(textBlock.text), content);
+  }
+  for (const query of ['未发布课件', 'https://example.test/cao-chong']) {
+    const missing = await searchCourseware({ query });
+    assert.deepEqual(successResult(missing.response).structuredContent, {
+      success: true,
+      results: [],
+    });
+  }
+  for (const invalid of [
+    { query: '   ' },
+    { query: '课'.repeat(161) },
+    { query: 1 },
+    { query: null },
+    { url: 'https://example.test/cao-chong' },
+  ]) {
+    const result = await searchCourseware(invalid);
+    assert.equal(result.status, 400);
+    assert(result.response && 'error' in result.response);
+    assert.equal(result.response.error.code, -32602);
+  }
+  const noCoursewareScope = await searchCourseware(
+    {},
+    new Set(['onework:knowledge'])
+  );
+  assert.equal(noCoursewareScope.status, 403);
+  assert(noCoursewareScope.response && 'error' in noCoursewareScope.response);
+  assert.equal(
+    noCoursewareScope.response.error.data?.requiredScope,
+    'onework:resolve'
+  );
 
   const resolved = await request(3, 'tools/call', {
     name: 'onework_resolve_capability',
