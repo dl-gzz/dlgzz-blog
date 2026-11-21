@@ -300,9 +300,13 @@ export default function ShapeView(
             <div className="owb-courseware-header" data-card-handle>
               <strong>互动课件 · {courseware.title}</strong>
               <div className="owb-courseware-actions" data-board-interactive="true">
-                {!interactive && (
-                  <button type="button" onClick={props.onActivateCourseware}>操作课件</button>
-                )}
+                <button
+                  type="button"
+                  className="owb-courseware-activate"
+                  onClick={props.onActivateCourseware}
+                >
+                  操作课件
+                </button>
                 <a href={courseware.articleHref}>返回文章</a>
               </div>
             </div>
@@ -317,7 +321,12 @@ export default function ShapeView(
               style={{
                 width: '100%',
                 height: '100%',
-                pointerEvents: interactive ? 'auto' : 'none',
+                // The canvas tool, not card selection, controls lesson input.
+                pointerEvents: courseware
+                  ? undefined
+                  : interactive
+                    ? 'auto'
+                    : 'none',
               }}
             />
           ) : (

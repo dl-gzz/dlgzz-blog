@@ -343,6 +343,14 @@
   display: block;
   flex: 1 1 auto;
   min-height: 0;
+  pointer-events: none;
+}
+/* Keep the running lesson clickable even after its card is deselected. */
+.owb-surface.tool-select:not(.is-panning) .owb-courseware iframe {
+  pointer-events: auto;
+}
+.owb-surface.tool-select .owb-courseware-activate {
+  display: none;
 }
 .owb-courseware-header {
   flex: 0 0 39px;
