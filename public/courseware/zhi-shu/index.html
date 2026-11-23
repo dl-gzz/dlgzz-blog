@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>直线植树</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f4f5ea;
+    color: #172e26;
+    font: 1rem/1.5 system-ui, sans-serif;
+  }
+  main { max-width: 62rem; margin: auto; padding: clamp(.75rem, 3vw, 2rem); }
+  header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
+  h1 { margin: 0; font-size: clamp(1.5rem, 5vw, 2.5rem); }
+  p { margin: .5rem 0; }
+  figure { margin: 1rem 0; background: #e2eddd; border: 1px solid #bdcbb8; border-radius: 1rem; overflow: hidden; }
+  svg { display: block; width: 100%; height: auto; }
+  figcaption { padding: .5rem .75rem; background: #fffdf6; }
+  output { display: block; font-weight: 700; }
+  .controls { display: flex; flex-wrap: wrap; align-items: start; gap: 1rem; }
+  [role="group"] { min-width: 0; }
+  .buttons { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-top: .25rem; }
+  button, summary { cursor: pointer; }
+  button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: .45rem .75rem;
+    border: 1px solid #607568;
+    border-radius: .5rem;
+    background: #fffdf6;
+    color: inherit;
+    font: inherit;
+  }
+  button[aria-pressed="true"] { background: #24553e; color: white; border-color: #24553e; }
+  button[aria-disabled="true"] { opacity: .55; cursor: default; }
+  :focus-visible { outline: 3px solid #944219; outline-offset: 3px; }
+  #interval-count { min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; }
+  details { margin-top: 1rem; border-top: 1px solid #bdcbb8; }
+  summary { min-height: 44px; padding: .6rem 0; font-weight: 700; }
+  .segments text { fill: #274737; font: 700 25px system-ui, sans-serif; text-anchor: middle; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>直线植树</h1>
+    <button id="reset" type="button">重置</button>
+  </header>
+  <p>改一改间隔数，再换一种端点种法。看看哪几棵树变了。</p>
+  <figure>
+    <svg viewBox="0 0 640 180" role="img" aria-label="直线路段示意图，空心圆表示未种树的端点，路下方按从左到右标出每个间隔">
+      <defs>
+        <g id="tree">
+          <path d="M-3 1V-24H3V1Z" fill="#764c33"/>
+          <path d="M0-65 16-38H10L19-22H-19L-10-38H-16Z" fill="#28714a"/>
+          <path d="M0-65V-22H-19L-10-38H-16Z" fill="#39915e"/>
+        </g>
+      </defs>
+      <path d="M0 81 81 42 141 67 221 26 309 67 396 34 469 68 553 35 640 76V126H0Z" fill="#d0e3cc"/>
+      <path d="M32 107H608" stroke="#c4a780" stroke-width="14" stroke-linecap="round"/>
+      <g id="segments" class="segments"></g>
+      <g id="internal-trees"></g>
+      <g id="endpoints"></g>
+    </svg>
+    <figcaption>
+      <output id="counts" aria-live="polite" aria-atomic="true"></output>
+      空心圆表示端点没种树。路下的编号标出每一段间隔。
+    </figcaption>
+  </figure>
+  <div class="controls">
+    <div role="group" aria-labelledby="interval-label">
+      <strong id="interval-label">间隔数</strong>
+      <div class="buttons">
+        <button id="less" type="button" aria-label="减少一个间隔">−</button>
+        <span id="interval-count"></span>
+        <button id="more" type="button" aria-label="增加一个间隔">+</button>
+      </div>
+    </div>
+    <div role="group" aria-labelledby="mode-label">
+      <strong id="mode-label">端点种法</strong>
+      <div class="buttons">
+        <button id="both" type="button" aria-pressed="true">两端都种</button>
+        <button id="left" type="button" aria-pressed="false">只种左端</button>
+        <button id="right" type="button" aria-pressed="false">只种右端</button>
+        <button id="neither" type="button" aria-pressed="false">两端不种</button>
+      </div>
+    </div>
+  </div>
+  <details id="explanation">
+    <summary>为什么树数会变？</summary>
+    <p id="reason"></p>
+  </details>
+</main>
+<script>
+const modes = {
+  both: { left: true, right: true },
+  left: { left: true, right: false },
+  right: { left: false, right: true },
+  neither: { left: false, right: false },
+};
+const initial = { intervals: 5, mode: 'both' };
+let { intervals, mode } = initial;
+const element = (id) => document.getElementById(id);
+const position = (index) => 32 + (576 * index) / intervals;
+
+const tree = (index) =>
+  `<use data-tree="${index}" href="#tree" x="${position(index)}" y="107"/>`;
+
+function renderGrid() {
+  element('segments').innerHTML = Array.from({ length: intervals }, (_, index) => {
+    const start = position(index);
+    const end = position(index + 1);
+    return `<g data-segment="${index + 1}">
+      <path d="M${start} 116v15h${end - start}v-15" fill="none" stroke="#607568" stroke-width="2"/>
+      <text x="${(start + end) / 2}" y="163">${index + 1}</text>
+    </g>`;
+  }).join('');
+  element('internal-trees').innerHTML = Array.from(
+    { length: intervals - 1 }, (_, index) => tree(index + 1)
+  ).join('');
+}
+
+function renderControlsAndEndpoints() {
+  const { left, right } = modes[mode];
+  const endpoint = (index, planted) => planted
+    ? tree(index)
+    : `<circle data-empty-end="${index}" cx="${position(index)}" cy="107" r="6" fill="#fffdf6" stroke="#274737" stroke-width="3"/>`;
+  element('endpoints').innerHTML = endpoint(0, left) + endpoint(intervals, right);
+
+  const endpoints = Number(left) + Number(right);
+  const trees = intervals - 1 + endpoints;
+  element('counts').textContent = `${trees} 棵树 · ${intervals} 段间隔`;
+  element('interval-count').textContent = intervals;
+  element('less').setAttribute('aria-disabled', String(intervals === 1));
+  element('more').setAttribute('aria-disabled', String(intervals === 10));
+  for (const id of Object.keys(modes)) {
+    element(id).setAttribute('aria-pressed', String(id === mode));
+  }
+
+  element('reason').textContent =
+    `从左往右数，第一段之后，每多一段就多一个内部格点。` +
+    `图上 ${intervals} 段间隔之间有 ${intervals - 1} 个内部格点，每个都种了树。` +
+    `再数左右两端，一共种了 ${endpoints} 棵。所以树数是 ${intervals - 1} + ${endpoints} = ${trees} 棵。`;
+}
+
+function changeIntervals(step) {
+  const next = Math.max(1, Math.min(10, intervals + step));
+  if (next === intervals) return;
+  intervals = next;
+  renderGrid();
+  renderControlsAndEndpoints();
+}
+
+element('less').addEventListener('click', () => changeIntervals(-1));
+element('more').addEventListener('click', () => changeIntervals(1));
+for (const id of Object.keys(modes)) {
+  element(id).addEventListener('click', () => {
+    mode = id;
+    renderControlsAndEndpoints();
+  });
+}
+element('reset').addEventListener('click', () => {
+  ({ intervals, mode } = initial);
+  element('explanation').open = false;
+  renderGrid();
+  renderControlsAndEndpoints();
+});
+renderGrid();
+renderControlsAndEndpoints();
+</script>
+</body>
+</html>

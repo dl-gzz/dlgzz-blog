@@ -19,14 +19,18 @@ export function CoursewareLaunch({ id }: { id: string }) {
       </p>
       <h2 className="mt-2 text-xl font-semibold">{courseware.title}</h2>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        把大象拖上船、画出吃水线，再用石头和台秤验证你的办法。
+        {courseware.id === 'cao-chong'
+          ? '把大象拖上船、画出吃水线，再用石头和台秤验证你的办法。'
+          : courseware.description}
       </p>
       <LocaleLink
         className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 dark:focus-visible:outline-blue-300"
         href={coursewareWhiteboardHref(courseware)}
       >
         <Play className="size-4 shrink-0" aria-hidden="true" />
-        在白板里做一次称象实验
+        {courseware.id === 'cao-chong'
+          ? '在白板里做一次称象实验'
+          : '在白板里打开课件'}
       </LocaleLink>
     </section>
   );

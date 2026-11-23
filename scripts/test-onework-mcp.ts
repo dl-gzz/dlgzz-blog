@@ -594,14 +594,23 @@ async function main() {
       { ...principal, scopes },
       coursewareDependencies
     );
+  const allCourseware = await searchCourseware({});
+  assert.equal(allCourseware.status, 200);
+  const publicLessons = asRecord(
+    successResult(allCourseware.response).structuredContent
+  ).results as unknown[];
+  assert.deepEqual(
+    publicLessons.map((lesson) => asRecord(lesson).id),
+    ['cao-chong', 'zhi-shu']
+  );
+
   for (const query of [
-    undefined,
     '曹冲称象',
     '找一下《曹冲称象》的互动课件',
     ' CAO-CHONG ',
     '吃水线',
   ]) {
-    const courseware = await searchCourseware(query ? { query } : {});
+    const courseware = await searchCourseware({ query });
     assert.equal(courseware.status, 200);
     const toolResult = successResult(courseware.response);
     const content = asRecord(toolResult.structuredContent);

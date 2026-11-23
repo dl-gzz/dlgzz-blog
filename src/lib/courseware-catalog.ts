@@ -14,6 +14,19 @@ const PUBLIC_COURSEWARE = [
       '讨论为什么同一条船回到相同吃水位置，说明两次载重相同。',
     ],
   },
+  {
+    id: 'zhi-shu',
+    title: '直线植树',
+    articleHref: '/blog/zhi-shu-wen-ti',
+    entryHref: '/courseware/zhi-shu/index.html',
+    description: '调节直线路段的间隔数，切换四种端点种法，观察树数怎样变化。',
+    searchTerms: ['zhi shu', '植树问题', '间隔', '端点', '小学数学'],
+    teachingPoints: [
+      '沿编号数出直路上的等距间隔。',
+      '保持间隔数，比较四种端点种法，只观察两端树的变化。',
+      '观察只有一段间隔且两端不种时，路段仍在，树数为零。',
+    ],
+  },
 ] as const;
 
 export type CoursewareProduct = (typeof PUBLIC_COURSEWARE)[number];
