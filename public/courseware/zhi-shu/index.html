@@ -41,6 +41,43 @@
   details { margin-top: 1rem; border-top: 1px solid #bdcbb8; }
   summary { min-height: 44px; padding: .6rem 0; font-weight: 700; }
   .segments text { fill: #274737; font: 700 25px system-ui, sans-serif; text-anchor: middle; }
+  [hidden] { display: none !important; }
+  .mode-bar { display: inline-flex; gap: .2rem; margin: .8rem 0 .4rem; padding: .2rem; border: 1px solid #becdb8; border-radius: .8rem; background: #e5ecdE; }
+  .mode-bar button { background: transparent; border: 0; padding-inline: 1rem; }
+  .mode-bar button[aria-pressed="true"], .primary { color: white; background: #24553e; }
+  #challenge-panel { margin: .5rem 0; }
+  .assignment { margin: .8rem 0; }
+  .chapter { font-size: .9rem; font-weight: 700; color: #536c43; }
+  .assignment h2 { margin: .15rem 0; font-size: clamp(1.35rem, 3vw, 2rem); }
+  .assignment p { margin: .15rem 0; }
+  .nursery { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; padding: .6rem .8rem; border-radius: .85rem; background: #fffdf6; border: 1px solid #c4d1b9; }
+  .nursery label { font-weight: 700; }
+  .nursery select { min-height: 44px; font: inherit; color: inherit; border: 1px solid #607568; border-radius: .5rem; padding: .4rem; background: white; }
+  #seed-stock { margin-inline-start: auto; padding: .35rem .65rem; border-radius: .5rem; color: #244a34; background: #e5efd9; font-variant-numeric: tabular-nums; }
+  .orchard { margin: .8rem 0; border: 1px solid #bcceae; border-radius: 1rem; overflow: hidden; background: #e6efe0; }
+  .orchard-title { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .4rem; align-items: center; padding: .65rem .85rem; color: #38533f; }
+  .orchard-title span { font-size: .9rem; }
+  .orchard-field { position: relative; isolation: isolate; padding: 1rem .5rem .7rem; }
+  .orchard-field::before { content: ''; position: absolute; z-index: -1; left: .5rem; right: .5rem; top: 4.9rem; height: .85rem; border-radius: 1rem; background: #c5ad82; }
+  .plots { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); }
+  .plot, .plot[aria-pressed="true"] { border: 1px solid transparent; margin: 0 .1rem; padding: 0; min-width: 0; background: transparent; color: #183a2a; display: grid; justify-items: center; gap: .15rem; }
+  .plot:focus-visible { outline-offset: 0; }
+  .plot:not(:disabled):hover { background: #ffffff58; border-color: #82987e; }
+  .plot:disabled { cursor: default; }
+  .plot-art { height: 4.4rem; display: grid; position: relative; place-items: end center; width: 100%; }
+  .plot-art svg { width: min(100%,4.8rem); height: 4.4rem; overflow: visible; }
+  .plot[data-gate="true"][aria-pressed="true"] .plot-state { color: #784321; font-weight: 700; }
+  .plot-distance { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .plot-state { font-size: .88rem; color: #384f40; }
+  .orchard-caption { background: #fffdf5; padding: .6rem .85rem; margin: 0; }
+  .mission-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+  #challenge-feedback { flex: 1 1 14rem; margin: .15rem 0; font-weight: 600; }
+  @media (max-width: 410px) {
+    main { padding: .65rem; }
+    .orchard-field { padding-inline: .1rem; }
+    #seed-stock { margin-inline-start: 0; }
+    .nursery { gap: .35rem; }
+  }
 </style>
 </head>
 <body>
@@ -48,7 +85,13 @@
   <header>
     <h1>直线植树</h1>
     <button id="reset" type="button">重置</button>
+    <button id="restart-challenge" type="button" hidden>重玩挑战</button>
   </header>
+  <div class="mode-bar" role="group" aria-label="活动模式">
+    <button id="explore-mode" type="button" aria-pressed="true" aria-controls="explore-panel">自由探索</button>
+    <button id="challenge-mode" type="button" aria-pressed="false" aria-controls="challenge-panel">校门挑战</button>
+  </div>
+  <section id="explore-panel" aria-label="自由探索">
   <p>改一改间隔数，再换一种端点种法。看看哪几棵树变了。</p>
   <figure>
     <svg viewBox="0 0 640 180" role="img" aria-label="直线路段示意图，空心圆表示未种树的端点，路下方按从左到右标出每个间隔">
@@ -93,6 +136,49 @@
     <summary>为什么树数会变？</summary>
     <p id="reason"></p>
   </details>
+  </section>
+  <section id="challenge-panel" aria-labelledby="challenge-title" data-stage="plan" hidden>
+    <div class="assignment">
+      <span class="chapter" id="chapter-label">校园任务 · 第一幕</span>
+      <h2 id="challenge-title">给校门留条路</h2>
+      <p id="mission">这条直路长 20 米，每隔 5 米种一棵。左端是校门，不能种，右端要种。你打算领几棵树苗？</p>
+    </div>
+    <div class="nursery">
+      <span id="nursery-input"><label for="seed-count">苗圃领苗</label>
+        <select id="seed-count">
+          <option value="">选数量</option>
+          <option value="0">0 棵</option><option value="1">1 棵</option><option value="2">2 棵</option><option value="3">3 棵</option>
+          <option value="4">4 棵</option><option value="5">5 棵</option><option value="6">6 棵</option>
+        </select>
+      </span>
+      <button id="take-seeds" type="button">领取树苗</button>
+      <span id="nursery-closed" hidden>苗圃已收工 · 用原来的树苗</span>
+      <output id="seed-stock" aria-live="off">尚未领苗</output>
+    </div>
+    <div class="orchard">
+      <div class="orchard-title"><strong>校园小路</strong><span>相邻标记相距 5 米</span></div>
+      <svg width="0" height="0" aria-hidden="true" style="position:absolute;width:0;height:0">
+        <defs>
+          <symbol id="campus-tree" viewBox="0 0 72 70"><ellipse cx="36" cy="64" rx="19" ry="3.5" fill="#a3b79a"/><path d="M32 63l2-29h5l2 29z" fill="#865834"/><path d="M36 4c-9 0-13 5-15 12-8 1-13 7-13 15 0 10 7 16 17 16 4 6 16 6 21 0 10 1 17-6 17-15 0-7-5-13-11-15C50 9 44 4 36 4Z" fill="#39825b"/><path d="M33 10c-7 1-11 8-11 13-4 0-8 4-8 9" fill="none" stroke="#80b885" stroke-width="4" stroke-linecap="round"/><path d="M36 53V34m0 11-7-6m7 1 8-8" fill="none" stroke="#476646" stroke-width="3" stroke-linecap="round"/></symbol>
+          <symbol id="campus-gate" viewBox="0 0 72 70"><ellipse cx="36" cy="64" rx="28" ry="3.5" fill="#a3b79a"/><path d="M9 33h10v29H9zm44 0h10v29H53z" fill="#b27e55"/><path d="M6 30h16v6H6zm44 0h16v6H50z" fill="#654b3e"/><path d="M17 30V19l19-9 19 9v11" fill="none" stroke="#876b4b" stroke-width="4"/><rect x="18" y="18" width="36" height="13" rx="3" fill="#3d6a58"/><path d="M18 60l18-7 18 7" fill="none" stroke="#c0a77f" stroke-width="3"/></symbol>
+          <symbol id="campus-hole" viewBox="0 0 72 70"><ellipse cx="36" cy="62" rx="13" ry="4.5" fill="#b5c59f"/><path d="M25 61q11-14 22 0Z" fill="#9c7850"/><path d="M36 54V41" fill="none" stroke="#755a3c" stroke-width="3"/><path d="M38 39h10l-5 5h-5z" fill="#e0aa57"/></symbol>
+        </defs>
+      </svg>
+      <div class="orchard-field"><div id="plots" class="plots" role="group" aria-label="沿路的种植位置">
+        <button id="plot-0" class="plot" type="button"></button>
+        <button id="plot-1" class="plot" type="button"></button>
+        <button id="plot-2" class="plot" type="button"></button>
+        <button id="plot-3" class="plot" type="button"></button>
+        <button id="plot-4" class="plot" type="button"></button>
+      </div></div>
+      <p class="orchard-caption">点空位种一棵；点已种的树，可把它收回手里。</p>
+    </div>
+    <div class="mission-actions">
+      <button id="check-layout" class="primary" type="button" hidden>检查种法</button>
+      <button id="move-gate" class="primary" type="button" hidden>搬校门</button>
+      <p id="challenge-feedback" role="status" aria-live="polite" aria-atomic="true" tabindex="-1">先估一估，再到苗圃领苗。</p>
+    </div>
+  </section>
 </main>
 <script>
 const modes = {
@@ -170,6 +256,117 @@ element('reset').addEventListener('click', () => {
 });
 renderGrid();
 renderControlsAndEndpoints();
+</script>
+<script>
+(() => {
+  const byId = (id) => document.getElementById(id);
+  const plots = Array.from({ length: 5 }, (_, i) => byId('plot-' + i));
+  const feedback = byId('challenge-feedback');
+  const firstPrompt = '这条直路长 20 米，每隔 5 米种一棵。左端是校门，不能种，右端要种。你打算领几棵树苗？';
+  const secondPrompt = '校门搬到了右端，原来的树还在。不再领苗，怎样把路种好，并给新校门留出通道？';
+  const initialGame = () => ({ stage: 'plan', issued: 0, trees: new Set() });
+  let game = initialGame();
+  const secondAct = () => game.stage === 'move' || game.stage === 'done';
+  const gateIndex = () => secondAct() ? plots.length - 1 : 0;
+  const stock = () => game.issued - game.trees.size;
+  const working = () => game.stage === 'plant' || game.stage === 'move';
+
+  function showMode(challenge) {
+    byId('explore-mode').setAttribute('aria-pressed', String(!challenge));
+    byId('challenge-mode').setAttribute('aria-pressed', String(challenge));
+    byId('explore-panel').hidden = challenge;
+    byId('challenge-panel').hidden = !challenge;
+    byId('reset').hidden = challenge;
+    byId('restart-challenge').hidden = !challenge;
+  }
+
+  function render(note) {
+    byId('challenge-panel').dataset.stage = game.stage;
+    byId('chapter-label').textContent = secondAct() ? '校园任务 · 第二幕' : '校园任务 · 第一幕';
+    byId('mission').textContent = secondAct() ? secondPrompt : firstPrompt;
+    const canCollect = game.stage === 'plan' || game.stage === 'plant';
+    byId('nursery-input').hidden = !canCollect;
+    byId('take-seeds').hidden = !canCollect;
+    byId('take-seeds').textContent = game.stage === 'plan' ? '领取树苗' : '调整领苗总数';
+    byId('nursery-closed').hidden = canCollect;
+    byId('seed-stock').textContent = game.stage === 'plan' ? '尚未领苗' :
+      '手中 ' + stock() + ' 棵 · 已种 ' + game.trees.size + ' 棵';
+    byId('check-layout').hidden = !working();
+    byId('move-gate').hidden = game.stage !== 'ready';
+    plots.forEach((button, i) => {
+      const gate = i === gateIndex(), planted = game.trees.has(i);
+      const state = gate ? (planted ? '门前有树' : '校门') : planted ? '已种' : '空位';
+      const icon = gate ? 'gate' : planted ? 'tree' : 'hole';
+      const art = gate && planted
+        ? '<use href="#campus-gate" x="12" y="8" width="60" height="60"/><use href="#campus-tree" x="0" y="23" width="46" height="46"/>'
+        : '<use href="#campus-' + icon + '"/>';
+      button.dataset.gate = String(gate);
+      button.setAttribute('aria-pressed', String(planted));
+      button.setAttribute('aria-label', i * 5 + ' 米，' + (gate && planted ? '校门前有树' : state));
+      button.disabled = !working();
+      button.innerHTML = '<span class="plot-art" aria-hidden="true"><svg viewBox="0 0 72 70">' + art + '</svg></span>'
+        + '<span class="plot-distance">' + i * 5 + ' 米</span><span class="plot-state">' + state + '</span>';
+    });
+    if (note !== undefined) feedback.textContent = note;
+  }
+
+  byId('explore-mode').addEventListener('click', () => showMode(false));
+  byId('challenge-mode').addEventListener('click', () => showMode(true));
+  byId('restart-challenge').addEventListener('click', () => {
+    game = initialGame();
+    byId('seed-count').value = '';
+    render('先估一估，再到苗圃领苗。');
+    byId('seed-count').focus();
+  });
+  byId('take-seeds').addEventListener('click', () => {
+    if (game.stage !== 'plan' && game.stage !== 'plant') return;
+    const choice = byId('seed-count').value;
+    if (!/^[0-6]$/.test(choice)) { render('先选你打算领取的树苗总数。'); return; }
+    const total = Number(choice);
+    if (total < game.trees.size) { render('路上已种 ' + game.trees.size + ' 棵，请先收回一些树再调整。'); return; }
+    game.issued = total;
+    game.stage = 'plant';
+    render('已领 ' + total + ' 棵。可以点路上的位置试种，也可以回来调整总数。');
+  });
+  plots.forEach((button, i) => button.addEventListener('click', () => {
+    if (!working()) return;
+    const where = i * 5 + ' 米处';
+    if (game.trees.has(i)) {
+      game.trees.delete(i);
+      render('从' + where + '收回一棵，手中还有 ' + stock() + ' 棵。');
+    } else if (i === gateIndex()) {
+      render('这里是校门，请给进出校园的人留条路。');
+    } else if (!stock()) {
+      render(secondAct() ? '手中没有余苗。看看路上有没有需要挪走的树。' : '手中没有余苗了。可以调整领苗总数，或把种下的树收回来。');
+    } else {
+      game.trees.add(i);
+      render(where + '种好了，手中还有 ' + stock() + ' 棵。');
+    }
+  }));
+  byId('check-layout').addEventListener('click', () => {
+    if (!working()) return;
+    if (game.trees.has(gateIndex())) { render('校门前还有一棵树，怎样给大家留条路？'); return; }
+    const missing = plots.some((_, i) => i !== gateIndex() && !game.trees.has(i));
+    if (missing) { render('看看路上的空位：除了校门，其他标记都种上了吗？'); return; }
+    if (stock()) { render('小路种好了，手中还剩 ' + stock() + ' 棵。调整领苗总数，把余苗还给苗圃吧。'); return; }
+    if (game.stage === 'plant') {
+      game.stage = 'ready';
+      render('小路种好了。要是校门换到另一端，还需要再领树苗吗？');
+      byId('move-gate').focus();
+    } else {
+      game.stage = 'done';
+      render('挑战完成！20 ÷ 5 = 4 段间隔。中间 3 棵，另一个端点 1 棵，一共 4 棵。校门换边，只挪树，不用多领。');
+      feedback.focus();
+    }
+  });
+  byId('move-gate').addEventListener('click', () => {
+    if (game.stage !== 'ready') return;
+    game.stage = 'move';
+    render('树没有动，校门换边了。动手试一试你的办法。');
+    plots[plots.length - 1].focus();
+  });
+  render();
+})();
 </script>
 </body>
 </html>
