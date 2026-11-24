@@ -10,13 +10,14 @@ export class DeepSeekAI {
     this.model = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
   }
 
-  async chat(messages: Array<{ role: string; content: string }>) {
+  async chat(messages: Array<{ role: string; content: string }>, options?: { json?: boolean; maxTokens?: number; signal?: AbortSignal }) {
     if (!this.apiKey) {
       throw new Error('DEEPSEEK_API_KEY is not configured');
     }
 
     const response = await fetch(`${this.baseURL}/chat/completions`, {
       method: 'POST',
+      signal: options?.signal,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
@@ -25,7 +26,8 @@ export class DeepSeekAI {
         model: this.model,
         messages,
         stream: false,
-        max_tokens: 8192,
+        max_tokens: options?.maxTokens ?? 8192,
+        ...(options?.json ? { response_format: { type: 'json_object' } } : {}),
       }),
     });
 

@@ -3,7 +3,7 @@
 import type { CSSProperties } from 'react';
 import BoardCard, { ARTICLE_LINK_FOOTER_HEIGHT } from './cards/BoardCard';
 import { safeWebUrl } from './cards/helpers';
-import { coursewareForShape } from './core/courseware';
+import { coursewareForShape, coursewareSource, treeSettingsForShape } from './core/courseware';
 import { resolveArrowPoints } from './core/model';
 import {
   CARD_TYPES,
@@ -112,6 +112,7 @@ export default function ShapeView(
     editing: boolean;
     finishEditing: () => void;
     onActivateCourseware?: () => void;
+    onDraftTreeLesson?: () => void;
   }
 ) {
   const {
@@ -127,6 +128,9 @@ export default function ShapeView(
   const isStroke = ['draw', 'highlight', 'line', 'arrow'].includes(type);
   const isCard = CARD_TYPES.includes(type);
   const courseware = coursewareForShape(shape);
+  const tree = treeSettingsForShape(shape);
+  const isTreeCopy = tree && 'treeLessonSettings' in shape.props;
+  const lessonTitle = isTreeCopy ? `副本 · ${courseware?.title} · ${tree.road}米 / 每${tree.spacing}米` : courseware?.title;
   const articleUrl = type === 'blog_post' ? safeWebUrl(shape.props.url) : '';
   const cardScale = shape.cardScale ?? 1;
   const cardLayout =
@@ -298,7 +302,7 @@ export default function ShapeView(
         <div className={`owb-embed${courseware ? ' owb-courseware' : ''}`}>
           {courseware && (
             <div className="owb-courseware-header" data-card-handle>
-              <strong>互动课件 · {courseware.title}</strong>
+              <strong title={lessonTitle}>{isTreeCopy ? lessonTitle : `互动课件 · ${courseware.title}`}</strong>
               <div className="owb-courseware-actions" data-board-interactive="true">
                 <button
                   type="button"
@@ -307,14 +311,15 @@ export default function ShapeView(
                 >
                   操作课件
                 </button>
+                {tree && <button type="button" className="owb-courseware-draft" onClick={props.onDraftTreeLesson}>用 AI 改副本</button>}
                 <a href={courseware.articleHref}>返回文章</a>
               </div>
             </div>
           )}
           {courseware || safeSource ? (
             <iframe
-              title={courseware?.title || shape.props.title || '网页嵌入'}
-              src={courseware?.entryHref || safeSource}
+              title={lessonTitle || shape.props.title || '网页嵌入'}
+              src={coursewareSource(shape) || safeSource}
               sandbox={courseware ? 'allow-scripts' : 'allow-scripts allow-presentation'}
               allowFullScreen={Boolean(courseware)}
               referrerPolicy="no-referrer"
