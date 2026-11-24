@@ -418,6 +418,13 @@
 .owb-tree-draft h3, .owb-tree-draft label { font-size: 15px; font-weight: 650; }
 .owb-tree-draft p { margin: 8px 0 14px; }
 .owb-tree-draft form { display: grid; justify-items: start; gap: 6px; }
+.owb-tree-access {
+  width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr);
+  gap: 6px; margin-bottom: 8px; padding: 12px;
+  border: 1px solid #dce5f1; border-radius: 10px; background: #f7faff;
+}
+.owb-tree-access label:not(:first-child) { margin-top: 4px; }
+.owb-tree-access p { margin: 2px 0 0; color: #43556c; line-height: 1.55; }
 .owb-tree-draft section { margin-top: 16px; padding-top: 12px; border-top: 1px solid #dce5f1; }
 .owb-tree-draft iframe {
   display: block;

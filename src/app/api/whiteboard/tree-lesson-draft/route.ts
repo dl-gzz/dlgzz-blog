@@ -2,15 +2,18 @@ import { NextResponse } from 'next/server';
 import {
   generateTreeDraft,
   parseTreeDraftRequest,
+  readTreeAICredentials,
+  treeDraftFailure,
 } from '@/lib/ai/tree-lesson-draft';
 import {
   bodyErrorResponse,
   readBoundedJson,
   requireSameOrigin,
-  requireSession,
 } from '@/lib/api-security';
+import { auth } from '@/lib/auth';
 import { userHasPremiumAccess } from '@/lib/premium-access';
 import { requireRequestBudget } from '@/lib/request-rate-limit';
+import { looksLikeDeepSeekKeyInPrompt } from '@/lib/tree-ai-key-format';
 
 export const maxDuration = 60;
 const json = (value: unknown, status = 200) =>
@@ -22,9 +25,20 @@ const json = (value: unknown, status = 200) =>
 export async function POST(request: Request) {
   const blocked = requireSameOrigin(request);
   if (blocked) return blocked;
-  const auth = await requireSession('请先登录，再用 AI 准备课件副本');
-  if ('response' in auth) return auth.response;
-  if (!(await userHasPremiumAccess(auth.session.user.id)))
+  // The incoming bearer belongs to DeepSeek, not to our identity provider.
+  // Pass only the signed session cookie, including for old site-mode clients.
+  const cookie = request.headers.get('cookie');
+  const session = cookie
+    ? await auth.api
+        .getSession({ headers: new Headers({ cookie }) })
+        .catch(() => null)
+    : null;
+  if (!session?.user?.id)
+    return json(
+      { code: 'UNAUTHORIZED', error: '请先登录，再用 AI 准备课件副本' },
+      401
+    );
+  if (!(await userHasPremiumAccess(session.user.id)))
     return json({ error: 'AI 备课需要有效会员；仍可使用原版课件。' }, 403);
   let raw: unknown;
   try {
@@ -40,16 +54,40 @@ export async function POST(request: Request) {
       { error: '请输入 1～800 字的备课要求，并使用有效的课件参数。' },
       400
     );
-  if (!process.env.DEEPSEEK_API_KEY)
-    return json({ error: '服务器尚未配置 DeepSeek，未创建副本。' }, 503);
+  if (looksLikeDeepSeekKeyInPrompt(input.instruction))
+    return json(
+      {
+        code: 'KEY_IN_PROMPT',
+        error:
+          '备课要求中疑似包含密钥。请移除它，粘贴到专用的 API Key 输入框。',
+      },
+      400
+    );
+  const credentials = readTreeAICredentials(
+    request.headers,
+    input.credentialMode
+  );
+  if (!credentials)
+    return json(
+      {
+        code: 'INVALID_AI_CREDENTIALS',
+        error: '密钥来源或 API Key 格式无效，请重新选择并填写。未创建副本。',
+      },
+      400
+    );
+  if (credentials.mode === 'site' && !process.env.DEEPSEEK_API_KEY)
+    return json(
+      { error: '站点尚未配置 DeepSeek，可以改用自己的 API Key。未创建副本。' },
+      503
+    );
   const limited = requireRequestBudget(
     'whiteboard-tree-draft',
-    auth.session.user.id,
+    session.user.id,
     6
   );
   if (limited) return limited;
   try {
-    const settings = await generateTreeDraft(input);
+    const settings = await generateTreeDraft(input, credentials);
     if (!settings)
       return json(
         {
@@ -64,7 +102,8 @@ export async function POST(request: Request) {
     )
       return json({ error: '路长和间距没有变化，请说明想改成多少米。' }, 422);
     return json({ settings });
-  } catch {
-    return json({ error: 'DeepSeek 暂时没有返回可用结果，未创建副本。' }, 502);
+  } catch (cause) {
+    const { code, error, status } = treeDraftFailure(cause, credentials.mode);
+    return json({ code, error }, status);
   }
 }
