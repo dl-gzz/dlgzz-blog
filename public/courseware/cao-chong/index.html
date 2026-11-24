@@ -237,11 +237,13 @@ const SCENE={
   shoreDrop:{left:26,right:874,top:348,bottom:550},
   scaleDrop:{left:614,right:844,top:430,bottom:501},
 };
-function lessonDropTarget(kind, stage, point) {
-  const inside = ({left,right,top,bottom}) => point.x>=left && point.x<=right && point.y>=top && point.y<=bottom;
-  if ((kind==='elephant' && stage===0 || kind==='rock' && (stage===3 || stage===4)) && inside(SCENE.boatDrop)) return 'boat';
-  if ((kind==='elephant' && stage===2 || kind==='rock' && stage===3) && inside(SCENE.shoreDrop)) return 'shore';
-  if (kind==='rock' && stage===4 && inside(SCENE.scaleDrop)) return 'scale';
+function lessonDropTarget(kind, stage, point, feet) {
+  const inside = (p, {left,right,top,bottom}) => p.x>=left && p.x<=right && p.y>=top && p.y<=bottom;
+  // A head or body grab can leave the pointer above the deck while the feet are already on it.
+  const hits = zone => inside(point, zone) || (kind === 'elephant' && feet && inside(feet, zone));
+  if ((kind==='elephant' && stage===0 || kind==='rock' && (stage===3 || stage===4)) && hits(SCENE.boatDrop)) return 'boat';
+  if ((kind==='elephant' && stage===2 || kind==='rock' && stage===3) && hits(SCENE.shoreDrop)) return 'shore';
+  if (kind==='rock' && stage===4 && hits(SCENE.scaleDrop)) return 'scale';
   return null;
 }
 class LessonModel {
@@ -583,9 +585,11 @@ svg.addEventListener('pointerup',e=>{
   drag=null;
   t.node.classList.remove('moving');
   const click=Math.hypot(p.x-t.start.x,p.y-t.start.y)<7;
-  const destination=lessonDropTarget(t.kind,model.stage,p);
+  const release=t.kind==='elephant'?pointerPose(t,p):null;
+  const destination=lessonDropTarget(t.kind,model.stage,p,release);
   if(t.kind==='elephant'){
-    if(click||destination)moveElephant(click?t.origin:pointerPose(t,p));
+    if(click||destination)moveElephant(click?t.origin:release);
+    else model.message=model.stage===0?'把大象拖到木船上，象脚落到甲板后松手。':'把大象拖回下方河岸，象脚落地后松手。';
   }else if(click){rockClick(t.i);return}
   else if(destination)model.rock(t.i,destination);
   render();

@@ -219,6 +219,27 @@ test('the lower shore and upper boat accept the new drag directions without chan
   ]);
 });
 
+test('dropping the elephant uses its feet as well as the pointer, without expanding the rock targets', () => {
+  const html = readFileSync(
+    new URL('../public/courseware/cao-chong/index.html', import.meta.url), 'utf8'
+  );
+  const source = html.match(/<script>([\s\S]+?)<\/script>/)?.[1];
+  assert.ok(source);
+  const results = runInNewContext(`${source}
+    const onDeck = {x:400,y:215}, aboveBoat = {x:400,y:110};
+    const shore = {x:340,y:520}, water = {x:340,y:325};
+    JSON.stringify([
+      lessonDropTarget('elephant', 0, aboveBoat, onDeck),
+      lessonDropTarget('elephant', 0, onDeck, water),
+      lessonDropTarget('elephant', 2, water, shore),
+      lessonDropTarget('elephant', 0, water, shore),
+      lessonDropTarget('elephant', 2, aboveBoat, onDeck),
+      lessonDropTarget('rock', 3, aboveBoat, onDeck)
+    ]);
+  `);
+  assert.deepEqual(JSON.parse(results), ['boat', 'boat', 'shore', null, null, null]);
+});
+
 test('weighing begins with a visible empty ledger and live mass; recorded batches remain visible', () => {
   const html = readFileSync(
     new URL('../public/courseware/cao-chong/index.html', import.meta.url),
