@@ -28,6 +28,18 @@ const PUBLIC_COURSEWARE = [
       '先估算树苗数量，种好后移动校门，解释为什么不需要多领树苗。',
     ],
   },
+  {
+    id: 'zhi-shu-shi-yan',
+    title: '植树大冒险',
+    articleHref: '/blog/zhi-shu-shi-yan',
+    entryHref: '/courseware/zhi-shu-shi-yan/index.html',
+    description: '从空路点种、均匀排列，完成直路、公路两侧和圆形花坛等五关。',
+    searchTerms: ['zhi shu shi yan', '植树实验', '公路两侧', '封闭路线'],
+    teachingPoints: [
+      '切换端点种法，比较间隔数和实际棵数。',
+      '在校园直路、公路两侧与封闭路线中验证数量关系。',
+    ],
+  },
 ] as const;
 
 export type CoursewareProduct = (typeof PUBLIC_COURSEWARE)[number];

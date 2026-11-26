@@ -20,7 +20,8 @@ test('直线植树 can be found, launched from its published guide, and embedded
   const product = getCourseware('zhi-shu');
   assert.ok(product);
   assert.equal(product.entryHref, '/courseware/zhi-shu/index.html');
-  for (const query of ['植树', '找一下《直线植树》的课件']) {
+  assert.ok(findPublishedCourseware('植树').includes(product));
+  for (const query of ['直线植树', '找一下《直线植树》的课件']) {
     assert.deepEqual(findPublishedCourseware(query), [product]);
   }
   assert.equal(coursewareWhiteboardHref(product), '/whiteboard?courseware=zhi-shu');

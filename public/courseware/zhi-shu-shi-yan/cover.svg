@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title">
+  <title id="title">植树大冒险 · 互动实验</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e9f6ee"/>
+      <stop offset="100%" stop-color="#cfe8d4"/>
+    </linearGradient>
+    <pattern id="paper" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" fill="none" stroke="#c3decb" stroke-opacity=".55"/>
+    </pattern>
+    <g id="sapling">
+      <ellipse cx="0" cy="12" rx="22" ry="7" fill="#23483b" opacity=".2"/>
+      <path d="M0 11v-55m0 31-19-17m19 17 19-17" fill="none" stroke="#81552b" stroke-width="7" stroke-linecap="round"/>
+      <path d="M0-19c-24-4-43-24-32-43 7-12 22-12 32-1 10-11 25-11 32 1 11 19-8 39-32 43Z" fill="#f3b93f" stroke="#925e20" stroke-width="3"/>
+      <path d="m0-23-13-54m13 31 13-31" fill="none" stroke="#a36a21" stroke-width="2"/>
+    </g>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <rect width="1200" height="675" fill="url(#paper)"/>
+  <path d="M116 445H1084" fill="none" stroke="#324d43" stroke-width="74" stroke-linecap="round"/>
+  <path d="M116 445H1084" fill="none" stroke="#4a6b5f" stroke-width="64" stroke-linecap="round"/>
+  <path d="M116 445H1084" stroke="#f7d674" stroke-width="4" stroke-dasharray="18 14" stroke-linecap="round"/>
+  <g>
+    <use href="#sapling" x="135" y="436"/>
+    <use href="#sapling" x="368" y="436"/>
+    <use href="#sapling" x="600" y="436"/>
+    <use href="#sapling" x="833" y="436"/>
+    <use href="#sapling" x="1065" y="436"/>
+  </g>
+  <g fill="#2563eb" stroke="#fff" stroke-width="4">
+    <circle cx="251" cy="482" r="24"/><circle cx="484" cy="482" r="24"/>
+    <circle cx="717" cy="482" r="24"/><circle cx="949" cy="482" r="24"/>
+  </g>
+  <g text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="25" font-weight="700">
+    <text x="251" y="491">1</text><text x="484" y="491">2</text>
+    <text x="717" y="491">3</text><text x="949" y="491">4</text>
+  </g>
+  <g fill="#143a2e" font-family="PingFang SC, Microsoft YaHei, sans-serif">
+    <rect x="108" y="102" width="318" height="44" rx="22" fill="#157347"/>
+    <text x="267" y="131" text-anchor="middle" fill="#fff" font-size="22" font-weight="700">人教版五年级 · 游戏化实验</text>
+    <text x="108" y="248" font-size="104" font-weight="800" letter-spacing="6">植树大冒险</text>
+    <text x="112" y="312" font-size="32" fill="#2c5949">自由种树 · 5 关闯关 · AI 改课件 · 一键带走</text>
+  </g>
+</svg>

@@ -1,6 +1,7 @@
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useRef, type CSSProperties } from 'react';
+import PlantingLessonFrame from './PlantingLessonFrame';
 import BoardCard, { ARTICLE_LINK_FOOTER_HEIGHT } from './cards/BoardCard';
 import { safeWebUrl } from './cards/helpers';
 import { coursewareForShape, coursewareSource, treeSettingsForShape } from './core/courseware';
@@ -128,9 +129,11 @@ export default function ShapeView(
   const isStroke = ['draw', 'highlight', 'line', 'arrow'].includes(type);
   const isCard = CARD_TYPES.includes(type);
   const courseware = coursewareForShape(shape);
+  const plantingLesson = courseware?.id === 'zhi-shu-shi-yan';
+  const coursewareBox = useRef<HTMLDivElement>(null);
   const tree = treeSettingsForShape(shape);
   const isTreeCopy = tree && 'treeLessonSettings' in shape.props;
-  const lessonTitle = isTreeCopy ? `副本 · ${courseware?.title} · ${tree.road}米 / 每${tree.spacing}米` : courseware?.title;
+  const lessonTitle = isTreeCopy ? `副本 · ${courseware?.title} · ${tree.road}米 / 每${tree.spacing}米` : plantingLesson ? (shape.props.title || courseware.title) : courseware?.title;
   const articleUrl = type === 'blog_post' ? safeWebUrl(shape.props.url) : '';
   const cardScale = shape.cardScale ?? 1;
   const cardLayout =
@@ -299,10 +302,10 @@ export default function ShapeView(
           )}
         </div>
       ) : type === 'embed' ? (
-        <div className={`owb-embed${courseware ? ' owb-courseware' : ''}`}>
+        <div ref={plantingLesson ? coursewareBox : undefined} className={`owb-embed${courseware ? ' owb-courseware' : ''}`}>
           {courseware && (
             <div className="owb-courseware-header" data-card-handle>
-              <strong title={lessonTitle}>{isTreeCopy ? lessonTitle : `互动课件 · ${courseware.title}`}</strong>
+              <strong title={lessonTitle}>{isTreeCopy ? lessonTitle : `互动课件 · ${lessonTitle}`}</strong>
               <div className="owb-courseware-actions" data-board-interactive="true">
                 <button
                   type="button"
@@ -312,11 +315,21 @@ export default function ShapeView(
                   操作课件
                 </button>
                 {tree && <button type="button" className="owb-courseware-draft" onClick={props.onDraftTreeLesson}>用 AI 改副本</button>}
+                {plantingLesson && <button type="button" onClick={() => {
+                  const panel = coursewareBox.current;
+                  if (document.fullscreenElement === panel) {
+                    void document.exitFullscreen().catch(() => undefined);
+                  } else {
+                    void panel?.requestFullscreen?.().catch(() => undefined);
+                  }
+                }}>全屏 / 退出</button>}
                 <a href={courseware.articleHref}>返回文章</a>
               </div>
             </div>
           )}
-          {courseware || safeSource ? (
+          {plantingLesson ? (
+            <PlantingLessonFrame title={lessonTitle || '植树大冒险'} config={shape.props.coursewareConfig} />
+          ) : courseware || safeSource ? (
             <iframe
               title={lessonTitle || shape.props.title || '网页嵌入'}
               src={coursewareSource(shape) || safeSource}

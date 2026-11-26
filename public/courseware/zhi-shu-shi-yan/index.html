@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>植树大冒险 · 互动实验</title>
+  <link rel="stylesheet" href="lesson.css">
+  <script defer src="config.js"></script>
+  <script defer src="model.js"></script>
+  <script defer src="lesson.js"></script>
+</head>
+<body data-theme="spring">
+  <main id="lesson">
+    <div class="workspace">
+      <header class="masthead">
+        <div class="masthead-left">
+          <div class="brand">
+            <span class="badge" id="course-subtitle">人教版五年级数学 · 植树问题互动实验</span>
+            <div class="title-row">
+              <h1 id="course-title">植树大冒险</h1>
+              <span class="length">路线全长 <strong id="route-length-label">100 米</strong></span>
+              <span class="preview-pill" id="preview-pill" hidden>预览版</span>
+            </div>
+          </div>
+          <div class="mode-tabs" role="tablist" aria-label="学习模式">
+            <button type="button" id="tab-explore" role="tab" aria-selected="true" class="tab-btn is-active">🧭 自由探索</button>
+            <button type="button" id="tab-mission" role="tab" aria-selected="false" class="tab-btn">🏆 闯关冒险 <span id="star-counter" class="star-pill">⭐ 0/5</span></button>
+          </div>
+        </div>
+        <div class="masthead-right">
+          <button type="button" id="reset" class="action-pill secondary">↺ 重置</button>
+          <button type="button" id="toggle-sound" class="icon-btn" aria-pressed="true" title="开关音效">🔊</button>
+          <button type="button" id="open-export" class="action-pill secondary">📦 下载/带走</button>
+        </div>
+      </header>
+
+      <section id="mission-bar" class="mission-bar" hidden aria-live="polite">
+        <div class="mission-nav" id="mission-pills"></div>
+        <div class="mission-body">
+          <div class="mission-copy">
+            <strong id="mission-title">第 1 关</strong>
+            <p id="mission-story"></p>
+            <p id="mission-feedback" class="mission-feedback" hidden></p>
+          </div>
+          <div class="mission-actions">
+            <button type="button" id="mission-hint-btn">💡 提示</button>
+            <button type="button" id="mission-check-btn" class="primary-btn">✅ 验证方案</button>
+            <button type="button" id="mission-next-btn" class="warm-btn" hidden>下一关 →</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="experiment">
+        <section class="canvas" aria-label="路线实验画布">
+          <p id="hint">点击路面种银杏，点击已种树木可拔除</p>
+          <svg id="road" viewBox="0 0 640 340" aria-label="路线，可点击放置或拔除对象">
+            <defs>
+              <linearGradient id="meadow-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--grass-top)"/>
+                <stop offset="100%" stop-color="var(--grass-bottom)"/>
+              </linearGradient>
+              <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <path d="M24 0H0V24" fill="none" stroke="var(--grid-line)" stroke-width="0.9"/>
+              </pattern>
+              <g id="ginkgo">
+                <ellipse cx="0" cy="2" rx="11" ry="4" fill="#17382b" opacity=".2"/>
+                <path d="M0 0v-24m0 8-7-7m7 7 7-7" fill="none" stroke="#784f26" stroke-width="3.2" stroke-linecap="round"/>
+                <path d="M0-17C-9-17-20-24-16-35c3-7 11-8 16-2 5-6 13-5 16 2 4 11-7 18-16 18Z" fill="#f5bd42" stroke="#8f5c14" stroke-width="1.5"/>
+                <path d="m0-19-6-13m6 13 6-13" stroke="#b57416" stroke-width="1.2" fill="none"/>
+              </g>
+              <g id="pine">
+                <ellipse cx="0" cy="2" rx="11" ry="4" fill="#17382b" opacity=".2"/>
+                <path d="M0 0v-15" stroke="#724c28" stroke-width="4" stroke-linecap="round"/>
+                <path d="M0-44 12-26H6l11 16H-17l11-16h-6Z" fill="#2b8a64" stroke="#134e3a" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="m0-26-6 9H6Z" fill="#77c391"/>
+              </g>
+              <g id="lamp">
+                <ellipse cx="0" cy="2" rx="8" ry="3.2" fill="#17382b" opacity=".22"/>
+                <circle cx="11" cy="-29" r="14" fill="#fde68a" opacity=".32" class="lamp-glow"/>
+                <path d="M-5 0H5M0 0V-29q0-8 8-8h5" stroke="#294558" fill="none" stroke-width="3" stroke-linecap="round"/>
+                <path d="M7-36h9l3 6H5Z" fill="#facc15" stroke="#294558" stroke-width="1.5"/>
+              </g>
+              <g id="flag">
+                <ellipse cx="0" cy="2" rx="8" ry="3" fill="#17382b" opacity=".2"/>
+                <path d="M0 0v-40" stroke="#294558" stroke-width="3" stroke-linecap="round"/>
+                <path d="M1-38h21l-6 7 6 7H1Z" fill="#f06a5d" stroke="#8f322f" stroke-width="1.5" stroke-linejoin="round"/>
+              </g>
+              <g id="building">
+                <ellipse cx="2" cy="4" rx="20" ry="5" fill="#17382b" opacity=".18"/>
+                <path d="M-16 2v-26l6-5h22l5 5V2Z" fill="#cbd5e1" stroke="#475569" stroke-width="1.5"/>
+                <path d="M-10-19h5m5 0h5m5 0h3m-23 7h5m5 0h5m5 0h3M-3 2v-7h7v7" stroke="#475569" stroke-width="2"/>
+              </g>
+            </defs>
+            <rect width="640" height="340" fill="url(#meadow-grad)"/>
+            <rect width="640" height="340" fill="url(#grid)"/>
+            <g id="scenery" pointer-events="none"></g>
+            <g id="paths"></g>
+            <g id="buildings"></g>
+            <g id="plants"></g>
+            <g id="markers" pointer-events="none"></g>
+            <g id="fx" pointer-events="none"></g>
+          </svg>
+        </section>
+
+        <aside class="data" aria-labelledby="data-title">
+          <div class="panel-heading">
+            <h2 id="data-title">实时数据</h2>
+            <button type="button" id="toggle-data" class="eye-button" aria-pressed="false">隐藏数据</button>
+          </div>
+          <div class="readout" aria-live="polite">
+            <div id="counts" class="counts">
+              <div class="stat-card"><span id="quantity-label">总棵数</span><strong id="quantity">0</strong></div>
+              <div class="stat-card accent"><span id="intervals-label">总间隔数</span><strong id="intervals">0</strong></div>
+            </div>
+            <p id="data-hidden" hidden>数据已隐藏（先猜一猜再揭晓）</p>
+            <div class="relation">
+              <div class="panel-heading">
+                <h3 id="mode-title">两端都种</h3>
+                <button type="button" id="toggle-formula" class="eye-button" aria-label="隐藏公式" aria-pressed="false"></button>
+              </div>
+              <p id="formula" class="placeholder">点击路面种树，自动揭示规律</p>
+              <p id="average" hidden></p>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="tools">
+        <div class="tools-left">
+          <section aria-labelledby="shape-title">
+            <h2 id="shape-title">1. 选择路形</h2>
+            <div class="choices">
+              <button type="button" data-shape="line"><span aria-hidden="true">━</span>直线</button>
+              <button type="button" data-shape="highway"><span aria-hidden="true">═</span>公路两侧</button>
+              <button type="button" data-shape="circle"><span aria-hidden="true">○</span>圆形</button>
+              <button type="button" data-shape="rectangle"><span aria-hidden="true">▭</span>长方形</button>
+              <button type="button" data-shape="triangle"><span aria-hidden="true">△</span>三角形</button>
+            </div>
+          </section>
+          <section aria-labelledby="arrangement-title">
+            <h2 id="arrangement-title">2. 排列模式</h2>
+            <div class="arrangement-row">
+              <div class="choices" id="mode-choices">
+                <button type="button" data-mode="both">两端都种</button>
+                <button type="button" data-mode="neither">两端都不种</button>
+                <button type="button" data-mode="left">只种左端</button>
+                <button type="button" data-mode="right">只种右端</button>
+              </div>
+              <button type="button" id="closed-mode" disabled hidden>封闭图形 (棵数 = 间隔数)</button>
+              <button type="button" id="uniform" class="primary-btn">✨ 均匀排列</button>
+            </div>
+          </section>
+        </div>
+        <section aria-labelledby="tools-title">
+          <h2 id="tools-title">3. 选择道具</h2>
+          <div class="choices">
+            <button type="button" data-skin="ginkgo">🍂 银杏</button>
+            <button type="button" data-skin="pine">🌲 松树</button>
+            <button type="button" data-skin="lamp">💡 路灯</button>
+            <button type="button" data-skin="flag">🚩 彩旗</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Download Offline HTML & Cross-Agent Prompt Pack Drawer -->
+    <div id="export-modal" class="modal-backdrop" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="export-title">
+        <div class="modal-head">
+          <h2 id="export-title">📦 下载课件 / 带走到其他智能体</h2>
+          <button type="button" class="close-btn" data-close="export-modal" aria-label="关闭">✕</button>
+        </div>
+        <p class="modal-desc">带不动的音效或重资源已自动降维为纯矢量与提示词规范，可在任意教室大屏或智能体中使用。</p>
+        <div class="export-options">
+          <div class="export-box">
+            <strong>1. 教室离线单文件（.html）</strong>
+            <p>内嵌你刚改好的配置、游戏闯关和纯 SVG 画面，零网络依赖，发微信或拷进希沃白板双击即用。</p>
+            <button type="button" id="download-html-btn" class="primary-btn">⬇ 下载离线 HTML 课件</button>
+          </div>
+          <div class="export-box">
+            <strong>2. 跨智能体提示规格包（.md）</strong>
+            <p>包含人教版知识点、当前 JSON 配置、关卡清单和降维说明，可直接发给豆包 / Kimi / Claude / WorkBuddy 继续改编。</p>
+            <div class="choices">
+              <button type="button" id="copy-agent-md-btn" class="warm-btn">📋 复制给其他智能体</button>
+              <button type="button" id="download-agent-md-btn">⬇ 下载 .md 规格包</button>
+            </div>
+          </div>
+        </div>
+        <p id="export-status" class="modal-status" hidden></p>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
