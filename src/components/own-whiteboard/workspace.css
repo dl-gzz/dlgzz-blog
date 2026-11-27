@@ -345,8 +345,34 @@
   min-height: 0;
   pointer-events: none;
 }
-.owb-courseware:fullscreen { display: flex; flex-direction: column; background: #f3efe6; }
-.owb-courseware:fullscreen iframe { flex: 1; min-height: 0; pointer-events: auto !important; }
+.owb-planting-display {
+  position: relative;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  max-width: none;
+  max-height: none;
+}
+.owb-planting-display:not([open]) { display: none; }
+.owb-planting-display.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  border-radius: 0;
+  background: #f3efe6;
+}
+.owb-planting-display.is-rotated-landscape {
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.owb-planting-display::backdrop { background: #172536; }
+.owb-planting-display.is-fullscreen iframe { pointer-events: auto; }
+.owb-planting-display.is-fullscreen .owb-courseware-header { cursor: default; }
+.owb-planting-display .owb-courseware-actions > * { touch-action: manipulation; }
 /* Keep the running lesson clickable even after its card is deselected. */
 .owb-surface.tool-select:not(.is-panning) .owb-courseware iframe {
   pointer-events: auto;

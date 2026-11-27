@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, type CSSProperties } from 'react';
-import PlantingLessonFrame from './PlantingLessonFrame';
+import type { CSSProperties } from 'react';
+import PlantingLessonDisplay from './PlantingLessonDisplay';
 import BoardCard, { ARTICLE_LINK_FOOTER_HEIGHT } from './cards/BoardCard';
 import { safeWebUrl } from './cards/helpers';
 import { coursewareForShape, isRetiredCoursewareId } from './core/courseware';
@@ -129,7 +129,6 @@ export default function ShapeView(
   const isCard = CARD_TYPES.includes(type);
   const courseware = coursewareForShape(shape);
   const plantingLesson = courseware?.id === 'zhi-shu-shi-yan';
-  const coursewareBox = useRef<HTMLDivElement>(null);
   const retiredLesson = isRetiredCoursewareId(shape.props.coursewareId);
   const lessonTitle = plantingLesson ? (shape.props.title || courseware.title) : courseware?.title;
   const articleUrl = type === 'blog_post' ? safeWebUrl(shape.props.url) : '';
@@ -299,8 +298,15 @@ export default function ShapeView(
             </a>
           )}
         </div>
+      ) : type === 'embed' && plantingLesson ? (
+        <PlantingLessonDisplay
+          title={lessonTitle || courseware.title}
+          articleHref={courseware.articleHref}
+          config={shape.props.coursewareConfig}
+          onActivate={props.onActivateCourseware}
+        />
       ) : type === 'embed' ? (
-        <div ref={plantingLesson ? coursewareBox : undefined} className={`owb-embed${courseware ? ' owb-courseware' : ''}`}>
+        <div className={`owb-embed${courseware ? ' owb-courseware' : ''}`}>
           {courseware && (
             <div className="owb-courseware-header" data-card-handle>
               <strong title={lessonTitle}>互动课件 · {lessonTitle}</strong>
@@ -312,22 +318,12 @@ export default function ShapeView(
                 >
                   操作课件
                 </button>
-                {plantingLesson && <button type="button" onClick={() => {
-                  const panel = coursewareBox.current;
-                  if (document.fullscreenElement === panel) {
-                    void document.exitFullscreen().catch(() => undefined);
-                  } else {
-                    void panel?.requestFullscreen?.().catch(() => undefined);
-                  }
-                }}>全屏 / 退出</button>}
                 <a href={courseware.articleHref}>返回文章</a>
               </div>
             </div>
           )}
           {retiredLesson ? (
             <div className="owb-media-placeholder">《直线植树》已下线</div>
-          ) : plantingLesson ? (
-            <PlantingLessonFrame title={lessonTitle || '植树大冒险'} config={shape.props.coursewareConfig} />
           ) : courseware || safeSource ? (
             <iframe
               title={lessonTitle || shape.props.title || '网页嵌入'}
