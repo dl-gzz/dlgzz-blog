@@ -1,6 +1,7 @@
 import { getDb } from '@/db';
 import { oneworkEntitlement, payment } from '@/db/schema';
 import { hasActiveMembership } from '@/lib/membership';
+import { ALL_PACKS_GRANT } from '@/lib/onework-constants';
 import { getSession } from '@/lib/server';
 import { and, eq, gt, isNull, or } from 'drizzle-orm';
 
@@ -14,7 +15,10 @@ import { and, eq, gt, isNull, or } from 'drizzle-orm';
  * @param userId 要检查的用户 ID
  * @returns true 表示用户拥有有效且未过期的订阅
  */
-export async function userHasPremiumAccess(userId: string): Promise<boolean> {
+export async function userHasPremiumAccess(
+  userId: string,
+  { membershipOnly = false }: { membershipOnly?: boolean } = {}
+): Promise<boolean> {
   try {
     const db = await getDb();
 
@@ -29,6 +33,10 @@ export async function userHasPremiumAccess(userId: string): Promise<boolean> {
           and(
             eq(oneworkEntitlement.userId, userId),
             eq(oneworkEntitlement.status, 'active'),
+            // A single knowledge-pack grant is not a site membership.
+            membershipOnly
+              ? eq(oneworkEntitlement.knowledgePackId, ALL_PACKS_GRANT)
+              : undefined,
             or(
               isNull(oneworkEntitlement.expiresAt),
               gt(oneworkEntitlement.expiresAt, now)

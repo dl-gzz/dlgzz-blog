@@ -90,6 +90,46 @@
   gap: 4px;
   flex-shrink: 0;
 }
+
+.ow-assistant__keybar {
+  display: grid;
+  flex-shrink: 0;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.ow-assistant__keybar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ow-assistant__keybar-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 30px;
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  font: inherit;
+}
+.ow-assistant__keybar-save {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #175cff;
+  border-radius: 7px;
+  background: #175cff;
+  color: #fff;
+  white-space: nowrap;
+}
+.ow-assistant__keybar-note {
+  color: #475569;
+  font-size: 11px;
+  line-height: 1.45;
+}
 .ow-assistant .ow-assistant__icon {
   width: 24px;
   height: 26px;

@@ -1,5 +1,5 @@
 export type DeepSeekCredentials =
-  | { mode: 'site' }
+  | { mode: 'site'; defaultModel?: string }
   | { mode: 'personal'; apiKey: string };
 
 const officialBase = 'https://api.deepseek.com/v1';
@@ -16,8 +16,8 @@ export class DeepSeekHttpError extends Error {
 export class DeepSeekAI {
   #apiKey: string;
   private readonly personal: boolean;
-  private baseURL: string;
-  private model: string;
+  private readonly baseURL: string;
+  readonly model: string;
 
   constructor(credentials: DeepSeekCredentials = { mode: 'site' }) {
     this.personal = credentials.mode === 'personal';
@@ -28,7 +28,8 @@ export class DeepSeekAI {
     } else {
       this.#apiKey = process.env.DEEPSEEK_API_KEY || '';
       this.baseURL = process.env.DEEPSEEK_BASE_URL || officialBase;
-      this.model = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+      this.model =
+        process.env.DEEPSEEK_MODEL?.trim() || credentials.defaultModel || 'deepseek-chat';
     }
   }
 

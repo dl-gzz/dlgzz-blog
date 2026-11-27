@@ -238,6 +238,10 @@ function AssistantSession({
   const [storageError, setStorageError] = useState('');
   const [canPersist, setCanPersist] = useState(true);
   const [error, setError] = useState('');
+  const [personalKey, setPersonalKey] = useState('');
+  const [keyDraft, setKeyDraft] = useState('');
+  const [keyError, setKeyError] = useState('');
+  const [keyPanelOpen, setKeyPanelOpen] = useState(false);
   const [clearConfirm, setClearConfirm] = useState(false);
   const [panelPosition, setPanelPosition] = useState<Point | null>(null);
   const [panelViewport, setPanelViewport] = useState<PanelViewport | null>(
@@ -543,7 +547,11 @@ function AssistantSession({
       const data = await readApiResponse(
         await fetch('/api/whiteboard/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(personalKey ? { 'x-deepseek-api-key': personalKey } : {}),
+          },
+          redirect: 'error',
           body: JSON.stringify(request),
           signal: controller.signal,
         })
@@ -688,9 +696,23 @@ function AssistantSession({
           </span>
           <span aria-hidden="true">✨</span>
           <strong>AI 助手</strong>
-          <span className="ow-assistant__badge">Server AI</span>
+          <span className="ow-assistant__badge">DeepSeek</span>
         </div>
         <div className="ow-assistant__header-actions">
+          <button
+            type="button"
+            className="ow-assistant__clear"
+            disabled={busy}
+            onClick={() => {
+              setKeyDraft('');
+              setKeyError('');
+              setKeyPanelOpen(!keyPanelOpen);
+            }}
+            aria-expanded={keyPanelOpen}
+            title="设置个人 DeepSeek API Key"
+          >
+            {personalKey ? '已用个人 Key' : 'API Key'}
+          </button>
           <button
             type="button"
             className="ow-assistant__clear"
@@ -714,6 +736,66 @@ function AssistantSession({
           </button>
         </div>
       </header>
+      {keyPanelOpen && (
+        <form
+          className="ow-assistant__keybar"
+          aria-label="DeepSeek API Key 设置"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (busy) return;
+            const value = keyDraft.trim();
+            if (!/^[!-~]{1,256}$/.test(value)) {
+              setKeyError('请输入有效的 DeepSeek API Key，不能包含空格。');
+              return;
+            }
+            setPersonalKey(value);
+            setKeyDraft('');
+            setKeyError('');
+            setKeyPanelOpen(false);
+            notify('已启用个人 DeepSeek Key，仅对此次打开的助手有效。');
+          }}
+        >
+          <div className="ow-assistant__keybar-row">
+            <input
+              type="password"
+              aria-label="个人 DeepSeek API Key"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={256}
+              placeholder="输入个人 DeepSeek API Key"
+              disabled={busy}
+              value={keyDraft}
+              onChange={(event) => {
+                setKeyDraft(event.target.value);
+                setKeyError('');
+              }}
+            />
+            <button type="submit" className="ow-assistant__keybar-save" disabled={busy}>
+              使用
+            </button>
+            {personalKey && (
+              <button
+                type="button"
+                className="ow-assistant__clear"
+                disabled={busy}
+                onClick={() => {
+                  setPersonalKey('');
+                  setKeyDraft('');
+                  setKeyError('');
+                  setKeyPanelOpen(false);
+                  notify('已清除个人 Key。平台额度仅限付费会员。');
+                }}
+              >
+                清除
+              </button>
+            )}
+          </div>
+          {keyError && <p role="alert">{keyError}</p>}
+          <p className="ow-assistant__keybar-note">
+            登录后可使用自己的 DeepSeek 额度。发送时由网站转发给 DeepSeek 官方，不保存；关闭助手或刷新后需重新填写。
+          </p>
+        </form>
+      )}
       <section className="ow-assistant__context" aria-label="本轮选中材料">
         <div className="ow-assistant__row">
           <strong>选中材料 · {selected.length}</strong>
@@ -754,7 +836,7 @@ function AssistantSession({
                   '把这篇文章做成交互式教程',
                   '做一个简单的番茄钟工具',
                 ].map((suggestion) => (
-                  <button
+        <button
                     key={suggestion}
                     type="button"
                     onClick={() => setDraft(suggestion)}

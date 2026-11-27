@@ -1,159 +1,112 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GeminiAI } from '@/lib/ai/gemini';
-import { ZhipuAI } from '@/lib/ai/zhipu';
-import { DeepSeekAI } from '@/lib/ai/deepseek';
-import { hasAccessToPremiumContent } from '@/lib/premium-access';
+import { DeepSeekAI, DeepSeekHttpError } from '@/lib/ai/deepseek';
+import {
+  bodyErrorResponse,
+  readBoundedJson,
+  requireSameOrigin,
+} from '@/lib/api-security';
+import { userHasPremiumAccess } from '@/lib/premium-access';
+import { requireRequestBudget } from '@/lib/request-rate-limit';
 import { getSession } from '@/lib/server';
 
 export const maxDuration = 60;
 
-const WHITEBOARD_ACTION_SCHEMA = {
-  type: 'object',
-  properties: {
-    thought: {
-      type: 'string',
-      description: 'A short private summary of the plan.',
-    },
-    voice_response: {
-      type: 'string',
-      description: 'A short Chinese sentence shown to the teacher.',
-    },
-    operations: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          action: {
-            type: 'string',
-            enum: ['create', 'update', 'delete'],
-          },
-          id: {
-            type: 'string',
-            description: 'Shape id for update/delete operations.',
-          },
-          type: {
-            type: 'string',
-            enum: ['preview_html', 'ai_result'],
-          },
-          x: { type: 'number' },
-          y: { type: 'number' },
-          props: {
-            type: 'object',
-            properties: {
-              w: { type: 'number' },
-              h: { type: 'number' },
-              html: {
-                type: 'string',
-                description:
-                  'Complete HTML document for preview_html. It must post quiz_result to window.parent after the learner submits answers.',
-              },
-              text: { type: 'string' },
-              color: { type: 'string' },
-            },
-          },
-        },
-        required: ['action'],
-      },
-    },
-  },
-  required: ['operations'],
-} satisfies Record<string, unknown>;
+function chatError(error: string, status: number) {
+  return NextResponse.json(
+    { success: false, error },
+    { status, headers: { 'Cache-Control': 'no-store' } }
+  );
+}
 
-/**
- * Whiteboard AI Chat API
- *
- * Provider priority:
- * 1. Courseware requests use WHITEBOARD_COURSEWARE_PROVIDER/MODEL.
- * 2. Other whiteboard requests use WHITEBOARD_AI_PROVIDER.
- * 3. Auto-detect by available server keys.
- */
+type ChatMessage = { role: string; content: string };
+
+function isChatMessage(value: unknown): value is ChatMessage {
+  if (typeof value !== 'object' || value === null) return false;
+  const message = value as Partial<ChatMessage>;
+  return (
+    typeof message.role === 'string' &&
+    ['system', 'user', 'assistant'].includes(message.role) &&
+    typeof message.content === 'string'
+  );
+}
+
 export async function POST(request: NextRequest) {
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
+  let usingPersonalKey = false;
   try {
-    const { messages, purpose } = await request.json();
-    const isCoursewareGeneration = purpose === 'courseware';
+    const userId = (await getSession())?.user?.id;
+    if (!userId) return chatError('请先登录后再使用白板 AI', 401);
 
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json(
-        { success: false, error: '无效的消息格式' },
-        { status: 400 }
-      );
+    const limited = requireRequestBudget('whiteboard-ai', userId, 10);
+    if (limited) return limited;
+
+    const input = (await readBoundedJson(request, 128_000)) as {
+      messages?: unknown;
+      purpose?: unknown;
+    } | null;
+    const messages = input?.messages;
+    if (!Array.isArray(messages) || !messages.length || !messages.every(isChatMessage)) {
+      return chatError('无效的消息格式', 400);
     }
 
-    const requireCoursewareAuth = process.env.WHITEBOARD_COURSEWARE_REQUIRE_AUTH === 'true';
-    if (!isCoursewareGeneration || requireCoursewareAuth) {
-      const session = await getSession();
-      if (!session?.user) {
-        return NextResponse.json(
-          { success: false, error: '请先登录后再使用白板 AI' },
-          { status: 401 }
-        );
+    const keyHeader = request.headers.get('x-deepseek-api-key');
+    const personalKey = keyHeader?.trim();
+    if (keyHeader !== null && (!personalKey || !/^[!-~]{1,256}$/.test(personalKey))) {
+      return chatError('DeepSeek API Key 格式无效', 400);
+    }
+    usingPersonalKey = Boolean(personalKey);
+
+    // The client-supplied purpose changes the output format, never billing access.
+    if (!usingPersonalKey) {
+      if (!(await userHasPremiumAccess(userId, { membershipOnly: true }))) {
+        return chatError('平台 AI 额度仅限付费会员。也可在 AI 助手中填写自己的 DeepSeek API Key。', 403);
       }
-
-      const hasPremiumAccess = await hasAccessToPremiumContent();
-      if (!hasPremiumAccess) {
-        return NextResponse.json(
-          { success: false, error: '白板 AI 功能仅限付费用户使用' },
-          { status: 403 }
-        );
+      if (!process.env.DEEPSEEK_API_KEY?.trim()) {
+        return chatError('平台 DeepSeek 暂未配置，可使用自己的 DeepSeek API Key。', 503);
       }
     }
 
-    const configuredProvider = (
-      isCoursewareGeneration
-        ? process.env.WHITEBOARD_COURSEWARE_PROVIDER || 'gemini'
-        : process.env.WHITEBOARD_AI_PROVIDER || ''
-    )
-      .trim()
-      .toLowerCase();
-    const coursewareModel =
-      process.env.WHITEBOARD_COURSEWARE_MODEL ||
-      process.env.GEMINI_MODEL ||
-      'gemini-3.5-flash';
-    const hasGemini = Boolean(process.env.GEMINI_API_KEY);
-    const hasZhipu = Boolean(process.env.ZHIPU_API_KEY);
-    const hasDeepSeek = Boolean(process.env.DEEPSEEK_API_KEY);
+    const deepseek = new DeepSeekAI(
+      personalKey
+        ? { mode: 'personal', apiKey: personalKey }
+        : { mode: 'site', defaultModel: 'deepseek-flash' }
+    );
+    const message = await deepseek.chat(
+      messages.map(({ role, content }) => ({ role, content })),
+      {
+        json: input?.purpose === 'courseware',
+        signal: AbortSignal.any([request.signal, AbortSignal.timeout(55_000)]),
+      }
+    );
 
-    let response = '';
-    let usedProvider = '';
-    let usedModel: string | null = null;
-
-    if (configuredProvider === 'gemini' || (!configuredProvider && hasGemini)) {
-      const gemini = new GeminiAI({
-        model: isCoursewareGeneration ? coursewareModel : undefined,
-        responseMimeType: isCoursewareGeneration ? 'application/json' : undefined,
-        responseSchema: isCoursewareGeneration ? WHITEBOARD_ACTION_SCHEMA : undefined,
-      });
-      response = await gemini.chat(messages);
-      usedProvider = 'gemini';
-      usedModel = isCoursewareGeneration ? coursewareModel : null;
-    } else if (configuredProvider === 'zhipu' || (!configuredProvider && hasZhipu)) {
-      const zhipu = new ZhipuAI();
-      response = await zhipu.chat(messages);
-      usedProvider = 'zhipu';
-    } else if (configuredProvider === 'deepseek' || (!configuredProvider && hasDeepSeek)) {
-      const deepseek = new DeepSeekAI();
-      response = await deepseek.chat(messages);
-      usedProvider = 'deepseek';
-    } else {
-      throw new Error(
-        'No whiteboard AI provider configured. Set GEMINI_API_KEY, ZHIPU_API_KEY, or DEEPSEEK_API_KEY.'
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: response,
-      provider: usedProvider,
-      model: usedModel,
-    });
-  } catch (error) {
-    console.error('Whiteboard AI Chat Error:', error);
     return NextResponse.json(
       {
-        success: false,
-        error: error instanceof Error ? error.message : 'AI 请求失败'
+        success: true,
+        message,
+        provider: 'deepseek',
+        model: deepseek.model,
+        keySource: usingPersonalKey ? 'user' : 'server',
       },
-      { status: 500 }
+      { headers: { 'Cache-Control': 'no-store' } }
     );
+  } catch (error) {
+    const bodyError = bodyErrorResponse(error);
+    if (bodyError) return bodyError;
+    if (error instanceof DeepSeekHttpError) {
+      // Never log headers, the request, the upstream body or the error object.
+      console.warn('Whiteboard DeepSeek upstream status:', error.status);
+      if (usingPersonalKey && (error.status === 401 || error.status === 403)) {
+        return chatError('DeepSeek 拒绝了你的 API Key，请检查密钥是否正确且有效。', 422);
+      }
+      if (usingPersonalKey && error.status === 402) {
+        return chatError('你的 DeepSeek 账号余额不足，请充值后重试。', 422);
+      }
+      if (error.status === 429) return chatError('DeepSeek 请求过多，请稍后重试。', 429);
+    } else {
+      console.warn('Whiteboard DeepSeek request failed');
+    }
+    return chatError('AI 请求失败，请稍后重试。', 502);
   }
 }
