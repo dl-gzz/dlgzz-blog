@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import ShapeView from './ShapeView';
-import TreeLessonDraft from './TreeLessonDraft';
 import DrawingToolsPanel from './DrawingToolsPanel';
 import StylePalette from './StylePalette';
 import ArticlePicker from './ArticlePicker';
@@ -37,12 +36,12 @@ import AssistantPanel, {
 import { applyAssistantPlan } from './assistant/logic';
 import ToolsDock from './dock/ToolsDock';
 import {
-  addTreeLessonCopy,
+  coursewareBoardKey,
   coursewareForShape,
   coursewareWhiteboardHref,
   getCourseware,
   prepareCoursewareBoard,
-  treeSettingsForShape,
+  isRetiredCoursewareId,
 } from './core/courseware';
 import {
   arrangeGeneratedResults,
@@ -311,10 +310,7 @@ export default function CanvasWorkspace({
     string | null
   >(null);
   const articlePageKey = `${doc.id}:${page.id}:${renderEpoch}`;
-  const [treeDraftTarget, setTreeDraftTarget] = useState<{boardId:string;pageId:string;shapeId:string;epoch:number} | null>(null);
-  const treeSource = treeDraftTarget && treeDraftTarget.boardId === doc.id && treeDraftTarget.pageId === page.id &&
-    treeDraftTarget.epoch === renderEpoch && shapes.find((s) => s.id === treeDraftTarget.shapeId);
-  const treeBase = treeSource && treeSettingsForShape(treeSource);
+  const [retiredLesson, setRetiredLesson] = useState(false);
   const [toast, setToast] = useState('');
   const [busy, setBusy] = useState(false);
   const [context, setContext] = useState<Point | null>(null);
@@ -327,7 +323,6 @@ export default function CanvasWorkspace({
     setArticlePickerPageKey((key) =>
       key === articlePageKey ? key : null
     );
-    setTreeDraftTarget(null);
   }, [articlePageKey]);
 
   function commit(next: BoardDocument, before?: BoardDocument) {
@@ -382,7 +377,10 @@ export default function CanvasWorkspace({
   useEffect(() => {
     let cancelled = false;
     const query = new URLSearchParams(window.location.search);
-    const courseware = getCourseware(query.get('courseware'));
+    const coursewareId = query.get('courseware');
+    const courseware = getCourseware(coursewareId);
+    const lessonKey = coursewareBoardKey(coursewareId);
+    setRetiredLesson(isRetiredCoursewareId(coursewareId));
     const identity = [
       query.get('studentId') || 'anonymous',
       query.get('lessonId') || 'own-whiteboard-demo',
@@ -390,14 +388,12 @@ export default function CanvasWorkspace({
       .map(encodeURIComponent)
       .join(':');
     const boardName = query.get('board');
-    const key = courseware
-      ? `oneworker-board-v2:courseware:${courseware.id}`
-      : `oneworker-board-v2:${boardName ? encodeURIComponent(boardName) : identity}`;
+    const key = lessonKey ?? `oneworker-board-v2:${boardName ? encodeURIComponent(boardName) : identity}`;
     setStorageKey(key);
     void (async () => {
       try {
         let stored = await loadBoard(key);
-        if (!stored && !courseware && !query.has('board')) {
+        if (!stored && !lessonKey && !query.has('board')) {
           const legacy = localStorage.getItem(
             `dlgzz-own-whiteboard-v1:${identity}`
           );
@@ -1987,10 +1983,6 @@ export default function CanvasWorkspace({
                 selected={selection.includes(shape.id)}
                 editing={editing === shape.id}
                 interactive={interactiveId === shape.id}
-                onDraftTreeLesson={() => {
-                  setMenu(null); setContext(null); setAssistantOpen(false);
-                  setTreeDraftTarget({boardId:doc.id,pageId:page.id,shapeId:shape.id,epoch:renderEpoch});
-                }}
                 onActivateCourseware={() => {
                   setTool('select');
                   setInteractiveId(shape.id);
@@ -2112,19 +2104,6 @@ export default function CanvasWorkspace({
           }}
           onInsertMedia={() => fileInput.current?.click()}
           onClose={() => setDrawToolsOpen(false)}
-        />
-      )}
-      {ready && treeDraftTarget && treeBase && (
-        <TreeLessonDraft key={`${articlePageKey}:${treeDraftTarget.shapeId}`} base={treeBase}
-          onClose={() => setTreeDraftTarget(null)}
-          onConfirm={(settings) => {
-            if (documentEpoch.current !== treeDraftTarget.epoch || storageError) throw new Error('白板已变更或无法保存，请关闭后重新打开。');
-            const next = addTreeLessonCopy(current.current, treeDraftTarget, settings, size);
-            commit(next.document);
-            setSelection([next.shapeId]); setTool('select'); setInteractiveId(next.shapeId);
-            setTreeDraftTarget(null); setInspector(false);
-            notify('已在白板创建植树副本，原课件保留。');
-          }}
         />
       )}
       {ready && articlePickerPageKey === articlePageKey && (
@@ -2782,6 +2761,14 @@ export default function CanvasWorkspace({
           <button className="owb-danger" onClick={removeSelected}>
             删除
           </button>
+        </div>
+      )}
+      {retiredLesson && (
+        <div className="owb-courseware-retired-notice" role="status">
+          《直线植树》已下线。
+          <a href={getLocalePathname({ locale, href: '/whiteboard?courseware=zhi-shu-shi-yan' })}>
+            打开《植树大冒险》
+          </a>
         </div>
       )}
       {storageError && (

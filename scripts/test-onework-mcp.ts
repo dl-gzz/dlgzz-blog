@@ -601,7 +601,7 @@ async function main() {
   ).results as unknown[];
   assert.deepEqual(
     publicLessons.map((lesson) => asRecord(lesson).id),
-    ['cao-chong', 'zhi-shu']
+    ['cao-chong', 'zhi-shu-shi-yan']
   );
 
   for (const query of [
@@ -633,7 +633,7 @@ async function main() {
     assert.equal(textBlock.type, 'text');
     assert.deepEqual(JSON.parse(textBlock.text), content);
   }
-  for (const query of ['未发布课件', 'https://example.test/cao-chong']) {
+  for (const query of ['未发布课件', '直线植树', 'https://example.test/cao-chong']) {
     const missing = await searchCourseware({ query });
     assert.deepEqual(successResult(missing.response).structuredContent, {
       success: true,

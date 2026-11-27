@@ -15,26 +15,12 @@ const PUBLIC_COURSEWARE = [
     ],
   },
   {
-    id: 'zhi-shu',
-    title: '直线植树',
-    articleHref: '/blog/zhi-shu-wen-ti',
-    entryHref: '/courseware/zhi-shu/index.html',
-    description: '比较四种端点种法，再玩校门挑战：先领苗种树，校门换边后用原来的树重新布置。',
-    searchTerms: ['zhi shu', '植树问题', '间隔', '端点', '小学数学'],
-    teachingPoints: [
-      '沿编号数出直路上的等距间隔。',
-      '保持间隔数，比较四种端点种法，只观察两端树的变化。',
-      '观察只有一段间隔且两端不种时，路段仍在，树数为零。',
-      '先估算树苗数量，种好后移动校门，解释为什么不需要多领树苗。',
-    ],
-  },
-  {
     id: 'zhi-shu-shi-yan',
     title: '植树大冒险',
     articleHref: '/blog/zhi-shu-shi-yan',
     entryHref: '/courseware/zhi-shu-shi-yan/index.html',
     description: '从空路点种、均匀排列，完成直路、公路两侧和圆形花坛等五关。',
-    searchTerms: ['zhi shu shi yan', '植树实验', '公路两侧', '封闭路线'],
+    searchTerms: ['zhi shu shi yan', '植树实验', '植树问题', '间隔', '端点', '公路两侧', '封闭路线'],
     teachingPoints: [
       '切换端点种法，比较间隔数和实际棵数。',
       '在校园直路、公路两侧与封闭路线中验证数量关系。',
@@ -43,6 +29,16 @@ const PUBLIC_COURSEWARE = [
 ] as const;
 
 export type CoursewareProduct = (typeof PUBLIC_COURSEWARE)[number];
+
+export function isRetiredCoursewareId(id: unknown): id is 'zhi-shu' {
+  return id === 'zhi-shu';
+}
+
+/** Retiring a lesson must not send its bookmarked URL into another local board. */
+export function coursewareBoardKey(id: unknown) {
+  const boardId = isRetiredCoursewareId(id) ? id : getCourseware(id)?.id;
+  return boardId ? `oneworker-board-v2:courseware:${boardId}` : null;
+}
 
 /** Only authored courseware IDs can resolve to executable lesson documents. */
 export function getCourseware(id: unknown): CoursewareProduct | undefined {

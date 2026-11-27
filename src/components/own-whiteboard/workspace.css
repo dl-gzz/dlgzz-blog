@@ -392,54 +392,25 @@
 .owb-courseware-actions a:hover {
   background: #eaf3ff;
 }
-.owb .owb-courseware-actions .owb-courseware-draft {
-  background: #e7f0ff;
-  color: #144da4;
-  white-space: nowrap;
-}
-.owb-tree-draft {
-  position: fixed;
-  inset: 0;
-  margin: auto;
-  width: min(820px, calc(100% - 24px));
-  max-height: calc(100dvh - 24px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: clamp(16px, 3vw, 28px);
+.owb-courseware-retired-notice {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  z-index: 9;
+  padding: 8px 12px;
   border: 1px solid #d9e2ed;
-  border-radius: 16px;
+  border-radius: 8px;
   background: white;
   color: #172536;
-  box-shadow: 0 22px 64px #17253630;
+  font-size: 13px;
 }
-.owb-tree-draft::backdrop { background: #14213870; }
-.owb-tree-draft header, .owb-tree-draft footer {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-}
-.owb-tree-draft h2 { font-size: 22px; font-weight: 700; }
-.owb-tree-draft h3, .owb-tree-draft label { font-size: 15px; font-weight: 650; }
-.owb-tree-draft p { margin: 8px 0 14px; }
-.owb-tree-draft form { display: grid; justify-items: start; gap: 6px; }
-.owb-tree-access {
-  width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr);
-  gap: 6px; margin-bottom: 8px; padding: 12px;
-  border: 1px solid #dce5f1; border-radius: 10px; background: #f7faff;
-}
-.owb-tree-access label:not(:first-child) { margin-top: 4px; }
-.owb-tree-access p { margin: 2px 0 0; color: #43556c; line-height: 1.55; }
-.owb-tree-draft section { margin-top: 16px; padding-top: 12px; border-top: 1px solid #dce5f1; }
-.owb-tree-draft iframe {
-  display: block;
-  width: 100%; height: min(52dvh, 480px); margin: 8px 0 12px;
-  border: 1px solid #d9e2ed; border-radius: 8px;
-}
-.owb .owb-tree-primary { background: #1756c9; color: white; padding: 8px 14px; border-radius: 8px; }
-.owb-tree-draft [role="alert"] { margin: 12px 0 0; color: #923928; }
-.owb-tree-draft a { color: #1756c9; text-decoration: underline; }
+.owb-courseware-retired-notice a { color: #0066cc; text-decoration: underline; }
 @media (max-width: 600px) {
   .owb-courseware-header { gap: 3px; padding-inline: 5px; }
   .owb .owb-courseware-actions button, .owb-courseware-actions a { padding-inline: 5px; }
-  .owb-tree-draft { padding: 14px; }
 }
 .owb-frame {
   border: 1px solid #c4cedd;
