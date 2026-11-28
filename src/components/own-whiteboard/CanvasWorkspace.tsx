@@ -2162,9 +2162,9 @@ export default function CanvasWorkspace({
           ]}
         />
       )}
-      {assistantOpen && ready && (
         <AssistantPanel
-          key={`${doc.id}:${page.id}:${renderEpoch}`}
+          open={assistantOpen && ready}
+          panelIdentity={`${doc.id}:${page.id}:${renderEpoch}`}
           pageKey={`${doc.id}:${page.id}`}
           shapes={shapes}
           selectedIds={selection}
@@ -2177,7 +2177,6 @@ export default function CanvasWorkspace({
           onApply={applyAssistant}
           notify={notify}
         />
-      )}
       <footer className="owb-footer">
         <button
           className="owb-page-button"

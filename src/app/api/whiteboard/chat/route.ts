@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
       return chatError('DeepSeek API Key 格式无效', 400);
     }
     usingPersonalKey = Boolean(personalKey);
+    const keyOwner = request.headers.get('x-whiteboard-key-owner');
+    if (usingPersonalKey && keyOwner !== null && keyOwner !== userId) {
+      return chatError('登录账号已切换，请刷新白板后再使用个人 Key。', 409);
+    }
 
     // The client-supplied purpose changes the output format, never billing access.
     if (!usingPersonalKey) {

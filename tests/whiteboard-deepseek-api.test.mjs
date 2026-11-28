@@ -84,7 +84,7 @@ test('whiteboard DeepSeek authentication, isolation and logging', async (t) => {
     return paid;
   };
 
-  async function request({ loggedIn = true, key, purpose, origin = site, rawBody, stableId } = {}) {
+  async function request({ loggedIn = true, key, keyOwner, purpose, origin = site, rawBody, stableId } = {}) {
     globalThis.testBoardSession = loggedIn
       ? { user: { id: stableId ?? String(++nextUser) } }
       : null;
@@ -94,6 +94,7 @@ test('whiteboard DeepSeek authentication, isolation and logging', async (t) => {
         origin,
         'content-type': 'application/json',
         ...(key !== undefined ? { 'x-deepseek-api-key': key } : {}),
+        ...(keyOwner !== undefined ? { 'x-whiteboard-key-owner': keyOwner } : {}),
       },
       body: rawBody ?? JSON.stringify({ messages: [publicMessage], purpose }),
     }));
@@ -126,6 +127,8 @@ test('whiteboard DeepSeek authentication, isolation and logging', async (t) => {
   });
 
   await t.test('personal key ignores site provider/model overrides and never follows redirects', async () => {
+    assert.equal((await request({ key: fakePersonalKey, stableId: 'second', keyOwner: 'first' })).status, 409);
+    assert.equal(calls.length, 0);
     const response = await request({ key: fakePersonalKey });
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {

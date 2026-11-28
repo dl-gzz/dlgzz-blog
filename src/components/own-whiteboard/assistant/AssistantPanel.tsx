@@ -13,6 +13,8 @@ import {
   stringValue,
 } from '../cards/helpers';
 import { createId, getSelectionBounds } from '../core/model';
+import { authClient } from '@/lib/auth-client';
+import { usePersonalKey } from './use-personal-key';
 import { type BoardShape, type Point, SHAPE_LABELS } from '../core/types';
 import {
   ASSISTANT_TYPES,
@@ -193,9 +195,20 @@ function restoreSession(raw: string | null): Session {
   return { messages, draft: stringValue(saved.draft) };
 }
 
-export function AssistantPanel(props: AssistantPanelProps) {
-  // This key also protects consumers that forget to key the panel themselves.
-  return <AssistantSession key={props.pageKey} {...props} />;
+type HostProps = AssistantPanelProps & { open: boolean; panelIdentity: string };
+export function AssistantPanel(props: HostProps) {
+  const session = authClient.useSession();
+  const owner = session.data?.user?.id || null;
+  return <KeyHost key={owner ? 'user:' + owner : 'guest'} owner={owner} {...props}
+    pending={!owner && session.isPending} />;
+}
+
+function KeyHost({ owner, pending, open, panelIdentity, ...props }: HostProps & {
+  owner: string | null; pending: boolean;
+}) {
+  const credential = usePersonalKey(owner);
+  return open ? <AssistantSession key={panelIdentity} {...props}
+    credential={{ ...credential, loading: credential.loading || pending }} /> : null;
 }
 
 function ToolPreview({ html }: { html: string }) {
@@ -230,7 +243,8 @@ function AssistantSession({
   onClose,
   onApply,
   notify,
-}: AssistantPanelProps) {
+  credential,
+}: AssistantPanelProps & { credential: ReturnType<typeof usePersonalKey> }) {
   const [session, setSession] = useState<Session>({ messages: [], draft: '' });
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -238,7 +252,8 @@ function AssistantSession({
   const [storageError, setStorageError] = useState('');
   const [canPersist, setCanPersist] = useState(true);
   const [error, setError] = useState('');
-  const [personalKey, setPersonalKey] = useState('');
+  const personalKey = credential.value;
+  const [rememberDraft, setRememberDraft] = useState(false);
   const [keyDraft, setKeyDraft] = useState('');
   const [keyError, setKeyError] = useState('');
   const [keyPanelOpen, setKeyPanelOpen] = useState(false);
@@ -404,7 +419,7 @@ function AssistantSession({
   }, [session.messages.length, busy]);
 
   async function send() {
-    if (busy || !ready || !session.draft.trim()) return;
+    if (busy || !ready || credential.loading || !session.draft.trim()) return;
     if (selected.length > 20) {
       setError('一次最多选择 20 个材料，请减少选择后再发送。');
       return;
@@ -549,7 +564,10 @@ function AssistantSession({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(personalKey ? { 'x-deepseek-api-key': personalKey } : {}),
+            ...(personalKey ? {
+              'x-deepseek-api-key': personalKey,
+              'x-whiteboard-key-owner': credential.owner || 'signed-out',
+            } : {}),
           },
           redirect: 'error',
           body: JSON.stringify(request),
@@ -702,9 +720,10 @@ function AssistantSession({
           <button
             type="button"
             className="ow-assistant__clear"
-            disabled={busy}
+            disabled={busy || credential.loading}
             onClick={() => {
               setKeyDraft('');
+              setRememberDraft(credential.remembered);
               setKeyError('');
               setKeyPanelOpen(!keyPanelOpen);
             }}
@@ -740,19 +759,24 @@ function AssistantSession({
         <form
           className="ow-assistant__keybar"
           aria-label="DeepSeek API Key 设置"
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
-            if (busy) return;
-            const value = keyDraft.trim();
+            if (busy || credential.loading) return;
+            const value = keyDraft.trim() || personalKey;
             if (!/^[!-~]{1,256}$/.test(value)) {
               setKeyError('请输入有效的 DeepSeek API Key，不能包含空格。');
               return;
             }
-            setPersonalKey(value);
+            try {
+              await credential.save(value, rememberDraft);
+            } catch (cause) {
+              setKeyError(cause instanceof Error ? cause.message : '无法保存设置。');
+              return;
+            }
             setKeyDraft('');
             setKeyError('');
             setKeyPanelOpen(false);
-            notify('已启用个人 DeepSeek Key，仅对此次打开的助手有效。');
+            notify(rememberDraft ? '已在这台设备上为当前账号记住 Key。' : '已启用个人 Key，收起助手后仍可继续使用。');
           }}
         >
           <div className="ow-assistant__keybar-row">
@@ -762,24 +786,30 @@ function AssistantSession({
               autoComplete="off"
               spellCheck={false}
               maxLength={256}
-              placeholder="输入个人 DeepSeek API Key"
-              disabled={busy}
+              placeholder={personalKey ? '已设置；仅更换时需填写' : '输入个人 DeepSeek API Key'}
+              disabled={busy || credential.loading}
               value={keyDraft}
               onChange={(event) => {
                 setKeyDraft(event.target.value);
                 setKeyError('');
               }}
             />
-            <button type="submit" className="ow-assistant__keybar-save" disabled={busy}>
+            <button type="submit" className="ow-assistant__keybar-save" disabled={busy || credential.loading}>
               使用
             </button>
-            {personalKey && (
+            {(personalKey || credential.deviceError) && (
               <button
                 type="button"
                 className="ow-assistant__clear"
-                disabled={busy}
-                onClick={() => {
-                  setPersonalKey('');
+                disabled={busy || credential.loading}
+                onClick={async () => {
+                  try {
+                    await credential.save('', false);
+                  } catch (cause) {
+                    setKeyError(cause instanceof Error ? cause.message : '无法清除，请重试。');
+                    return;
+                  }
+                  setRememberDraft(false);
                   setKeyDraft('');
                   setKeyError('');
                   setKeyPanelOpen(false);
@@ -790,9 +820,16 @@ function AssistantSession({
               </button>
             )}
           </div>
+          <label>
+            <input type="checkbox" checked={rememberDraft}
+              disabled={!credential.owner || busy || credential.loading}
+              onChange={event => setRememberDraft(event.target.checked)} /> 在这台设备上记住
+          </label>
+          {personalKey && <p>个人 Key 已启用 · {credential.remembered ? '此设备已记住' : '仅本次白板使用'}</p>}
+          {credential.deviceError && <p role="alert">未能读取设备保存的 Key。可使用临时 Key，或点「清除」移除设备记录。</p>}
           {keyError && <p role="alert">{keyError}</p>}
           <p className="ow-assistant__keybar-note">
-            登录后可使用自己的 DeepSeek 额度。发送时由网站转发给 DeepSeek 官方，不保存；关闭助手或刷新后需重新填写。
+            默认只在本次白板使用，收起助手不会清除。登录后勾选并点「使用」，下次同一账号在此浏览器可继续使用。公共设备请勿勾选。
           </p>
         </form>
       )}
@@ -995,7 +1032,7 @@ function AssistantSession({
                 type="submit"
                 className="ow-assistant__primary"
                 aria-label="发送"
-                disabled={!ready || !session.draft.trim()}
+                disabled={!ready || credential.loading || !session.draft.trim()}
               >
                 ↵
               </button>
